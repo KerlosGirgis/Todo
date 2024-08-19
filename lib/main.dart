@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
+import 'package:todo/services/database_service.dart';
+import 'pages/home_page.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await DatabaseService().openDb();
   runApp(const MyApp());
 }
 
