@@ -6,6 +6,7 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
 
   await DatabaseService().openDb();
+
   runApp(const MyApp());
 }
 

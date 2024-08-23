@@ -16,7 +16,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   @override
   void initState() {
     getItems();
@@ -24,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<TodoItem> items = [];
-  List<UserProfile> user=[];
+  List<UserProfile> user = [];
   bool isLoading = false;
   void getItems() async {
     setState(() {
@@ -32,8 +31,9 @@ class _HomePageState extends State<HomePage> {
     });
     items = await DatabaseService().getItems();
     user = await DatabaseService().getUser();
-    if (user.isEmpty){
-      await DatabaseService().insertUser(UserProfile(firstName: "user", lastName: "", pic: "0"));
+    if (user.isEmpty) {
+      await DatabaseService()
+          .insertUser(UserProfile(firstName: "user", lastName: "", pic: "0"));
       user = await DatabaseService().getUser();
     }
     setState(() {
@@ -45,7 +45,9 @@ class _HomePageState extends State<HomePage> {
   TextEditingController descController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return isLoading==true? const Scaffold(body: Center(
+      child: CircularProgressIndicator(),
+    ),) : Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
@@ -81,7 +83,8 @@ class _HomePageState extends State<HomePage> {
                       if (titleController.text.isEmpty) {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(
-                          content: Text("Task title can't be empty"),duration: Durations.long4,
+                          content: Text("Task title can't be empty"),
+                          duration: Durations.long4,
                         ));
                         return;
                       }
@@ -111,11 +114,7 @@ class _HomePageState extends State<HomePage> {
         },
         child: const Icon(Icons.add),
       ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : items.isEmpty
+      body: items.isEmpty
               ? Center(
                   child: Image.asset(
                     "assets/empty_list.png",
@@ -169,8 +168,10 @@ class _HomePageState extends State<HomePage> {
                                             if (titleController.text.isEmpty) {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(const SnackBar(
-                                                      content: Text(
-                                                          "Task title can't be empty"),duration: Durations.long4,));
+                                                content: Text(
+                                                    "Task title can't be empty"),
+                                                duration: Durations.long4,
+                                              ));
                                               return;
                                             }
                                             await DatabaseService()
@@ -186,8 +187,9 @@ class _HomePageState extends State<HomePage> {
                                               descController.clear();
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(const SnackBar(
-                                                      content: Text(
-                                                          "Task Updated"),duration: Durations.long4,));
+                                                content: Text("Task Updated"),
+                                                duration: Durations.long4,
+                                              ));
                                             });
                                             if (context.mounted) {
                                               Navigator.of(context).pop();
@@ -208,9 +210,11 @@ class _HomePageState extends State<HomePage> {
                                   .deleteItem(items[index].id!)
                                   .then((value) {
                                 getItems();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text("Task Deleted"),duration: Durations.long4,));
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  content: Text("Task Deleted"),
+                                  duration: Durations.long4,
+                                ));
                               });
                             },
                             icon: const Icon(
@@ -223,9 +227,9 @@ class _HomePageState extends State<HomePage> {
                       title: InkWell(
                         child: Text(items[index].title,
                             style: items[index].status == 0
-                                ? const TextStyle(fontSize: 20)
+                                ? const TextStyle(fontSize: 22)
                                 : const TextStyle(
-                                fontSize: 20,
+                                    fontSize: 22,
                                     decoration: TextDecoration.lineThrough,
                                     decorationThickness: 3)),
                         onTap: () async {
@@ -240,8 +244,11 @@ class _HomePageState extends State<HomePage> {
                               getItems();
                               titleController.clear();
                               descController.clear();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Task done"),duration: Durations.long4,));
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                content: Text("Task done"),
+                                duration: Durations.long4,
+                              ));
                             });
                           } else {
                             await DatabaseService()
@@ -254,8 +261,11 @@ class _HomePageState extends State<HomePage> {
                               getItems();
                               titleController.clear();
                               descController.clear();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Task undone"),duration: Durations.long4,));
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(const SnackBar(
+                                content: Text("Task undone"),
+                                duration: Durations.long4,
+                              ));
                             });
                           }
                         },
@@ -279,10 +289,12 @@ class _HomePageState extends State<HomePage> {
             children: [
               GestureDetector(
                 child: CircleAvatar(
-                  backgroundImage: user.first.pic.compareTo("0")==0?  const AssetImage("assets/avatar.png"): FileImage(File(user.first.pic)),
+                  backgroundImage: user.first.pic.compareTo("0") == 0
+                      ? const AssetImage("assets/avatar.png")
+                      : FileImage(File(user.first.pic)),
                   radius: 18,
                 ),
-                onTap: (){
+                onTap: () {
                   showDialog(
                       useRootNavigator: true,
                       context: context,
@@ -291,7 +303,9 @@ class _HomePageState extends State<HomePage> {
                           backgroundColor: Colors.black.withOpacity(.5),
                           title: CircleAvatar(
                             radius: 130,
-                            backgroundImage: user.first.pic.compareTo("0")==0?  const AssetImage("assets/avatar.png"): FileImage(File(user.first.pic)),
+                            backgroundImage: user.first.pic.compareTo("0") == 0
+                                ? const AssetImage("assets/avatar.png")
+                                : FileImage(File(user.first.pic)),
                           ),
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -306,7 +320,8 @@ class _HomePageState extends State<HomePage> {
                                   )
                                 ],
                               ),
-                              const Padding(padding: EdgeInsets.only(bottom: 10)),
+                              const Padding(
+                                  padding: EdgeInsets.only(bottom: 10)),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -317,9 +332,17 @@ class _HomePageState extends State<HomePage> {
                                       padding: EdgeInsets.only(right: 30)),
                                   ElevatedButton(
                                       onPressed: () {
-                                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  ProfilePage(user: user.first,))).then((e){setState(() {
-                                          getItems();
-                                        });});
+                                        Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ProfilePage(
+                                                      user: user.first,
+                                                    ))).then((e) {
+                                          setState(() {
+                                            getItems();
+                                          });
+                                        });
                                       },
                                       child: const Icon(Icons.edit))
                                 ],
