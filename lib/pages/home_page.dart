@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:todo/models/todo_item.dart';
+import 'package:todo/models/user_profile.dart';
+import 'package:todo/pages/profile_page.dart';
 import 'package:todo/services/database_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,40 +16,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  File? imageFile;
-
-  //final picker = ImagePicker();
-  pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      if (kDebugMode) {
-        print("file returned");
-      }
-      return File(pickedFile.path);
-    }
-    return null;
-  }
-
-  saveImageToAppStorage(File image) async {
-    final appDir = await getApplicationDocumentsDirectory();
-
-    final fileName = image.path.split('/').last;
-
-    final savedImage = await image.copy('${appDir.path}/$fileName');
-
-    return savedImage;
-  }
-
-  _pickAndSaveImage() async {
-    final image = await pickImage();
-    if (image != null) {
-      final savedImage = await saveImageToAppStorage(image);
-      setState(() {
-        imageFile = savedImage;
-      });
-    }
-  }
 
   @override
   void initState() {
@@ -58,11 +24,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<TodoItem> items = [];
+  List<UserProfile> user=[];
   bool isLoading = false;
   void getItems() async {
-    isLoading = true;
-    setState(() {});
+    setState(() {
+      isLoading = true;
+    });
     items = await DatabaseService().getItems();
+    user = await DatabaseService().getUser();
+    if (user.isEmpty){
+      await DatabaseService().insertUser(UserProfile(firstName: "user", lastName: "", pic: "0"));
+      user = await DatabaseService().getUser();
+    }
     setState(() {
       isLoading = false;
     });
@@ -108,7 +81,7 @@ class _HomePageState extends State<HomePage> {
                       if (titleController.text.isEmpty) {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(const SnackBar(
-                          content: Text("Task title can't be empty"),
+                          content: Text("Task title can't be empty"),duration: Durations.long4,
                         ));
                         return;
                       }
@@ -197,7 +170,7 @@ class _HomePageState extends State<HomePage> {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(const SnackBar(
                                                       content: Text(
-                                                          "Task title can't be empty")));
+                                                          "Task title can't be empty"),duration: Durations.long4,));
                                               return;
                                             }
                                             await DatabaseService()
@@ -214,7 +187,7 @@ class _HomePageState extends State<HomePage> {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(const SnackBar(
                                                       content: Text(
-                                                          "Task Updated")));
+                                                          "Task Updated"),duration: Durations.long4,));
                                             });
                                             if (context.mounted) {
                                               Navigator.of(context).pop();
@@ -237,7 +210,7 @@ class _HomePageState extends State<HomePage> {
                                 getItems();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                        content: Text("Task Deleted")));
+                                        content: Text("Task Deleted"),duration: Durations.long4,));
                               });
                             },
                             icon: const Icon(
@@ -247,16 +220,12 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      leading: InkWell(
-                        child: Text(
-                          items[index].id.toString(),
-                        ),
-                      ),
                       title: InkWell(
                         child: Text(items[index].title,
                             style: items[index].status == 0
-                                ? const TextStyle()
+                                ? const TextStyle(fontSize: 20)
                                 : const TextStyle(
+                                fontSize: 20,
                                     decoration: TextDecoration.lineThrough,
                                     decorationThickness: 3)),
                         onTap: () async {
@@ -272,7 +241,7 @@ class _HomePageState extends State<HomePage> {
                               titleController.clear();
                               descController.clear();
                               ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Task done")));
+                                  const SnackBar(content: Text("Task done"),duration: Durations.long4,));
                             });
                           } else {
                             await DatabaseService()
@@ -286,7 +255,7 @@ class _HomePageState extends State<HomePage> {
                               titleController.clear();
                               descController.clear();
                               ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Task undone")));
+                                  const SnackBar(content: Text("Task undone"),duration: Durations.long4,));
                             });
                           }
                         },
@@ -301,65 +270,67 @@ class _HomePageState extends State<HomePage> {
         title: const Text(
           "ToDo",
           style: TextStyle(
+            fontSize: 30,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           Row(
             children: [
-              CircleAvatar(
-                child: IconButton(
-                  onPressed: () {
-                    showDialog(
-                        context: context,
-                        builder: (e) {
-                          return AlertDialog(
-                            backgroundColor: Colors.black.withOpacity(.5),
-                            title: imageFile != null
-                                ? CircleAvatar(
-                                    backgroundImage: FileImage(imageFile!),
-                                    radius: 100,
-                                  )
-                                : Image.asset("assets/avatar.png"),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      "Kerlos",
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 42),
-                                    )
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    ElevatedButton(
-                                        onPressed: () {},
-                                        child: const Icon(Icons.settings)),
-                                    const Padding(
-                                        padding: EdgeInsets.only(right: 30)),
-                                    ElevatedButton(
-                                        onPressed: () {
-                                          _pickAndSaveImage();
-                                        },
-                                        child: const Icon(Icons.edit))
-                                  ],
-                                )
-                              ],
-                            ),
-                          );
-                        });
-                  },
-                  icon: Image.asset(
-                    "assets/avatar.png",
-                  ),
+              GestureDetector(
+                child: CircleAvatar(
+                  backgroundImage: user.first.pic.compareTo("0")==0?  const AssetImage("assets/avatar.png"): FileImage(File(user.first.pic)),
+                  radius: 18,
                 ),
+                onTap: (){
+                  showDialog(
+                      useRootNavigator: true,
+                      context: context,
+                      builder: (e) {
+                        return AlertDialog(
+                          backgroundColor: Colors.black.withOpacity(.5),
+                          title: CircleAvatar(
+                            radius: 130,
+                            backgroundImage: user.first.pic.compareTo("0")==0?  const AssetImage("assets/avatar.png"): FileImage(File(user.first.pic)),
+                          ),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "${user.first.firstName} ${user.first.lastName}",
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 42),
+                                  )
+                                ],
+                              ),
+                              const Padding(padding: EdgeInsets.only(bottom: 10)),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ElevatedButton(
+                                      onPressed: () {},
+                                      child: const Icon(Icons.settings)),
+                                  const Padding(
+                                      padding: EdgeInsets.only(right: 30)),
+                                  ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>  ProfilePage(user: user.first,))).then((e){setState(() {
+                                          getItems();
+                                        });});
+                                      },
+                                      child: const Icon(Icons.edit))
+                                ],
+                              )
+                            ],
+                          ),
+                        );
+                      });
+                },
               ),
-              const Padding(padding: EdgeInsets.only(right: 15))
+              const Padding(padding: EdgeInsets.only(right: 18))
             ],
           )
         ],
