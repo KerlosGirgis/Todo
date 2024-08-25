@@ -22,7 +22,9 @@ class DatabaseService {
       id INTEGER PRIMARY KEY,
       title TEXT,
       desc TEXT,
-      status INTEGER
+      status INTEGER,
+      date TEXT,
+      time TEXT
     )
     ''');
     await db.execute('''
@@ -47,7 +49,7 @@ class DatabaseService {
   }
 
   Future<List<TodoItem>> getItems() async {
-    List<Map<String,dynamic>> maps = await db.query('ToDo', columns: ['id', 'title', 'desc','status']);
+    List<Map<String,dynamic>> maps = await db.query('ToDo', columns: ['id', 'title', 'desc','status','date','time']);
     List<TodoItem> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {

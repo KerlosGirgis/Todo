@@ -41,7 +41,7 @@ class ColorProvider{
       profilePageName = Colors.blue[100];
       addTaskAlertText= Colors.black;
       editTaskAlertBackground=Colors.grey.withOpacity(.7);
-      addTaskAlertBackground=Colors.grey.withOpacity(.7);
+      addTaskAlertBackground=Colors.grey;
       appBarBackground=Colors.black12;
       editPicButtonBackground=Colors.grey;
       profilePageName = Colors.blue[100];
@@ -56,7 +56,7 @@ class ColorProvider{
       homePageBackground = Colors.white;
       profilePageBackground = Colors.white;
       userNameAlert = Colors.white;
-      profileAlertBackground =Colors.black.withOpacity(.5);
+      profileAlertBackground =Colors.grey.withOpacity(.7);
       cardBackground = Colors.blue[50];
       alertButtonsBackground = Colors.white;
       profilePageButtonsBackground = Colors.white;
