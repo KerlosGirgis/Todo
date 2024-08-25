@@ -30,7 +30,8 @@ class DatabaseService {
       id INTEGER PRIMARY KEY,
       firstName TEXT,
       lastName TEXT,
-      pic TEXT
+      pic TEXT,
+      theme INTEGER
     )
     ''').then((e)async{
     });
@@ -56,7 +57,7 @@ class DatabaseService {
     return items;
   }
   Future<List<UserProfile>> getUser() async {
-    List<Map<String,dynamic>> maps = await db.query('User', columns: ['id','firstName', 'lastName', 'pic']);
+    List<Map<String,dynamic>> maps = await db.query('User', columns: ['id','firstName', 'lastName', 'pic','theme']);
     List<UserProfile> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {

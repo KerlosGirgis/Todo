@@ -5,14 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:todo/models/user_profile.dart';
-import 'package:todo/pages/home_page.dart';
+import 'package:todo/services/color_provider.dart';
 import 'package:todo/services/database_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
     super.key,
-    required this.user,
+    required this.user, required this.colorProvider,
   });
+  final ColorProvider colorProvider;
   final UserProfile user;
   @override
   State<ProfilePage> createState() => ProfilePageState();
@@ -61,7 +62,7 @@ class ProfilePageState extends State<ProfilePage> {
       setState(() {
         imageFile = savedImage;
       });
-      DatabaseService().updateUser(UserProfile(id: widget.user.id,firstName: widget.user.firstName, lastName: widget.user.lastName, pic: imageFile!.path));
+      DatabaseService().updateUser(UserProfile(id: widget.user.id,firstName: widget.user.firstName, lastName: widget.user.lastName, pic: imageFile!.path, theme: widget.user.theme));
     }
   }
 
@@ -70,6 +71,7 @@ class ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: widget.colorProvider.homePageBackground,
         body: SingleChildScrollView(
       child: Column(
         children: [
@@ -89,7 +91,7 @@ class ProfilePageState extends State<ProfilePage> {
                     right: 15,
                     child: IconButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
+                        backgroundColor: widget.colorProvider.editPicButtonBackground,
                       ),
                         onPressed: () {
                         _pickAndSaveImage();
@@ -109,10 +111,10 @@ class ProfilePageState extends State<ProfilePage> {
             children: [
               Text(
                 "${widget.user.firstName} ${widget.user.lastName}",
-                style: const TextStyle(
+                style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 40,
-                    color: Colors.blueAccent),
+                    color: widget.colorProvider.profilePageName),
               )
             ],
           ),
@@ -125,8 +127,10 @@ class ProfilePageState extends State<ProfilePage> {
                 child: TextFormField(
                   controller: firstNameController,
                   decoration: InputDecoration(
+                    hintStyle: TextStyle(color: widget.colorProvider.profilePageText),
                       hintText: "First Name",
                       label: const Text("First Name"),
+                      labelStyle: TextStyle(color: widget.colorProvider.profilePageText) ,
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(13))),
                 ),
@@ -143,7 +147,9 @@ class ProfilePageState extends State<ProfilePage> {
                   controller: lastNameController,
                   decoration: InputDecoration(
                       hintText: "Last Name",
+                      hintStyle:  TextStyle(color: widget.colorProvider.profilePageText),
                       label: const Text("Last Name"),
+                      labelStyle: TextStyle(color: widget.colorProvider.profilePageText) ,
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(13))),
                 ),
@@ -155,6 +161,9 @@ class ProfilePageState extends State<ProfilePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.colorProvider.profilePageButtonsBackground
+                ),
                   onPressed: () {
                     setState(() {
                       widget.user.firstName = firstNameController.text;
@@ -173,6 +182,9 @@ class ProfilePageState extends State<ProfilePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.colorProvider.profilePageButtonsBackground
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
                   },
