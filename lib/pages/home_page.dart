@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -90,6 +91,7 @@ class _HomePageState extends State<HomePage> {
                   builder: (context) {
                     //add task
                     return AlertDialog(
+                      scrollable: true,
                       backgroundColor: colorProvider.addTaskAlertBackground,
                       title: const Text(
                         "Add Task",
@@ -110,7 +112,8 @@ class _HomePageState extends State<HomePage> {
                           TextField(
                             controller: descController,
                             keyboardType: TextInputType.multiline,
-                            maxLines: null,
+                            maxLines: 4,
+                            maxLength: 250,
                             decoration: InputDecoration(
                                 labelText: "Description",
                                 labelStyle: TextStyle(
@@ -172,6 +175,8 @@ class _HomePageState extends State<HomePage> {
                       actions: [
                         TextButton(
                           onPressed: () {
+                            titleController.clear();
+                            descController.clear();
                             Navigator.pop(context);
                           },
                           child: const Text("Cancel"),
@@ -240,6 +245,7 @@ class _HomePageState extends State<HomePage> {
                                       context: context,
                                       builder: (context) {
                                         return AlertDialog(
+                                          scrollable: true,
                                           title: const Text(
                                             "Edit Task",
                                             style: TextStyle(
@@ -264,7 +270,8 @@ class _HomePageState extends State<HomePage> {
                                                 controller: descController,
                                                 keyboardType:
                                                     TextInputType.multiline,
-                                                maxLines: null,
+                                                maxLines: 4,
+                                                maxLength: 250,
                                                 decoration: InputDecoration(
                                                     labelText: "Description",
                                                     labelStyle: TextStyle(
@@ -428,25 +435,25 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Row(
                                 children: [
-                                  InkWell(
-                                    child: Text(items[index].title,
+                                  Expanded(child:                                   InkWell(
+                                    child: AutoSizeText(items[index].title,maxLines: 1,overflow: TextOverflow.ellipsis,minFontSize: 18,
                                         style: items[index].status == 0
                                             ? const TextStyle(fontSize: 22)
                                             : const TextStyle(
-                                                fontSize: 22,
-                                                decoration:
-                                                    TextDecoration.lineThrough,
-                                                decorationThickness: 3)),
+                                            fontSize: 22,
+                                            decoration:
+                                            TextDecoration.lineThrough,
+                                            decorationThickness: 3)),
                                     onTap: () async {
                                       if (items[index].status == 0) {
                                         await DatabaseService()
                                             .updateItem(TodoItem(
-                                                title: items[index].title,
-                                                desc: items[index].desc,
-                                                id: items[index].id,
-                                                status: 1,
-                                                date: items[index].date,
-                                                time: items[index].time))
+                                            title: items[index].title,
+                                            desc: items[index].desc,
+                                            id: items[index].id,
+                                            status: 1,
+                                            date: items[index].date,
+                                            time: items[index].time))
                                             .then((value) {
                                           getItems();
                                           titleController.clear();
@@ -460,12 +467,12 @@ class _HomePageState extends State<HomePage> {
                                       } else {
                                         await DatabaseService()
                                             .updateItem(TodoItem(
-                                                title: items[index].title,
-                                                desc: items[index].desc,
-                                                id: items[index].id,
-                                                status: 0,
-                                                date: items[index].date,
-                                                time: items[index].time))
+                                            title: items[index].title,
+                                            desc: items[index].desc,
+                                            id: items[index].id,
+                                            status: 0,
+                                            date: items[index].date,
+                                            time: items[index].time))
                                             .then((value) {
                                           getItems();
                                           titleController.clear();
@@ -478,7 +485,8 @@ class _HomePageState extends State<HomePage> {
                                         });
                                       }
                                     },
-                                  ),
+                                  ),),
+
                                   const Padding(
                                       padding: EdgeInsets.only(right: 10)),
                                   //Text(DateTime.now().isAfter(stringToDateTime(items[index].date, items[index].time)).toString())

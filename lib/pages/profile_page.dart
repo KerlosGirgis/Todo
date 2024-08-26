@@ -125,6 +125,9 @@ class ProfilePageState extends State<ProfilePage> {
               SizedBox(
                 width: 350,
                 child: TextFormField(
+                  style: TextStyle(color: widget.colorProvider.profilePageText),
+                  maxLines: 1,
+                  maxLength: 7,
                   controller: firstNameController,
                   decoration: InputDecoration(
                     hintStyle: TextStyle(color: widget.colorProvider.profilePageText),
@@ -144,6 +147,9 @@ class ProfilePageState extends State<ProfilePage> {
               SizedBox(
                 width: 350,
                 child: TextFormField(
+                  style: TextStyle(color: widget.colorProvider.profilePageText),
+                  maxLines: 1,
+                  maxLength: 7,
                   controller: lastNameController,
                   decoration: InputDecoration(
                       hintText: "Last Name",
