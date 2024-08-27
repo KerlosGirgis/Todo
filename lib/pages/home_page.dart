@@ -8,6 +8,7 @@ import 'package:todo/models/user_profile.dart';
 import 'package:todo/pages/profile_page.dart';
 import 'package:todo/services/color_provider.dart';
 import 'package:todo/services/database_service.dart';
+import 'package:todo/services/icon_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -22,27 +23,38 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     getItems();
+    getUser();
     super.initState();
   }
 
   List<TodoItem> items = [];
   List<UserProfile> user = [];
   late ColorProvider colorProvider;
-  bool isLoading = false;
-  void getItems() async {
+  bool isItemsLoading = false;
+  bool isUserLoading = false;
+  void getUser() async {
     setState(() {
-      isLoading = true;
+      isUserLoading = true;
     });
-    items = await DatabaseService().getItems();
     user = await DatabaseService().getUser();
     if (user.isEmpty) {
       await DatabaseService().insertUser(
-          UserProfile(firstName: "user", lastName: "", pic: "0", theme: 1));
+          UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1));
       user = await DatabaseService().getUser();
     }
     colorProvider = ColorProvider(user.first.theme);
     setState(() {
-      isLoading = false;
+      isUserLoading = false;
+    });
+  }
+
+  void getItems() async {
+    setState(() {
+      isItemsLoading = true;
+    });
+    items = await DatabaseService().getItems();
+    setState(() {
+      isItemsLoading = false;
     });
   }
 
@@ -76,12 +88,8 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     String date = "";
     String time = "";
-    return isLoading == true
-        ? const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          )
+    return isUserLoading == true
+        ? const SizedBox.shrink()
         : Scaffold(
             backgroundColor: colorProvider.homePageBackground,
             floatingActionButton: FloatingActionButton(
@@ -216,7 +224,6 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                 );
-                getItems();
               },
               child: const Icon(Icons.add),
             ),
@@ -415,7 +422,7 @@ class _HomePageState extends State<HomePage> {
                                 onPressed: () async {
                                   await DatabaseService()
                                       .deleteItem(items[index].id!)
-                                      .then((value) {
+                                      .then((value) async {
                                     getItems();
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(const SnackBar(
@@ -435,57 +442,62 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Row(
                                 children: [
-                                  Expanded(child:                                   InkWell(
-                                    child: AutoSizeText(items[index].title,maxLines: 1,overflow: TextOverflow.ellipsis,minFontSize: 18,
-                                        style: items[index].status == 0
-                                            ? const TextStyle(fontSize: 22)
-                                            : const TextStyle(
-                                            fontSize: 22,
-                                            decoration:
-                                            TextDecoration.lineThrough,
-                                            decorationThickness: 3)),
-                                    onTap: () async {
-                                      if (items[index].status == 0) {
-                                        await DatabaseService()
-                                            .updateItem(TodoItem(
-                                            title: items[index].title,
-                                            desc: items[index].desc,
-                                            id: items[index].id,
-                                            status: 1,
-                                            date: items[index].date,
-                                            time: items[index].time))
-                                            .then((value) {
-                                          getItems();
-                                          titleController.clear();
-                                          descController.clear();
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(const SnackBar(
-                                            content: Text("Task done"),
-                                            duration: Durations.long4,
-                                          ));
-                                        });
-                                      } else {
-                                        await DatabaseService()
-                                            .updateItem(TodoItem(
-                                            title: items[index].title,
-                                            desc: items[index].desc,
-                                            id: items[index].id,
-                                            status: 0,
-                                            date: items[index].date,
-                                            time: items[index].time))
-                                            .then((value) {
-                                          getItems();
-                                          titleController.clear();
-                                          descController.clear();
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(const SnackBar(
-                                            content: Text("Task undone"),
-                                            duration: Durations.long4,
-                                          ));
-                                        });
-                                      }
-                                    },
-                                  ),),
+                                  Expanded(
+                                    child: InkWell(
+                                      child: AutoSizeText(items[index].title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          minFontSize: 18,
+                                          style: items[index].status == 0
+                                              ? const TextStyle(fontSize: 22)
+                                              : const TextStyle(
+                                                  fontSize: 22,
+                                                  decoration: TextDecoration
+                                                      .lineThrough,
+                                                  decorationThickness: 3)),
+                                      onTap: () async {
+                                        if (items[index].status == 0) {
+                                          await DatabaseService()
+                                              .updateItem(TodoItem(
+                                                  title: items[index].title,
+                                                  desc: items[index].desc,
+                                                  id: items[index].id,
+                                                  status: 1,
+                                                  date: items[index].date,
+                                                  time: items[index].time))
+                                              .then((value) {
+                                            getItems();
+                                            titleController.clear();
+                                            descController.clear();
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(const SnackBar(
+                                              content: Text("Task done"),
+                                              duration: Durations.long4,
+                                            ));
+                                          });
+                                        } else {
+                                          await DatabaseService()
+                                              .updateItem(TodoItem(
+                                                  title: items[index].title,
+                                                  desc: items[index].desc,
+                                                  id: items[index].id,
+                                                  status: 0,
+                                                  date: items[index].date,
+                                                  time: items[index].time))
+                                              .then((value) {
+                                            getItems();
+                                            titleController.clear();
+                                            descController.clear();
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(const SnackBar(
+                                              content: Text("Task undone"),
+                                              duration: Durations.long4,
+                                            ));
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
 
                                   const Padding(
                                       padding: EdgeInsets.only(right: 10)),
@@ -558,8 +570,11 @@ class _HomePageState extends State<HomePage> {
                     GestureDetector(
                       child: CircleAvatar(
                         backgroundColor: Colors.transparent,
-                        backgroundImage: user.first.pic.compareTo("0") == 0
-                            ? const AssetImage("assets/avatar.png")
+                        backgroundImage: user.first.pic
+                                    .substring(0, 1)
+                                    .compareTo("0") ==
+                                0
+                            ? AssetImage(IconProvider.getAvatar(user.first.pic))
                             : FileImage(File(user.first.pic)),
                         radius: 18,
                       ),
@@ -572,12 +587,17 @@ class _HomePageState extends State<HomePage> {
                                 backgroundColor:
                                     colorProvider.profileAlertBackground,
                                 title: CircleAvatar(
-                                  radius: 130,
+                                  radius:
+                                      MediaQuery.of(context).size.height > 700
+                                          ? 130
+                                          : 40,
                                   backgroundColor: Colors.transparent,
                                   backgroundImage: user.first.pic
+                                              .substring(0, 1)
                                               .compareTo("0") ==
                                           0
-                                      ? const AssetImage("assets/avatar.png")
+                                      ? AssetImage(IconProvider.getAvatar(
+                                          user.first.pic))
                                       : FileImage(File(user.first.pic)),
                                 ),
                                 content: Column(
@@ -586,13 +606,18 @@ class _HomePageState extends State<HomePage> {
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text(
+                                        Expanded(
+                                            child: Text(
                                           "${user.first.firstName} ${user.first.lastName}",
+                                          maxLines: 2,
+                                          overflow: TextOverflow.clip,
+                                          textAlign: TextAlign.center,
                                           style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 42),
-                                        )
+                                        ))
                                       ],
                                     ),
                                     const Padding(
@@ -614,14 +639,14 @@ class _HomePageState extends State<HomePage> {
                                                 DatabaseService()
                                                     .updateUser(user.first)
                                                     .then((onValue) {
-                                                  getItems();
+                                                  getUser();
                                                 });
                                               } else {
                                                 user.first.theme = 0;
                                                 DatabaseService()
                                                     .updateUser(user.first)
                                                     .then((onValue) {
-                                                  getItems();
+                                                  getUser();
                                                 });
                                               }
                                               Navigator.pop(context);
@@ -633,16 +658,15 @@ class _HomePageState extends State<HomePage> {
                                                 EdgeInsets.only(right: 30)),
                                         ElevatedButton(
                                             onPressed: () {
-                                              Navigator.pushReplacement(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          ProfilePage(
-                                                            user: user.first,
-                                                            colorProvider:
-                                                                colorProvider,
-                                                          ))).then((e) {
+                                              Navigator.pop(context);
+                                              Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                               ProfilePage(user: user.first,)))
+                                                  .then((e) {
                                                 setState(() {
+                                                  getUser();
                                                   getItems();
                                                 });
                                               });
