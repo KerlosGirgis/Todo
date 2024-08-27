@@ -31,8 +31,8 @@ class ColorProvider{
       appTitle = Colors.white;
       subtitle = Colors.grey;
       dateAndTime = Colors.white;
-      homePageBackground = Colors.black12;
-      profilePageBackground = Colors.black12;
+      homePageBackground = Colors.black;
+      profilePageBackground = Colors.black;
       userNameAlert = Colors.white;
       profileAlertBackground =Colors.grey.withOpacity(.7);
       cardBackground = Colors.white.withOpacity(.9);
