@@ -239,321 +239,337 @@ class _HomePageState extends State<HomePage> {
                 : ListView.builder(
                     itemCount: items.length,
                     itemBuilder: (context, index) {
-                      return Card(
-                        elevation: 1,
-                        color: colorProvider.cardBackground,
-                        child: ListTile(
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                onPressed: () async {
-                                  titleController.text = items[index].title;
-                                  descController.text = items[index].desc;
-                                  showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          scrollable: true,
-                                          title: const Text(
-                                            "Edit Task",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 32),
-                                          ),
-                                          backgroundColor: colorProvider
-                                              .editTaskAlertBackground,
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              TextField(
-                                                controller: titleController,
-                                                maxLines: 1,
-                                                maxLength: 25,
-                                                decoration: InputDecoration(
-                                                    labelText: "Title",
-                                                    labelStyle: TextStyle(
-                                                        fontSize: 30,
-                                                        color: colorProvider
-                                                            .addTaskAlertText)),
-                                              ),
-                                              TextField(
-                                                controller: descController,
-                                                keyboardType:
-                                                    TextInputType.multiline,
-                                                maxLines: 4,
-                                                maxLength: 250,
-                                                decoration: InputDecoration(
-                                                    labelText: "Description",
-                                                    labelStyle: TextStyle(
-                                                        fontSize: 30,
-                                                        color: colorProvider
-                                                            .addTaskAlertText)),
-                                              ),
-                                              Row(
-                                                children: [
-                                                  IconButton(
-                                                      onPressed: () {
-                                                        DateTime? selectedDate;
-                                                        TimeOfDay? selectedTime;
-                                                        showDatePicker(
-                                                                context:
-                                                                    context,
-                                                                firstDate: DateTime(
-                                                                    DateTime.now()
-                                                                        .year,
-                                                                    DateTime.now()
-                                                                        .month,
-                                                                    DateTime.now()
-                                                                        .day),
-                                                                lastDate: DateTime(
-                                                                    DateTime.now()
-                                                                            .year +
-                                                                        1))
-                                                            .then((dateValue) {
-                                                          if (dateValue !=
-                                                              null) {
-                                                            selectedDate =
-                                                                dateValue;
-                                                            date = selectedDate!
-                                                                .toString()
-                                                                .split(" ")
-                                                                .first;
-                                                            if (kDebugMode) {
-                                                              print(selectedDate
-                                                                  ?.toString()
-                                                                  .split(" ")
-                                                                  .first);
-                                                            }
-                                                            showTimePicker(
-                                                                    context:
-                                                                        context,
-                                                                    initialTime: TimeOfDay(
-                                                                        hour: DateTime.now()
-                                                                            .hour,
-                                                                        minute: DateTime.now()
-                                                                            .minute))
-                                                                .then(
-                                                                    (timeValue) {
-                                                              if (timeValue !=
-                                                                  null) {
-                                                                selectedTime =
-                                                                    timeValue;
-                                                                time = selectedTime!
-                                                                    .format(
-                                                                        context);
-                                                                if (kDebugMode) {
-                                                                  print(selectedTime
-                                                                      ?.format(
-                                                                          context));
-                                                                }
-                                                              }
-                                                            });
-                                                          }
-                                                        });
-                                                      },
-                                                      icon: const Icon(Icons
-                                                          .calendar_month)),
-                                                  Text(
-                                                      "${items[index].date}  ${items[index].time}")
-                                                ],
-                                              )
-                                            ],
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                titleController.clear();
-                                                descController.clear();
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text("Cancel"),
+                      final taskKey=items[index].title;
+                      return Dismissible(
+                        onDismissed: (direction) async {
+                          await DatabaseService()
+                              .deleteItem(items[index].id!)
+                              .then((value) async {
+                            getItems();
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text("Task Deleted"),
+                              duration: Durations.long4,
+                            ));
+                          });
+                        },
+                        key: Key(taskKey),
+                        child: Card(
+                          elevation: 1,
+                          color: colorProvider.cardBackground,
+                          child: ListTile(
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: () async {
+                                    titleController.text = items[index].title;
+                                    descController.text = items[index].desc;
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            scrollable: true,
+                                            title: const Text(
+                                              "Edit Task",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 32),
                                             ),
-                                            TextButton(
-                                              onPressed: () async {
-                                                if (titleController
-                                                    .text.isEmpty) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                          const SnackBar(
-                                                    content: Text(
-                                                        "Task title can't be empty"),
-                                                    duration: Durations.long4,
-                                                  ));
-                                                  return;
-                                                }
-                                                await DatabaseService()
-                                                    .updateItem(TodoItem(
-                                                        title: titleController
-                                                            .text,
-                                                        desc:
-                                                            descController.text,
-                                                        id: items[index].id,
-                                                        status:
-                                                            items[index].status,
-                                                        date: date.isEmpty
-                                                            ? items[index].date
-                                                            : date,
-                                                        time: time.isEmpty
-                                                            ? items[index].time
-                                                            : time))
-                                                    .then((value) {
-                                                  getItems();
+                                            backgroundColor: colorProvider
+                                                .editTaskAlertBackground,
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                TextField(
+                                                  controller: titleController,
+                                                  maxLines: 1,
+                                                  maxLength: 25,
+                                                  decoration: InputDecoration(
+                                                      labelText: "Title",
+                                                      labelStyle: TextStyle(
+                                                          fontSize: 30,
+                                                          color: colorProvider
+                                                              .addTaskAlertText)),
+                                                ),
+                                                TextField(
+                                                  controller: descController,
+                                                  keyboardType:
+                                                      TextInputType.multiline,
+                                                  maxLines: 4,
+                                                  maxLength: 250,
+                                                  decoration: InputDecoration(
+                                                      labelText: "Description",
+                                                      labelStyle: TextStyle(
+                                                          fontSize: 30,
+                                                          color: colorProvider
+                                                              .addTaskAlertText)),
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    IconButton(
+                                                        onPressed: () {
+                                                          DateTime? selectedDate;
+                                                          TimeOfDay? selectedTime;
+                                                          showDatePicker(
+                                                                  context:
+                                                                      context,
+                                                                  firstDate: DateTime(
+                                                                      DateTime.now()
+                                                                          .year,
+                                                                      DateTime.now()
+                                                                          .month,
+                                                                      DateTime.now()
+                                                                          .day),
+                                                                  lastDate: DateTime(
+                                                                      DateTime.now()
+                                                                              .year +
+                                                                          1))
+                                                              .then((dateValue) {
+                                                            if (dateValue !=
+                                                                null) {
+                                                              selectedDate =
+                                                                  dateValue;
+                                                              date = selectedDate!
+                                                                  .toString()
+                                                                  .split(" ")
+                                                                  .first;
+                                                              if (kDebugMode) {
+                                                                print(selectedDate
+                                                                    ?.toString()
+                                                                    .split(" ")
+                                                                    .first);
+                                                              }
+                                                              showTimePicker(
+                                                                      context:
+                                                                          context,
+                                                                      initialTime: TimeOfDay(
+                                                                          hour: DateTime.now()
+                                                                              .hour,
+                                                                          minute: DateTime.now()
+                                                                              .minute))
+                                                                  .then(
+                                                                      (timeValue) {
+                                                                if (timeValue !=
+                                                                    null) {
+                                                                  selectedTime =
+                                                                      timeValue;
+                                                                  time = selectedTime!
+                                                                      .format(
+                                                                          context);
+                                                                  if (kDebugMode) {
+                                                                    print(selectedTime
+                                                                        ?.format(
+                                                                            context));
+                                                                  }
+                                                                }
+                                                              });
+                                                            }
+                                                          });
+                                                        },
+                                                        icon: const Icon(Icons
+                                                            .calendar_month)),
+                                                    Text(
+                                                        "${items[index].date}  ${items[index].time}")
+                                                  ],
+                                                )
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
                                                   titleController.clear();
                                                   descController.clear();
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                          const SnackBar(
-                                                    content:
-                                                        Text("Task Updated"),
-                                                    duration: Durations.long4,
-                                                  ));
-                                                });
-                                                if (context.mounted) {
-                                                  Navigator.of(context).pop();
-                                                }
-                                              },
-                                              child: const Text("Update"),
-                                            ),
-                                          ],
-                                        );
-                                      });
-                                },
-                                icon: const Icon(Icons.edit),
-                                color: Colors.blue,
-                              ),
-                              IconButton(
-                                onPressed: () async {
-                                  await DatabaseService()
-                                      .deleteItem(items[index].id!)
-                                      .then((value) async {
-                                    getItems();
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(const SnackBar(
-                                      content: Text("Task Deleted"),
-                                      duration: Durations.long4,
-                                    ));
-                                  });
-                                },
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text("Cancel"),
+                                              ),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  if (titleController
+                                                      .text.isEmpty) {
+                                                    ScaffoldMessenger.of(context)
+                                                        .showSnackBar(
+                                                            const SnackBar(
+                                                      content: Text(
+                                                          "Task title can't be empty"),
+                                                      duration: Durations.long4,
+                                                    ));
+                                                    return;
+                                                  }
+                                                  await DatabaseService()
+                                                      .updateItem(TodoItem(
+                                                          title: titleController
+                                                              .text,
+                                                          desc:
+                                                              descController.text,
+                                                          id: items[index].id,
+                                                          status:
+                                                              items[index].status,
+                                                          date: date.isEmpty
+                                                              ? items[index].date
+                                                              : date,
+                                                          time: time.isEmpty
+                                                              ? items[index].time
+                                                              : time))
+                                                      .then((value) {
+                                                    getItems();
+                                                    titleController.clear();
+                                                    descController.clear();
+                                                    ScaffoldMessenger.of(context)
+                                                        .showSnackBar(
+                                                            const SnackBar(
+                                                      content:
+                                                          Text("Task Updated"),
+                                                      duration: Durations.long4,
+                                                    ));
+                                                  });
+                                                  if (context.mounted) {
+                                                    Navigator.of(context).pop();
+                                                  }
+                                                },
+                                                child: const Text("Update"),
+                                              ),
+                                            ],
+                                          );
+                                        });
+                                  },
+                                  icon: const Icon(Icons.edit),
+                                  color: Colors.blue,
                                 ),
-                              ),
-                            ],
-                          ),
-                          title: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: InkWell(
-                                      child: AutoSizeText(items[index].title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          minFontSize: 18,
-                                          style: items[index].status == 0
-                                              ? const TextStyle(fontSize: 22)
-                                              : const TextStyle(
-                                                  fontSize: 22,
-                                                  decoration: TextDecoration
-                                                      .lineThrough,
-                                                  decorationThickness: 3)),
-                                      onTap: () async {
-                                        if (items[index].status == 0) {
-                                          await DatabaseService()
-                                              .updateItem(TodoItem(
-                                                  title: items[index].title,
-                                                  desc: items[index].desc,
-                                                  id: items[index].id,
-                                                  status: 1,
-                                                  date: items[index].date,
-                                                  time: items[index].time))
-                                              .then((value) {
-                                            getItems();
-                                            titleController.clear();
-                                            descController.clear();
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(const SnackBar(
-                                              content: Text("Task done"),
-                                              duration: Durations.long4,
-                                            ));
-                                          });
-                                        } else {
-                                          await DatabaseService()
-                                              .updateItem(TodoItem(
-                                                  title: items[index].title,
-                                                  desc: items[index].desc,
-                                                  id: items[index].id,
-                                                  status: 0,
-                                                  date: items[index].date,
-                                                  time: items[index].time))
-                                              .then((value) {
-                                            getItems();
-                                            titleController.clear();
-                                            descController.clear();
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(const SnackBar(
-                                              content: Text("Task undone"),
-                                              duration: Durations.long4,
-                                            ));
-                                          });
-                                        }
-                                      },
-                                    ),
+                                IconButton(
+                                  onPressed: () async {
+                                    await DatabaseService()
+                                        .deleteItem(items[index].id!)
+                                        .then((value) async {
+                                      getItems();
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                        content: Text("Task Deleted"),
+                                        duration: Durations.long4,
+                                      ));
+                                    });
+                                  },
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
                                   ),
+                                ),
+                              ],
+                            ),
+                            title: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: InkWell(
+                                        child: AutoSizeText(items[index].title,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            minFontSize: 18,
+                                            style: items[index].status == 0
+                                                ? const TextStyle(fontSize: 22)
+                                                : const TextStyle(
+                                                    fontSize: 22,
+                                                    decoration: TextDecoration
+                                                        .lineThrough,
+                                                    decorationThickness: 3)),
+                                        onTap: () async {
+                                          if (items[index].status == 0) {
+                                            await DatabaseService()
+                                                .updateItem(TodoItem(
+                                                    title: items[index].title,
+                                                    desc: items[index].desc,
+                                                    id: items[index].id,
+                                                    status: 1,
+                                                    date: items[index].date,
+                                                    time: items[index].time))
+                                                .then((value) {
+                                              getItems();
+                                              titleController.clear();
+                                              descController.clear();
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(const SnackBar(
+                                                content: Text("Task done"),
+                                                duration: Durations.long4,
+                                              ));
+                                            });
+                                          } else {
+                                            await DatabaseService()
+                                                .updateItem(TodoItem(
+                                                    title: items[index].title,
+                                                    desc: items[index].desc,
+                                                    id: items[index].id,
+                                                    status: 0,
+                                                    date: items[index].date,
+                                                    time: items[index].time))
+                                                .then((value) {
+                                              getItems();
+                                              titleController.clear();
+                                              descController.clear();
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(const SnackBar(
+                                                content: Text("Task undone"),
+                                                duration: Durations.long4,
+                                              ));
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
 
-                                  const Padding(
-                                      padding: EdgeInsets.only(right: 10)),
-                                  //Text(DateTime.now().isAfter(stringToDateTime(items[index].date, items[index].time)).toString())
-                                  items[index].status != 1 &&
-                                          items[index].date.isNotEmpty &&
-                                          items[index].time.isNotEmpty &&
-                                          DateTime.now().isAfter(
-                                              stringToDateTime(
-                                                  items[index].date,
-                                                  items[index].time))
-                                      ? const Icon(
-                                          Icons.dangerous_outlined,
-                                          color: Colors.red,
-                                        )
-                                      : items[index].status != 1 &&
-                                              items[index].date.isNotEmpty &&
-                                              items[index].time.isEmpty &&
-                                              DateTime.now().isAfter(
-                                                  DateTime.parse(
-                                                      items[index].date))
-                                          ? const Icon(
-                                              Icons.dangerous_outlined,
-                                              color: Colors.red,
-                                            )
-                                          : items[index].status != 1
-                                              ? const Icon(Icons.check_outlined)
-                                              : const Icon(
-                                                  Icons.check,
-                                                  color: Colors.green,
-                                                )
-                                ],
-                              ),
-                              items[index].date.isNotEmpty ||
-                                      items[index].time.isNotEmpty
-                                  ? Row(
-                                      children: [
-                                        Text(
-                                          "${items[index].date}  ${items[index].time}",
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.normal,
-                                              fontSize: 16),
-                                        )
-                                      ],
-                                    )
-                                  : const Row()
-                            ],
+                                    const Padding(
+                                        padding: EdgeInsets.only(right: 10)),
+                                    //Text(DateTime.now().isAfter(stringToDateTime(items[index].date, items[index].time)).toString())
+                                    items[index].status != 1 &&
+                                            items[index].date.isNotEmpty &&
+                                            items[index].time.isNotEmpty &&
+                                            DateTime.now().isAfter(
+                                                stringToDateTime(
+                                                    items[index].date,
+                                                    items[index].time))
+                                        ? const Icon(
+                                            Icons.dangerous_outlined,
+                                            color: Colors.red,
+                                          )
+                                        : items[index].status != 1 &&
+                                                items[index].date.isNotEmpty &&
+                                                items[index].time.isEmpty &&
+                                                DateTime.now().isAfter(
+                                                    DateTime.parse(
+                                                        items[index].date))
+                                            ? const Icon(
+                                                Icons.dangerous_outlined,
+                                                color: Colors.red,
+                                              )
+                                            : items[index].status != 1
+                                                ? const Icon(Icons.check_outlined)
+                                                : const Icon(
+                                                    Icons.check,
+                                                    color: Colors.green,
+                                                  )
+                                  ],
+                                ),
+                                items[index].date.isNotEmpty ||
+                                        items[index].time.isNotEmpty
+                                    ? Row(
+                                        children: [
+                                          Text(
+                                            "${items[index].date}  ${items[index].time}",
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.normal,
+                                                fontSize: 16),
+                                          )
+                                        ],
+                                      )
+                                    : const Row()
+                              ],
+                            ),
+                            subtitle: items[index].desc.isNotEmpty
+                                ? Text(items[index].desc)
+                                : null,
+                            isThreeLine: false,
                           ),
-                          subtitle: items[index].desc.isNotEmpty
-                              ? Text(items[index].desc)
-                              : null,
-                          isThreeLine: false,
                         ),
                       );
                     },
@@ -655,8 +671,9 @@ class _HomePageState extends State<HomePage> {
                                               }
                                               Navigator.pop(context);
                                             },
-                                            child: const Icon(
-                                                Icons.dark_mode_sharp)),
+                                            child: Icon(
+                                              user.first.theme==1?
+                                                Icons.dark_mode_sharp:Icons.light_mode_sharp)),
                                         const Padding(
                                             padding:
                                                 EdgeInsets.only(right: 30)),

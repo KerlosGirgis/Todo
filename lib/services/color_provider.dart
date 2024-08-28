@@ -35,9 +35,9 @@ class ColorProvider{
       profilePageBackground = Colors.black;
       userNameAlert = Colors.white;
       profileAlertBackground =Colors.grey.withOpacity(.7);
-      cardBackground = Colors.white.withOpacity(.9);
+      cardBackground = Colors.grey[400];
       alertButtonsBackground = Colors.black;
-      profilePageButtonsBackground = Colors.grey[400];
+      profilePageButtonsBackground = Colors.grey[50];
       profilePageName = Colors.blue[100];
       addTaskAlertText= Colors.black;
       editTaskAlertBackground=Colors.grey;
