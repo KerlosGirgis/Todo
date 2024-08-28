@@ -474,6 +474,178 @@ class _HomePageState extends State<HomePage> {
                                                     decoration: TextDecoration
                                                         .lineThrough,
                                                     decorationThickness: 3)),
+                                        onLongPress: (){
+                                          titleController.text = items[index].title;
+                                          descController.text = items[index].desc;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return AlertDialog(
+                                                  scrollable: true,
+                                                  title: const Text(
+                                                    "Edit Task",
+                                                    style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 32),
+                                                  ),
+                                                  backgroundColor: colorProvider
+                                                      .editTaskAlertBackground,
+                                                  content: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      TextField(
+                                                        controller: titleController,
+                                                        maxLines: 1,
+                                                        maxLength: 25,
+                                                        decoration: InputDecoration(
+                                                            labelText: "Title",
+                                                            labelStyle: TextStyle(
+                                                                fontSize: 30,
+                                                                color: colorProvider
+                                                                    .addTaskAlertText)),
+                                                      ),
+                                                      TextField(
+                                                        controller: descController,
+                                                        keyboardType:
+                                                        TextInputType.multiline,
+                                                        maxLines: 4,
+                                                        maxLength: 250,
+                                                        decoration: InputDecoration(
+                                                            labelText: "Description",
+                                                            labelStyle: TextStyle(
+                                                                fontSize: 30,
+                                                                color: colorProvider
+                                                                    .addTaskAlertText)),
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          IconButton(
+                                                              onPressed: () {
+                                                                DateTime? selectedDate;
+                                                                TimeOfDay? selectedTime;
+                                                                showDatePicker(
+                                                                    context:
+                                                                    context,
+                                                                    firstDate: DateTime(
+                                                                        DateTime.now()
+                                                                            .year,
+                                                                        DateTime.now()
+                                                                            .month,
+                                                                        DateTime.now()
+                                                                            .day),
+                                                                    lastDate: DateTime(
+                                                                        DateTime.now()
+                                                                            .year +
+                                                                            1))
+                                                                    .then((dateValue) {
+                                                                  if (dateValue !=
+                                                                      null) {
+                                                                    selectedDate =
+                                                                        dateValue;
+                                                                    date = selectedDate!
+                                                                        .toString()
+                                                                        .split(" ")
+                                                                        .first;
+                                                                    if (kDebugMode) {
+                                                                      print(selectedDate
+                                                                          ?.toString()
+                                                                          .split(" ")
+                                                                          .first);
+                                                                    }
+                                                                    showTimePicker(
+                                                                        context:
+                                                                        context,
+                                                                        initialTime: TimeOfDay(
+                                                                            hour: DateTime.now()
+                                                                                .hour,
+                                                                            minute: DateTime.now()
+                                                                                .minute))
+                                                                        .then(
+                                                                            (timeValue) {
+                                                                          if (timeValue !=
+                                                                              null) {
+                                                                            selectedTime =
+                                                                                timeValue;
+                                                                            time = selectedTime!
+                                                                                .format(
+                                                                                context);
+                                                                            if (kDebugMode) {
+                                                                              print(selectedTime
+                                                                                  ?.format(
+                                                                                  context));
+                                                                            }
+                                                                          }
+                                                                        });
+                                                                  }
+                                                                });
+                                                              },
+                                                              icon: const Icon(Icons
+                                                                  .calendar_month)),
+                                                          Text(
+                                                              "${items[index].date}  ${items[index].time}")
+                                                        ],
+                                                      )
+                                                    ],
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        titleController.clear();
+                                                        descController.clear();
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: const Text("Cancel"),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () async {
+                                                        if (titleController
+                                                            .text.isEmpty) {
+                                                          ScaffoldMessenger.of(context)
+                                                              .showSnackBar(
+                                                              const SnackBar(
+                                                                content: Text(
+                                                                    "Task title can't be empty"),
+                                                                duration: Durations.long4,
+                                                              ));
+                                                          return;
+                                                        }
+                                                        await DatabaseService()
+                                                            .updateItem(TodoItem(
+                                                            title: titleController
+                                                                .text,
+                                                            desc:
+                                                            descController.text,
+                                                            id: items[index].id,
+                                                            status:
+                                                            items[index].status,
+                                                            date: date.isEmpty
+                                                                ? items[index].date
+                                                                : date,
+                                                            time: time.isEmpty
+                                                                ? items[index].time
+                                                                : time))
+                                                            .then((value) {
+                                                          getItems();
+                                                          titleController.clear();
+                                                          descController.clear();
+                                                          ScaffoldMessenger.of(context)
+                                                              .showSnackBar(
+                                                              const SnackBar(
+                                                                content:
+                                                                Text("Task Updated"),
+                                                                duration: Durations.long4,
+                                                              ));
+                                                        });
+                                                        if (context.mounted) {
+                                                          Navigator.of(context).pop();
+                                                        }
+                                                      },
+                                                      child: const Text("Update"),
+                                                    ),
+                                                  ],
+                                                );
+                                              });
+                                        },
                                         onTap: () async {
                                           if (items[index].status == 0) {
                                             await DatabaseService()
