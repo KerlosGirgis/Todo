@@ -64,6 +64,7 @@ class ProfilePageState extends State<ProfilePage> {
       final savedImage = await saveImageToAppStorage(image);
       setState(() {
         imageFile = savedImage;
+        widget.user.pic=imageFile!.path;
       });
       DatabaseService().updateUser(UserProfile(
           id: widget.user.id,
@@ -161,6 +162,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("000")),
@@ -180,6 +182,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("001")),
@@ -207,6 +210,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("002")),
@@ -226,6 +230,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("003")),
@@ -253,6 +258,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("004")),
@@ -272,6 +278,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("005")),
@@ -299,6 +306,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("006")),
@@ -318,6 +326,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("007")),
@@ -345,6 +354,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("008")),
@@ -364,6 +374,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                             GestureDetector(
                                                               child:
                                                               CircleAvatar(
+                                                                backgroundColor: Colors.transparent,
                                                                 backgroundImage:
                                                                 AssetImage(
                                                                     IconProvider.getAvatar("009")),
