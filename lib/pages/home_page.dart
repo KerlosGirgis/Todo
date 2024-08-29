@@ -91,8 +91,10 @@ class _HomePageState extends State<HomePage> {
     return isUserLoading == true
         ? const SizedBox.shrink()
         : Scaffold(
-            backgroundColor: colorProvider.homePageBackground,
+            backgroundColor: colorProvider.pageBackground,
             floatingActionButton: FloatingActionButton(
+              backgroundColor: colorProvider.floatingActionButtonBackground,
+              foregroundColor: colorProvider.floatingActionButtonForeground,
               onPressed: () {
                 showDialog(
                   context: context,
@@ -270,7 +272,7 @@ class _HomePageState extends State<HomePage> {
                           elevation: 1,
                           color: colorProvider.cardBackground,
                           child: ListTile(
-                            trailing: Row(
+                           /* trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
@@ -507,7 +509,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               ],
-                            ),
+                            ),*/
                             title: Column(
                               children: [
                                 Row(
@@ -519,9 +521,10 @@ class _HomePageState extends State<HomePage> {
                                             overflow: TextOverflow.ellipsis,
                                             minFontSize: 18,
                                             style: items[index].status == 0
-                                                ? const TextStyle(fontSize: 22)
-                                                : const TextStyle(
-                                                    fontSize: 22,
+                                                ?  TextStyle(fontSize: 26,color: colorProvider.taskTitle)
+                                                :  TextStyle(
+                                                color: colorProvider.taskTitle,
+                                                    fontSize: 26,
                                                     decoration: TextDecoration
                                                         .lineThrough,
                                                     decorationThickness: 3)),
@@ -803,7 +806,8 @@ class _HomePageState extends State<HomePage> {
                                         children: [
                                           Text(
                                             "${items[index].date}  ${items[index].time}",
-                                            style: const TextStyle(
+                                            style: TextStyle(
+                                              color: colorProvider.date,
                                                 fontWeight: FontWeight.normal,
                                                 fontSize: 16),
                                           )
@@ -813,7 +817,7 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                             subtitle: items[index].desc.isNotEmpty
-                                ? Text(items[index].desc)
+                                ? Text(items[index].desc,style: TextStyle(color: colorProvider.subtitle),)
                                 : null,
                             isThreeLine: false,
                           ),
@@ -822,7 +826,7 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
             appBar: AppBar(
-              backgroundColor: colorProvider.appBarBackground,
+              backgroundColor: colorProvider.pageBackground,
               title: Text(
                 "ToDo",
                 style: TextStyle(

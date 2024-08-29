@@ -1,79 +1,67 @@
-
 import 'package:flutter/material.dart';
 
-class ColorProvider{
+class ColorProvider {
   int theme;
-   Color? taskTitle;
-   Color? appTitle;
-   Color? cardBackground;
-   Color? subtitle;
-   Color? dateAndTime;
-   Color? homePageBackground;
-   Color? profilePageBackground;
-   Color? userNameAlert;
-   Color? profileAlertBackground;
-   Color? alertButtonsBackground;
-   Color? profilePageButtonsBackground;
-   Color? profilePageName;
-   Color? addTaskAlertText;
-   Color? editTaskAlertBackground;
-   Color? addTaskAlertBackground;
-   Color? appBarBackground;
-   Color? editPicButtonBackground;
-   Color? profilePageText;
+  Color? floatingActionButtonBackground;
+  Color? floatingActionButtonForeground;
+  Color? taskTitle;
+  Color? date;
+  Color? appTitle;
+  Color? cardBackground;
+  Color? subtitle;
+  Color? pageBackground;
+  Color? userNameAlert;
+  Color? profileAlertBackground;
+  Color? alertButtonsBackground;
+  Color? profilePageButtonsBackground;
+  Color? profilePageName;
+  Color? addTaskAlertText;
+  Color? editTaskAlertBackground;
+  Color? addTaskAlertBackground;
+  Color? editPicButtonBackground;
+  Color? profilePageText;
 
-
-
-
-  ColorProvider(this.theme){
-    if(theme==1){
-      taskTitle = Colors.black;
+  ColorProvider(this.theme) {
+    if (theme == 1) {
+      floatingActionButtonBackground = const Color.fromARGB(255, 64, 64, 64);
+      floatingActionButtonForeground = Colors.grey.shade300;
+      taskTitle = Colors.white;
+      date = Colors.white;
       appTitle = Colors.white;
-      subtitle = Colors.grey;
-      dateAndTime = Colors.white;
-      homePageBackground = Colors.black;
-      profilePageBackground = Colors.black;
+      subtitle = Colors.grey.shade200;
+      pageBackground = const Color.fromARGB(255, 24, 24, 24);
       userNameAlert = Colors.white;
-      profileAlertBackground =Colors.grey.withOpacity(.7);
-      cardBackground = Colors.grey[400];
+      profileAlertBackground = Colors.grey.shade800.withOpacity(.8);
+      cardBackground = Colors.grey.shade700;
       alertButtonsBackground = Colors.black;
       profilePageButtonsBackground = Colors.grey[50];
       profilePageName = Colors.blue[100];
-      addTaskAlertText= Colors.black;
-      editTaskAlertBackground=Colors.grey;
-      addTaskAlertBackground=Colors.grey;
-      appBarBackground=Colors.black12;
-      editPicButtonBackground=Colors.grey;
+      addTaskAlertText = Colors.black;
+      editTaskAlertBackground = Colors.grey;
+      addTaskAlertBackground = Colors.grey;
+      editPicButtonBackground = Colors.grey;
       profilePageName = Colors.blue[100];
       profilePageText = Colors.white;
-
-    }
-    else{
+    } else {
+      floatingActionButtonBackground = Colors.blue.shade300;
+      floatingActionButtonForeground = Colors.white;
       taskTitle = Colors.black;
+      date = Colors.black;
       appTitle = Colors.black;
-      subtitle = Colors.black;
-      dateAndTime = Colors.black;
-      homePageBackground = Colors.white;
-      profilePageBackground = Colors.white;
+      subtitle = Colors.grey.shade800;
+      pageBackground = Colors.white;
       userNameAlert = Colors.white;
-      profileAlertBackground =Colors.grey.withOpacity(.7);
-      cardBackground = Colors.blue[50];
+      profileAlertBackground = Colors.grey;
+      cardBackground = Colors.grey.shade200;
       alertButtonsBackground = Colors.white;
       profilePageButtonsBackground = Colors.white;
       profilePageName = Colors.blue;
-      addTaskAlertText= Colors.black;
-      editTaskAlertBackground=Colors.white;
-      addTaskAlertBackground=Colors.white;
-      appBarBackground=Colors.white;
-      editPicButtonBackground=Colors.white;
+      addTaskAlertText = Colors.black;
+      editTaskAlertBackground = Colors.white;
+      addTaskAlertBackground = Colors.white;
+      editPicButtonBackground = Colors.white;
       profilePageName = Colors.blue;
       profilePageText = Colors.black;
-
     }
-
   }
-
-
-
-
 }

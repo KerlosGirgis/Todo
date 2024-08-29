@@ -94,7 +94,7 @@ class ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: colorProvider.homePageBackground,
+        backgroundColor: colorProvider.pageBackground,
         body: SingleChildScrollView(
             child: Column(
           children: [
