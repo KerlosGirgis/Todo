@@ -97,47 +97,50 @@ class _HomePageState extends State<HomePage> {
                 showDialog(
                   context: context,
                   builder: (context) {
-                    //add task
-                    return AlertDialog(
-                      scrollable: true,
-                      backgroundColor: colorProvider.addTaskAlertBackground,
-                      title: const Text(
-                        "Add Task",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 32),
-                      ),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(
-                            controller: titleController,
-                            maxLines: 1,
-                            maxLength: 25,
-                            decoration: InputDecoration(
-                                labelText: "Title",
-                                labelStyle: TextStyle(
-                                    fontSize: 30,
-                                    color: colorProvider.addTaskAlertText)),
+                    String dateText="";
+                    String timeText="";
+                    return StatefulBuilder(
+                      builder: (context, setState) {
+                        return AlertDialog(
+                          scrollable: true,
+                          backgroundColor: colorProvider.addTaskAlertBackground,
+                          title: const Text(
+                            "Add Task",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 32),
                           ),
-                          TextField(
-                            controller: descController,
-                            keyboardType: TextInputType.multiline,
-                            maxLines: 4,
-                            maxLength: 250,
-                            decoration: InputDecoration(
-                                labelText: "Description",
-                                labelStyle: TextStyle(
-                                    fontSize: 30,
-                                    color: colorProvider.addTaskAlertText)),
-                          ),
-                          const Padding(padding: EdgeInsets.only(bottom: 15)),
-                          Row(
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                  onPressed: () {
-                                    DateTime? selectedDate;
-                                    TimeOfDay? selectedTime;
-                                    showDatePicker(
+                              TextField(
+                                controller: titleController,
+                                maxLines: 1,
+                                maxLength: 25,
+                                decoration: InputDecoration(
+                                    labelText: "Title",
+                                    labelStyle: TextStyle(
+                                        fontSize: 30,
+                                        color: colorProvider.addTaskAlertText)),
+                              ),
+                              TextField(
+                                controller: descController,
+                                keyboardType: TextInputType.multiline,
+                                maxLines: 4,
+                                maxLength: 250,
+                                decoration: InputDecoration(
+                                    labelText: "Description",
+                                    labelStyle: TextStyle(
+                                        fontSize: 30,
+                                        color: colorProvider.addTaskAlertText)),
+                              ),
+                              const Padding(padding: EdgeInsets.only(bottom: 15)),
+                              Row(
+                                children: [
+                                  IconButton(
+                                      onPressed: () {
+                                        DateTime? selectedDate;
+                                        TimeOfDay? selectedTime;
+                                        showDatePicker(
                                             context: context,
                                             firstDate: DateTime(
                                                 DateTime.now().year,
@@ -145,84 +148,93 @@ class _HomePageState extends State<HomePage> {
                                                 DateTime.now().day),
                                             lastDate: DateTime(
                                                 DateTime.now().year + 1))
-                                        .then((dateValue) {
-                                      if (dateValue != null) {
-                                        selectedDate = dateValue;
-                                        date = selectedDate!
-                                            .toString()
-                                            .split(" ")
-                                            .first;
-                                        if (kDebugMode) {
-                                          print(selectedDate
-                                              ?.toString()
-                                              .split(" ")
-                                              .first);
-                                        }
-                                        showTimePicker(
+                                            .then((dateValue) {
+                                          if (dateValue != null) {
+                                            selectedDate = dateValue;
+                                            date = selectedDate!
+                                                .toString()
+                                                .split(" ")
+                                                .first;
+                                            setState(() {
+                                              dateText = date;
+                                            });
+                                            if (kDebugMode) {
+                                              print(selectedDate
+                                                  ?.toString()
+                                                  .split(" ")
+                                                  .first);
+                                            }
+                                            showTimePicker(
                                                 context: context,
                                                 initialTime: TimeOfDay(
                                                     hour: DateTime.now().hour,
                                                     minute:
-                                                        DateTime.now().minute))
-                                            .then((timeValue) {
-                                          if (timeValue != null) {
-                                            selectedTime = timeValue;
-                                            time =
-                                                selectedTime!.format(context);
-                                            if (kDebugMode) {
-                                              print(selectedTime);
-                                            }
+                                                    DateTime.now().minute))
+                                                .then((timeValue) {
+                                              if (timeValue != null) {
+                                                selectedTime = timeValue;
+                                                time =
+                                                    selectedTime!.format(context);
+                                                setState(() {
+                                                  timeText=time;
+                                                });
+                                                if (kDebugMode) {
+                                                  print(selectedTime);
+                                                }
+                                              }
+                                            });
                                           }
                                         });
-                                      }
-                                    });
-                                  },
-                                  icon: const Icon(Icons.calendar_month))
+                                      },
+                                      icon: const Icon(Icons.calendar_month)),
+                                  Text("$dateText $timeText")
+                                ],
+                              )
                             ],
-                          )
-                        ],
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            titleController.clear();
-                            descController.clear();
-                            Navigator.pop(context);
-                          },
-                          child: const Text("Cancel"),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            if (titleController.text.isEmpty) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                content: Text("Task title can't be empty"),
-                                duration: Durations.long4,
-                              ));
-                              return;
-                            }
-                            await DatabaseService()
-                                .insertItem(
-                              TodoItem(
-                                title: titleController.text,
-                                desc: descController.text,
-                                status: 0,
-                                date: date,
-                                time: time,
-                              ),
-                            )
-                                .then((value) {
-                              getItems();
-                              titleController.clear();
-                              descController.clear();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Task Added")));
-                            });
-                            if (context.mounted) Navigator.of(context).pop();
-                          },
-                          child: const Text("Save"),
-                        ),
-                      ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                titleController.clear();
+                                descController.clear();
+                                Navigator.pop(context);
+                              },
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                if (titleController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    content: Text("Task title can't be empty"),
+                                    duration: Durations.long4,
+                                  ));
+                                  return;
+                                }
+                                await DatabaseService()
+                                    .insertItem(
+                                  TodoItem(
+                                    title: titleController.text,
+                                    desc: descController.text,
+                                    status: 0,
+                                    date: date,
+                                    time: time,
+                                  ),
+                                )
+                                    .then((value) {
+                                  getItems();
+                                  titleController.clear();
+                                  descController.clear();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Task Added")));
+                                });
+                                if (context.mounted) Navigator.of(context).pop();
+                              },
+                              child: const Text("Save"),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                 );
@@ -239,7 +251,7 @@ class _HomePageState extends State<HomePage> {
                 : ListView.builder(
                     itemCount: items.length,
                     itemBuilder: (context, index) {
-                      final taskKey=items[index].title;
+                      final taskKey = items[index].title;
                       return Dismissible(
                         onDismissed: (direction) async {
                           await DatabaseService()
@@ -268,170 +280,209 @@ class _HomePageState extends State<HomePage> {
                                     showDialog(
                                         context: context,
                                         builder: (context) {
-                                          return AlertDialog(
-                                            scrollable: true,
-                                            title: const Text(
-                                              "Edit Task",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 32),
-                                            ),
-                                            backgroundColor: colorProvider
-                                                .editTaskAlertBackground,
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                TextField(
-                                                  controller: titleController,
-                                                  maxLines: 1,
-                                                  maxLength: 25,
-                                                  decoration: InputDecoration(
-                                                      labelText: "Title",
-                                                      labelStyle: TextStyle(
-                                                          fontSize: 30,
-                                                          color: colorProvider
-                                                              .addTaskAlertText)),
-                                                ),
-                                                TextField(
-                                                  controller: descController,
-                                                  keyboardType:
-                                                      TextInputType.multiline,
-                                                  maxLines: 4,
-                                                  maxLength: 250,
-                                                  decoration: InputDecoration(
-                                                      labelText: "Description",
-                                                      labelStyle: TextStyle(
-                                                          fontSize: 30,
-                                                          color: colorProvider
-                                                              .addTaskAlertText)),
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    IconButton(
-                                                        onPressed: () {
-                                                          DateTime? selectedDate;
-                                                          TimeOfDay? selectedTime;
-                                                          showDatePicker(
-                                                                  context:
-                                                                      context,
-                                                                  firstDate: DateTime(
-                                                                      DateTime.now()
-                                                                          .year,
-                                                                      DateTime.now()
-                                                                          .month,
-                                                                      DateTime.now()
-                                                                          .day),
-                                                                  lastDate: DateTime(
-                                                                      DateTime.now()
-                                                                              .year +
-                                                                          1))
-                                                              .then((dateValue) {
-                                                            if (dateValue !=
-                                                                null) {
-                                                              selectedDate =
-                                                                  dateValue;
-                                                              date = selectedDate!
-                                                                  .toString()
-                                                                  .split(" ")
-                                                                  .first;
-                                                              if (kDebugMode) {
-                                                                print(selectedDate
-                                                                    ?.toString()
-                                                                    .split(" ")
-                                                                    .first);
-                                                              }
-                                                              showTimePicker(
-                                                                      context:
-                                                                          context,
-                                                                      initialTime: TimeOfDay(
-                                                                          hour: DateTime.now()
-                                                                              .hour,
-                                                                          minute: DateTime.now()
-                                                                              .minute))
-                                                                  .then(
-                                                                      (timeValue) {
-                                                                if (timeValue !=
-                                                                    null) {
-                                                                  selectedTime =
-                                                                      timeValue;
-                                                                  time = selectedTime!
-                                                                      .format(
-                                                                          context);
-                                                                  if (kDebugMode) {
-                                                                    print(selectedTime
-                                                                        ?.format(
-                                                                            context));
-                                                                  }
-                                                                }
-                                                              });
-                                                            }
-                                                          });
-                                                        },
-                                                        icon: const Icon(Icons
-                                                            .calendar_month)),
-                                                    Text(
-                                                        "${items[index].date}  ${items[index].time}")
-                                                  ],
-                                                )
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  titleController.clear();
-                                                  descController.clear();
-                                                  Navigator.pop(context);
-                                                },
-                                                child: const Text("Cancel"),
+                                          String editedDateText="";
+                                          String editedTimeText="";
+                                          return StatefulBuilder(builder: (context,setState){
+                                            return AlertDialog(
+                                              scrollable: true,
+                                              title: const Text(
+                                                "Edit Task",
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 32),
                                               ),
-                                              TextButton(
-                                                onPressed: () async {
-                                                  if (titleController
-                                                      .text.isEmpty) {
-                                                    ScaffoldMessenger.of(context)
-                                                        .showSnackBar(
-                                                            const SnackBar(
-                                                      content: Text(
-                                                          "Task title can't be empty"),
-                                                      duration: Durations.long4,
-                                                    ));
-                                                    return;
-                                                  }
-                                                  await DatabaseService()
-                                                      .updateItem(TodoItem(
-                                                          title: titleController
-                                                              .text,
-                                                          desc:
-                                                              descController.text,
-                                                          id: items[index].id,
-                                                          status:
-                                                              items[index].status,
-                                                          date: date.isEmpty
-                                                              ? items[index].date
-                                                              : date,
-                                                          time: time.isEmpty
-                                                              ? items[index].time
-                                                              : time))
-                                                      .then((value) {
-                                                    getItems();
+                                              backgroundColor: colorProvider
+                                                  .editTaskAlertBackground,
+                                              content: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  TextField(
+                                                    controller: titleController,
+                                                    maxLines: 1,
+                                                    maxLength: 25,
+                                                    decoration: InputDecoration(
+                                                        labelText: "Title",
+                                                        labelStyle: TextStyle(
+                                                            fontSize: 30,
+                                                            color: colorProvider
+                                                                .addTaskAlertText)),
+                                                  ),
+                                                  TextField(
+                                                    controller: descController,
+                                                    keyboardType:
+                                                    TextInputType.multiline,
+                                                    maxLines: 4,
+                                                    maxLength: 250,
+                                                    decoration: InputDecoration(
+                                                        labelText: "Description",
+                                                        labelStyle: TextStyle(
+                                                            fontSize: 30,
+                                                            color: colorProvider
+                                                                .addTaskAlertText)),
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      IconButton(
+                                                          onPressed: () {
+                                                            DateTime?
+                                                            selectedDate;
+                                                            TimeOfDay?
+                                                            selectedTime;
+                                                            showDatePicker(
+                                                                context:
+                                                                context,
+                                                                firstDate: DateTime(
+                                                                    DateTime.now()
+                                                                        .year,
+                                                                    DateTime.now()
+                                                                        .month,
+                                                                    DateTime.now()
+                                                                        .day),
+                                                                lastDate: DateTime(
+                                                                    DateTime.now()
+                                                                        .year +
+                                                                        1))
+                                                                .then(
+                                                                    (dateValue) {
+                                                                  if (dateValue !=
+                                                                      null) {
+                                                                    selectedDate =
+                                                                        dateValue;
+                                                                    date =
+                                                                        selectedDate!
+                                                                            .toString()
+                                                                            .split(
+                                                                            " ")
+                                                                            .first;
+                                                                    setState(() {
+                                                                      editedDateText=date;
+                                                                    });
+                                                                    if (kDebugMode) {
+                                                                      print(selectedDate
+                                                                          ?.toString()
+                                                                          .split(" ")
+                                                                          .first);
+                                                                    }
+                                                                    showTimePicker(
+                                                                        context:
+                                                                        context,
+                                                                        initialTime: TimeOfDay(
+                                                                            hour: DateTime.now()
+                                                                                .hour,
+                                                                            minute: DateTime.now()
+                                                                                .minute))
+                                                                        .then(
+                                                                            (timeValue) {
+                                                                          if (timeValue !=
+                                                                              null) {
+                                                                            selectedTime =
+                                                                                timeValue;
+                                                                            time = selectedTime!
+                                                                                .format(
+                                                                                context);
+                                                                            setState(() {
+                                                                              editedTimeText=time;
+                                                                            });
+                                                                            if (kDebugMode) {
+                                                                              print(selectedTime
+                                                                                  ?.format(
+                                                                                  context));
+                                                                            }
+                                                                          }
+                                                                          else{
+                                                                            time="";
+                                                                            setState(() {
+                                                                              editedTimeText=time;
+                                                                            });
+                                                                          }
+                                                                        });
+                                                                  }
+                                                                });
+                                                          },
+                                                          icon: const Icon(Icons
+                                                              .calendar_month)),
+                                                      Column(
+                                                        mainAxisAlignment: MainAxisAlignment.start,
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Row(
+                                                            children: [
+                                                              Text(
+                                                                  "Current: ${items[index].date}  ${items[index].time}"),
+                                                            ],
+                                                          ),
+                                                          Row(
+                                                              children: [
+                                                                Text("New: $editedDateText $editedTimeText")
+                                                              ],
+                                                          )
+                                                        ],
+                                                      )
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
                                                     titleController.clear();
                                                     descController.clear();
-                                                    ScaffoldMessenger.of(context)
-                                                        .showSnackBar(
-                                                            const SnackBar(
-                                                      content:
-                                                          Text("Task Updated"),
-                                                      duration: Durations.long4,
-                                                    ));
-                                                  });
-                                                  if (context.mounted) {
-                                                    Navigator.of(context).pop();
-                                                  }
-                                                },
-                                                child: const Text("Update"),
-                                              ),
-                                            ],
-                                          );
+                                                    date="";
+                                                    time="";
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text("Cancel"),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () async {
+                                                    if (titleController
+                                                        .text.isEmpty) {
+                                                      ScaffoldMessenger.of(
+                                                          context)
+                                                          .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                "Task title can't be empty"),
+                                                            duration: Durations.long4,
+                                                          ));
+                                                      return;
+                                                    }
+                                                    await DatabaseService()
+                                                        .updateItem(TodoItem(
+                                                        title: titleController
+                                                            .text,
+                                                        desc: descController
+                                                            .text,
+                                                        id: items[index].id,
+                                                        status: items[index]
+                                                            .status,
+                                                        date: date.isEmpty
+                                                            ? items[index]
+                                                            .date
+                                                            : date,
+                                                        time: time))
+                                                        .then((value) {
+                                                      getItems();
+                                                      titleController.clear();
+                                                      descController.clear();
+                                                      ScaffoldMessenger.of(
+                                                          context)
+                                                          .showSnackBar(
+                                                          const SnackBar(
+                                                            content:
+                                                            Text("Task Updated"),
+                                                            duration: Durations.long4,
+                                                          ));
+                                                    });
+                                                    if (context.mounted) {
+                                                      Navigator.of(context).pop();
+                                                    }
+                                                  },
+                                                  child: const Text("Update"),
+                                                ),
+                                              ],
+                                            );
+                                          });
                                         });
                                   },
                                   icon: const Icon(Icons.edit),
@@ -474,9 +525,11 @@ class _HomePageState extends State<HomePage> {
                                                     decoration: TextDecoration
                                                         .lineThrough,
                                                     decorationThickness: 3)),
-                                        onLongPress: (){
-                                          titleController.text = items[index].title;
-                                          descController.text = items[index].desc;
+                                        onLongPress: () {
+                                          titleController.text =
+                                              items[index].title;
+                                          descController.text =
+                                              items[index].desc;
                                           showDialog(
                                               context: context,
                                               builder: (context) {
@@ -485,16 +538,19 @@ class _HomePageState extends State<HomePage> {
                                                   title: const Text(
                                                     "Edit Task",
                                                     style: TextStyle(
-                                                        fontWeight: FontWeight.bold,
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                         fontSize: 32),
                                                   ),
                                                   backgroundColor: colorProvider
                                                       .editTaskAlertBackground,
                                                   content: Column(
-                                                    mainAxisSize: MainAxisSize.min,
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
                                                     children: [
                                                       TextField(
-                                                        controller: titleController,
+                                                        controller:
+                                                            titleController,
                                                         maxLines: 1,
                                                         maxLength: 25,
                                                         decoration: InputDecoration(
@@ -505,13 +561,16 @@ class _HomePageState extends State<HomePage> {
                                                                     .addTaskAlertText)),
                                                       ),
                                                       TextField(
-                                                        controller: descController,
+                                                        controller:
+                                                            descController,
                                                         keyboardType:
-                                                        TextInputType.multiline,
+                                                            TextInputType
+                                                                .multiline,
                                                         maxLines: 4,
                                                         maxLength: 250,
                                                         decoration: InputDecoration(
-                                                            labelText: "Description",
+                                                            labelText:
+                                                                "Description",
                                                             labelStyle: TextStyle(
                                                                 fontSize: 30,
                                                                 color: colorProvider
@@ -521,61 +580,59 @@ class _HomePageState extends State<HomePage> {
                                                         children: [
                                                           IconButton(
                                                               onPressed: () {
-                                                                DateTime? selectedDate;
-                                                                TimeOfDay? selectedTime;
+                                                                DateTime?
+                                                                    selectedDate;
+                                                                TimeOfDay?
+                                                                    selectedTime;
                                                                 showDatePicker(
-                                                                    context:
-                                                                    context,
-                                                                    firstDate: DateTime(
-                                                                        DateTime.now()
-                                                                            .year,
-                                                                        DateTime.now()
-                                                                            .month,
-                                                                        DateTime.now()
-                                                                            .day),
-                                                                    lastDate: DateTime(
-                                                                        DateTime.now()
-                                                                            .year +
-                                                                            1))
-                                                                    .then((dateValue) {
+                                                                        context:
+                                                                            context,
+                                                                        firstDate: DateTime(
+                                                                            DateTime.now()
+                                                                                .year,
+                                                                            DateTime.now()
+                                                                                .month,
+                                                                            DateTime.now()
+                                                                                .day),
+                                                                        lastDate:
+                                                                            DateTime(DateTime.now().year +
+                                                                                1))
+                                                                    .then(
+                                                                        (dateValue) {
                                                                   if (dateValue !=
                                                                       null) {
                                                                     selectedDate =
                                                                         dateValue;
                                                                     date = selectedDate!
                                                                         .toString()
-                                                                        .split(" ")
+                                                                        .split(
+                                                                            " ")
                                                                         .first;
                                                                     if (kDebugMode) {
                                                                       print(selectedDate
                                                                           ?.toString()
-                                                                          .split(" ")
+                                                                          .split(
+                                                                              " ")
                                                                           .first);
                                                                     }
                                                                     showTimePicker(
-                                                                        context:
-                                                                        context,
-                                                                        initialTime: TimeOfDay(
-                                                                            hour: DateTime.now()
-                                                                                .hour,
-                                                                            minute: DateTime.now()
-                                                                                .minute))
-                                                                        .then(
-                                                                            (timeValue) {
-                                                                          if (timeValue !=
-                                                                              null) {
-                                                                            selectedTime =
-                                                                                timeValue;
-                                                                            time = selectedTime!
-                                                                                .format(
-                                                                                context);
-                                                                            if (kDebugMode) {
-                                                                              print(selectedTime
-                                                                                  ?.format(
-                                                                                  context));
-                                                                            }
-                                                                          }
-                                                                        });
+                                                                            context:
+                                                                                context,
+                                                                            initialTime:
+                                                                                TimeOfDay(hour: DateTime.now().hour, minute: DateTime.now().minute))
+                                                                        .then((timeValue) {
+                                                                      if (timeValue !=
+                                                                          null) {
+                                                                        selectedTime =
+                                                                            timeValue;
+                                                                        time = selectedTime!
+                                                                            .format(context);
+                                                                        if (kDebugMode) {
+                                                                          print(
+                                                                              selectedTime?.format(context));
+                                                                        }
+                                                                      }
+                                                                    });
                                                                   }
                                                                 });
                                                               },
@@ -594,53 +651,70 @@ class _HomePageState extends State<HomePage> {
                                                         descController.clear();
                                                         Navigator.pop(context);
                                                       },
-                                                      child: const Text("Cancel"),
+                                                      child:
+                                                          const Text("Cancel"),
                                                     ),
                                                     TextButton(
                                                       onPressed: () async {
                                                         if (titleController
                                                             .text.isEmpty) {
-                                                          ScaffoldMessenger.of(context)
+                                                          ScaffoldMessenger.of(
+                                                                  context)
                                                               .showSnackBar(
-                                                              const SnackBar(
-                                                                content: Text(
-                                                                    "Task title can't be empty"),
-                                                                duration: Durations.long4,
-                                                              ));
+                                                                  const SnackBar(
+                                                            content: Text(
+                                                                "Task title can't be empty"),
+                                                            duration:
+                                                                Durations.long4,
+                                                          ));
                                                           return;
                                                         }
                                                         await DatabaseService()
                                                             .updateItem(TodoItem(
-                                                            title: titleController
-                                                                .text,
-                                                            desc:
-                                                            descController.text,
-                                                            id: items[index].id,
-                                                            status:
-                                                            items[index].status,
-                                                            date: date.isEmpty
-                                                                ? items[index].date
-                                                                : date,
-                                                            time: time.isEmpty
-                                                                ? items[index].time
-                                                                : time))
+                                                                title:
+                                                                    titleController
+                                                                        .text,
+                                                                desc:
+                                                                    descController
+                                                                        .text,
+                                                                id: items[index]
+                                                                    .id,
+                                                                status:
+                                                                    items[index]
+                                                                        .status,
+                                                                date: date
+                                                                        .isEmpty
+                                                                    ? items[index]
+                                                                        .date
+                                                                    : date,
+                                                                time: time
+                                                                        .isEmpty
+                                                                    ? items[index]
+                                                                        .time
+                                                                    : time))
                                                             .then((value) {
                                                           getItems();
-                                                          titleController.clear();
-                                                          descController.clear();
-                                                          ScaffoldMessenger.of(context)
+                                                          titleController
+                                                              .clear();
+                                                          descController
+                                                              .clear();
+                                                          ScaffoldMessenger.of(
+                                                                  context)
                                                               .showSnackBar(
-                                                              const SnackBar(
-                                                                content:
-                                                                Text("Task Updated"),
-                                                                duration: Durations.long4,
-                                                              ));
+                                                                  const SnackBar(
+                                                            content: Text(
+                                                                "Task Updated"),
+                                                            duration:
+                                                                Durations.long4,
+                                                          ));
                                                         });
                                                         if (context.mounted) {
-                                                          Navigator.of(context).pop();
+                                                          Navigator.of(context)
+                                                              .pop();
                                                         }
                                                       },
-                                                      child: const Text("Update"),
+                                                      child:
+                                                          const Text("Update"),
                                                     ),
                                                   ],
                                                 );
@@ -715,7 +789,8 @@ class _HomePageState extends State<HomePage> {
                                                 color: Colors.red,
                                               )
                                             : items[index].status != 1
-                                                ? const Icon(Icons.check_outlined)
+                                                ? const Icon(
+                                                    Icons.check_outlined)
                                                 : const Icon(
                                                     Icons.check,
                                                     color: Colors.green,
@@ -843,9 +918,9 @@ class _HomePageState extends State<HomePage> {
                                               }
                                               Navigator.pop(context);
                                             },
-                                            child: Icon(
-                                              user.first.theme==1?
-                                                Icons.dark_mode_sharp:Icons.light_mode_sharp)),
+                                            child: Icon(user.first.theme == 1
+                                                ? Icons.dark_mode_sharp
+                                                : Icons.light_mode_sharp)),
                                         const Padding(
                                             padding:
                                                 EdgeInsets.only(right: 30)),
@@ -855,17 +930,33 @@ class _HomePageState extends State<HomePage> {
                                               Navigator.push(
                                                 context,
                                                 PageRouteBuilder(
-                                                  pageBuilder: (context, animation, secondaryAnimation) => ProfilePage(user: user.first),
-                                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                                    const begin = Offset(0.0, 1.0);
+                                                  pageBuilder: (context,
+                                                          animation,
+                                                          secondaryAnimation) =>
+                                                      ProfilePage(
+                                                          user: user.first),
+                                                  transitionsBuilder: (context,
+                                                      animation,
+                                                      secondaryAnimation,
+                                                      child) {
+                                                    const begin =
+                                                        Offset(0.0, 1.0);
                                                     const end = Offset.zero;
                                                     const curve = Curves.ease;
-                                                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                                                    var offsetAnimation = animation.drive(tween);
-                                                    return SlideTransition(position: offsetAnimation, child: child);
+                                                    var tween = Tween(
+                                                            begin: begin,
+                                                            end: end)
+                                                        .chain(CurveTween(
+                                                            curve: curve));
+                                                    var offsetAnimation =
+                                                        animation.drive(tween);
+                                                    return SlideTransition(
+                                                        position:
+                                                            offsetAnimation,
+                                                        child: child);
                                                   },
                                                 ),
-                                              ).then((e){
+                                              ).then((e) {
                                                 setState(() {
                                                   getUser();
                                                 });
