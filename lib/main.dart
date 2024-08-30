@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:todo/services/database_service.dart';
 import 'pages/home_page.dart';
+import 'package:flutter/services.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-
   await DatabaseService().openDb();
-
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   runApp(const MyApp());
 }
 

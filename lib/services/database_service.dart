@@ -73,6 +73,9 @@ class DatabaseService {
   {
     await db.delete('ToDo', where: 'id = ?', whereArgs: [id]);
   }
+  Future<void> deleteAllItems() async {
+    await db.delete('ToDo');
+  }
 
   Future<void> updateItem(TodoItem item) async
   {
