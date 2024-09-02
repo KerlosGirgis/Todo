@@ -20,6 +20,9 @@ class ColorProvider {
   Color? addTaskAlertBackground;
   Color? editPicButtonBackground;
   Color? profilePageText;
+  Color? homePageText;
+  Color? noteEditorBackButton;
+  Color? noteEditorText;
 
   ColorProvider(this.theme) {
     if (theme == 1) {
@@ -42,6 +45,10 @@ class ColorProvider {
       editPicButtonBackground = Colors.grey;
       profilePageName = Colors.blue[100];
       profilePageText = Colors.white;
+      homePageText = Colors.white;
+      noteEditorBackButton= Colors.white;
+      noteEditorText=Colors.white;
+
     } else {
       floatingActionButtonBackground = Colors.blue.shade300;
       floatingActionButtonForeground = Colors.white;
@@ -62,6 +69,9 @@ class ColorProvider {
       editPicButtonBackground = Colors.white;
       profilePageName = Colors.blue;
       profilePageText = Colors.black;
+      homePageText = Colors.black;
+      noteEditorBackButton= Colors.black;
+      noteEditorText=Colors.black;
     }
   }
 }
