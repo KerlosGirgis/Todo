@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
-import 'package:todo/pages/home_page.dart';
 import 'package:todo/pages/profile_page.dart';
 import 'package:todo/services/color_provider.dart';
 import 'package:todo/services/database_service.dart';
@@ -106,35 +105,7 @@ class _TodoPageState extends State<TodoPage> {
                       backgroundColor: colorProvider.floatingActionButtonBackground,
                       foregroundColor: colorProvider.floatingActionButtonForeground,
                       onPressed: (){
-                        Navigator.pushReplacement(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (context,
-                                animation,
-                                secondaryAnimation) =>
-                            const HomePage(),
-                            transitionsBuilder: (context,
-                                animation,
-                                secondaryAnimation,
-                                child) {
-                              const begin =
-                              Offset(-1.0, 0.0);
-                              const end = Offset.zero;
-                              const curve = Curves.ease;
-                              var tween = Tween(
-                                  begin: begin,
-                                  end: end)
-                                  .chain(CurveTween(
-                                  curve: curve));
-                              var offsetAnimation =
-                              animation.drive(tween);
-                              return SlideTransition(
-                                  position:
-                                  offsetAnimation,
-                                  child: child);
-                            },
-                          ),
-                        );
+                        Navigator.pop(context);
                       },
                       child: const Icon(Icons.menu_sharp)),
                 const Padding(padding: EdgeInsets.only(bottom: 20)),
@@ -672,6 +643,7 @@ class _TodoPageState extends State<TodoPage> {
                     ),
                 ),
             appBar: AppBar(
+              automaticallyImplyLeading: false,
               backgroundColor: colorProvider.pageBackground,
               title: Text(
                 "ToDo",

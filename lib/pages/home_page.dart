@@ -200,202 +200,227 @@ class _HomePageState extends State<HomePage>{
         ],
       ),
       body: MediaQuery.of(context).size.width>720?
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  IconButton(onPressed: (){
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context,
-                            animation,
-                            secondaryAnimation) =>
-                        const NotesPage(),
-                        transitionsBuilder: (context,
-                            animation,
-                            secondaryAnimation,
-                            child) {
-                          const begin =
-                          Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.ease;
-                          var tween = Tween(
-                              begin: begin,
-                              end: end)
-                              .chain(CurveTween(
-                              curve: curve));
-                          var offsetAnimation =
-                          animation.drive(tween);
-                          return SlideTransition(
-                              position:
-                              offsetAnimation,
-                              child: child);
-                        },
-                      ),
-                    );
-                  }, icon: Image.asset("assets/HomeIcons/notes.png",scale: 3,)),
-                  Text("Notes",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
-                ],
-              ),
-              Column(
-                children: [
-                  IconButton(onPressed: (){
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context,
-                            animation,
-                            secondaryAnimation) =>
-                        const TodoPage(),
-                        transitionsBuilder: (context,
-                            animation,
-                            secondaryAnimation,
-                            child) {
-                          const begin =
-                          Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.ease;
-                          var tween = Tween(
-                              begin: begin,
-                              end: end)
-                              .chain(CurveTween(
-                              curve: curve));
-                          var offsetAnimation =
-                          animation.drive(tween);
-                          return SlideTransition(
-                              position:
-                              offsetAnimation,
-                              child: child);
-                        },
-                      ),
-                    );
-                  }, icon: Image.asset("assets/HomeIcons/todo.png",scale: 3,)),
-                   Text("ToDo",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
-                ],
-              ),
-              Column(
-                children: [
-                  IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/diary.png",scale: 3,)),
-                   Text("Diary",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
-                ],
-              ),
-              Column(
-                children: [
-                  IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/habitTracker.png",scale: 3,)),
-                   Text("Habits",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
-                ],
-              ),
-            ],
-          ),
-        ],
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    IconButton(onPressed: (){
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context,
+                              animation,
+                              secondaryAnimation) =>
+                          const NotesPage(),
+                          transitionsBuilder: (context,
+                              animation,
+                              secondaryAnimation,
+                              child) {
+                            const begin =
+                            Offset(1.0, 0.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
+                            var tween = Tween(
+                                begin: begin,
+                                end: end)
+                                .chain(CurveTween(
+                                curve: curve));
+                            var offsetAnimation =
+                            animation.drive(tween);
+                            return SlideTransition(
+                                position:
+                                offsetAnimation,
+                                child: child);
+                          },
+                        ),
+                      );
+                    }, icon: Image.asset("assets/HomeIcons/notes.png",scale: 3,)),
+                    Text("Notes",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(onPressed: (){
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context,
+                              animation,
+                              secondaryAnimation) =>
+                          const TodoPage(),
+                          transitionsBuilder: (context,
+                              animation,
+                              secondaryAnimation,
+                              child) {
+                            const begin =
+                            Offset(1.0, 0.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
+                            var tween = Tween(
+                                begin: begin,
+                                end: end)
+                                .chain(CurveTween(
+                                curve: curve));
+                            var offsetAnimation =
+                            animation.drive(tween);
+                            return SlideTransition(
+                                position:
+                                offsetAnimation,
+                                child: child);
+                          },
+                        ),
+                      );
+                    }, icon: Image.asset("assets/HomeIcons/todo.png",scale: 3,)),
+                     Text("ToDo",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/diary.png",scale: 3,)),
+                     Text("Diary",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/habitTracker.png",scale: 3,)),
+                     Text("Habits",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/sticky_note.png",scale: 3,)),
+                    Text("Sticky Note",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ):
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Padding(padding: EdgeInsets.only(bottom: 50)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  IconButton(onPressed: (){
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context,
-                            animation,
-                            secondaryAnimation) =>
-                        const NotesPage(),
-                        transitionsBuilder: (context,
-                            animation,
-                            secondaryAnimation,
-                            child) {
-                          const begin =
-                          Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.ease;
-                          var tween = Tween(
-                              begin: begin,
-                              end: end)
-                              .chain(CurveTween(
-                              curve: curve));
-                          var offsetAnimation =
-                          animation.drive(tween);
-                          return SlideTransition(
-                              position:
-                              offsetAnimation,
-                              child: child);
-                        },
-                      ),
-                    );
-                  }, icon: Image.asset("assets/HomeIcons/notes.png",scale: 3,)),
-                   Text("Notes",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
-                ],
-              ),
-              Column(
-                children: [
-                  IconButton(onPressed: (){
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context,
-                            animation,
-                            secondaryAnimation) =>
-                        const TodoPage(),
-                        transitionsBuilder: (context,
-                            animation,
-                            secondaryAnimation,
-                            child) {
-                          const begin =
-                          Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.ease;
-                          var tween = Tween(
-                              begin: begin,
-                              end: end)
-                              .chain(CurveTween(
-                              curve: curve));
-                          var offsetAnimation =
-                          animation.drive(tween);
-                          return SlideTransition(
-                              position:
-                              offsetAnimation,
-                              child: child);
-                        },
-                      ),
-                    );
-                  }, icon: Image.asset("assets/HomeIcons/todo.png",scale: 3,)),
-                   Text("ToDo",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
-                ],
-              )
-
-            ],
-          ),
-          const Padding(padding: EdgeInsets.only(bottom: 50)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/diary.png",scale: 3,)),
-                   Text("Diary",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
-                ],
-              ),
-              Column(
-                children: [
-                  IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/habitTracker.png",scale: 3,)),
-                   Text("Habits",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
-                ],
-              ),
-            ],
-          )
-        ],
+      SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(bottom: 50)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    IconButton(onPressed: (){
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context,
+                              animation,
+                              secondaryAnimation) =>
+                          const NotesPage(),
+                          transitionsBuilder: (context,
+                              animation,
+                              secondaryAnimation,
+                              child) {
+                            const begin =
+                            Offset(1.0, 0.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
+                            var tween = Tween(
+                                begin: begin,
+                                end: end)
+                                .chain(CurveTween(
+                                curve: curve));
+                            var offsetAnimation =
+                            animation.drive(tween);
+                            return SlideTransition(
+                                position:
+                                offsetAnimation,
+                                child: child);
+                          },
+                        ),
+                      );
+                    }, icon: Image.asset("assets/HomeIcons/notes.png",scale: 3,)),
+                     Text("Notes",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(onPressed: (){
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context,
+                              animation,
+                              secondaryAnimation) =>
+                          const TodoPage(),
+                          transitionsBuilder: (context,
+                              animation,
+                              secondaryAnimation,
+                              child) {
+                            const begin =
+                            Offset(1.0, 0.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
+                            var tween = Tween(
+                                begin: begin,
+                                end: end)
+                                .chain(CurveTween(
+                                curve: curve));
+                            var offsetAnimation =
+                            animation.drive(tween);
+                            return SlideTransition(
+                                position:
+                                offsetAnimation,
+                                child: child);
+                          },
+                        ),
+                      );
+                    }, icon: Image.asset("assets/HomeIcons/todo.png",scale: 3,)),
+                     Text("ToDo",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                )
+        
+              ],
+            ),
+            const Padding(padding: EdgeInsets.only(bottom: 15)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/diary.png",scale: 3,)),
+                     Text("Diary",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/habitTracker.png",scale: 3,)),
+                     Text("Habits",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+              ],
+            ),
+            const Padding(padding: EdgeInsets.only(bottom: 20)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(onPressed: (){}, icon: Image.asset("assets/HomeIcons/sticky_note.png",scale: 3,)),
+                    Text("Sticky Note",style: TextStyle(color: colorProvider.homePageText,fontSize: 36,fontWeight: FontWeight.bold),)
+                  ],
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

@@ -27,31 +27,49 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: widget.colorProvider.floatingActionButtonBackground,
-        foregroundColor: widget.colorProvider.floatingActionButtonForeground,
-        onPressed: () async {
-          try {
-            await DatabaseService().updateNote(Note(
-                id: widget.note.id,
-                title: titleController.text,
-                body: bodyController.text));
-          } catch (e) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(const SnackBar(
-              content: Text("Sorry, Something went wrong,note not saved"),
-              duration: Durations.long4,
-            ));
-          }
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(
-            content: Text("Saved Successfully"),
-            duration: Durations.long4,
-          ));
-        },
-        child: const Icon(Icons.save_sharp),
-      ),
       backgroundColor: widget.colorProvider.pageBackground,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 2,
+              backgroundColor:
+                  widget.colorProvider.floatingActionButtonBackground,
+              foregroundColor:
+                  widget.colorProvider.floatingActionButtonForeground,
+              onPressed: () async{
+                await DatabaseService().deleteNote(widget.note.id!);
+                Navigator.pop(context);
+              },
+            child: const Icon(Icons.delete,color: Colors.red,)),
+          const Padding(padding: EdgeInsets.only(bottom: 20)),
+          FloatingActionButton(
+            heroTag: 3,
+            backgroundColor:
+                widget.colorProvider.floatingActionButtonBackground,
+            foregroundColor:
+                widget.colorProvider.floatingActionButtonForeground,
+            onPressed: () async {
+              try {
+                await DatabaseService().updateNote(Note(
+                    id: widget.note.id,
+                    title: titleController.text,
+                    body: bodyController.text));
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Sorry, Something went wrong,note not saved"),
+                  duration: Durations.long4,
+                ));
+              }
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Saved Successfully"),
+                duration: Durations.long4,
+              ));
+            },
+            child: const Icon(Icons.save_sharp),
+          ),
+        ],
+      ),
       appBar: AppBar(
         backgroundColor: widget.colorProvider.pageBackground,
         leading: IconButton(
