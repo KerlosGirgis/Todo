@@ -3,6 +3,7 @@ import 'package:todo/services/color_provider.dart';
 import 'package:todo/services/database_service.dart';
 
 import '../models/note.dart';
+import '../services/authentication_service.dart';
 
 class NoteEditorPage extends StatefulWidget {
   const NoteEditorPage(
@@ -15,6 +16,7 @@ class NoteEditorPage extends StatefulWidget {
 }
 
 class _NoteEditorPageState extends State<NoteEditorPage> {
+  final AuthenticationService authService = AuthenticationService();
   TextEditingController titleController = TextEditingController();
   TextEditingController bodyController = TextEditingController();
   @override
@@ -32,16 +34,29 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            heroTag: 2,
+              heroTag: 2,
               backgroundColor:
                   widget.colorProvider.floatingActionButtonBackground,
               foregroundColor:
                   widget.colorProvider.floatingActionButtonForeground,
-              onPressed: () async{
-                await DatabaseService().deleteNote(widget.note.id!);
-                Navigator.pop(context);
+              onPressed: () async {
+                if (widget.note.protected == 1) {
+                  bool isAuthenticated = await authService.authenticate();
+                  if (isAuthenticated) {
+                    await DatabaseService().deleteNote(widget.note.id!);
+                    Navigator.pop(context);
+                  }
+                }
+                else{
+                  await DatabaseService().deleteNote(widget.note.id!);
+                  Navigator.pop(context);
+                }
+
               },
-            child: const Icon(Icons.delete,color: Colors.red,)),
+              child: const Icon(
+                Icons.delete,
+                color: Colors.red,
+              )),
           const Padding(padding: EdgeInsets.only(bottom: 20)),
           FloatingActionButton(
             heroTag: 3,
@@ -54,7 +69,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                 await DatabaseService().updateNote(Note(
                     id: widget.note.id,
                     title: titleController.text,
-                    body: bodyController.text, titleColor: widget.note.titleColor, coverColor: widget.note.coverColor));
+                    body: bodyController.text,
+                    titleColor: widget.note.titleColor,
+                    coverColor: widget.note.coverColor,
+                    protected: widget.note.protected));
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Sorry, Something went wrong,note not saved"),

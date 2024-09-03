@@ -15,7 +15,6 @@ class TodoPage extends StatefulWidget {
   const TodoPage({
     super.key,
   });
-
   @override
   State<TodoPage> createState() => _TodoPageState();
 }
@@ -40,7 +39,7 @@ class _TodoPageState extends State<TodoPage> {
     user = await DatabaseService().getUser();
     if (user.isEmpty) {
       await DatabaseService().insertUser(
-          UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1, auth: 0));
+          UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1));
       user = await DatabaseService().getUser();
     }
     colorProvider = ColorProvider(user.first.theme);
@@ -105,7 +104,7 @@ class _TodoPageState extends State<TodoPage> {
                       backgroundColor: colorProvider.floatingActionButtonBackground,
                       foregroundColor: colorProvider.floatingActionButtonForeground,
                       onPressed: (){
-                        Navigator.pushReplacement(
+                        Navigator.push(
                           context,
                           PageRouteBuilder(
                             pageBuilder: (context,

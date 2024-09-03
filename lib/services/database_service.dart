@@ -34,8 +34,7 @@ class DatabaseService {
       firstName TEXT,
       lastName TEXT,
       pic TEXT,
-      theme INTEGER,
-      auth INTEGER
+      theme INTEGER
     )
     ''');
     await db.execute('''
@@ -43,8 +42,9 @@ class DatabaseService {
       id INTEGER PRIMARY KEY,
       title TEXT,
       body TEXT,
-      titleColor,
-      coverColor
+      titleColor INTEGER,
+      coverColor INTEGER,
+      protected INTEGER
     )
     ''');
   }
@@ -73,7 +73,7 @@ class DatabaseService {
   }
   Future<List<Note>> getNotes() async {
     List<Map<String, dynamic>> maps = await db.query('Notes',
-        columns: ['id', 'title', 'body','titleColor','coverColor']);
+        columns: ['id', 'title', 'body','titleColor','coverColor','protected']);
     List<Note> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {
@@ -85,7 +85,7 @@ class DatabaseService {
 
   Future<List<UserProfile>> getUser() async {
     List<Map<String, dynamic>> maps = await db.query('User',
-        columns: ['id', 'firstName', 'lastName', 'pic', 'theme','auth']);
+        columns: ['id', 'firstName', 'lastName', 'pic', 'theme']);
     List<UserProfile> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {
