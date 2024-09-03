@@ -41,7 +41,9 @@ class DatabaseService {
     CREATE TABLE Notes(
       id INTEGER PRIMARY KEY,
       title TEXT,
-      body TEXT
+      body TEXT,
+      titleColor,
+      coverColor
     )
     ''');
   }
@@ -70,7 +72,7 @@ class DatabaseService {
   }
   Future<List<Note>> getNotes() async {
     List<Map<String, dynamic>> maps = await db.query('Notes',
-        columns: ['id', 'title', 'body']);
+        columns: ['id', 'title', 'body','titleColor','coverColor']);
     List<Note> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:todo/pages/note_editor_page.dart';
 import 'package:todo/pages/profile_page.dart';
@@ -239,72 +240,116 @@ class _NotesPageState extends State<NotesPage> {
                     showDialog(
                         context: context,
                         builder: (context) {
-                          return AlertDialog(
-                            scrollable: true,
-                            backgroundColor:
+                          int titleColor=Colors.white.value;
+                          int coverColor=Colors.grey.shade700.value;
+                          return StatefulBuilder(
+                            builder: (BuildContext context,setState) {
+                              return AlertDialog(
+                                scrollable: true,
+                                backgroundColor:
                                 colorProvider.addTaskAlertBackground,
-                            title: const Text(
-                              "Add Note",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 32),
-                            ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                TextField(
-                                  controller: titleController,
-                                  maxLines: 1,
-                                  maxLength: 50,
-                                  decoration: InputDecoration(
-                                      labelText: "Title",
-                                      labelStyle: TextStyle(
-                                          fontSize: 30,
-                                          color:
+                                title: const Text(
+                                  "Add Note",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 32),
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
+                                      controller: titleController,
+                                      maxLines: 1,
+                                      maxLength: 50,
+                                      decoration: InputDecoration(
+                                          labelText: "Title",
+                                          labelStyle: TextStyle(
+                                              fontSize: 30,
+                                              color:
                                               colorProvider.addTaskAlertText)),
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  titleController.clear();
-                                  Navigator.pop(context);
-                                },
-                                child: Text(
-                                  "Cancel",
-                                  style: TextStyle(
-                                      color: Colors.blueAccent[900],
-                                      fontSize: 18),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  await DatabaseService()
-                                      .insertNote(
-                                    Note(
-                                      title: titleController.text,
-                                      body: '',
                                     ),
-                                  )
-                                      .then((value) {
-                                    getNotes();
-                                    titleController.clear();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                            content: Text("Note Added")));
-                                  });
-                                  if (context.mounted) {
-                                    Navigator.of(context).pop();
-                                  }
-                                },
-                                child: Text(
-                                  "Save",
-                                  style: TextStyle(
-                                      color: Colors.blueAccent[900],
-                                      fontSize: 18),
+                                    const Padding(padding: EdgeInsets.only(bottom: 15)),
+                                    Row(children: [
+                                      const Text("Title : ",style: TextStyle(fontSize: 24),),
+                                      GestureDetector(child: CircleAvatar(backgroundColor: Color(titleColor),),onTap: (){
+                                        ColorPicker(
+                                          onColorChanged: (Color color) {
+                                            setState(() {
+                                              titleColor = color.value;
+                                            });
+                                          },
+                                        ).showPickerDialog(context);
+                                      },),
+                                      IconButton(onPressed: (){
+                                        setState(() {
+                                          titleColor = Colors.white.value;
+                                        });
+                                      }, icon: const Icon(Icons.undo_sharp))
+                                    ],),
+                                    const Padding(padding: EdgeInsets.only(bottom: 15)),
+                                    Row(
+                                      children: [
+                                        const Text("Cover : ",style: TextStyle(fontSize: 24),),
+                                        GestureDetector(child: CircleAvatar(backgroundColor: Color(coverColor),),onTap: (){
+                                          ColorPicker(
+                                            onColorChanged: (Color color) {
+                                              setState(() {
+                                                coverColor = color.value;
+                                              });
+                                            },
+                                          ).showPickerDialog(context);
+                                        },),
+                                        IconButton(onPressed: (){
+                                          setState(() {
+                                            coverColor = Colors.grey.shade700.value;
+                                          });
+                                        }, icon: const Icon(Icons.undo_sharp))
+                                      ],
+                                    )
+                                  ],
                                 ),
-                              ),
-                            ],
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      titleController.clear();
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      "Cancel",
+                                      style: TextStyle(
+                                          color: Colors.blueAccent[900],
+                                          fontSize: 18),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      await DatabaseService()
+                                          .insertNote(
+                                        Note(
+                                          title: titleController.text,
+                                          body: '', titleColor: titleColor, coverColor: coverColor,
+                                        ),
+                                      )
+                                          .then((value) {
+                                        getNotes();
+                                        titleController.clear();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                                content: Text("Note Added")));
+                                      });
+                                      if (context.mounted) {
+                                        Navigator.of(context).pop();
+                                      }
+                                    },
+                                    child: Text(
+                                      "Save",
+                                      style: TextStyle(
+                                          color: Colors.blueAccent[900],
+                                          fontSize: 18),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         });
                   },
@@ -344,7 +389,7 @@ class _NotesPageState extends State<NotesPage> {
                                 child: Container(
                                   width: cardWidth,
                                   decoration: BoxDecoration(
-                                    color: colorProvider.cardBackground,
+                                    color: Color(notes[index].coverColor),
                                     borderRadius: BorderRadius.circular(12.0),
                                     boxShadow: [
                                       BoxShadow(
@@ -361,7 +406,7 @@ class _NotesPageState extends State<NotesPage> {
                                       overflow: TextOverflow.ellipsis,
                                       notes[index].title,
                                       style: TextStyle(
-                                          color: colorProvider.taskTitle,
+                                          color: Color(notes[index].titleColor),
                                           fontSize: 20),
                                     ),
                                   ),
@@ -397,6 +442,125 @@ class _NotesPageState extends State<NotesPage> {
                               getNotes();
                             });
                           });
+                        },
+                        onLongPress: (){
+                          titleController.text=notes[index].title;
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                int titleColor=notes[index].titleColor;
+                                int coverColor=notes[index].coverColor;
+                                return StatefulBuilder(
+                                  builder: (BuildContext context,setState) {
+                                    return AlertDialog(
+                                      scrollable: true,
+                                      backgroundColor:
+                                      colorProvider.addTaskAlertBackground,
+                                      title: const Text(
+                                        "Edit Note",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold, fontSize: 32),
+                                      ),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextField(
+                                            controller: titleController,
+                                            maxLines: 1,
+                                            maxLength: 50,
+                                            decoration: InputDecoration(
+                                                labelText: "Title",
+                                                labelStyle: TextStyle(
+                                                    fontSize: 30,
+                                                    color:
+                                                    colorProvider.addTaskAlertText)),
+                                          ),
+                                          const Padding(padding: EdgeInsets.only(bottom: 15)),
+                                          Row(children: [
+                                            const Text("Title : ",style: TextStyle(fontSize: 24),),
+                                            GestureDetector(child: CircleAvatar(backgroundColor: Color(titleColor),),onTap: (){
+                                              ColorPicker(
+                                                onColorChanged: (Color color) {
+                                                  setState(() {
+                                                    titleColor = color.value;
+                                                  });
+                                                },
+                                              ).showPickerDialog(context);
+                                            },),
+                                            IconButton(onPressed: (){
+                                              setState(() {
+                                                titleColor = Colors.white.value;
+                                              });
+                                            }, icon: const Icon(Icons.undo_sharp))
+                                          ],),
+                                          const Padding(padding: EdgeInsets.only(bottom: 15)),
+                                          Row(
+                                            children: [
+                                              const Text("Cover : ",style: TextStyle(fontSize: 24),),
+                                              GestureDetector(child: CircleAvatar(backgroundColor: Color(coverColor),),onTap: (){
+                                                ColorPicker(
+                                                  onColorChanged: (Color color) {
+                                                    setState(() {
+                                                      coverColor = color.value;
+                                                    });
+                                                  },
+                                                ).showPickerDialog(context);
+                                              },),
+                                              IconButton(onPressed: (){
+                                                setState(() {
+                                                  coverColor = Colors.grey.shade700.value;
+                                                });
+                                              }, icon: const Icon(Icons.undo_sharp))
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            titleController.clear();
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text(
+                                            "Cancel",
+                                            style: TextStyle(
+                                                color: Colors.blueAccent[900],
+                                                fontSize: 18),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () async {
+                                            await DatabaseService()
+                                                .updateNote(
+                                              Note(
+                                                id: notes[index].id,
+                                                title: titleController.text,
+                                                body: notes[index].body, titleColor: titleColor, coverColor: coverColor,
+                                              ),
+                                            )
+                                                .then((value) {
+                                              getNotes();
+                                              titleController.clear();
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                      content: Text("Note Edited")));
+                                            });
+                                            if (context.mounted) {
+                                              Navigator.of(context).pop();
+                                            }
+                                          },
+                                          child: Text(
+                                            "Save",
+                                            style: TextStyle(
+                                                color: Colors.blueAccent[900],
+                                                fontSize: 18),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              });
                         },
                       );
                     }),

@@ -54,7 +54,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                 await DatabaseService().updateNote(Note(
                     id: widget.note.id,
                     title: titleController.text,
-                    body: bodyController.text));
+                    body: bodyController.text, titleColor: widget.note.titleColor, coverColor: widget.note.coverColor));
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Sorry, Something went wrong,note not saved"),
