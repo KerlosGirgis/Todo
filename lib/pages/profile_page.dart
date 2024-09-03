@@ -71,7 +71,7 @@ class ProfilePageState extends State<ProfilePage> {
           firstName: widget.user.firstName,
           lastName: widget.user.lastName,
           pic: imageFile!.path,
-          theme: widget.user.theme));
+          theme: widget.user.theme, auth: widget.user.auth));
     }
   }
 
@@ -85,7 +85,7 @@ class ProfilePageState extends State<ProfilePage> {
         firstName: widget.user.firstName,
         lastName: widget.user.lastName,
         pic: avatarNum,
-        theme: widget.user.theme));
+        theme: widget.user.theme, auth: widget.user.auth));
     widget.user.pic=avatarNum;
 
   }

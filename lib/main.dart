@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo/pages/home_page.dart';
+import 'package:todo/pages/todo_page.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:flutter/services.dart';
 
@@ -12,7 +12,7 @@ void main() async{
     ),
   );
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  runApp(const MyApp());
+    runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const TodoPage(),
     );
   }
 }

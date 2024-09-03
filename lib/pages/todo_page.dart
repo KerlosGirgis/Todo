@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
+import 'package:todo/pages/notes_page.dart';
 import 'package:todo/pages/profile_page.dart';
 import 'package:todo/services/color_provider.dart';
 import 'package:todo/services/database_service.dart';
@@ -39,7 +40,7 @@ class _TodoPageState extends State<TodoPage> {
     user = await DatabaseService().getUser();
     if (user.isEmpty) {
       await DatabaseService().insertUser(
-          UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1));
+          UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1, auth: 0));
       user = await DatabaseService().getUser();
     }
     colorProvider = ColorProvider(user.first.theme);
@@ -49,13 +50,13 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   void getItems() async {
-    setState(() {
-      isItemsLoading = true;
-    });
-    items = await DatabaseService().getItems();
-    setState(() {
-      isItemsLoading = false;
-    });
+      setState(() {
+        isItemsLoading = true;
+      });
+      items = await DatabaseService().getItems();
+      setState(() {
+        isItemsLoading = false;
+      });
   }
   syncDatabase() async{
     DatabaseService().deleteAllItems();
@@ -84,7 +85,6 @@ class _TodoPageState extends State<TodoPage> {
     }
     return DateTime.parse("$date $time24Hour");
   }
-
   TextEditingController titleController = TextEditingController();
   TextEditingController descController = TextEditingController();
   TextEditingController dateController = TextEditingController();
@@ -105,9 +105,37 @@ class _TodoPageState extends State<TodoPage> {
                       backgroundColor: colorProvider.floatingActionButtonBackground,
                       foregroundColor: colorProvider.floatingActionButtonForeground,
                       onPressed: (){
-                        Navigator.pop(context);
+                        Navigator.pushReplacement(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (context,
+                                animation,
+                                secondaryAnimation) =>
+                                const NotesPage(),
+                            transitionsBuilder: (context,
+                                animation,
+                                secondaryAnimation,
+                                child) {
+                              const begin =
+                              Offset(0.0, 1.0);
+                              const end = Offset.zero;
+                              const curve = Curves.ease;
+                              var tween = Tween(
+                                  begin: begin,
+                                  end: end)
+                                  .chain(CurveTween(
+                                  curve: curve));
+                              var offsetAnimation =
+                              animation.drive(tween);
+                              return SlideTransition(
+                                  position:
+                                  offsetAnimation,
+                                  child: child);
+                            },
+                          ),
+                        );
                       },
-                      child: const Icon(Icons.menu_sharp)),
+                      child: const Icon(Icons.edit_note_sharp)),
                 const Padding(padding: EdgeInsets.only(bottom: 20)),
                 FloatingActionButton(
                   heroTag: 1,
@@ -784,7 +812,7 @@ class _TodoPageState extends State<TodoPage> {
                                             },
                                             child: const Icon(Icons.edit))
                                       ],
-                                    )
+                                    ),
                                   ],
                                 ),
                               );

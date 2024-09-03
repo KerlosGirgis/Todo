@@ -3,6 +3,7 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:todo/pages/note_editor_page.dart';
 import 'package:todo/pages/profile_page.dart';
+import 'package:todo/pages/todo_page.dart';
 import '../models/note.dart';
 import '../models/user_profile.dart';
 import '../services/color_provider.dart';
@@ -37,7 +38,7 @@ class _NotesPageState extends State<NotesPage> {
     user = await DatabaseService().getUser();
     if (user.isEmpty) {
       await DatabaseService().insertUser(
-          UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1));
+          UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1, auth: 0));
       user = await DatabaseService().getUser();
     }
     colorProvider = ColorProvider(user.first.theme);
@@ -228,9 +229,37 @@ class _NotesPageState extends State<NotesPage> {
                     foregroundColor:
                         colorProvider.floatingActionButtonForeground,
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context,
+                              animation,
+                              secondaryAnimation) =>
+                          const TodoPage(),
+                          transitionsBuilder: (context,
+                              animation,
+                              secondaryAnimation,
+                              child) {
+                            const begin =
+                            Offset(0.0, -1.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
+                            var tween = Tween(
+                                begin: begin,
+                                end: end)
+                                .chain(CurveTween(
+                                curve: curve));
+                            var offsetAnimation =
+                            animation.drive(tween);
+                            return SlideTransition(
+                                position:
+                                offsetAnimation,
+                                child: child);
+                          },
+                        ),
+                      );
                     },
-                    child: const Icon(Icons.menu_sharp)),
+                    child: const Icon(Icons.checklist_sharp)),
                 const Padding(padding: EdgeInsets.only(bottom: 20)),
                 FloatingActionButton(
                   heroTag: 1,

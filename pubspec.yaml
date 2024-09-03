@@ -46,6 +46,7 @@ dependencies:
   auto_size_text: ^3.0.0
   page_transition: ^2.1.0
   flex_color_picker: ^3.5.1
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:
