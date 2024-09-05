@@ -48,6 +48,7 @@ dependencies:
   flex_color_picker: ^3.5.1
   local_auth: ^2.3.0
   home_widget: ^0.7.0
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:

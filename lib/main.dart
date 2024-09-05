@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:todo/pages/todo_page.dart';
+import 'package:todo/provider/theme_provider.dart';
+import 'package:todo/provider/user_provider.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:flutter/services.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DatabaseService().openDb();
   SystemChrome.setSystemUIOverlayStyle(
@@ -13,11 +16,15 @@ void main() async{
     ),
   );
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    runApp(const MyApp());
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (_) => UserProvider()),
+    ChangeNotifierProvider(create: (_) => ThemeProvider()),
+  ], child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-   const MyApp({super.key});
+  const MyApp({super.key});
+
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +34,16 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const TodoPage(),
+      home: FutureBuilder(
+        future: Provider.of<UserProvider>(context, listen: false).get(),
+        builder: (context, snapshot) {
+            return const TodoPage();
+        },
+      ),
     );
   }
 }
+
 class AuthWrapper extends StatefulWidget {
   final AuthenticationService authService;
 
@@ -49,6 +62,7 @@ class AuthWrapperState extends State<AuthWrapper> {
     super.initState();
     _checkAuthentication();
   }
+
   Future<void> _checkAuthentication() async {
     bool isAuthenticated = await widget.authService.authenticate();
     setState(() {
