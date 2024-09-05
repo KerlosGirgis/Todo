@@ -467,7 +467,7 @@ class _NotesPageState extends State<NotesPage> {
                                 pageBuilder: (context, animation,
                                     secondaryAnimation) =>
                                     NoteEditorPage(
-                                      noteIndex: index,
+                                      note: notes.notes[index],
                                     ),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
@@ -492,7 +492,7 @@ class _NotesPageState extends State<NotesPage> {
                               pageBuilder:
                                   (context, animation, secondaryAnimation) =>
                                   NoteEditorPage(
-                                    noteIndex: index,
+                                    note: notes.notes[index],
                                   ),
                               transitionsBuilder: (context, animation,
                                   secondaryAnimation, child) {

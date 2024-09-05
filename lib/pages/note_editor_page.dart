@@ -8,9 +8,9 @@ import '../services/authentication_service.dart';
 
 class NoteEditorPage extends StatefulWidget {
   const NoteEditorPage(
-      {super.key, required this.noteIndex});
+      {super.key, required this.note});
 
-  final int noteIndex;
+  final Note note;
   @override
   State<NoteEditorPage> createState() => _NoteEditorPageState();
 }
@@ -39,8 +39,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
       builder: (context,user,child) {
         return Consumer<NotesProvider>(
           builder: (context,notes,child) {
-            titleController.text = notes.notes[widget.noteIndex].title;
-            bodyController.text = notes.notes[widget.noteIndex].body;
+            titleController.text = widget.note.title;
+            bodyController.text = widget.note.body;
             return Scaffold(
               backgroundColor: user.colorProvider.pageBackground,
               floatingActionButton: Column(
@@ -53,14 +53,14 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       foregroundColor:
                       user.colorProvider.floatingActionButtonForeground,
                       onPressed: () async {
-                        if (notes.notes[widget.noteIndex].protected == 1) {
+                        if (widget.note.protected == 1) {
                           bool isAuthenticated = await authService.authenticate();
                           if (isAuthenticated) {
-                            Provider.of<NotesProvider>(context, listen: false).deleteNote(notes.notes[widget.noteIndex].id!);
+                            Provider.of<NotesProvider>(context, listen: false).deleteNote(widget.note.id!);
                             Navigator.pop(context);
                           }
                         } else {
-                          Provider.of<NotesProvider>(context, listen: false).deleteNote(notes.notes[widget.noteIndex].id!);
+                          Provider.of<NotesProvider>(context, listen: false).deleteNote(widget.note.id!);
                           Navigator.pop(context);
                         }
                       },
@@ -76,8 +76,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     foregroundColor:
                     user.colorProvider.floatingActionButtonForeground,
                     onPressed: () {
-                      if(notes.notes[widget.noteIndex].body.isNotEmpty){
-                        updateAndroidWidget(notes.notes[widget.noteIndex].body);
+                      if(widget.note.body.isNotEmpty){
+                        updateAndroidWidget(widget.note.body);
                       }
                     },
                     child: const Icon(Icons.sticky_note_2_sharp),
@@ -91,17 +91,15 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     user.colorProvider.floatingActionButtonForeground,
                     onPressed: () async {
                       try {
-                        /*
-
-                         */
                         Provider.of<NotesProvider>(context, listen: false).updateNote(Note(
-                            id: notes.notes[widget.noteIndex].id,
+                            id: widget.note.id,
                             title: titleController.text,
                             body: bodyController.text,
-                            titleColor: notes.notes[widget.noteIndex].titleColor,
-                            coverColor: notes.notes[widget.noteIndex].coverColor,
-                            protected: notes.notes[widget.noteIndex].protected)).then((onValue){
-                          notes.notes[widget.noteIndex].body=bodyController.text;
+                            titleColor: widget.note.titleColor,
+                            coverColor: widget.note.coverColor,
+                            protected: widget.note.protected)).then((onValue){
+                          widget.note.body=bodyController.text;
+                          widget.note.title=titleController.text;
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                             content: Text("Saved Successfully"),
                             duration: Durations.long4,

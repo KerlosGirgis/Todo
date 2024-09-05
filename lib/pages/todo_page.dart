@@ -29,24 +29,12 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   DateTime stringToDateTime(String date, String time12Hour) {
-    // Create a DateFormat instance for parsing the 12-hour format
-
     DateFormat format12Hour =
-        DateFormat('h:mm a'); // 'h:mm a' for 12-hour format with AM/PM
-
-    // Parse the 12-hour time string into a DateTime object
+        DateFormat('h:mm a');
     DateTime dateTime = format12Hour.parse(time12Hour);
-
-    // Create a DateFormat instance for the 24-hour format
     DateFormat format24Hour =
-        DateFormat('HH:mm:ss'); // 'HH:mm' for 24-hour format
-
-    // Convert the DateTime object to a 24-hour formatted string
+        DateFormat('HH:mm:ss');
     String time24Hour = format24Hour.format(dateTime);
-
-    if (kDebugMode) {
-      print(time24Hour);
-    }
     return DateTime.parse("$date $time24Hour");
   }
 
