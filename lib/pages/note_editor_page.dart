@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:todo/services/color_provider.dart';
 import 'package:todo/services/database_service.dart';
 
@@ -16,6 +17,14 @@ class NoteEditorPage extends StatefulWidget {
 }
 
 class _NoteEditorPageState extends State<NoteEditorPage> {
+
+  void updateAndroidWidget(String note) {
+    HomeWidget.saveWidgetData("note", note);
+    HomeWidget.updateWidget(
+      androidName: "Note",
+    );
+  }
+
   final AuthenticationService authService = AuthenticationService();
   TextEditingController titleController = TextEditingController();
   TextEditingController bodyController = TextEditingController();
@@ -46,17 +55,29 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     await DatabaseService().deleteNote(widget.note.id!);
                     Navigator.pop(context);
                   }
-                }
-                else{
+                } else {
                   await DatabaseService().deleteNote(widget.note.id!);
                   Navigator.pop(context);
                 }
-
               },
               child: const Icon(
                 Icons.delete,
                 color: Colors.red,
               )),
+          const Padding(padding: EdgeInsets.only(bottom: 20)),
+          FloatingActionButton(
+            heroTag: 4,
+            backgroundColor:
+            widget.colorProvider.floatingActionButtonBackground,
+            foregroundColor:
+            widget.colorProvider.floatingActionButtonForeground,
+            onPressed: () {
+              if(widget.note.body.isNotEmpty){
+                updateAndroidWidget(widget.note.body);
+              }
+            },
+            child: const Icon(Icons.sticky_note_2_sharp),
+          ),
           const Padding(padding: EdgeInsets.only(bottom: 20)),
           FloatingActionButton(
             heroTag: 3,
@@ -72,17 +93,19 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     body: bodyController.text,
                     titleColor: widget.note.titleColor,
                     coverColor: widget.note.coverColor,
-                    protected: widget.note.protected));
+                    protected: widget.note.protected)).then((onValue){
+                      widget.note.body=bodyController.text;
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Saved Successfully"),
+                    duration: Durations.long4,
+                  ));
+                });
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Sorry, Something went wrong,note not saved"),
                   duration: Durations.long4,
                 ));
               }
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text("Saved Successfully"),
-                duration: Durations.long4,
-              ));
             },
             child: const Icon(Icons.save_sharp),
           ),
@@ -102,6 +125,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            const Padding(padding: EdgeInsets.only(bottom: 10)),
             Row(
               children: [
                 Expanded(
@@ -113,6 +137,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     maxLines: 1,
                     maxLength: 50,
                     decoration: InputDecoration(
+                      border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
                         hintText: "Title",
                         hintStyle: TextStyle(
                             color: widget.colorProvider.noteEditorText)),
@@ -120,6 +145,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                 ),
               ],
             ),
+            const Padding(padding: EdgeInsets.only(bottom: 10)),
             Row(
               children: [
                 Expanded(
@@ -130,6 +156,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                         color: widget.colorProvider.noteEditorText,
                         fontSize: 30),
                     decoration: InputDecoration(
+                        border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
                         hintStyle: TextStyle(
                             color: widget.colorProvider.noteEditorText)),
                   ),

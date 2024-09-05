@@ -49,6 +49,9 @@ android {
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
+    kotlinOptions {
+        jvmTarget = "1.8" // Ensure this matches the Java version
+    }
     signingConfigs {
         release {
             keyAlias = keystoreProperties['keyAlias']
@@ -64,6 +67,9 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.release
         }
+    }
+    buildFeatures {
+        viewBinding true
     }
 }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appwidget_text">Note</string>
+    <string name="add_widget">Note</string>
+    <string name="app_widget_description">Note</string>
+</resources>
