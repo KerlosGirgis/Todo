@@ -132,7 +132,10 @@ class _TodoPageState extends State<TodoPage> {
                                   child: child);
                             },
                           ),
-                        );
+                        ).then((onValue){
+                          getUser();
+                          getItems();
+                        });
                       },
                       child: const Icon(Icons.edit_note_sharp)),
                 const Padding(padding: EdgeInsets.only(bottom: 20)),
@@ -275,7 +278,7 @@ class _TodoPageState extends State<TodoPage> {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(content: Text("Task Added")));
                                     });
-                                    if (context.mounted) Navigator.of(context).pop();
+                                    Navigator.pop(context);
                                   },
                                   child: Text("Save",style: TextStyle(color: Colors.blueAccent[900],fontSize: 18),),
                                 ),
@@ -302,7 +305,7 @@ class _TodoPageState extends State<TodoPage> {
                   child: isItemsLoading==true? const SizedBox.shrink(): ReorderableListView.builder(
                       itemCount: items.length,
                       itemBuilder: (context, index) {
-                        final taskKey = items[index].title;
+                        final taskKey = items[index].id.toString();
                         return Dismissible(
                           onDismissed: (direction) async {
                             await DatabaseService()
