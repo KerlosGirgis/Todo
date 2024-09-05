@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/pages/todo_page.dart';
+import 'package:todo/provider/tasks_provider.dart';
 import 'package:todo/provider/theme_provider.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/services/authentication_service.dart';
@@ -19,6 +20,7 @@ void main() async {
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => UserProvider()),
     ChangeNotifierProvider(create: (_) => ThemeProvider()),
+    ChangeNotifierProvider(create: (_) => TasksProvider()),
   ], child: const MyApp()));
 }
 

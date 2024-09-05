@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/models/user_profile.dart';
 import 'package:todo/provider/user_provider.dart';
 
 import '../services/icon_provider.dart';
@@ -13,10 +12,8 @@ import '../services/icon_provider.dart';
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
     super.key,
-    required this.user,
   });
   //final ColorProvider colorProvider;
-  final UserProfile user;
   @override
   State<ProfilePage> createState() => ProfilePageState();
 }
@@ -412,7 +409,7 @@ class ProfilePageState extends State<ProfilePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "${widget.user.firstName} ${widget.user.lastName}",
+                        "${user.user.firstName} ${user.user.lastName}",
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 40,

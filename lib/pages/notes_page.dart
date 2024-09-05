@@ -180,8 +180,7 @@ class _NotesPageState extends State<NotesPage> {
                                                   pageBuilder: (context,
                                                           animation,
                                                           secondaryAnimation) =>
-                                                      ProfilePage(
-                                                          user: user.first),
+                                                      const ProfilePage(),
                                                   transitionsBuilder: (context,
                                                       animation,
                                                       secondaryAnimation,
