@@ -11,7 +11,7 @@ class AuthenticationService {
 
       // Attempt biometric authentication
       return await _auth.authenticate(
-        localizedReason: 'Please authenticate to access the app',
+        localizedReason: 'Please authenticate',
         options: const AuthenticationOptions(
           biometricOnly: true,
         ),
