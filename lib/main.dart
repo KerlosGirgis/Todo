@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/pages/todo_page.dart';
+import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/tasks_provider.dart';
 import 'package:todo/provider/theme_provider.dart';
 import 'package:todo/provider/user_provider.dart';
@@ -21,6 +22,7 @@ void main() async {
     ChangeNotifierProvider(create: (_) => UserProvider()),
     ChangeNotifierProvider(create: (_) => ThemeProvider()),
     ChangeNotifierProvider(create: (_) => TasksProvider()),
+    ChangeNotifierProvider(create: (_) => NotesProvider()),
   ], child: const MyApp()));
 }
 
