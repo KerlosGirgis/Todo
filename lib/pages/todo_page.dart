@@ -313,6 +313,7 @@ class _TodoPageState extends State<TodoPage> {
                                 .then((value) async {
                                   setState(() {
                                     items.removeAt(index);
+                                    getItems();
                                   });
                               ScaffoldMessenger.of(context)
                                   .showSnackBar(const SnackBar(
@@ -656,13 +657,11 @@ class _TodoPageState extends State<TodoPage> {
                           ),
                         );
                       }, onReorder: (int oldIndex, int newIndex) async {
-                        if(newIndex>oldIndex){
+                        if(oldIndex<newIndex){
                           newIndex-=1;
                         }
                         setState(() {
-                          TodoItem oldTodo;
-                          oldTodo=items[oldIndex];
-                          items.removeAt(oldIndex);
+                          final oldTodo = items.removeAt(oldIndex);
                           items.insert(newIndex, oldTodo);
                         });
                         await syncDatabase();
