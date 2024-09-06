@@ -39,6 +39,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.k.todo"
@@ -71,6 +72,12 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    dependencies {
+        implementation 'com.google.crypto.tink:tink-android:1.8.0'
+        implementation 'com.google.errorprone:error_prone_annotations:2.23.0'
+    }
+
 }
 
 flutter {

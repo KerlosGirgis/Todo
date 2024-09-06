@@ -20,7 +20,8 @@
         android:contentDescription="@string/appwidget_text"
         android:text="@string/appwidget_text"
         android:textSize="22sp"
-        android:textStyle="bold" />
+        android:fontFamily="monospace"
+        android:textStyle="" />
 
 
 </RelativeLayout>
