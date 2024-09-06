@@ -19,9 +19,8 @@
         android:layout_marginBottom="0dp"
         android:contentDescription="@string/appwidget_text"
         android:text="@string/appwidget_text"
-        android:textSize="22sp"
-        android:fontFamily="monospace"
-        android:textStyle="" />
+        android:textSize="21sp"
+        android:textStyle="bold" />
 
 
 </RelativeLayout>
