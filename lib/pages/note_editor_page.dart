@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/provider/notes_provider.dart';
@@ -29,7 +30,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   TextEditingController bodyController = TextEditingController();
   @override
   void initState() {
-
     super.initState();
   }
 
@@ -65,21 +65,50 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                           protected: widget.note.protected)).then((onValue){
                         widget.note.body=bodyController.text;
                         widget.note.title=titleController.text;
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text("Saved Successfully"),
-                          duration: Durations.long4,
-                        ));
+                        Fluttertoast.showToast(
+                            msg: "Saved Successfully",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: user.colorProvider.cardBackground,
+                            textColor: user.colorProvider.appTitle,
+                            fontSize: 19.0
+                        );
                       });
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text("Sorry, Something went wrong,note not saved"),
-                        duration: Durations.long4,
-                      ));
+                      Fluttertoast.showToast(
+                          msg: "Sorry, Something went wrong,note not saved",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.red,
+                          textColor: Colors.white,
+                          fontSize: 19.0
+                      );
                     }
                   }, icon: Icon(Icons.save_sharp,color: user.colorProvider.noteEditorButtons,)),
                   IconButton(onPressed: (){
                     if(widget.note.body.isNotEmpty){
-                      updateAndroidWidget(widget.note.body);
+                      try{
+                        updateAndroidWidget(widget.note.body);
+                      }
+                      catch(e){
+                        Fluttertoast.showToast(
+                            msg: "Sorry, Something went wrong",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.red,
+                            textColor: Colors.white,
+                            fontSize: 19.0
+                        );
+                        return;
+                      }
+                      Fluttertoast.showToast(
+                          msg: "Note has been added to the widget",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: user.colorProvider.cardBackground,
+                          textColor: user.colorProvider.appTitle,
+                          fontSize: 19.0
+                      );
                     }
                   }, icon: Icon(Icons.sticky_note_2_sharp,color: user.colorProvider.noteEditorButtons,)),
                   IconButton(onPressed: () async {
@@ -93,7 +122,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       Provider.of<NotesProvider>(context, listen: false).deleteNote(widget.note.id!);
                       Navigator.pop(context);
                     }
-                  }, icon: Icon(Icons.delete_sharp,color: Colors.red,)),
+                  }, icon: const Icon(Icons.delete_sharp,color: Colors.red,)),
                 ],
               ),
               body: SingleChildScrollView(

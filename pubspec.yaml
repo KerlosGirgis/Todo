@@ -52,6 +52,7 @@ dependencies:
   sqflite_sqlcipher: ^3.1.0+1
   flutter_secure_storage: ^9.2.2
   crypto: ^3.0.5
+  fluttertoast: ^8.2.8
 
 dev_dependencies:
   flutter_test:
