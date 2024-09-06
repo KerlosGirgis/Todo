@@ -31,6 +31,7 @@ class TasksProvider with ChangeNotifier{
     for (var item in items) {
       await DatabaseService().insertItem(item); // Reinsert items in new order
     }
+    get();
     notifyListeners();
   }
   Future<void> addTask(TodoItem todo) async {
