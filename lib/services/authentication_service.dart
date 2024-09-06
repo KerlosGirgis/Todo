@@ -17,7 +17,6 @@ class AuthenticationService {
         ),
       );
     } catch (e) {
-      print('Error during authentication: $e');
       return false;
     }
   }

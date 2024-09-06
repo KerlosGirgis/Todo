@@ -23,6 +23,7 @@ class ColorProvider {
   Color? homePageText;
   Color? noteEditorBackButton;
   Color? noteEditorText;
+  Color? noteEditorButtons;
 
   ColorProvider(this.theme) {
     if (theme == 1) {
@@ -48,6 +49,9 @@ class ColorProvider {
       homePageText = Colors.white;
       noteEditorBackButton= Colors.white;
       noteEditorText=Colors.white;
+      noteEditorButtons=Colors.white;
+
+
 
     } else {
       floatingActionButtonBackground = Colors.blue.shade300;
@@ -72,6 +76,7 @@ class ColorProvider {
       homePageText = Colors.black;
       noteEditorBackButton= Colors.black;
       noteEditorText=Colors.black;
+      noteEditorButtons=Colors.black;
     }
   }
 }

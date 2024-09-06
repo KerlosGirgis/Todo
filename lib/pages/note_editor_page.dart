@@ -43,79 +43,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
             bodyController.text = widget.note.body;
             return Scaffold(
               backgroundColor: user.colorProvider.pageBackground,
-              floatingActionButton: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  FloatingActionButton(
-                      heroTag: 2,
-                      backgroundColor:
-                      user.colorProvider.floatingActionButtonBackground,
-                      foregroundColor:
-                      user.colorProvider.floatingActionButtonForeground,
-                      onPressed: () async {
-                        if (widget.note.protected == 1) {
-                          bool isAuthenticated = await authService.authenticate();
-                          if (isAuthenticated) {
-                            Provider.of<NotesProvider>(context, listen: false).deleteNote(widget.note.id!);
-                            Navigator.pop(context);
-                          }
-                        } else {
-                          Provider.of<NotesProvider>(context, listen: false).deleteNote(widget.note.id!);
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: const Icon(
-                        Icons.delete,
-                        color: Colors.red,
-                      )),
-                  const Padding(padding: EdgeInsets.only(bottom: 20)),
-                  FloatingActionButton(
-                    heroTag: 4,
-                    backgroundColor:
-                    user.colorProvider.floatingActionButtonBackground,
-                    foregroundColor:
-                    user.colorProvider.floatingActionButtonForeground,
-                    onPressed: () {
-                      if(widget.note.body.isNotEmpty){
-                        updateAndroidWidget(widget.note.body);
-                      }
-                    },
-                    child: const Icon(Icons.sticky_note_2_sharp),
-                  ),
-                  const Padding(padding: EdgeInsets.only(bottom: 20)),
-                  FloatingActionButton(
-                    heroTag: 3,
-                    backgroundColor:
-                    user.colorProvider.floatingActionButtonBackground,
-                    foregroundColor:
-                    user.colorProvider.floatingActionButtonForeground,
-                    onPressed: () async {
-                      try {
-                        Provider.of<NotesProvider>(context, listen: false).updateNote(Note(
-                            id: widget.note.id,
-                            title: titleController.text,
-                            body: bodyController.text,
-                            titleColor: widget.note.titleColor,
-                            coverColor: widget.note.coverColor,
-                            protected: widget.note.protected)).then((onValue){
-                          widget.note.body=bodyController.text;
-                          widget.note.title=titleController.text;
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text("Saved Successfully"),
-                            duration: Durations.long4,
-                          ));
-                        });
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text("Sorry, Something went wrong,note not saved"),
-                          duration: Durations.long4,
-                        ));
-                      }
-                    },
-                    child: const Icon(Icons.save_sharp),
-                  ),
-                ],
-              ),
               appBar: AppBar(
                 backgroundColor: user.colorProvider.pageBackground,
                 leading: IconButton(
@@ -126,6 +53,48 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       Icons.arrow_back_ios,
                       color: user.colorProvider.noteEditorBackButton,
                     )),
+                actions: [
+                  IconButton(onPressed: (){
+                    try {
+                      Provider.of<NotesProvider>(context, listen: false).updateNote(Note(
+                          id: widget.note.id,
+                          title: titleController.text,
+                          body: bodyController.text,
+                          titleColor: widget.note.titleColor,
+                          coverColor: widget.note.coverColor,
+                          protected: widget.note.protected)).then((onValue){
+                        widget.note.body=bodyController.text;
+                        widget.note.title=titleController.text;
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text("Saved Successfully"),
+                          duration: Durations.long4,
+                        ));
+                      });
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Sorry, Something went wrong,note not saved"),
+                        duration: Durations.long4,
+                      ));
+                    }
+                  }, icon: Icon(Icons.save_sharp,color: user.colorProvider.noteEditorButtons,)),
+                  IconButton(onPressed: (){
+                    if(widget.note.body.isNotEmpty){
+                      updateAndroidWidget(widget.note.body);
+                    }
+                  }, icon: Icon(Icons.sticky_note_2_sharp,color: user.colorProvider.noteEditorButtons,)),
+                  IconButton(onPressed: () async {
+                    if (widget.note.protected == 1) {
+                      bool isAuthenticated = await authService.authenticate();
+                      if (isAuthenticated) {
+                        Provider.of<NotesProvider>(context, listen: false).deleteNote(widget.note.id!);
+                        Navigator.pop(context);
+                      }
+                    } else {
+                      Provider.of<NotesProvider>(context, listen: false).deleteNote(widget.note.id!);
+                      Navigator.pop(context);
+                    }
+                  }, icon: Icon(Icons.delete_sharp,color: Colors.red,)),
+                ],
               ),
               body: SingleChildScrollView(
                 child: Column(
