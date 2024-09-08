@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/pages/avatar.dart';
 import 'package:todo/provider/user_provider.dart';
 
 import '../services/icon_provider.dart';
@@ -130,42 +131,12 @@ class ProfilePageState extends State<ProfilePage> {
                                                                 MainAxisSize
                                                                     .min,
                                                                 children: [
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("000")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: () {
-                                                                      _saveAvatar(
-                                                                          "000");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "000"),
                                                                   const Padding(
                                                                       padding: EdgeInsets.only(
                                                                           right:
                                                                           10)),
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("001")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: () {
-                                                                      _saveAvatar(
-                                                                          "001");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  )
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "001"),
                                                                 ],
                                                               ),
                                                               const Padding(
@@ -178,42 +149,12 @@ class ProfilePageState extends State<ProfilePage> {
                                                                 MainAxisSize
                                                                     .min,
                                                                 children: [
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("002")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: (){
-                                                                      _saveAvatar(
-                                                                          "002");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "002"),
                                                                   const Padding(
                                                                       padding: EdgeInsets.only(
                                                                           right:
                                                                           10)),
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("003")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: (){
-                                                                      _saveAvatar(
-                                                                          "003");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                          Avatar(saveAvatar: _saveAvatar, number: "003"),
                                                                 ],
                                                               ),
                                                               const Padding(
@@ -226,42 +167,12 @@ class ProfilePageState extends State<ProfilePage> {
                                                                 MainAxisSize
                                                                     .min,
                                                                 children: [
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("004")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: (){
-                                                                      _saveAvatar(
-                                                                          "004");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "004"),
                                                                   const Padding(
                                                                       padding: EdgeInsets.only(
                                                                           right:
                                                                           10)),
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("005")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: (){
-                                                                      _saveAvatar(
-                                                                          "005");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "005"),
                                                                 ],
                                                               ),
                                                               const Padding(
@@ -274,42 +185,12 @@ class ProfilePageState extends State<ProfilePage> {
                                                                 MainAxisSize
                                                                     .min,
                                                                 children: [
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("006")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: (){
-                                                                      _saveAvatar(
-                                                                          "006");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "006"),
                                                                   const Padding(
                                                                       padding: EdgeInsets.only(
                                                                           right:
                                                                           10)),
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("007")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: (){
-                                                                      _saveAvatar(
-                                                                          "007");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "007"),
                                                                 ],
                                                               ),
                                                               const Padding(
@@ -322,42 +203,12 @@ class ProfilePageState extends State<ProfilePage> {
                                                                 MainAxisSize
                                                                     .min,
                                                                 children: [
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("008")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: (){
-                                                                      _saveAvatar(
-                                                                          "008");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "008"),
                                                                   const Padding(
                                                                       padding: EdgeInsets.only(
                                                                           right:
                                                                           10)),
-                                                                  GestureDetector(
-                                                                    child:
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Colors.transparent,
-                                                                      backgroundImage:
-                                                                      AssetImage(
-                                                                          IconProvider.getAvatar("009")),
-                                                                      radius: 50,
-                                                                    ),
-                                                                    onTap: (){
-                                                                      _saveAvatar(
-                                                                          "009");
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    },
-                                                                  ),
+                                                                  Avatar(saveAvatar: _saveAvatar, number: "009"),
                                                                 ],
                                                               )
                                                             ],
