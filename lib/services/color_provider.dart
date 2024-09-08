@@ -36,14 +36,14 @@ class ColorProvider {
       pageBackground = const Color.fromARGB(255, 24, 24, 24);
       userNameAlert = Colors.white;
       profileAlertBackground = Colors.grey.shade800.withOpacity(.8);
-      cardBackground = Colors.grey.shade700;
+      cardBackground = Colors.grey.shade700.withOpacity(.2);
       alertButtonsBackground = Colors.black;
       profilePageButtonsBackground = Colors.grey[50];
       profilePageName = Colors.blue[100];
       addTaskAlertText = Colors.black;
       editTaskAlertBackground = Colors.grey;
       addTaskAlertBackground = Colors.grey;
-      editPicButtonBackground = Colors.grey;
+      editPicButtonBackground = Colors.white;
       profilePageName = Colors.blue[100];
       profilePageText = Colors.white;
       homePageText = Colors.white;
@@ -63,7 +63,7 @@ class ColorProvider {
       pageBackground = Colors.white;
       userNameAlert = Colors.white;
       profileAlertBackground = Colors.grey;
-      cardBackground = Colors.grey.shade200;
+      cardBackground = Colors.blue.shade200;
       alertButtonsBackground = Colors.white;
       profilePageButtonsBackground = Colors.white;
       profilePageName = Colors.blue;

@@ -26,7 +26,6 @@ class ProfilePageState extends State<ProfilePage> {
     super.initState();
   }
 
-  //final picker = ImagePicker();
   pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);

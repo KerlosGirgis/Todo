@@ -197,7 +197,7 @@ class _NotesPageState extends State<NotesPage> {
                       builder: (context) {
                         int isProtected = 0;
                         int titleColor = Colors.white.value;
-                        int coverColor = Colors.grey.shade700.value;
+                        int coverColor = Colors.grey.shade900.withOpacity(.7).value;
                         return StatefulBuilder(
                           builder: (BuildContext context, setState) {
                             return AlertDialog(
@@ -280,7 +280,7 @@ class _NotesPageState extends State<NotesPage> {
                                           onPressed: () {
                                             setState(() {
                                               coverColor =
-                                                  Colors.grey.shade700.value;
+                                                  Colors.grey.shade900.withOpacity(.7).value;
                                             });
                                           },
                                           icon: const Icon(Icons.undo_sharp))
@@ -338,16 +338,6 @@ class _NotesPageState extends State<NotesPage> {
                                         fontSize: 18),
                                   ),
                                 ),
-
-                                /*
-                                Note(
-                                        title: titleController.text,
-                                        body: '',
-                                        titleColor: titleColor,
-                                        coverColor: coverColor,
-                                        protected: isProtected,
-                                      )
-                                 */
                                 TextButton(
                                   onPressed: () async {
                                     Provider.of<NotesProvider>(context,
@@ -416,12 +406,9 @@ class _NotesPageState extends State<NotesPage> {
                         return GestureDetector(
                           child: Container(
                             margin: const EdgeInsets.all(16),
-                            // Use LayoutBuilder to adjust size based on parent constraints
                             child: LayoutBuilder(
                               builder: (context, constraints) {
-                                // Calculate the card width based on the screen width
                                 final cardWidth = screenSize.width * 0.8;
-                                // Maintain an aspect ratio for the card
                                 const aspectRatio = 16 / 9;
 
                                 return AspectRatio(
@@ -454,13 +441,10 @@ class _NotesPageState extends State<NotesPage> {
                                             style: TextStyle(
                                                 color: Color(notes
                                                     .notes[index].titleColor),
-                                                fontSize: 20),
+                                                fontSize: 24,fontWeight: FontWeight.bold),
                                           ),
                                           notes.notes[index].protected == 1
-                                              ? const Icon(
-                                                  Icons.lock_sharp,
-                                                  color: Colors.amber,
-                                                )
+                                              ? Image.asset("assets/lock.png",scale: 1.4,)
                                               : const Row(),
                                         ],
                                       )),
@@ -638,8 +622,8 @@ class _NotesPageState extends State<NotesPage> {
                                                           setState(() {
                                                             coverColor = Colors
                                                                 .grey
-                                                                .shade700
-                                                                .value;
+                                                                .shade900
+                                                                .withOpacity(.7).value;
                                                           });
                                                         },
                                                         icon: const Icon(
@@ -705,16 +689,7 @@ class _NotesPageState extends State<NotesPage> {
                                                       fontSize: 18),
                                                 ),
                                               ),
-                                              /*
-                                          Note(
-                                                    id: notes.notes[index].id,
-                                                    title:
-                                                    titleController.text,
-                                                    body: notes.notes[index].body,
-                                                    titleColor: titleColor,
-                                                    coverColor: coverColor,
-                                                    protected: isProtected)
-                                           */
+
                                               TextButton(
                                                 onPressed: () async {
                                                   Provider.of<NotesProvider>(
@@ -874,7 +849,7 @@ class _NotesPageState extends State<NotesPage> {
                                                         setState(() {
                                                           coverColor = Colors
                                                               .grey
-                                                              .shade700
+                                                              .shade900.withOpacity(.7)
                                                               .value;
                                                         });
                                                       },
@@ -937,15 +912,7 @@ class _NotesPageState extends State<NotesPage> {
                                                     fontSize: 18),
                                               ),
                                             ),
-                                            /*
-                                        Note(
-                                                  id: notes.notes[index].id,
-                                                  title: titleController.text,
-                                                  body: notes.notes[index].body,
-                                                  titleColor: titleColor,
-                                                  coverColor: coverColor,
-                                                  protected: isProtected)
-                                         */
+
                                             TextButton(
                                               onPressed: () async {
                                                 Provider.of<NotesProvider>(

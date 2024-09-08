@@ -217,15 +217,6 @@ class _TodoPageState extends State<TodoPage> {
                                     );
                                     return;
                                   }
-                                  /*
-                                  TodoItem(
-                                      title: titleController.text,
-                                      desc: descController.text,
-                                      status: 0,
-                                      date: date,
-                                      time: time,
-                                    )
-                                   */
                                   Provider.of<TasksProvider>(context,
                                           listen: false)
                                       .addTask(TodoItem(
@@ -320,10 +311,8 @@ class _TodoPageState extends State<TodoPage> {
                                                         color: user
                                                             .colorProvider
                                                             .taskTitle)
-                                                    : TextStyle(
-                                                        color: user
-                                                            .colorProvider
-                                                            .taskTitle,
+                                                    : const TextStyle(
+                                                        color: Colors.grey,
                                                         fontSize: 26,
                                                         decoration:
                                                             TextDecoration
