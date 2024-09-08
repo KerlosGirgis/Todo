@@ -197,7 +197,7 @@ class _NotesPageState extends State<NotesPage> {
                       builder: (context) {
                         int isProtected = 0;
                         int titleColor = Colors.white.value;
-                        int coverColor = Colors.grey.shade900.withOpacity(.7).value;
+                        int coverColor = Colors.grey.shade800.withOpacity(.5).value;
                         return StatefulBuilder(
                           builder: (BuildContext context, setState) {
                             return AlertDialog(
@@ -280,7 +280,7 @@ class _NotesPageState extends State<NotesPage> {
                                           onPressed: () {
                                             setState(() {
                                               coverColor =
-                                                  Colors.grey.shade900.withOpacity(.7).value;
+                                                  Colors.grey.shade800.withOpacity(.5).value;
                                             });
                                           },
                                           icon: const Icon(Icons.undo_sharp))
@@ -622,8 +622,8 @@ class _NotesPageState extends State<NotesPage> {
                                                           setState(() {
                                                             coverColor = Colors
                                                                 .grey
-                                                                .shade900
-                                                                .withOpacity(.7).value;
+                                                                .shade800
+                                                                .withOpacity(.5).value;
                                                           });
                                                         },
                                                         icon: const Icon(
@@ -849,7 +849,7 @@ class _NotesPageState extends State<NotesPage> {
                                                         setState(() {
                                                           coverColor = Colors
                                                               .grey
-                                                              .shade900.withOpacity(.7)
+                                                              .shade800.withOpacity(.5)
                                                               .value;
                                                         });
                                                       },
