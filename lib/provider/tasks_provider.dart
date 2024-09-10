@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:todo/services/notification_service.dart';
 
 import '../models/todo_item.dart';
 import '../services/database_service.dart';
@@ -7,11 +6,8 @@ import '../services/database_service.dart';
 class TasksProvider with ChangeNotifier{
   List<TodoItem> items = [];
 
-
-
   Future<void> get() async {
     items = await DatabaseService().getItems();
-    NotificationService().syncNotifications(items);
     notifyListeners();
   }
   Future<void> updateTask(TodoItem todo) async {
