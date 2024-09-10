@@ -195,6 +195,8 @@ class _TodoPageState extends State<TodoPage> {
                                 onPressed: () {
                                   titleController.clear();
                                   descController.clear();
+                                  date="";
+                                  time="";
                                   Navigator.pop(context);
                                 },
                                 child: Text(
@@ -229,6 +231,8 @@ class _TodoPageState extends State<TodoPage> {
                                       .then((value) {
                                     titleController.clear();
                                     descController.clear();
+                                    date="";
+                                    time="";
                                     Fluttertoast.showToast(
                                         msg: "Task Added",
                                         toastLength: Toast.LENGTH_SHORT,
@@ -529,6 +533,8 @@ class _TodoPageState extends State<TodoPage> {
                                                                     .clear();
                                                                 descController
                                                                     .clear();
+                                                                date = "";
+                                                                time = "";
                                                                 Fluttertoast.showToast(
                                                                     msg: "Task Updated",
                                                                     toastLength: Toast.LENGTH_SHORT,
