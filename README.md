@@ -38,7 +38,3 @@ allowing you to keep track of your tasks without needing an internet connection.
 This project is licensed under the GNU General Public License v3.0
 
 Developed with ❤️ by Kerlos Girgis
-
-Simple ToDo App
-
-<img width="100" alt="1.png" src="Screenshots%2F1.png"/><img width="100" alt="2.png" src="Screenshots%2F2.png"/><img width="100" alt="3.png" src="Screenshots%2F3.png"/>
