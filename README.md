@@ -16,8 +16,9 @@ allowing you to keep track of your tasks without needing an internet connection.
 
 ## Screenshots
 
-<img width="100" alt="1.png" src="Screenshots%2F1.png"/><img width="100" alt="2.png" src="Screenshots%2F2.png"/><img width="100" alt="3.png" src="Screenshots%2F3.png"/><img width="100" alt="4.png" src="Screenshots%2F3.png"/><img width="100" alt="5.png" src="Screenshots%2F3.png"/>
-<img width="100" alt="6.png" src="Screenshots%2F3.png"/><img width="100" alt="7.png" src="Screenshots%2F3.png"/><img width="100" alt="8.png" src="Screenshots%2F3.png"/>
+<img width="100" alt="1.png" src="Screenshots%2F1.png"/><img width="100" alt="2.png" src="Screenshots%2F2.png"/><img width="100" alt="3.png" src="Screenshots%2F3.png"/><img width="100" alt="4.png" src="Screenshots%2F4.png"/><img width="100" alt="5.png" src="Screenshots%2F5.png"/>
+
+<img width="100" alt="6.png" src="Screenshots%2F6.png"/><img width="100" alt="7.png" src="Screenshots%2F7.png"/><img width="100" alt="8.png" src="Screenshots%2F8.png"/>
 
 ## Getting Started
 
