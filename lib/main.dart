@@ -13,8 +13,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 import 'package:flutter/material.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import 'package:provider/provider.dart';
 import 'package:todo/pages/todo_page.dart';
 import 'package:todo/provider/notes_provider.dart';
@@ -23,6 +23,7 @@ import 'package:todo/provider/theme_provider.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:flutter/services.dart';
+import 'package:todo/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,8 @@ void main() async {
     ),
   );
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  NotificationService().initNotification();
+  tz.initializeTimeZones();
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => UserProvider()),
     ChangeNotifierProvider(create: (_) => ThemeProvider()),
