@@ -743,10 +743,6 @@ class _TodoPageState extends State<TodoPage> {
                                         ),
                                         const Padding(
                                             padding:
-                                            EdgeInsets.only(right: 10)),
-                                        IconButton(onPressed: (){}, icon: const Icon(Icons.notifications)),
-                                        const Padding(
-                                            padding:
                                                 EdgeInsets.only(right: 10)),
                                         tasks.items[index].status != 1 &&
                                                 tasks.items[index].date
@@ -776,7 +772,7 @@ class _TodoPageState extends State<TodoPage> {
                                                   )
                                                 : tasks.items[index].status != 1
                                                     ? const Icon(
-                                                        Icons.check_outlined)
+                                                        Icons.check_outlined,color: Colors.grey,)
                                                     : const Icon(
                                                         Icons.check,
                                                         color: Colors.green,
