@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 
 class Button extends StatelessWidget {
@@ -33,11 +34,13 @@ class Button extends StatelessWidget {
               borderRadius: BorderRadius.all(Radius.circular(13)),
             ),
             backgroundColor: status ? const Color(0xff3D5AFE) : Colors.white),
-        child: Text(
-          label,
-          style: TextStyle(
-              color: status ? Colors.white : const Color(0xff3D5AFE),
-              fontSize: fontSize),
+        child: Center(
+          child: AutoSizeText(
+            label,
+            style: TextStyle(
+                color: status ? Colors.white : const Color(0xff3D5AFE),
+                fontSize: fontSize),
+          ),
         ),
       ),
     );

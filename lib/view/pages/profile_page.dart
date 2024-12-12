@@ -71,6 +71,7 @@ class ProfilePageState extends State<ProfilePage> {
       builder: (context, user, child) {
         return Scaffold(
             appBar: AppBar(
+              surfaceTintColor: Colors.transparent,
               toolbarHeight: 40,
               backgroundColor: Colors.transparent,
               leading: IconButton(
