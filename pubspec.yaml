@@ -78,7 +78,6 @@ flutter:
   assets:
       - assets/
       - assets/avatars/
-      - assets/HomeIcons/
       - assets/nasb.json
   #   - images/a_dot_ham.jpeg
 
