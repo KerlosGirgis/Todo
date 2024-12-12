@@ -27,7 +27,6 @@ class VerseManager {
 
     // Pick a random verse based on the seed
     int index = random.nextInt(_verses!.length);
-    print(_verses![index]);
     return _verses![index];
   }
 }
