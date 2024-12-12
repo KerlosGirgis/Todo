@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/provider/user_provider.dart';
+import 'package:todo/services/verse_manager.dart';
 
 import '../../services/icon_provider.dart';
-import '../pages/profile_page.dart';
 
 class AppbarAvatar extends StatelessWidget {
   const AppbarAvatar({
@@ -62,9 +62,45 @@ class AppbarAvatar extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                       color: Colors.white, fontSize: 42),
-                                ))
+                                )),
                           ],
                         ),
+                        Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height/60)),
+                        Center(
+                          child: Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    "Verse Of The Day",
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blueAccent,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    VerseManager.getDailyVerse(),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.black87,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
                       ],
                     ),
                   );

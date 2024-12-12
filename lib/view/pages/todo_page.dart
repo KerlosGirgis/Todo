@@ -248,9 +248,7 @@ class _TodoPageState extends State<TodoPage> {
                                     fontSize: 18,
                                     size: 1,
                                   ),
-                                  const Spacer(
-                                    flex: 1,
-                                  ),
+                                  Padding(padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/25)),
                                   Button(
                                     onPressed: () async {
                                       if (titleController.text.isEmpty) {
@@ -576,6 +574,7 @@ class _TodoPageState extends State<TodoPage> {
                                                             fontSize: 18,
                                                             size: 1,
                                                           ),
+                                                          Padding(padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/25)),
                                                           Button(
                                                             onPressed:
                                                                 () async {
@@ -742,6 +741,10 @@ class _TodoPageState extends State<TodoPage> {
                                             },
                                           ),
                                         ),
+                                        const Padding(
+                                            padding:
+                                            EdgeInsets.only(right: 10)),
+                                        IconButton(onPressed: (){}, icon: const Icon(Icons.notifications)),
                                         const Padding(
                                             padding:
                                                 EdgeInsets.only(right: 10)),

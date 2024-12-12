@@ -16,6 +16,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/services/verse_manager.dart';
 import 'package:todo/view/pages/todo_page.dart';
 import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/tasks_provider.dart';
@@ -29,6 +30,7 @@ void main() async {
   await DatabaseService().storeEncryptionKey().then((onValue) async {
     await DatabaseService().openDb();
   });
+  await VerseManager.loadVerses();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.transparent,

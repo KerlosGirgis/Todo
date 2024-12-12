@@ -303,6 +303,7 @@ class _NotesPageState extends State<NotesPage> {
                                   fontSize: 18,
                                   size: 1,
                                 ),
+                                Padding(padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/25)),
                                 Button(
                                   onPressed: () async {
                                     Provider.of<NotesProvider>(context,
@@ -705,6 +706,7 @@ class _NotesPageState extends State<NotesPage> {
                                                 fontSize: 18,
                                                 size: 1,
                                               ),
+                                              Padding(padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/25)),
                                               Button(
                                                 onPressed: () async {
                                                   Provider.of<NotesProvider>(
@@ -973,6 +975,7 @@ class _NotesPageState extends State<NotesPage> {
                                               fontSize: 18,
                                               size: 1,
                                             ),
+                                            Padding(padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/25)),
                                             Button(
                                               onPressed: () async {
                                                 Provider.of<NotesProvider>(
