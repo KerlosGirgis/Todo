@@ -74,7 +74,7 @@ android {
     }
 
     dependencies {
-        implementation 'com.google.crypto.tink:tink-android:1.8.0'
+        implementation 'com.google.crypto.tink:tink-android:1.15.0'
         implementation 'com.google.errorprone:error_prone_annotations:2.23.0'
     }
 
