@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/services/verse_manager.dart';
@@ -67,36 +69,50 @@ class AppbarAvatar extends StatelessWidget {
                         ),
                         Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height/60)),
                         Center(
-                          child: Card(
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text(
-                                    "Verse Of The Day",
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blueAccent,
+                          child: GestureDetector(
+                            onLongPress: (){
+                              Clipboard.setData(ClipboardData(text: VerseManager.getDailyVerse())).then((_) {
+                                Fluttertoast.showToast(
+                                    msg: "Verse copied to clipboard",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                    backgroundColor:
+                                    user.colorProvider.cardBackground,
+                                    textColor: user.colorProvider.appTitle,
+                                    fontSize: 19.0);
+                              });
+                            },
+                            child: Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text(
+                                      "Verse Of The Day",
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    VerseManager.getDailyVerse(),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontStyle: FontStyle.italic,
-                                      color: Colors.black87,
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      VerseManager.getDailyVerse(),
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontStyle: FontStyle.italic,
+                                        color: Colors.black87,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
