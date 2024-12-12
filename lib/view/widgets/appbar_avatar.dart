@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -57,16 +56,14 @@ class AppbarAvatar extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Expanded(
-                                child: AutoSizeText(
-                                  "${user.user.firstName} ${user.user.lastName}",
-                                  maxLines: 1,
-                                  minFontSize: 14,
-                                  overflow: TextOverflow.clip,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      color: Colors.white, fontSize: 42),
-                                )),
+                            Text(
+                              "${user.user.firstName} ${user.user.lastName}",
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 42),
+                            ),
                           ],
                         ),
                         Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height/60)),
