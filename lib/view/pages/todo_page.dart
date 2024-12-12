@@ -1,16 +1,16 @@
-import 'dart:io';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/models/todo_item.dart';
-import 'package:todo/pages/notes_page.dart';
-import 'package:todo/pages/profile_page.dart';
+import 'package:todo/view/pages/notes_page.dart';
 import 'package:todo/provider/tasks_provider.dart';
 import 'package:todo/provider/user_provider.dart';
-import 'package:todo/services/icon_provider.dart';
+import 'package:todo/view/pages/profile_page.dart';
+import 'package:todo/view/widgets/button.dart';
+
+import '../widgets/appbar_avatar.dart';
 
 class TodoPage extends StatefulWidget {
   const TodoPage({
@@ -29,13 +29,7 @@ class _TodoPageState extends State<TodoPage> {
     super.initState();
   }
 
-  DateTime stringToDateTime(String date, String time12Hour) {
-    DateFormat format12Hour = DateFormat('h:mm a');
-    DateTime dateTime = format12Hour.parse(time12Hour);
-    DateFormat format24Hour = DateFormat('HH:mm:ss');
-    String time24Hour = format24Hour.format(dateTime);
-    return DateTime.parse("$date $time24Hour");
-  }
+
 
   TextEditingController titleController = TextEditingController();
   TextEditingController descController = TextEditingController();
@@ -98,10 +92,51 @@ class _TodoPageState extends State<TodoPage> {
                             scrollable: true,
                             backgroundColor:
                                 user.colorProvider.addTaskAlertBackground,
-                            title: const Text(
-                              "Add Task",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 32),
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                const Spacer(
+                                  flex: 1,
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xffd8defb),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.add_task,
+                                    color: Color(0xff3D5AFE),
+                                    size: 20,
+                                  ),
+                                ),
+                                const Spacer(
+                                  flex: 10,
+                                ),
+                                const Text(
+                                  "Add Task",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32),
+                                ),
+                                const Spacer(
+                                  flex: 10,
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    titleController.clear();
+                                    descController.clear();
+                                    date = "";
+                                    time = "";
+                                    Navigator.pop(context);
+                                  },
+                                  icon: const Icon(Icons.close),style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.grey.shade300,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                                  ),
+                                ),)
+                              ],
                             ),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -115,7 +150,10 @@ class _TodoPageState extends State<TodoPage> {
                                       labelStyle: TextStyle(
                                           fontSize: 30,
                                           color: user
-                                              .colorProvider.addTaskAlertText)),
+                                              .colorProvider.addTaskAlertText),
+                                      border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(15))),
                                 ),
                                 TextField(
                                   controller: descController,
@@ -127,7 +165,10 @@ class _TodoPageState extends State<TodoPage> {
                                       labelStyle: TextStyle(
                                           fontSize: 30,
                                           color: user
-                                              .colorProvider.addTaskAlertText)),
+                                              .colorProvider.addTaskAlertText),
+                                      border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(15))),
                                 ),
                                 const Padding(
                                     padding: EdgeInsets.only(bottom: 15)),
@@ -191,66 +232,69 @@ class _TodoPageState extends State<TodoPage> {
                               ],
                             ),
                             actions: [
-                              TextButton(
-                                onPressed: () {
-                                  titleController.clear();
-                                  descController.clear();
-                                  date="";
-                                  time="";
-                                  Navigator.pop(context);
-                                },
-                                child: Text(
-                                  "Cancel",
-                                  style: TextStyle(
-                                      color: Colors.blueAccent[900],
-                                      fontSize: 18),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  if (titleController.text.isEmpty) {
-                                    Fluttertoast.showToast(
-                                        msg: "Task title can't be empty",
-                                        toastLength: Toast.LENGTH_SHORT,
-                                        gravity: ToastGravity.BOTTOM,
-                                        backgroundColor: Colors.red,
-                                        textColor: Colors.white,
-                                        fontSize: 19.0
-                                    );
-                                    return;
-                                  }
-                                  Provider.of<TasksProvider>(context,
-                                          listen: false)
-                                      .addTask(TodoItem(
-                                    title: titleController.text,
-                                    desc: descController.text,
-                                    status: 0,
-                                    date: date,
-                                    time: time,
-                                  ))
-                                      .then((value) {
-                                    titleController.clear();
-                                    descController.clear();
-                                    date="";
-                                    time="";
-                                    Fluttertoast.showToast(
-                                        msg: "Task Added",
-                                        toastLength: Toast.LENGTH_SHORT,
-                                        gravity: ToastGravity.BOTTOM,
-                                        backgroundColor: user.colorProvider.cardBackground,
-                                        textColor: user.colorProvider.appTitle,
-                                        fontSize: 19.0
-                                    );
-                                  });
-                                  Navigator.pop(context);
-
-                                },
-                                child: Text(
-                                  "Save",
-                                  style: TextStyle(
-                                      color: Colors.blueAccent[900],
-                                      fontSize: 18),
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Button(
+                                    onPressed: () {
+                                      titleController.clear();
+                                      descController.clear();
+                                      date = "";
+                                      time = "";
+                                      Navigator.pop(context);
+                                    },
+                                    label: 'Cancel',
+                                    status: false,
+                                    fontSize: 18,
+                                    size: 1,
+                                  ),
+                                  const Spacer(
+                                    flex: 1,
+                                  ),
+                                  Button(
+                                    onPressed: () async {
+                                      if (titleController.text.isEmpty) {
+                                        Fluttertoast.showToast(
+                                            msg: "Task title can't be empty",
+                                            toastLength: Toast.LENGTH_SHORT,
+                                            gravity: ToastGravity.BOTTOM,
+                                            backgroundColor: Colors.red,
+                                            textColor: Colors.white,
+                                            fontSize: 19.0);
+                                        return;
+                                      }
+                                      Provider.of<TasksProvider>(context,
+                                              listen: false)
+                                          .addTask(TodoItem(
+                                        title: titleController.text,
+                                        desc: descController.text,
+                                        status: 0,
+                                        date: date,
+                                        time: time,
+                                      ))
+                                          .then((value) {
+                                        titleController.clear();
+                                        descController.clear();
+                                        date = "";
+                                        time = "";
+                                        Fluttertoast.showToast(
+                                            msg: "Task Added",
+                                            toastLength: Toast.LENGTH_SHORT,
+                                            gravity: ToastGravity.BOTTOM,
+                                            backgroundColor: user
+                                                .colorProvider.cardBackground,
+                                            textColor:
+                                                user.colorProvider.appTitle,
+                                            fontSize: 19.0);
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    label: 'Save',
+                                    status: true,
+                                    fontSize: 18,
+                                    size: 1,
+                                  ),
+                                ],
                               ),
                             ],
                           );
@@ -287,10 +331,10 @@ class _TodoPageState extends State<TodoPage> {
                                     msg: "Task Deleted",
                                     toastLength: Toast.LENGTH_SHORT,
                                     gravity: ToastGravity.BOTTOM,
-                                    backgroundColor: user.colorProvider.cardBackground,
+                                    backgroundColor:
+                                        user.colorProvider.cardBackground,
                                     textColor: user.colorProvider.appTitle,
-                                    fontSize: 19.0
-                                );
+                                    fontSize: 19.0);
                               });
                             },
                             key: Key(taskKey),
@@ -309,12 +353,14 @@ class _TodoPageState extends State<TodoPage> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 minFontSize: 18,
-                                                style: tasks.items[index].status == 0
+                                                style: tasks.items[index]
+                                                            .status ==
+                                                        0
                                                     ? TextStyle(
                                                         fontSize: 26,
-                                                        color: user
-                                                            .colorProvider
-                                                            .taskTitle)
+                                                        color:
+                                                            user.colorProvider
+                                                                .taskTitle)
                                                     : const TextStyle(
                                                         color: Colors.grey,
                                                         fontSize: 26,
@@ -338,17 +384,55 @@ class _TodoPageState extends State<TodoPage> {
                                                             setState) {
                                                       return AlertDialog(
                                                         scrollable: true,
-                                                        title: const Text(
-                                                          "Edit Task",
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              fontSize: 32),
+                                                        title: Row(
+                                                          mainAxisAlignment: MainAxisAlignment.start,
+                                                          children: [
+                                                            const Spacer(
+                                                              flex: 1,
+                                                            ),
+                                                            Container(
+                                                              padding: const EdgeInsets.all(8),
+                                                              decoration: BoxDecoration(
+                                                                color: const Color(0xffd8defb),
+                                                                borderRadius: BorderRadius.circular(8),
+                                                              ),
+                                                              child: const Icon(
+                                                                Icons.edit,
+                                                                color: Color(0xff3D5AFE),
+                                                                size: 20,
+                                                              ),
+                                                            ),
+                                                            const Spacer(
+                                                              flex: 10,
+                                                            ),
+                                                            const Text(
+                                                              "Edit Task",
+                                                              style: TextStyle(
+                                                                  fontWeight: FontWeight.bold,
+                                                                  fontSize: 32),
+                                                            ),
+                                                            const Spacer(
+                                                              flex: 10,
+                                                            ),
+                                                            IconButton(
+                                                              onPressed: () {
+                                                                titleController.clear();
+                                                                descController.clear();
+                                                                date = "";
+                                                                time = "";
+                                                                Navigator.pop(context);
+                                                              },
+                                                              icon: const Icon(Icons.close),style: ElevatedButton.styleFrom(
+                                                              backgroundColor: Colors.grey.shade300,
+                                                              shape: const RoundedRectangleBorder(
+                                                                borderRadius: BorderRadius.all(Radius.circular(8)),
+                                                              ),
+                                                            ),)
+                                                          ],
                                                         ),
                                                         backgroundColor: user
                                                             .colorProvider
-                                                            .editTaskAlertBackground,
+                                                            .addTaskAlertBackground,
                                                         content: Column(
                                                           mainAxisSize:
                                                               MainAxisSize.min,
@@ -366,7 +450,11 @@ class _TodoPageState extends State<TodoPage> {
                                                                           30,
                                                                       color: user
                                                                           .colorProvider
-                                                                          .addTaskAlertText)),
+                                                                          .addTaskAlertText),
+                                                                  border: OutlineInputBorder(
+                                                                      borderRadius:
+                                                                      BorderRadius.circular(15))
+                                                              ),
                                                             ),
                                                             TextField(
                                                               controller:
@@ -384,7 +472,11 @@ class _TodoPageState extends State<TodoPage> {
                                                                           30,
                                                                       color: user
                                                                           .colorProvider
-                                                                          .addTaskAlertText)),
+                                                                          .addTaskAlertText),
+                                                                  border: OutlineInputBorder(
+                                                                      borderRadius:
+                                                                      BorderRadius.circular(15))
+                                                              ),
                                                             ),
                                                             Row(
                                                               children: [
@@ -468,7 +560,7 @@ class _TodoPageState extends State<TodoPage> {
                                                           ],
                                                         ),
                                                         actions: [
-                                                          TextButton(
+                                                          Button(
                                                             onPressed: () {
                                                               titleController
                                                                   .clear();
@@ -479,23 +571,34 @@ class _TodoPageState extends State<TodoPage> {
                                                               Navigator.pop(
                                                                   context);
                                                             },
-                                                            child: const Text(
-                                                                "Cancel"),
+                                                            label: "Cancel",
+                                                            status: false,
+                                                            fontSize: 18,
+                                                            size: 1,
                                                           ),
-                                                          TextButton(
+                                                          Button(
                                                             onPressed:
                                                                 () async {
                                                               if (titleController
                                                                   .text
                                                                   .isEmpty) {
                                                                 Fluttertoast.showToast(
-                                                                    msg: "Task title can't be empty",
-                                                                    toastLength: Toast.LENGTH_SHORT,
-                                                                    gravity: ToastGravity.BOTTOM,
-                                                                    backgroundColor: Colors.red,
-                                                                    textColor: Colors.white,
-                                                                    fontSize: 19.0
-                                                                );
+                                                                    msg:
+                                                                        "Task title can't be empty",
+                                                                    toastLength:
+                                                                        Toast
+                                                                            .LENGTH_SHORT,
+                                                                    gravity:
+                                                                        ToastGravity
+                                                                            .BOTTOM,
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .red,
+                                                                    textColor:
+                                                                        Colors
+                                                                            .white,
+                                                                    fontSize:
+                                                                        19.0);
                                                                 return;
                                                               }
                                                               /*
@@ -536,13 +639,22 @@ class _TodoPageState extends State<TodoPage> {
                                                                 date = "";
                                                                 time = "";
                                                                 Fluttertoast.showToast(
-                                                                    msg: "Task Updated",
-                                                                    toastLength: Toast.LENGTH_SHORT,
-                                                                    gravity: ToastGravity.BOTTOM,
-                                                                    backgroundColor: user.colorProvider.cardBackground,
-                                                                    textColor: user.colorProvider.appTitle,
-                                                                    fontSize: 19.0
-                                                                );
+                                                                    msg:
+                                                                        "Task Updated",
+                                                                    toastLength:
+                                                                        Toast
+                                                                            .LENGTH_SHORT,
+                                                                    gravity:
+                                                                        ToastGravity
+                                                                            .BOTTOM,
+                                                                    backgroundColor: user
+                                                                        .colorProvider
+                                                                        .cardBackground,
+                                                                    textColor: user
+                                                                        .colorProvider
+                                                                        .appTitle,
+                                                                    fontSize:
+                                                                        19.0);
                                                               });
                                                               if (context
                                                                   .mounted) {
@@ -551,27 +663,16 @@ class _TodoPageState extends State<TodoPage> {
                                                                     .pop();
                                                               }
                                                             },
-                                                            child: const Text(
-                                                                "Update"),
+                                                            label: 'Update',
+                                                            status: true,
+                                                            fontSize: 18,
+                                                            size: 1,
                                                           ),
                                                         ],
                                                       );
                                                     });
                                                   });
                                             },
-                                            /*
-                                    TodoItem(
-                                            title: tasks.items[index]
-                                                .title,
-                                            desc: tasks.items[index]
-                                                .desc,
-                                            id: tasks.items[index].id,
-                                            status: 1,
-                                            date: tasks.items[index]
-                                                .date,
-                                            time: tasks.items[index]
-                                                .time)
-                                    */
                                             onTap: () async {
                                               if (tasks.items[index].status ==
                                                   0) {
@@ -595,12 +696,14 @@ class _TodoPageState extends State<TodoPage> {
                                                   descController.clear();
                                                   Fluttertoast.showToast(
                                                       msg: "Task done",
-                                                      toastLength: Toast.LENGTH_SHORT,
-                                                      gravity: ToastGravity.BOTTOM,
-                                                      backgroundColor: Colors.green,
+                                                      toastLength:
+                                                          Toast.LENGTH_SHORT,
+                                                      gravity:
+                                                          ToastGravity.BOTTOM,
+                                                      backgroundColor:
+                                                          Colors.green,
                                                       textColor: Colors.white,
-                                                      fontSize: 19.0
-                                                  );
+                                                      fontSize: 19.0);
                                                 });
                                               } else {
                                                 Provider.of<TasksProvider>(
@@ -623,29 +726,32 @@ class _TodoPageState extends State<TodoPage> {
                                                   descController.clear();
                                                   Fluttertoast.showToast(
                                                       msg: "Task undone",
-                                                      toastLength: Toast.LENGTH_SHORT,
-                                                      gravity: ToastGravity.BOTTOM,
-                                                      backgroundColor: user.colorProvider.cardBackground,
-                                                      textColor: user.colorProvider.appTitle,
-                                                      fontSize: 19.0
-                                                  );
+                                                      toastLength:
+                                                          Toast.LENGTH_SHORT,
+                                                      gravity:
+                                                          ToastGravity.BOTTOM,
+                                                      backgroundColor: user
+                                                          .colorProvider
+                                                          .cardBackground,
+                                                      textColor: user
+                                                          .colorProvider
+                                                          .appTitle,
+                                                      fontSize: 19.0);
                                                 });
                                               }
                                             },
                                           ),
                                         ),
-
                                         const Padding(
                                             padding:
                                                 EdgeInsets.only(right: 10)),
-                                        //Text(DateTime.now().isAfter(stringToDateTime(items[index].date, items[index].time)).toString())
                                         tasks.items[index].status != 1 &&
                                                 tasks.items[index].date
                                                     .isNotEmpty &&
                                                 tasks.items[index].time
                                                     .isNotEmpty &&
                                                 DateTime.now().isAfter(
-                                                    stringToDateTime(
+                                                    user.stringToDateTime(
                                                         tasks.items[index].date,
                                                         tasks
                                                             .items[index].time))
@@ -726,119 +832,37 @@ class _TodoPageState extends State<TodoPage> {
             actions: [
               Row(
                 children: [
-                  GestureDetector(
-                    child: CircleAvatar(
-                      backgroundColor: Colors.transparent,
-                      backgroundImage: user.user.pic
-                                  .substring(0, 1)
-                                  .compareTo("0") ==
-                              0
-                          ? AssetImage(IconProvider.getAvatar(user.user.pic))
-                          : FileImage(File(user.user.pic)),
-                      radius: 18,
-                    ),
-                    onTap: () {
-                      showDialog(
-                          useRootNavigator: true,
-                          context: context,
-                          builder: (e) {
-                            return AlertDialog(
-                              scrollable: true,
-                              backgroundColor:
-                                  user.colorProvider.profileAlertBackground,
-                              title: CircleAvatar(
-                                radius: 130,
-                                backgroundColor: Colors.transparent,
-                                backgroundImage: user.user.pic
-                                            .substring(0, 1)
-                                            .compareTo("0") ==
-                                        0
-                                    ? AssetImage(
-                                        IconProvider.getAvatar(user.user.pic))
-                                    : FileImage(File(user.user.pic)),
-                              ),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Expanded(
-                                          child: Text(
-                                        "${user.user.firstName} ${user.user.lastName}",
-                                        maxLines: 2,
-                                        overflow: TextOverflow.clip,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            color: Colors.white, fontSize: 42),
-                                      ))
-                                    ],
-                                  ),
-                                  const Padding(
-                                      padding: EdgeInsets.only(bottom: 10)),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                user.user.theme == 0
-                                                    ? Colors.white
-                                                    : Colors.black12,
-                                          ),
-                                          onPressed: () {
-                                            Provider.of<UserProvider>(context,
-                                                    listen: false)
-                                                .changeTheme();
-                                            Navigator.pop(context);
-                                          },
-                                          child: Icon(user.user.theme == 1
-                                              ? Icons.dark_mode_sharp
-                                              : Icons.light_mode_sharp)),
-                                      const Padding(
-                                          padding: EdgeInsets.only(right: 30)),
-                                      ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            Navigator.push(
-                                              context,
-                                              PageRouteBuilder(
-                                                pageBuilder: (context,
-                                                        animation,
-                                                        secondaryAnimation) =>
-                                                    const ProfilePage(),
-                                                transitionsBuilder: (context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                    child) {
-                                                  const begin =
-                                                      Offset(0.0, 1.0);
-                                                  const end = Offset.zero;
-                                                  const curve = Curves.ease;
-                                                  var tween = Tween(
-                                                          begin: begin,
-                                                          end: end)
-                                                      .chain(CurveTween(
-                                                          curve: curve));
-                                                  var offsetAnimation =
-                                                      animation.drive(tween);
-                                                  return SlideTransition(
-                                                      position: offsetAnimation,
-                                                      child: child);
-                                                },
-                                              ),
-                                            );
-                                          },
-                                          child: const Icon(Icons.edit))
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            );
-                          });
-                    },
-                  ),
+                  IconButton(onPressed: (){
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context,
+                            animation,
+                            secondaryAnimation) =>
+                        const ProfilePage(),
+                        transitionsBuilder: (context,
+                            animation,
+                            secondaryAnimation,
+                            child) {
+                          const begin =
+                          Offset(0.0, 1.0);
+                          const end = Offset.zero;
+                          const curve = Curves.ease;
+                          var tween = Tween(
+                              begin: begin,
+                              end: end)
+                              .chain(CurveTween(
+                              curve: curve));
+                          var offsetAnimation =
+                          animation.drive(tween);
+                          return SlideTransition(
+                              position: offsetAnimation,
+                              child: child);
+                        },
+                      ),
+                    );
+                  }, icon: const Icon(Icons.settings,color: Colors.grey,)),
+                  const AppbarAvatar(),
                   const Padding(padding: EdgeInsets.only(right: 18))
                 ],
               )

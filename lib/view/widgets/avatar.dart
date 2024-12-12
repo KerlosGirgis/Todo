@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../services/icon_provider.dart';
+import '../../services/icon_provider.dart';
 
 class Avatar extends StatelessWidget {
   const Avatar({super.key, required this.saveAvatar, required this.number});

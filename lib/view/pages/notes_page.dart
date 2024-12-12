@@ -1,16 +1,16 @@
-import 'dart:io';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/pages/note_editor_page.dart';
-import 'package:todo/pages/profile_page.dart';
+import 'package:todo/view/pages/note_editor_page.dart';
+import 'package:todo/view/pages/profile_page.dart';
 import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/user_provider.dart';
-import '../models/note.dart';
-import '../services/icon_provider.dart';
+import '../../models/note.dart';
 import 'package:todo/services/authentication_service.dart';
+import '../widgets/appbar_avatar.dart';
+import '../widgets/button.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -53,119 +53,37 @@ class _NotesPageState extends State<NotesPage> {
             actions: [
               Row(
                 children: [
-                  GestureDetector(
-                    child: CircleAvatar(
-                      backgroundColor: Colors.transparent,
-                      backgroundImage: user.user.pic
-                                  .substring(0, 1)
-                                  .compareTo("0") ==
-                              0
-                          ? AssetImage(IconProvider.getAvatar(user.user.pic))
-                          : FileImage(File(user.user.pic)),
-                      radius: 18,
-                    ),
-                    onTap: () {
-                      showDialog(
-                          useRootNavigator: true,
-                          context: context,
-                          builder: (e) {
-                            return AlertDialog(
-                              scrollable: true,
-                              backgroundColor:
-                                  user.colorProvider.profileAlertBackground,
-                              title: CircleAvatar(
-                                radius: 130,
-                                backgroundColor: Colors.transparent,
-                                backgroundImage: user.user.pic
-                                            .substring(0, 1)
-                                            .compareTo("0") ==
-                                        0
-                                    ? AssetImage(
-                                        IconProvider.getAvatar(user.user.pic))
-                                    : FileImage(File(user.user.pic)),
-                              ),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Expanded(
-                                          child: Text(
-                                        "${user.user.firstName} ${user.user.lastName}",
-                                        maxLines: 2,
-                                        overflow: TextOverflow.clip,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                            color: Colors.white, fontSize: 42),
-                                      ))
-                                    ],
-                                  ),
-                                  const Padding(
-                                      padding: EdgeInsets.only(bottom: 10)),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                user.user.theme == 0
-                                                    ? Colors.white
-                                                    : Colors.black12,
-                                          ),
-                                          onPressed: () {
-                                            Provider.of<UserProvider>(context,
-                                                    listen: false)
-                                                .changeTheme();
-                                            Navigator.pop(context);
-                                          },
-                                          child: Icon(user.user.theme == 1
-                                              ? Icons.dark_mode_sharp
-                                              : Icons.light_mode_sharp)),
-                                      const Padding(
-                                          padding: EdgeInsets.only(right: 30)),
-                                      ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            Navigator.push(
-                                              context,
-                                              PageRouteBuilder(
-                                                pageBuilder: (context,
-                                                        animation,
-                                                        secondaryAnimation) =>
-                                                    const ProfilePage(),
-                                                transitionsBuilder: (context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                    child) {
-                                                  const begin =
-                                                      Offset(0.0, 1.0);
-                                                  const end = Offset.zero;
-                                                  const curve = Curves.ease;
-                                                  var tween = Tween(
-                                                          begin: begin,
-                                                          end: end)
-                                                      .chain(CurveTween(
-                                                          curve: curve));
-                                                  var offsetAnimation =
-                                                      animation.drive(tween);
-                                                  return SlideTransition(
-                                                      position: offsetAnimation,
-                                                      child: child);
-                                                },
-                                              ),
-                                            );
-                                          },
-                                          child: const Icon(Icons.edit))
-                                    ],
-                                  )
-                                ],
-                              ),
-                            );
-                          });
-                    },
-                  ),
+                  IconButton(onPressed: (){
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context,
+                            animation,
+                            secondaryAnimation) =>
+                        const ProfilePage(),
+                        transitionsBuilder: (context,
+                            animation,
+                            secondaryAnimation,
+                            child) {
+                          const begin =
+                          Offset(0.0, 1.0);
+                          const end = Offset.zero;
+                          const curve = Curves.ease;
+                          var tween = Tween(
+                              begin: begin,
+                              end: end)
+                              .chain(CurveTween(
+                              curve: curve));
+                          var offsetAnimation =
+                          animation.drive(tween);
+                          return SlideTransition(
+                              position: offsetAnimation,
+                              child: child);
+                        },
+                      ),
+                    );
+                  }, icon: const Icon(Icons.settings,color: Colors.grey,)),
+                  const AppbarAvatar(),
                   const Padding(padding: EdgeInsets.only(right: 18))
                 ],
               )
@@ -197,17 +115,60 @@ class _NotesPageState extends State<NotesPage> {
                       builder: (context) {
                         int isProtected = 0;
                         int titleColor = Colors.white.value;
-                        int coverColor = Colors.grey.shade800.withOpacity(.5).value;
+                        int coverColor =
+                            Colors.grey.shade800.withOpacity(.5).value;
                         return StatefulBuilder(
                           builder: (BuildContext context, setState) {
                             return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 2,
                               scrollable: true,
                               backgroundColor:
                                   user.colorProvider.addTaskAlertBackground,
-                              title: const Text(
-                                "Add Note",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 32),
+                              title: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  const Spacer(
+                                    flex: 1,
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xffd8defb),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.add_task,
+                                      color: Color(0xff3D5AFE),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const Spacer(
+                                    flex: 10,
+                                  ),
+                                  const Text(
+                                    "Add Note",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 32),
+                                  ),
+                                  const Spacer(
+                                    flex: 10,
+                                  ),
+                                  IconButton(
+                                      onPressed: () {
+                                        titleController.clear();
+                                        Navigator.pop(context);
+                                      },
+                                      icon: const Icon(Icons.close),style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey.shade300,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                                    ),
+                                  ),)
+                                ],
                               ),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -221,7 +182,10 @@ class _NotesPageState extends State<NotesPage> {
                                         labelStyle: TextStyle(
                                             fontSize: 30,
                                             color: user.colorProvider
-                                                .addTaskAlertText)),
+                                                .addTaskAlertText),
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(15))),
                                   ),
                                   const Padding(
                                       padding: EdgeInsets.only(bottom: 15)),
@@ -279,8 +243,9 @@ class _NotesPageState extends State<NotesPage> {
                                       IconButton(
                                           onPressed: () {
                                             setState(() {
-                                              coverColor =
-                                                  Colors.grey.shade800.withOpacity(.5).value;
+                                              coverColor = Colors.grey.shade800
+                                                  .withOpacity(.5)
+                                                  .value;
                                             });
                                           },
                                           icon: const Icon(Icons.undo_sharp))
@@ -293,21 +258,23 @@ class _NotesPageState extends State<NotesPage> {
                                           onPressed: () async {
                                             if (isProtected == 0) {
                                               bool isBioAvailable =
-                                                  await localAuthentication
-                                                      .canCheckBiometrics;
+                                                  await authService
+                                                      .authenticate();
                                               if (isBioAvailable) {
                                                 setState(() {
                                                   isProtected = 1;
                                                 });
                                               } else {
                                                 Fluttertoast.showToast(
-                                                    msg: "Couldn't read your fingerprint data",
-                                                    toastLength: Toast.LENGTH_SHORT,
-                                                    gravity: ToastGravity.BOTTOM,
+                                                    msg:
+                                                        "Couldn't read your fingerprint data",
+                                                    toastLength:
+                                                        Toast.LENGTH_SHORT,
+                                                    gravity:
+                                                        ToastGravity.BOTTOM,
                                                     backgroundColor: Colors.red,
                                                     textColor: Colors.white,
-                                                    fontSize: 19.0
-                                                );
+                                                    fontSize: 19.0);
                                               }
                                             } else if (isProtected == 1) {
                                               setState(() {
@@ -326,19 +293,17 @@ class _NotesPageState extends State<NotesPage> {
                                 ],
                               ),
                               actions: [
-                                TextButton(
+                                Button(
                                   onPressed: () {
                                     titleController.clear();
                                     Navigator.pop(context);
                                   },
-                                  child: Text(
-                                    "Cancel",
-                                    style: TextStyle(
-                                        color: Colors.blueAccent[900],
-                                        fontSize: 18),
-                                  ),
+                                  label: 'Cancel',
+                                  status: false,
+                                  fontSize: 18,
+                                  size: 1,
                                 ),
-                                TextButton(
+                                Button(
                                   onPressed: () async {
                                     Provider.of<NotesProvider>(context,
                                             listen: false)
@@ -355,21 +320,20 @@ class _NotesPageState extends State<NotesPage> {
                                           msg: "Note Added",
                                           toastLength: Toast.LENGTH_SHORT,
                                           gravity: ToastGravity.BOTTOM,
-                                          backgroundColor: user.colorProvider.cardBackground,
-                                          textColor: user.colorProvider.appTitle,
-                                          fontSize: 19.0
-                                      );
+                                          backgroundColor:
+                                              user.colorProvider.cardBackground,
+                                          textColor:
+                                              user.colorProvider.appTitle,
+                                          fontSize: 19.0);
                                     });
                                     if (context.mounted) {
                                       Navigator.of(context).pop();
                                     }
                                   },
-                                  child: Text(
-                                    "Save",
-                                    style: TextStyle(
-                                        color: Colors.blueAccent[900],
-                                        fontSize: 18),
-                                  ),
+                                  label: 'Save',
+                                  status: true,
+                                  fontSize: 18,
+                                  size: 1,
                                 ),
                               ],
                             );
@@ -441,10 +405,14 @@ class _NotesPageState extends State<NotesPage> {
                                             style: TextStyle(
                                                 color: Color(notes
                                                     .notes[index].titleColor),
-                                                fontSize: 24,fontWeight: FontWeight.bold),
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold),
                                           ),
                                           notes.notes[index].protected == 1
-                                              ? Image.asset("assets/lock.png",scale: 1.4,)
+                                              ? Image.asset(
+                                                  "assets/lock.png",
+                                                  scale: 1.4,
+                                                )
                                               : const Row(),
                                         ],
                                       )),
@@ -529,11 +497,48 @@ class _NotesPageState extends State<NotesPage> {
                                             scrollable: true,
                                             backgroundColor: user.colorProvider
                                                 .addTaskAlertBackground,
-                                            title: const Text(
-                                              "Edit Note",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 32),
+                                            title: Row(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              children: [
+                                                const Spacer(
+                                                  flex: 1,
+                                                ),
+                                                Container(
+                                                  padding: const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xffd8defb),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.edit,
+                                                    color: Color(0xff3D5AFE),
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                                const Spacer(
+                                                  flex: 10,
+                                                ),
+                                                const Text(
+                                                  "Edit Note",
+                                                  style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 32),
+                                                ),
+                                                const Spacer(
+                                                  flex: 10,
+                                                ),
+                                                IconButton(
+                                                  onPressed: () {
+                                                    titleController.clear();
+                                                    Navigator.pop(context);
+                                                  },
+                                                  icon: const Icon(Icons.close),style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.grey.shade300,
+                                                  shape: const RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                                                  ),
+                                                ),)
+                                              ],
                                             ),
                                             content: Column(
                                               mainAxisSize: MainAxisSize.min,
@@ -548,7 +553,13 @@ class _NotesPageState extends State<NotesPage> {
                                                           fontSize: 30,
                                                           color: user
                                                               .colorProvider
-                                                              .addTaskAlertText)),
+                                                              .addTaskAlertText),
+                                                      border:
+                                                          OutlineInputBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          15))),
                                                 ),
                                                 const Padding(
                                                     padding: EdgeInsets.only(
@@ -621,9 +632,9 @@ class _NotesPageState extends State<NotesPage> {
                                                         onPressed: () {
                                                           setState(() {
                                                             coverColor = Colors
-                                                                .grey
-                                                                .shade800
-                                                                .withOpacity(.5).value;
+                                                                .grey.shade800
+                                                                .withOpacity(.5)
+                                                                .value;
                                                           });
                                                         },
                                                         icon: const Icon(
@@ -640,21 +651,29 @@ class _NotesPageState extends State<NotesPage> {
                                                               0) {
                                                             bool
                                                                 isBioAvailable =
-                                                                await localAuthentication
-                                                                    .canCheckBiometrics;
+                                                                await authService
+                                                                    .authenticate();
                                                             if (isBioAvailable) {
                                                               setState(() {
                                                                 isProtected = 1;
                                                               });
                                                             } else {
                                                               Fluttertoast.showToast(
-                                                                  msg: "Couldn't read your fingerprint data",
-                                                                  toastLength: Toast.LENGTH_SHORT,
-                                                                  gravity: ToastGravity.BOTTOM,
-                                                                  backgroundColor: Colors.red,
-                                                                  textColor: Colors.white,
-                                                                  fontSize: 19.0
-                                                              );
+                                                                  msg:
+                                                                      "Couldn't read your fingerprint data",
+                                                                  toastLength: Toast
+                                                                      .LENGTH_SHORT,
+                                                                  gravity:
+                                                                      ToastGravity
+                                                                          .BOTTOM,
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .red,
+                                                                  textColor:
+                                                                      Colors
+                                                                          .white,
+                                                                  fontSize:
+                                                                      19.0);
                                                             }
                                                           } else if (isProtected ==
                                                               1) {
@@ -676,21 +695,17 @@ class _NotesPageState extends State<NotesPage> {
                                               ],
                                             ),
                                             actions: [
-                                              TextButton(
+                                              Button(
                                                 onPressed: () {
                                                   titleController.clear();
                                                   Navigator.pop(context);
                                                 },
-                                                child: Text(
-                                                  "Cancel",
-                                                  style: TextStyle(
-                                                      color: Colors
-                                                          .blueAccent[900],
-                                                      fontSize: 18),
-                                                ),
+                                                label: 'Cancel',
+                                                status: false,
+                                                fontSize: 18,
+                                                size: 1,
                                               ),
-
-                                              TextButton(
+                                              Button(
                                                 onPressed: () async {
                                                   Provider.of<NotesProvider>(
                                                           context,
@@ -713,24 +728,26 @@ class _NotesPageState extends State<NotesPage> {
                                                     titleController.clear();
                                                     Fluttertoast.showToast(
                                                         msg: "Note Edited",
-                                                        toastLength: Toast.LENGTH_SHORT,
-                                                        gravity: ToastGravity.BOTTOM,
-                                                        backgroundColor: user.colorProvider.cardBackground,
-                                                        textColor: user.colorProvider.appTitle,
-                                                        fontSize: 19.0
-                                                    );
+                                                        toastLength:
+                                                            Toast.LENGTH_SHORT,
+                                                        gravity:
+                                                            ToastGravity.BOTTOM,
+                                                        backgroundColor: user
+                                                            .colorProvider
+                                                            .cardBackground,
+                                                        textColor: user
+                                                            .colorProvider
+                                                            .appTitle,
+                                                        fontSize: 19.0);
                                                   });
                                                   if (context.mounted) {
                                                     Navigator.of(context).pop();
                                                   }
                                                 },
-                                                child: Text(
-                                                  "Save",
-                                                  style: TextStyle(
-                                                      color: Colors
-                                                          .blueAccent[900],
-                                                      fontSize: 18),
-                                                ),
+                                                label: 'Update',
+                                                status: true,
+                                                fontSize: 18,
+                                                size: 1,
                                               ),
                                             ],
                                           );
@@ -756,11 +773,48 @@ class _NotesPageState extends State<NotesPage> {
                                           scrollable: true,
                                           backgroundColor: user.colorProvider
                                               .addTaskAlertBackground,
-                                          title: const Text(
-                                            "Edit Note",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 32),
+                                          title: Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              const Spacer(
+                                                flex: 1,
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.all(8),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xffd8defb),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.edit,
+                                                  color: Color(0xff3D5AFE),
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              const Spacer(
+                                                flex: 10,
+                                              ),
+                                              const Text(
+                                                "Edit Note",
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 32),
+                                              ),
+                                              const Spacer(
+                                                flex: 10,
+                                              ),
+                                              IconButton(
+                                                onPressed: () {
+                                                  titleController.clear();
+                                                  Navigator.pop(context);
+                                                },
+                                                icon: const Icon(Icons.close),style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.grey.shade300,
+                                                shape: const RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                                                ),
+                                              ),)
+                                            ],
                                           ),
                                           content: Column(
                                             mainAxisSize: MainAxisSize.min,
@@ -775,7 +829,11 @@ class _NotesPageState extends State<NotesPage> {
                                                         fontSize: 30,
                                                         color: user
                                                             .colorProvider
-                                                            .addTaskAlertText)),
+                                                            .addTaskAlertText),
+                                                    border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(15))),
                                               ),
                                               const Padding(
                                                   padding: EdgeInsets.only(
@@ -848,8 +906,8 @@ class _NotesPageState extends State<NotesPage> {
                                                       onPressed: () {
                                                         setState(() {
                                                           coverColor = Colors
-                                                              .grey
-                                                              .shade800.withOpacity(.5)
+                                                              .grey.shade800
+                                                              .withOpacity(.5)
                                                               .value;
                                                         });
                                                       },
@@ -865,21 +923,27 @@ class _NotesPageState extends State<NotesPage> {
                                                       onPressed: () async {
                                                         if (isProtected == 0) {
                                                           bool isBioAvailable =
-                                                              await localAuthentication
-                                                                  .canCheckBiometrics;
+                                                              await authService
+                                                                  .authenticate();
                                                           if (isBioAvailable) {
                                                             setState(() {
                                                               isProtected = 1;
                                                             });
                                                           } else {
                                                             Fluttertoast.showToast(
-                                                                msg: "Couldn't read your fingerprint data",
-                                                                toastLength: Toast.LENGTH_SHORT,
-                                                                gravity: ToastGravity.BOTTOM,
-                                                                backgroundColor: Colors.red,
-                                                                textColor: Colors.white,
-                                                                fontSize: 19.0
-                                                            );
+                                                                msg:
+                                                                    "Couldn't read your fingerprint data",
+                                                                toastLength: Toast
+                                                                    .LENGTH_SHORT,
+                                                                gravity:
+                                                                    ToastGravity
+                                                                        .BOTTOM,
+                                                                backgroundColor:
+                                                                    Colors.red,
+                                                                textColor:
+                                                                    Colors
+                                                                        .white,
+                                                                fontSize: 19.0);
                                                           }
                                                         } else if (isProtected ==
                                                             1) {
@@ -899,21 +963,17 @@ class _NotesPageState extends State<NotesPage> {
                                             ],
                                           ),
                                           actions: [
-                                            TextButton(
+                                            Button(
                                               onPressed: () {
                                                 titleController.clear();
                                                 Navigator.pop(context);
                                               },
-                                              child: Text(
-                                                "Cancel",
-                                                style: TextStyle(
-                                                    color:
-                                                        Colors.blueAccent[900],
-                                                    fontSize: 18),
-                                              ),
+                                              label: 'Cancel',
+                                              status: false,
+                                              fontSize: 18,
+                                              size: 1,
                                             ),
-
-                                            TextButton(
+                                            Button(
                                               onPressed: () async {
                                                 Provider.of<NotesProvider>(
                                                         context,
@@ -932,24 +992,26 @@ class _NotesPageState extends State<NotesPage> {
                                                   titleController.clear();
                                                   Fluttertoast.showToast(
                                                       msg: "Note Edited",
-                                                      toastLength: Toast.LENGTH_SHORT,
-                                                      gravity: ToastGravity.BOTTOM,
-                                                      backgroundColor: user.colorProvider.cardBackground,
-                                                      textColor: user.colorProvider.appTitle,
-                                                      fontSize: 19.0
-                                                  );
+                                                      toastLength:
+                                                          Toast.LENGTH_SHORT,
+                                                      gravity:
+                                                          ToastGravity.BOTTOM,
+                                                      backgroundColor: user
+                                                          .colorProvider
+                                                          .cardBackground,
+                                                      textColor: user
+                                                          .colorProvider
+                                                          .appTitle,
+                                                      fontSize: 19.0);
                                                 });
                                                 if (context.mounted) {
                                                   Navigator.of(context).pop();
                                                 }
                                               },
-                                              child: Text(
-                                                "Save",
-                                                style: TextStyle(
-                                                    color:
-                                                        Colors.blueAccent[900],
-                                                    fontSize: 18),
-                                              ),
+                                              label: 'Update',
+                                              status: true,
+                                              fontSize: 18,
+                                              size: 1,
                                             ),
                                           ],
                                         );

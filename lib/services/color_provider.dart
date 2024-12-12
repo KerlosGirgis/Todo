@@ -16,7 +16,6 @@ class ColorProvider {
   Color? profilePageButtonsBackground;
   Color? profilePageName;
   Color? addTaskAlertText;
-  Color? editTaskAlertBackground;
   Color? addTaskAlertBackground;
   Color? editPicButtonBackground;
   Color? profilePageText;
@@ -41,8 +40,7 @@ class ColorProvider {
       profilePageButtonsBackground = Colors.grey[50];
       profilePageName = Colors.blue[100];
       addTaskAlertText = Colors.black;
-      editTaskAlertBackground = Colors.grey;
-      addTaskAlertBackground = Colors.grey;
+      addTaskAlertBackground = const Color(0xffF8F9FF);
       editPicButtonBackground = Colors.white;
       profilePageName = Colors.blue[100];
       profilePageText = Colors.white;
@@ -63,13 +61,12 @@ class ColorProvider {
       pageBackground = Colors.white;
       userNameAlert = Colors.white;
       profileAlertBackground = Colors.grey;
-      cardBackground = Colors.blue.shade200;
+      cardBackground = const Color(0xffF8F9FF);
       alertButtonsBackground = Colors.white;
       profilePageButtonsBackground = Colors.white;
       profilePageName = Colors.blue;
       addTaskAlertText = Colors.black;
-      editTaskAlertBackground = Colors.white;
-      addTaskAlertBackground = Colors.white;
+      addTaskAlertBackground = const Color(0xffF8F9FF);
       editPicButtonBackground = Colors.white;
       profilePageName = Colors.blue;
       profilePageText = Colors.black;

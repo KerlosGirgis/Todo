@@ -16,7 +16,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/pages/todo_page.dart';
+import 'package:todo/view/pages/todo_page.dart';
 import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/tasks_provider.dart';
 import 'package:todo/provider/theme_provider.dart';
@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300),
         useMaterial3: true,
       ),
       home: FutureBuilder(
