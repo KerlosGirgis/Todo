@@ -4,7 +4,7 @@
     android:initialKeyguardLayout="@layout/note"
     android:initialLayout="@layout/note"
     android:minWidth="110dp"
-    android:minHeight="40dp"
+    android:minHeight="75dp"
     android:previewLayout="@layout/note"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="2"

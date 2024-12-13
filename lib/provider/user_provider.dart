@@ -5,7 +5,7 @@ import '../services/color_provider.dart';
 import '../services/database_service.dart';
 
 class UserProvider with ChangeNotifier {
-  UserProfile user = UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1,autoSave: 1);
+  UserProfile user = UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1,autoSave: 1, casual: 0);
 
   ColorProvider colorProvider =ColorProvider(1);
 
@@ -65,6 +65,19 @@ class UserProvider with ChangeNotifier {
     }
     else{
       user.autoSave=1;
+      await DatabaseService().updateUser(user);
+      notifyListeners();
+    }
+  }
+
+  changeFont() async {
+    if(user.casual==1){
+      user.casual=0;
+      await DatabaseService().updateUser(user);
+      notifyListeners();
+    }
+    else{
+      user.casual=1;
       await DatabaseService().updateUser(user);
       notifyListeners();
     }

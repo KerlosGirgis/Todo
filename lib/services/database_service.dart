@@ -63,7 +63,8 @@ class DatabaseService {
       lastName TEXT,
       pic TEXT,
       theme INTEGER,
-      autoSave INTEGER
+      autoSave INTEGER,
+      casual INTEGER
     )
     ''');
     await db.execute('''
@@ -122,7 +123,7 @@ class DatabaseService {
 
   Future<List<UserProfile>> getUser() async {
     List<Map<String, dynamic>> maps = await db.query('User',
-        columns: ['id', 'firstName', 'lastName', 'pic', 'theme','autoSave']);
+        columns: ['id', 'firstName', 'lastName', 'pic', 'theme','autoSave','casual']);
     List<UserProfile> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {

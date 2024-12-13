@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +33,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     bodyController.text = widget.note.body;
     super.initState();
   }
+
   @override
   void dispose() {
     super.dispose();
@@ -100,7 +102,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       },
                       icon: Icon(
                         Icons.save_sharp,
-                        color: user.colorProvider.noteEditorButtons,
+                        color:
+                            widget.note.body.compareTo(bodyController.text) == 0
+                                ? user.colorProvider.noteEditorButtons
+                                : Colors.lightBlue,
                       )),
                   IconButton(
                       onPressed: () {
@@ -140,6 +145,14 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             Provider.of<NotesProvider>(context, listen: false)
                                 .deleteNote(widget.note.id!);
                             Navigator.pop(context);
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: "Authentication Failed",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 19.0);
                           }
                         } else {
                           Provider.of<NotesProvider>(context, listen: false)
@@ -163,21 +176,26 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                         SizedBox(
                           width: MediaQuery.of(context).size.width / 1.1,
                           child: TextField(
-                            onChanged: (value){
-                              if(user.user.autoSave==1) {
+                            onChanged: (value) {
+                              if (user.user.autoSave == 1) {
                                 try {
-                                  Provider.of<NotesProvider>(
-                                      context, listen: false)
+                                  Provider.of<NotesProvider>(context,
+                                          listen: false)
                                       .updateNote(Note(
-                                      id: widget.note.id,
-                                      title: titleController.text,
-                                      body: bodyController.text,
-                                      titleColor: widget.note.titleColor,
-                                      coverColor: widget.note.coverColor,
-                                      protected: widget.note.protected));
+                                          id: widget.note.id,
+                                          title: titleController.text,
+                                          body: bodyController.text,
+                                          titleColor: widget.note.titleColor,
+                                          coverColor: widget.note.coverColor,
+                                          protected: widget.note.protected))
+                                      .then((onValue) {
+                                    widget.note.body = bodyController.text;
+                                    widget.note.title = titleController.text;
+                                  });
                                 } catch (e) {
                                   Fluttertoast.showToast(
-                                      msg: "Sorry, Something went wrong,note not saved",
+                                      msg:
+                                          "Sorry, Something went wrong,note not saved",
                                       toastLength: Toast.LENGTH_SHORT,
                                       gravity: ToastGravity.BOTTOM,
                                       backgroundColor: Colors.red,
@@ -189,8 +207,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             controller: bodyController,
                             maxLines: null,
                             style: TextStyle(
+                                fontFamily: user.user.casual==1?'casual':'arial',
+                                fontWeight: user.user.casual==1?FontWeight.w600:FontWeight.w400,
                                 color: user.colorProvider.noteEditorText,
-                                fontSize: 30),
+                                fontSize: 26),
                             decoration: InputDecoration(
                                 border: InputBorder.none,
                                 hintStyle: TextStyle(

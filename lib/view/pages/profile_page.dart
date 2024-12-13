@@ -406,6 +406,14 @@ class ProfilePageState extends State<ProfilePage> {
                               style: TextStyle(
                                   color: user.colorProvider.appTitle, fontSize: 32),
                             ),
+                            Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: MediaQuery.of(context).size.height / 50)),
+                            Text(
+                              "Casual Font",
+                              style: TextStyle(
+                                  color: user.colorProvider.appTitle, fontSize: 32),
+                            ),
                           ],
                         ),
                         const Spacer(flex: 1,),
@@ -426,6 +434,14 @@ class ProfilePageState extends State<ProfilePage> {
                                   Provider.of<UserProvider>(context, listen: false)
                                       .changeAutoSave();
                                 }),
+                            Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: MediaQuery.of(context).size.height / 50)),
+                            Switch(
+                                value: user.user.casual == 1 ? true : false,
+                                onChanged: (value) {
+                                  Provider.of<UserProvider>(context, listen: false).changeFont();
+                                }),
                           ],
                         ),
                         const Spacer(
@@ -435,7 +451,7 @@ class ProfilePageState extends State<ProfilePage> {
                     ),
                     Padding(
                         padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).size.height / 7)),
+                            bottom: MediaQuery.of(context).size.height / 11.5)),
                     //if(firstNameController.text.compareTo(user.user.firstName)!=0||lastNameController.text.compareTo(user.user.lastName)!=0)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -456,7 +472,7 @@ class ProfilePageState extends State<ProfilePage> {
                     ),
                     Padding(
                         padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).size.height / 30)),
+                            bottom: MediaQuery.of(context).size.height / 40)),
                   ],
                 )));
       },
