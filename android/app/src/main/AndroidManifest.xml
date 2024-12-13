@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
     <!--
  Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -20,6 +21,8 @@
     </queries>
 
     <application
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:label="Todo">
