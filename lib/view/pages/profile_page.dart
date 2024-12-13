@@ -1,9 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view/widgets/avatar.dart';
 import 'package:todo/provider/user_provider.dart';
@@ -28,40 +25,6 @@ class ProfilePageState extends State<ProfilePage> {
     super.initState();
   }
 
-  pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      if (kDebugMode) {
-        print("file returned");
-      }
-      return File(pickedFile.path);
-    }
-    return null;
-  }
-
-  saveImageToAppStorage(File image) async {
-    final appDir = await getApplicationDocumentsDirectory();
-
-    final fileName = image.path.split('/').last;
-
-    final savedImage = await image.copy('${appDir.path}/$fileName');
-
-    return savedImage;
-  }
-
-  _pickAndSaveImage() async {
-    final image = await pickImage();
-    if (image != null) {
-      final savedImage = await saveImageToAppStorage(image);
-      Provider.of<UserProvider>(context, listen: false)
-          .editPic(savedImage!.path);
-    }
-  }
-
-  _saveAvatar(String avatarNum) async {
-    Provider.of<UserProvider>(context, listen: false).editPic(avatarNum);
-  }
 
   TextEditingController firstNameController = TextEditingController();
   TextEditingController lastNameController = TextEditingController();
@@ -152,7 +115,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                                     .addTaskAlertBackground,
                                                                 scrollable:
                                                                     true,
-                                                                content: Column(
+                                                                content: const Column(
                                                                   mainAxisSize:
                                                                       MainAxisSize
                                                                           .min,
@@ -163,21 +126,18 @@ class ProfilePageState extends State<ProfilePage> {
                                                                               .min,
                                                                       children: [
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
                                                                             number:
                                                                                 "000"),
-                                                                        const Padding(
+                                                                        Padding(
                                                                             padding:
                                                                                 EdgeInsets.only(right: 10)),
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "001"),
                                                                       ],
                                                                     ),
-                                                                    const Padding(
+                                                                    Padding(
                                                                         padding:
                                                                             EdgeInsets.only(bottom: 10)),
                                                                     Row(
@@ -186,21 +146,19 @@ class ProfilePageState extends State<ProfilePage> {
                                                                               .min,
                                                                       children: [
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "002"),
-                                                                        const Padding(
+                                                                        Padding(
                                                                             padding:
                                                                                 EdgeInsets.only(right: 10)),
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "003"),
                                                                       ],
                                                                     ),
-                                                                    const Padding(
+                                                                    Padding(
                                                                         padding:
                                                                             EdgeInsets.only(bottom: 10)),
                                                                     Row(
@@ -209,21 +167,19 @@ class ProfilePageState extends State<ProfilePage> {
                                                                               .min,
                                                                       children: [
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "004"),
-                                                                        const Padding(
+                                                                        Padding(
                                                                             padding:
                                                                                 EdgeInsets.only(right: 10)),
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "005"),
                                                                       ],
                                                                     ),
-                                                                    const Padding(
+                                                                    Padding(
                                                                         padding:
                                                                             EdgeInsets.only(bottom: 10)),
                                                                     Row(
@@ -232,21 +188,19 @@ class ProfilePageState extends State<ProfilePage> {
                                                                               .min,
                                                                       children: [
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "006"),
-                                                                        const Padding(
+                                                                        Padding(
                                                                             padding:
                                                                                 EdgeInsets.only(right: 10)),
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "007"),
                                                                       ],
                                                                     ),
-                                                                    const Padding(
+                                                                    Padding(
                                                                         padding:
                                                                             EdgeInsets.only(bottom: 10)),
                                                                     Row(
@@ -255,16 +209,14 @@ class ProfilePageState extends State<ProfilePage> {
                                                                               .min,
                                                                       children: [
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "008"),
-                                                                        const Padding(
+                                                                        Padding(
                                                                             padding:
                                                                                 EdgeInsets.only(right: 10)),
                                                                         Avatar(
-                                                                            saveAvatar:
-                                                                                _saveAvatar,
+
                                                                             number:
                                                                                 "009"),
                                                                       ],
@@ -294,7 +246,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                         radius: 50,
                                                       ),
                                                       onTap: () async {
-                                                        _pickAndSaveImage();
+                                                        user.pickAndSaveImage();
                                                         Navigator.pop(context);
                                                       },
                                                     ),

@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:todo/models/user_profile.dart';
 import '../services/color_provider.dart';
 import '../services/database_service.dart';
@@ -89,6 +92,36 @@ class UserProvider with ChangeNotifier {
     DateFormat format24Hour = DateFormat('HH:mm:ss');
     String time24Hour = format24Hour.format(dateTime);
     return DateTime.parse("$date $time24Hour");
+  }
+
+  _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      if (kDebugMode) {
+        print("file returned");
+      }
+      return File(pickedFile.path);
+    }
+    return null;
+  }
+
+  _saveImageToAppStorage(File image) async {
+    final appDir = await getApplicationDocumentsDirectory();
+
+    final fileName = image.path.split('/').last;
+
+    final savedImage = await image.copy('${appDir.path}/$fileName');
+
+    return savedImage;
+  }
+
+  pickAndSaveImage() async {
+    final image = await _pickImage();
+    if (image != null) {
+      final savedImage = await _saveImageToAppStorage(image);
+      editPic(savedImage!.path);
+    }
   }
 
 }
