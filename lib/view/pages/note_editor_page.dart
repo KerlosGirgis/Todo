@@ -25,11 +25,9 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   }
 
   final AuthenticationService authService = AuthenticationService();
-  TextEditingController titleController = TextEditingController();
   TextEditingController bodyController = TextEditingController();
   @override
   void initState() {
-    titleController.text = widget.note.title;
     bodyController.text = widget.note.body;
     super.initState();
   }
@@ -73,14 +71,13 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                           Provider.of<NotesProvider>(context, listen: false)
                               .updateNote(Note(
                                   id: widget.note.id,
-                                  title: titleController.text,
+                                  title: widget.note.title,
                                   body: bodyController.text,
                                   titleColor: widget.note.titleColor,
                                   coverColor: widget.note.coverColor,
                                   protected: widget.note.protected))
                               .then((onValue) {
                             widget.note.body = bodyController.text;
-                            widget.note.title = titleController.text;
                             Fluttertoast.showToast(
                                 msg: "Saved Successfully",
                                 toastLength: Toast.LENGTH_SHORT,
@@ -183,14 +180,13 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                           listen: false)
                                       .updateNote(Note(
                                           id: widget.note.id,
-                                          title: titleController.text,
+                                          title: widget.note.title,
                                           body: bodyController.text,
                                           titleColor: widget.note.titleColor,
                                           coverColor: widget.note.coverColor,
                                           protected: widget.note.protected))
                                       .then((onValue) {
                                     widget.note.body = bodyController.text;
-                                    widget.note.title = titleController.text;
                                   });
                                 } catch (e) {
                                   Fluttertoast.showToast(
@@ -207,14 +203,20 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             controller: bodyController,
                             maxLines: null,
                             style: TextStyle(
+
                                 fontFamily: user.user.casual==1?'casual':'arial',
                                 fontWeight: user.user.casual==1?FontWeight.w600:FontWeight.w400,
                                 color: user.colorProvider.noteEditorText,
-                                fontSize: 26),
-                            decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintStyle: TextStyle(
-                                    color: user.colorProvider.noteEditorText)),
+                                fontSize: 26,
+                              decoration: TextDecoration.none,
+                              decorationColor: user.colorProvider.noteEditorText
+                            ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,),
                           ),
                         ),
                       ],
