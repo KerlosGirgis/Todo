@@ -30,10 +30,10 @@ class Note : AppWidgetProvider() {
         appWidgetIds: IntArray
     ) {
         // There may be multiple widgets active, so update all of them
+        val widgetData = HomeWidgetPlugin.getData(context)
+        val note = widgetData.getString("note","Note")
         for (appWidgetId in appWidgetIds) {
-            val widgetData = HomeWidgetPlugin.getData(context)
             val views = RemoteViews(context.packageName, R.layout.note)
-            val note = widgetData.getString("note","Note")
             views.setTextViewText(R.id.noteText,note)
             appWidgetManager.updateAppWidget(appWidgetId,views)
         }
