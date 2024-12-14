@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view/widgets/avatar.dart';
 import 'package:todo/provider/user_provider.dart';
@@ -46,6 +47,18 @@ class ProfilePageState extends State<ProfilePage> {
                     color: user.colorProvider.appTitle,
                     size: 32,
                   )),
+              actions: [
+                IconButton(onPressed: (){
+                  Fluttertoast.showToast(
+                      msg: "Developed with ❤️ by Kerlos Girgis",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                      backgroundColor: Colors.blue,
+                      textColor:
+                      user.colorProvider.appTitle,
+                      fontSize: 18.0);
+                }, icon: Icon(Icons.question_mark,color: user.colorProvider.appTitle,))
+              ],
             ),
             backgroundColor: user.colorProvider.pageBackground,
             body: SingleChildScrollView(
