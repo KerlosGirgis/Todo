@@ -1,16 +1,14 @@
-import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view/pages/note_editor_page.dart';
 import 'package:todo/view/pages/profile_page.dart';
 import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/user_provider.dart';
-import '../../models/note.dart';
+import 'package:todo/view/widgets/add_note_dialog.dart';
 import 'package:todo/services/authentication_service.dart';
 import '../widgets/appbar_avatar.dart';
-import '../widgets/button.dart';
+import '../widgets/update_note_dialog.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -31,7 +29,6 @@ class _NotesPageState extends State<NotesPage> {
     super.initState();
   }
 
-  TextEditingController titleController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -53,36 +50,32 @@ class _NotesPageState extends State<NotesPage> {
             actions: [
               Row(
                 children: [
-                  IconButton(onPressed: (){
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context,
-                            animation,
-                            secondaryAnimation) =>
-                        const ProfilePage(),
-                        transitionsBuilder: (context,
-                            animation,
-                            secondaryAnimation,
-                            child) {
-                          const begin =
-                          Offset(0.0, 1.0);
-                          const end = Offset.zero;
-                          const curve = Curves.ease;
-                          var tween = Tween(
-                              begin: begin,
-                              end: end)
-                              .chain(CurveTween(
-                              curve: curve));
-                          var offsetAnimation =
-                          animation.drive(tween);
-                          return SlideTransition(
-                              position: offsetAnimation,
-                              child: child);
-                        },
-                      ),
-                    );
-                  }, icon: const Icon(Icons.settings,color: Colors.grey,)),
+                  IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const ProfilePage(),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              const begin = Offset(0.0, 1.0);
+                              const end = Offset.zero;
+                              const curve = Curves.ease;
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
+                              var offsetAnimation = animation.drive(tween);
+                              return SlideTransition(
+                                  position: offsetAnimation, child: child);
+                            },
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.settings,
+                        color: Colors.grey,
+                      )),
                   const AppbarAvatar(),
                   const Padding(padding: EdgeInsets.only(right: 18))
                 ],
@@ -113,233 +106,7 @@ class _NotesPageState extends State<NotesPage> {
                   showDialog(
                       context: context,
                       builder: (context) {
-                        int isProtected = 0;
-                        int titleColor = Colors.white.value;
-                        int coverColor =
-                            Colors.grey.shade800.withOpacity(.5).value;
-                        return StatefulBuilder(
-                          builder: (BuildContext context, setState) {
-                            return AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              elevation: 2,
-                              scrollable: true,
-                              backgroundColor:
-                                  user.colorProvider.addTaskAlertBackground,
-                              title: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  const Spacer(
-                                    flex: 1,
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xffd8defb),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.add_task,
-                                      color: Color(0xff3D5AFE),
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const Spacer(
-                                    flex: 10,
-                                  ),
-                                  const Text(
-                                    "Add Note",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 32),
-                                  ),
-                                  const Spacer(
-                                    flex: 10,
-                                  ),
-                                  IconButton(
-                                      onPressed: () {
-                                        titleController.clear();
-                                        Navigator.pop(context);
-                                      },
-                                      icon: const Icon(Icons.close),style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey.shade300,
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                                    ),
-                                  ),)
-                                ],
-                              ),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  TextField(
-                                    controller: titleController,
-                                    maxLines: 1,
-                                    maxLength: 50,
-                                    decoration: InputDecoration(
-                                        labelText: "Title",
-                                        labelStyle: TextStyle(
-                                            fontSize: 30,
-                                            color: user.colorProvider
-                                                .addTaskAlertText),
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(15))),
-                                  ),
-                                  const Padding(
-                                      padding: EdgeInsets.only(bottom: 15)),
-                                  Row(
-                                    children: [
-                                      const Text(
-                                        "Title : ",
-                                        style: TextStyle(fontSize: 24),
-                                      ),
-                                      GestureDetector(
-                                        child: CircleAvatar(
-                                          backgroundColor: Color(titleColor),
-                                        ),
-                                        onTap: () {
-                                          ColorPicker(
-                                            onColorChanged: (Color color) {
-                                              setState(() {
-                                                titleColor = color.value;
-                                              });
-                                            },
-                                          ).showPickerDialog(context);
-                                        },
-                                      ),
-                                      IconButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              titleColor = Colors.white.value;
-                                            });
-                                          },
-                                          icon: const Icon(Icons.undo_sharp))
-                                    ],
-                                  ),
-                                  const Padding(
-                                      padding: EdgeInsets.only(bottom: 15)),
-                                  Row(
-                                    children: [
-                                      const Text(
-                                        "Cover : ",
-                                        style: TextStyle(fontSize: 24),
-                                      ),
-                                      GestureDetector(
-                                        child: CircleAvatar(
-                                          backgroundColor: Color(coverColor),
-                                        ),
-                                        onTap: () {
-                                          ColorPicker(
-                                            onColorChanged: (Color color) {
-                                              setState(() {
-                                                coverColor = color.value;
-                                              });
-                                            },
-                                          ).showPickerDialog(context);
-                                        },
-                                      ),
-                                      IconButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              coverColor = Colors.grey.shade800
-                                                  .withOpacity(.5)
-                                                  .value;
-                                            });
-                                          },
-                                          icon: const Icon(Icons.undo_sharp))
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      IconButton(
-                                          onPressed: () async {
-                                            if (isProtected == 0) {
-                                              bool isBioAvailable =
-                                                  await authService
-                                                      .authenticate();
-                                              if (isBioAvailable) {
-                                                setState(() {
-                                                  isProtected = 1;
-                                                });
-                                              } else {
-                                                Fluttertoast.showToast(
-                                                    msg:
-                                                        "Couldn't read your fingerprint data",
-                                                    toastLength:
-                                                        Toast.LENGTH_SHORT,
-                                                    gravity:
-                                                        ToastGravity.BOTTOM,
-                                                    backgroundColor: Colors.red,
-                                                    textColor: Colors.white,
-                                                    fontSize: 19.0);
-                                              }
-                                            } else if (isProtected == 1) {
-                                              setState(() {
-                                                isProtected = 0;
-                                              });
-                                            }
-                                          },
-                                          icon: Icon(
-                                            Icons.fingerprint_sharp,
-                                            color: isProtected == 0
-                                                ? Colors.black
-                                                : Colors.green,
-                                          ))
-                                    ],
-                                  )
-                                ],
-                              ),
-                              actions: [
-                                Button(
-                                  onPressed: () {
-                                    titleController.clear();
-                                    Navigator.pop(context);
-                                  },
-                                  label: 'Cancel',
-                                  status: false,
-                                  fontSize: 18,
-                                  size: 1,
-                                ),
-                                Padding(padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/25)),
-                                Button(
-                                  onPressed: () async {
-                                    Provider.of<NotesProvider>(context,
-                                            listen: false)
-                                        .addNote(Note(
-                                      title: titleController.text,
-                                      body: '',
-                                      titleColor: titleColor,
-                                      coverColor: coverColor,
-                                      protected: isProtected,
-                                    ))
-                                        .then((value) {
-                                      titleController.clear();
-                                      Fluttertoast.showToast(
-                                          msg: "Note Added",
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.BOTTOM,
-                                          backgroundColor:
-                                              user.colorProvider.cardBackground,
-                                          textColor:
-                                              user.colorProvider.appTitle,
-                                          fontSize: 19.0);
-                                    });
-                                    if (context.mounted) {
-                                      Navigator.of(context).pop();
-                                    }
-                                  },
-                                  label: 'Save',
-                                  status: true,
-                                  fontSize: 18,
-                                  size: 1,
-                                ),
-                              ],
-                            );
-                          },
-                        );
+                        return const AddNoteDialog();
                       });
                 },
                 child: const Icon(Icons.add),
@@ -375,7 +142,6 @@ class _NotesPageState extends State<NotesPage> {
                               builder: (context, constraints) {
                                 final cardWidth = screenSize.width * 0.8;
                                 const aspectRatio = 16 / 9;
-
                                 return AspectRatio(
                                   aspectRatio: aspectRatio,
                                   child: Container(
@@ -426,29 +192,31 @@ class _NotesPageState extends State<NotesPage> {
                               bool isAuthenticated =
                                   await authService.authenticate();
                               if (isAuthenticated) {
-                                Navigator.push(
-                                  context,
-                                  PageRouteBuilder(
-                                    pageBuilder: (context, animation,
-                                            secondaryAnimation) =>
-                                        NoteEditorPage(
-                                      note: notes.notes[index],
+                                if(context.mounted){
+                                  Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                          NoteEditorPage(
+                                            note: notes.notes[index],
+                                          ),
+                                      transitionsBuilder: (context, animation,
+                                          secondaryAnimation, child) {
+                                        const begin = Offset(1.0, 0.0);
+                                        const end = Offset.zero;
+                                        const curve = Curves.ease;
+                                        var tween = Tween(begin: begin, end: end)
+                                            .chain(CurveTween(curve: curve));
+                                        var offsetAnimation =
+                                        animation.drive(tween);
+                                        return SlideTransition(
+                                            position: offsetAnimation,
+                                            child: child);
+                                      },
                                     ),
-                                    transitionsBuilder: (context, animation,
-                                        secondaryAnimation, child) {
-                                      const begin = Offset(1.0, 0.0);
-                                      const end = Offset.zero;
-                                      const curve = Curves.ease;
-                                      var tween = Tween(begin: begin, end: end)
-                                          .chain(CurveTween(curve: curve));
-                                      var offsetAnimation =
-                                          animation.drive(tween);
-                                      return SlideTransition(
-                                          position: offsetAnimation,
-                                          child: child);
-                                    },
-                                  ),
-                                );
+                                  );
+                                }
                               }
                             } else {
                               Navigator.push(
@@ -481,545 +249,19 @@ class _NotesPageState extends State<NotesPage> {
                               bool isAuthenticated =
                                   await authService.authenticate();
                               if (isAuthenticated) {
-                                titleController.text = notes.notes[index].title;
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      int isProtected =
-                                          notes.notes[index].protected;
-                                      int titleColor =
-                                          notes.notes[index].titleColor;
-                                      int coverColor =
-                                          notes.notes[index].coverColor;
-                                      return StatefulBuilder(
-                                        builder:
-                                            (BuildContext context, setState) {
-                                          return AlertDialog(
-                                            scrollable: true,
-                                            backgroundColor: user.colorProvider
-                                                .addTaskAlertBackground,
-                                            title: Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              children: [
-                                                const Spacer(
-                                                  flex: 1,
-                                                ),
-                                                Container(
-                                                  padding: const EdgeInsets.all(8),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xffd8defb),
-                                                    borderRadius: BorderRadius.circular(8),
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.edit,
-                                                    color: Color(0xff3D5AFE),
-                                                    size: 20,
-                                                  ),
-                                                ),
-                                                const Spacer(
-                                                  flex: 10,
-                                                ),
-                                                const Text(
-                                                  "Edit Note",
-                                                  style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 32),
-                                                ),
-                                                const Spacer(
-                                                  flex: 10,
-                                                ),
-                                                IconButton(
-                                                  onPressed: () {
-                                                    titleController.clear();
-                                                    Navigator.pop(context);
-                                                  },
-                                                  icon: const Icon(Icons.close),style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.grey.shade300,
-                                                  shape: const RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.all(Radius.circular(8)),
-                                                  ),
-                                                ),)
-                                              ],
-                                            ),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                TextField(
-                                                  controller: titleController,
-                                                  maxLines: 1,
-                                                  maxLength: 50,
-                                                  decoration: InputDecoration(
-                                                      labelText: "Title",
-                                                      labelStyle: TextStyle(
-                                                          fontSize: 30,
-                                                          color: user
-                                                              .colorProvider
-                                                              .addTaskAlertText),
-                                                      border:
-                                                          OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          15))),
-                                                ),
-                                                const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        bottom: 15)),
-                                                Row(
-                                                  children: [
-                                                    const Text(
-                                                      "Title : ",
-                                                      style: TextStyle(
-                                                          fontSize: 24),
-                                                    ),
-                                                    GestureDetector(
-                                                      child: CircleAvatar(
-                                                        backgroundColor:
-                                                            Color(titleColor),
-                                                      ),
-                                                      onTap: () {
-                                                        ColorPicker(
-                                                          onColorChanged:
-                                                              (Color color) {
-                                                            setState(() {
-                                                              titleColor =
-                                                                  color.value;
-                                                            });
-                                                          },
-                                                        ).showPickerDialog(
-                                                            context);
-                                                      },
-                                                    ),
-                                                    IconButton(
-                                                        onPressed: () {
-                                                          setState(() {
-                                                            titleColor = Colors
-                                                                .white.value;
-                                                          });
-                                                        },
-                                                        icon: const Icon(
-                                                            Icons.undo_sharp))
-                                                  ],
-                                                ),
-                                                const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        bottom: 15)),
-                                                Row(
-                                                  children: [
-                                                    const Text(
-                                                      "Cover : ",
-                                                      style: TextStyle(
-                                                          fontSize: 24),
-                                                    ),
-                                                    GestureDetector(
-                                                      child: CircleAvatar(
-                                                        backgroundColor:
-                                                            Color(coverColor),
-                                                      ),
-                                                      onTap: () {
-                                                        ColorPicker(
-                                                          onColorChanged:
-                                                              (Color color) {
-                                                            setState(() {
-                                                              coverColor =
-                                                                  color.value;
-                                                            });
-                                                          },
-                                                        ).showPickerDialog(
-                                                            context);
-                                                      },
-                                                    ),
-                                                    IconButton(
-                                                        onPressed: () {
-                                                          setState(() {
-                                                            coverColor = Colors
-                                                                .grey.shade800
-                                                                .withOpacity(.5)
-                                                                .value;
-                                                          });
-                                                        },
-                                                        icon: const Icon(
-                                                            Icons.undo_sharp))
-                                                  ],
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    IconButton(
-                                                        onPressed: () async {
-                                                          if (isProtected ==
-                                                              0) {
-                                                            bool
-                                                                isBioAvailable =
-                                                                await authService
-                                                                    .authenticate();
-                                                            if (isBioAvailable) {
-                                                              setState(() {
-                                                                isProtected = 1;
-                                                              });
-                                                            } else {
-                                                              Fluttertoast.showToast(
-                                                                  msg:
-                                                                      "Couldn't read your fingerprint data",
-                                                                  toastLength: Toast
-                                                                      .LENGTH_SHORT,
-                                                                  gravity:
-                                                                      ToastGravity
-                                                                          .BOTTOM,
-                                                                  backgroundColor:
-                                                                      Colors
-                                                                          .red,
-                                                                  textColor:
-                                                                      Colors
-                                                                          .white,
-                                                                  fontSize:
-                                                                      19.0);
-                                                            }
-                                                          } else if (isProtected ==
-                                                              1) {
-                                                            setState(() {
-                                                              isProtected = 0;
-                                                            });
-                                                          }
-                                                        },
-                                                        icon: Icon(
-                                                          Icons
-                                                              .fingerprint_sharp,
-                                                          color: isProtected ==
-                                                                  0
-                                                              ? Colors.black
-                                                              : Colors.green,
-                                                        ))
-                                                  ],
-                                                )
-                                              ],
-                                            ),
-                                            actions: [
-                                              Button(
-                                                onPressed: () {
-                                                  titleController.clear();
-                                                  Navigator.pop(context);
-                                                },
-                                                label: 'Cancel',
-                                                status: false,
-                                                fontSize: 18,
-                                                size: 1,
-                                              ),
-                                              Padding(padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/25)),
-                                              Button(
-                                                onPressed: () async {
-                                                  Provider.of<NotesProvider>(
-                                                          context,
-                                                          listen: false)
-                                                      .updateNote(Note(
-                                                          id: notes
-                                                              .notes[index].id,
-                                                          title: titleController
-                                                              .text,
-                                                          body: notes
-                                                              .notes[index]
-                                                              .body,
-                                                          titleColor:
-                                                              titleColor,
-                                                          coverColor:
-                                                              coverColor,
-                                                          protected:
-                                                              isProtected))
-                                                      .then((value) {
-                                                    titleController.clear();
-                                                    Fluttertoast.showToast(
-                                                        msg: "Note Edited",
-                                                        toastLength:
-                                                            Toast.LENGTH_SHORT,
-                                                        gravity:
-                                                            ToastGravity.BOTTOM,
-                                                        backgroundColor: user
-                                                            .colorProvider
-                                                            .cardBackground,
-                                                        textColor: user
-                                                            .colorProvider
-                                                            .appTitle,
-                                                        fontSize: 19.0);
-                                                  });
-                                                  if (context.mounted) {
-                                                    Navigator.of(context).pop();
-                                                  }
-                                                },
-                                                label: 'Update',
-                                                status: true,
-                                                fontSize: 18,
-                                                size: 1,
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    });
+                                if(context.mounted){
+                                  showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return UpdateNoteDialog(index: index);
+                                      });
+                                }
                               }
                             } else {
-                              titleController.text = notes.notes[index].title;
                               showDialog(
                                   context: context,
                                   builder: (context) {
-                                    int isProtected =
-                                        notes.notes[index].protected;
-                                    int titleColor =
-                                        notes.notes[index].titleColor;
-                                    int coverColor =
-                                        notes.notes[index].coverColor;
-                                    return StatefulBuilder(
-                                      builder:
-                                          (BuildContext context, setState) {
-                                        return AlertDialog(
-                                          scrollable: true,
-                                          backgroundColor: user.colorProvider
-                                              .addTaskAlertBackground,
-                                          title: Row(
-                                            mainAxisAlignment: MainAxisAlignment.start,
-                                            children: [
-                                              const Spacer(
-                                                flex: 1,
-                                              ),
-                                              Container(
-                                                padding: const EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  color: const Color(0xffd8defb),
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.edit,
-                                                  color: Color(0xff3D5AFE),
-                                                  size: 20,
-                                                ),
-                                              ),
-                                              const Spacer(
-                                                flex: 10,
-                                              ),
-                                              const Text(
-                                                "Edit Note",
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 32),
-                                              ),
-                                              const Spacer(
-                                                flex: 10,
-                                              ),
-                                              IconButton(
-                                                onPressed: () {
-                                                  titleController.clear();
-                                                  Navigator.pop(context);
-                                                },
-                                                icon: const Icon(Icons.close),style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.grey.shade300,
-                                                shape: const RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.all(Radius.circular(8)),
-                                                ),
-                                              ),)
-                                            ],
-                                          ),
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              TextField(
-                                                controller: titleController,
-                                                maxLines: 1,
-                                                maxLength: 50,
-                                                decoration: InputDecoration(
-                                                    labelText: "Title",
-                                                    labelStyle: TextStyle(
-                                                        fontSize: 30,
-                                                        color: user
-                                                            .colorProvider
-                                                            .addTaskAlertText),
-                                                    border: OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(15))),
-                                              ),
-                                              const Padding(
-                                                  padding: EdgeInsets.only(
-                                                      bottom: 15)),
-                                              Row(
-                                                children: [
-                                                  const Text(
-                                                    "Title : ",
-                                                    style:
-                                                        TextStyle(fontSize: 24),
-                                                  ),
-                                                  GestureDetector(
-                                                    child: CircleAvatar(
-                                                      backgroundColor:
-                                                          Color(titleColor),
-                                                    ),
-                                                    onTap: () {
-                                                      ColorPicker(
-                                                        onColorChanged:
-                                                            (Color color) {
-                                                          setState(() {
-                                                            titleColor =
-                                                                color.value;
-                                                          });
-                                                        },
-                                                      ).showPickerDialog(
-                                                          context);
-                                                    },
-                                                  ),
-                                                  IconButton(
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          titleColor = Colors
-                                                              .white.value;
-                                                        });
-                                                      },
-                                                      icon: const Icon(
-                                                          Icons.undo_sharp))
-                                                ],
-                                              ),
-                                              const Padding(
-                                                  padding: EdgeInsets.only(
-                                                      bottom: 15)),
-                                              Row(
-                                                children: [
-                                                  const Text(
-                                                    "Cover : ",
-                                                    style:
-                                                        TextStyle(fontSize: 24),
-                                                  ),
-                                                  GestureDetector(
-                                                    child: CircleAvatar(
-                                                      backgroundColor:
-                                                          Color(coverColor),
-                                                    ),
-                                                    onTap: () {
-                                                      ColorPicker(
-                                                        onColorChanged:
-                                                            (Color color) {
-                                                          setState(() {
-                                                            coverColor =
-                                                                color.value;
-                                                          });
-                                                        },
-                                                      ).showPickerDialog(
-                                                          context);
-                                                    },
-                                                  ),
-                                                  IconButton(
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          coverColor = Colors
-                                                              .grey.shade800
-                                                              .withOpacity(.5)
-                                                              .value;
-                                                        });
-                                                      },
-                                                      icon: const Icon(
-                                                          Icons.undo_sharp))
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.end,
-                                                children: [
-                                                  IconButton(
-                                                      onPressed: () async {
-                                                        if (isProtected == 0) {
-                                                          bool isBioAvailable =
-                                                              await authService
-                                                                  .authenticate();
-                                                          if (isBioAvailable) {
-                                                            setState(() {
-                                                              isProtected = 1;
-                                                            });
-                                                          } else {
-                                                            Fluttertoast.showToast(
-                                                                msg:
-                                                                    "Couldn't read your fingerprint data",
-                                                                toastLength: Toast
-                                                                    .LENGTH_SHORT,
-                                                                gravity:
-                                                                    ToastGravity
-                                                                        .BOTTOM,
-                                                                backgroundColor:
-                                                                    Colors.red,
-                                                                textColor:
-                                                                    Colors
-                                                                        .white,
-                                                                fontSize: 19.0);
-                                                          }
-                                                        } else if (isProtected ==
-                                                            1) {
-                                                          setState(() {
-                                                            isProtected = 0;
-                                                          });
-                                                        }
-                                                      },
-                                                      icon: Icon(
-                                                        Icons.fingerprint_sharp,
-                                                        color: isProtected == 0
-                                                            ? Colors.black
-                                                            : Colors.green,
-                                                      ))
-                                                ],
-                                              )
-                                            ],
-                                          ),
-                                          actions: [
-                                            Button(
-                                              onPressed: () {
-                                                titleController.clear();
-                                                Navigator.pop(context);
-                                              },
-                                              label: 'Cancel',
-                                              status: false,
-                                              fontSize: 18,
-                                              size: 1,
-                                            ),
-                                            Padding(padding: EdgeInsets.only(right: MediaQuery.of(context).size.width/25)),
-                                            Button(
-                                              onPressed: () async {
-                                                Provider.of<NotesProvider>(
-                                                        context,
-                                                        listen: false)
-                                                    .updateNote(Note(
-                                                        id: notes
-                                                            .notes[index].id,
-                                                        title: titleController
-                                                            .text,
-                                                        body: notes
-                                                            .notes[index].body,
-                                                        titleColor: titleColor,
-                                                        coverColor: coverColor,
-                                                        protected: isProtected))
-                                                    .then((value) {
-                                                  titleController.clear();
-                                                  Fluttertoast.showToast(
-                                                      msg: "Note Edited",
-                                                      toastLength:
-                                                          Toast.LENGTH_SHORT,
-                                                      gravity:
-                                                          ToastGravity.BOTTOM,
-                                                      backgroundColor: user
-                                                          .colorProvider
-                                                          .cardBackground,
-                                                      textColor: user
-                                                          .colorProvider
-                                                          .appTitle,
-                                                      fontSize: 19.0);
-                                                });
-                                                if (context.mounted) {
-                                                  Navigator.of(context).pop();
-                                                }
-                                              },
-                                              label: 'Update',
-                                              status: true,
-                                              fontSize: 18,
-                                              size: 1,
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
+                                    return UpdateNoteDialog(index: index);
                                   });
                             }
                           },
