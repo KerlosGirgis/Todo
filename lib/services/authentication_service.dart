@@ -1,7 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
+
+import 'key_management_service.dart';
+import 'lock_manager.dart';
 
 class AuthenticationService {
   final LocalAuthentication _auth = LocalAuthentication();
+  final KeyManagementService _keyService = KeyManagementService();
 
   Future<bool> authenticate() async {
     try {
@@ -20,4 +25,52 @@ class AuthenticationService {
       return false;
     }
   }
+
+  Future<bool> authenticateApp() async {
+    bool canAuthenticate = await _auth.canCheckBiometrics;
+    if (!canAuthenticate) return false;
+
+    bool authenticated = await _auth.authenticate(
+      localizedReason: 'Authenticate to access your To-Do app',
+      options: const AuthenticationOptions(
+        biometricOnly: true,
+        useErrorDialogs: true,
+        stickyAuth: true,
+      ),
+    );
+
+    if (authenticated) {
+      // Trigger key fetching as a security layer.
+      await _keyService.getOrCreateEncryptionKey();
+    }
+
+    return authenticated;
+  }
+
+  Future<bool> initializeApp() async {
+    final AuthenticationService authService = AuthenticationService();
+    final LockManager lockManager = LockManager();
+
+    try {
+      // Check if the lock is enabled.
+      bool isLockEnabled = await lockManager.isLockEnabled();
+
+      if (isLockEnabled) {
+        // Perform authentication if lock is enabled.
+        bool authenticated = await authService.authenticateApp();
+        if (!authenticated) {
+          return false; // Exit if authentication fails.
+        }
+      }
+
+      return true; // Proceed to load the app.
+    } catch (e) {
+      // Log any initialization errors.
+      if (kDebugMode) {
+        print('Initialization Error: $e');
+      }
+      return false;
+    }
+  }
+
 }

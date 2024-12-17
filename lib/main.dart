@@ -16,7 +16,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/verse_manager.dart';
+import 'package:todo/view/pages/lock_page.dart';
 import 'package:todo/view/pages/todo_page.dart';
 import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/tasks_provider.dart';
@@ -27,22 +29,40 @@ import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseService().storeEncryptionKey().then((onValue) async {
-    await DatabaseService().openDb();
-  });
-  await VerseManager.loadVerses();
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      systemNavigationBarColor: Colors.transparent,
-    ),
-  );
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (_) => UserProvider()),
-    ChangeNotifierProvider(create: (_) => ThemeProvider()),
-    ChangeNotifierProvider(create: (_) => TasksProvider()),
-    ChangeNotifierProvider(create: (_) => NotesProvider()),
-  ], child: const MyApp()));
+  final bool initialized = await AuthenticationService().initializeApp();
+  if (initialized) {
+    final DatabaseService dbService = DatabaseService();
+    await dbService.openDb();
+    await VerseManager.loadVerses();
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.transparent,
+      ),
+    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    runApp(MultiProvider(providers: [
+      ChangeNotifierProvider(create: (_) => UserProvider()),
+      ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ChangeNotifierProvider(create: (_) => TasksProvider()),
+      ChangeNotifierProvider(create: (_) => NotesProvider()),
+    ], child: const MyApp()));  } else {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.transparent,
+      ),
+    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        fontFamily: 'arial',
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300),
+        useMaterial3: true,
+      ),
+      home:const LockPage()
+    ));
+  }
+
 }
 
 class MyApp extends StatelessWidget {

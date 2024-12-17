@@ -1,9 +1,13 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:todo/models/user_profile.dart';
+import 'package:todo/services/authentication_service.dart';
+import 'package:todo/services/lock_manager.dart';
 import '../services/color_provider.dart';
 import '../services/database_service.dart';
 
@@ -11,6 +15,8 @@ class UserProvider with ChangeNotifier {
   UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0);
 
   ColorProvider colorProvider =ColorProvider(1);
+
+  late bool isEnabled;
 
   Future<void> get() async {
     List users;
@@ -25,6 +31,7 @@ class UserProvider with ChangeNotifier {
       user = users.first;
       colorProvider =ColorProvider(user.theme);
     }
+     isEnabled=await LockManager().isLockEnabled();
     notifyListeners();
   }
 
@@ -77,6 +84,33 @@ class UserProvider with ChangeNotifier {
       user.casual=1;
       await DatabaseService().updateUser(user);
       notifyListeners();
+    }
+  }
+
+  changeLock() async {
+    final bool auth=await AuthenticationService().authenticate();
+    if(auth){
+      if(isEnabled){
+        await LockManager().disableLock().then((e){
+          isEnabled=false;
+        });
+        notifyListeners();
+      }
+      else{
+        await LockManager().enableLock().then((e){
+          isEnabled=true;
+        });
+        notifyListeners();
+      }
+    }
+    else{
+      Fluttertoast.showToast(
+          msg: "Authentication Failed",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 19.0);
     }
   }
 

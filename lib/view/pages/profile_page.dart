@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:todo/view/widgets/avatar.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/view/widgets/edit_name_dialog.dart';
+import 'package:todo/view/widgets/settings_button.dart';
 import '../../services/icon_provider.dart';
 import '../../services/verse_manager.dart';
 
@@ -300,7 +301,7 @@ class ProfilePageState extends State<ProfilePage> {
                   ),
                   Padding(
                       padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).size.height / 40)),
+                          bottom: MediaQuery.of(context).size.height / 50)),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -361,81 +362,42 @@ class ProfilePageState extends State<ProfilePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Spacer(
-                        flex: 6,
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Dark Mode",
-                            style: TextStyle(
-                                color: user.colorProvider.appTitle,
-                                fontSize: 32),
-                          ),
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  bottom: MediaQuery.of(context).size.height /
-                                      50)),
-                          Text(
-                            "Auto Save",
-                            style: TextStyle(
-                                color: user.colorProvider.appTitle,
-                                fontSize: 32),
-                          ),
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  bottom: MediaQuery.of(context).size.height /
-                                      50)),
-                          Text(
-                            "Casual Font",
-                            style: TextStyle(
-                                color: user.colorProvider.appTitle,
-                                fontSize: 32),
-                          ),
-                        ],
-                      ),
-                      const Spacer(
-                        flex: 20,
-                      ),
-                      Column(
-                        children: [
-                          Switch(
-                              value: user.user.theme == 1 ? true : false,
-                              onChanged: (value) {
-                                Provider.of<UserProvider>(context,
-                                        listen: false)
-                                    .changeTheme();
-                              }),
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  bottom: MediaQuery.of(context).size.height /
-                                      50)),
-                          Switch(
-                              value: user.user.autoSave == 1 ? true : false,
-                              onChanged: (value) {
-                                Provider.of<UserProvider>(context,
-                                        listen: false)
-                                    .changeAutoSave();
-                              }),
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  bottom: MediaQuery.of(context).size.height /
-                                      50)),
-                          Switch(
-                              value: user.user.casual == 1 ? true : false,
-                              onChanged: (value) {
-                                Provider.of<UserProvider>(context,
-                                        listen: false)
-                                    .changeFont();
-                              }),
-                        ],
-                      ),
-                      const Spacer(
-                        flex: 5,
-                      ),
+                      const Spacer(flex: 2,),
+                      SettingsButton(onPressed: (){
+                        Provider.of<UserProvider>(context,
+                            listen: false)
+                            .changeTheme();
+                      }, label: "Dark Mode", status: user.user.theme == 1 ? true : false, fontSize: 22, size: 1.5),
+                      const Spacer(flex: 1,),
+                      SettingsButton(onPressed: (){
+                        Provider.of<UserProvider>(context,
+                            listen: false)
+                            .changeAutoSave();
+                      }, label: "Auto Save", status: user.user.autoSave == 1 ? true : false, fontSize: 22, size: 1.5),
+                      const Spacer(flex: 2,),
                     ],
                   ),
+                  Padding(
+                      padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).size.height / 40)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Spacer(flex: 2,),
+                      SettingsButton(onPressed: (){
+                        Provider.of<UserProvider>(context,
+                            listen: false)
+                            .changeFont();
+                      }, label: "Casual Font", status: user.user.casual == 1 ? true : false, fontSize: 22, size: 1.5),
+                      const Spacer(flex: 1,),
+                      SettingsButton(onPressed: (){
+                        Provider.of<UserProvider>(context,
+                            listen: false)
+                            .changeLock();
+                      }, label: "App Lock", status: user.isEnabled ? true : false, fontSize: 22, size: 1.5),
+                      const Spacer(flex: 2,),
+                    ],
+                  )
                 ],
               ),
             ):
@@ -734,73 +696,50 @@ class ProfilePageState extends State<ProfilePage> {
                       ),
                       const Spacer(flex: 1,),
                       Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Padding(
+                              padding: EdgeInsets.only(
+                                  bottom: MediaQuery.of(context).size.height / 40)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                "Dark Mode",
-                                style: TextStyle(
-                                    color: user.colorProvider.appTitle,
-                                    fontSize: 32),
-                              ),
-                              Padding(
-                                  padding: EdgeInsets.only(
-                                      bottom: MediaQuery.of(context).size.height /
-                                          50)),
-                              Text(
-                                "Auto Save",
-                                style: TextStyle(
-                                    color: user.colorProvider.appTitle,
-                                    fontSize: 32),
-                              ),
-                              Padding(
-                                  padding: EdgeInsets.only(
-                                      bottom: MediaQuery.of(context).size.height /
-                                          50)),
-                              Text(
-                                "Casual Font",
-                                style: TextStyle(
-                                    color: user.colorProvider.appTitle,
-                                    fontSize: 32),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const Spacer(flex: 1,),
-                      Column(
-                        children: [
-                          Switch(
-                              value: user.user.theme == 1 ? true : false,
-                              onChanged: (value) {
+                              SettingsButton(onPressed: (){
                                 Provider.of<UserProvider>(context,
                                     listen: false)
                                     .changeTheme();
-                              }),
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  bottom: MediaQuery.of(context).size.height /
-                                      50)),
-                          Switch(
-                              value: user.user.autoSave == 1 ? true : false,
-                              onChanged: (value) {
+                              }, label: "Dark Mode", status: user.user.theme == 1 ? true : false, fontSize: 22, size: 1.5),
+                              Padding(
+                                  padding: EdgeInsets.only(
+                                      right: MediaQuery.of(context).size.height / 40)),
+                              SettingsButton(onPressed: (){
                                 Provider.of<UserProvider>(context,
                                     listen: false)
                                     .changeAutoSave();
-                              }),
+                              }, label: "Auto Save", status: user.user.autoSave == 1 ? true : false, fontSize: 22, size: 1.5),
+                            ],
+                          ),
                           Padding(
                               padding: EdgeInsets.only(
-                                  bottom: MediaQuery.of(context).size.height /
-                                      50)),
-                          Switch(
-                              value: user.user.casual == 1 ? true : false,
-                              onChanged: (value) {
+                                  bottom: MediaQuery.of(context).size.height / 40)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SettingsButton(onPressed: (){
                                 Provider.of<UserProvider>(context,
                                     listen: false)
                                     .changeFont();
-                              }),
-
+                              }, label: "Casual Font", status: user.user.casual == 1 ? true : false, fontSize: 22, size: 1.5),
+                              Padding(
+                                  padding: EdgeInsets.only(
+                                      right: MediaQuery.of(context).size.height / 40)),
+                              SettingsButton(onPressed: (){
+                                Provider.of<UserProvider>(context,
+                                    listen: false)
+                                    .changeLock();
+                              }, label: "App Lock", status: user.isEnabled ? true : false, fontSize: 22, size: 1.5),
+                            ],
+                          )
                         ],
                       ),
                       const Spacer(flex: 1,),
