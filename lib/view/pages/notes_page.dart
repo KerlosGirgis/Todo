@@ -37,6 +37,7 @@ class _NotesPageState extends State<NotesPage> {
         return Scaffold(
           backgroundColor: user.colorProvider.pageBackground,
           appBar: AppBar(
+            surfaceTintColor: Colors.transparent,
             automaticallyImplyLeading: false,
             backgroundColor: user.colorProvider.pageBackground,
             title: Text(
