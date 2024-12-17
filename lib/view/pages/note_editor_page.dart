@@ -138,9 +138,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                           bool isAuthenticated =
                               await authService.authenticate();
                           if (isAuthenticated) {
-                            Provider.of<NotesProvider>(context, listen: false)
-                                .deleteNote(widget.note.id!);
-                            Navigator.pop(context);
+                            notes.deleteNote(widget.note.id!);
+                            if(context.mounted){
+                              Navigator.pop(context);
+                            }
                           } else {
                             Fluttertoast.showToast(
                                 msg: "Authentication Failed",
@@ -202,20 +203,23 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             controller: bodyController,
                             maxLines: null,
                             style: TextStyle(
-
-                                fontFamily: user.user.casual==1?'casual':'arial',
-                                fontWeight: user.user.casual==1?FontWeight.w600:FontWeight.w400,
+                                fontFamily:
+                                    user.user.casual == 1 ? 'casual' : 'arial',
+                                fontWeight: user.user.casual == 1
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
                                 color: user.colorProvider.noteEditorText,
                                 fontSize: 26,
-                              decoration: TextDecoration.none,
-                              decorationColor: user.colorProvider.noteEditorText
-                            ),
+                                decoration: TextDecoration.none,
+                                decorationColor:
+                                    user.colorProvider.noteEditorText),
                             decoration: const InputDecoration(
                               border: InputBorder.none,
                               focusedBorder: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               errorBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,),
+                              disabledBorder: InputBorder.none,
+                            ),
                           ),
                         ),
                       ],

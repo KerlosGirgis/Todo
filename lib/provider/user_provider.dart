@@ -8,7 +8,7 @@ import '../services/color_provider.dart';
 import '../services/database_service.dart';
 
 class UserProvider with ChangeNotifier {
-  UserProfile user = UserProfile(firstName: "user", lastName: "", pic: "000", theme: 1,autoSave: 1, casual: 0);
+  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0);
 
   ColorProvider colorProvider =ColorProvider(1);
 
@@ -28,14 +28,8 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  editFirstName(String firstName) async {
-    user.firstName = firstName;
-    await DatabaseService().updateUser(user);
-    notifyListeners();
-  }
-
-  editLastName(String lastName) async {
-    user.lastName = lastName;
+  editName(String name) async {
+    user.name = name;
     await DatabaseService().updateUser(user);
     notifyListeners();
   }

@@ -1,6 +1,5 @@
 class UserProfile {
-  String firstName;
-  String lastName;
+  String name;
   String pic;
   int theme;
   int? id;
@@ -8,8 +7,7 @@ class UserProfile {
   int casual;
 
   UserProfile(
-      {required this.firstName,
-      required this.lastName,
+      {required this.name,
       required this.pic,
       required this.theme,
       this.id,
@@ -19,16 +17,14 @@ class UserProfile {
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
         id: map['id'],
-        firstName: map['firstName'],
-        lastName: map['lastName'],
+        name: map['name'],
         pic: map['pic'],
         theme: map['theme'],
         autoSave: map['autoSave'], casual: map['casual']);
   }
   toMap() {
     return {
-      'firstName': firstName,
-      'lastName': lastName,
+      'name': name,
       'pic': pic,
       'theme': theme,
       'autoSave': autoSave,

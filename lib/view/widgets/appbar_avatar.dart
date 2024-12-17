@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
@@ -55,13 +56,16 @@ class AppbarAvatar extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              "${user.user.firstName} ${user.user.lastName}",
-                              maxLines: 1,
-                              overflow: TextOverflow.clip,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 42),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width/1.5,
+                              child: Text(
+                                user.user.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.clip,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 42),
+                              ),
                             ),
                           ],
                         ),
@@ -91,7 +95,9 @@ class AppbarAvatar extends StatelessWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const Text(
-                                      "Verse Of The Day",
+                                      maxLines: 1,
+                                      //overflow: TextOverflow.visible,
+                                      "🕯️Verse Of The Day🕯️",
                                       style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,
@@ -99,7 +105,7 @@ class AppbarAvatar extends StatelessWidget {
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 12),
                                     Text(
                                       VerseManager.getDailyVerse(),
                                       style: const TextStyle(
