@@ -31,7 +31,7 @@ class SettingsButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
             elevation: 2,
             shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(13)),
+              borderRadius: BorderRadius.all(Radius.circular(100)),
             ),
             backgroundColor: status ? const Color(0xff3D5AFE) : Colors.white),
         child: Center(
