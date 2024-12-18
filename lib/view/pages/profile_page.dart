@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -44,6 +43,22 @@ class ProfilePageState extends State<ProfilePage> {
                     color: user.colorProvider.appTitle,
                     size: 32,
                   )),
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      Fluttertoast.showToast(
+                          msg: "Developed with ❤️ by Kerlos Girgis",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.blue,
+                          textColor: user.colorProvider.appTitle,
+                          fontSize: 18.0);
+                    },
+                    icon: Icon(
+                      Icons.question_mark,
+                      color: user.colorProvider.appTitle,
+                    ))
+              ],
             ),
             backgroundColor: user.colorProvider.pageBackground,
             body: MediaQuery.of(context).orientation == Orientation.portrait
@@ -383,23 +398,6 @@ class ProfilePageState extends State<ProfilePage> {
                             ),
                           ],
                         ),
-                        Padding(
-                            padding: EdgeInsets.only(
-                                bottom:
-                                MediaQuery.of(context).size.height / 40)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            AutoSizeText(
-                              "Developed with ❤️ by Kerlos Girgis",
-                              minFontSize: 18,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 22,
-                                  color: user.colorProvider.appTitle),
-                            )
-                          ],
-                        )
                       ],
                     ),
                   )
