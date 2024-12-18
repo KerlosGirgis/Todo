@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class KeyManagementService {
@@ -16,6 +18,8 @@ class KeyManagementService {
 
   String _generateRandomKey() {
     // Generate a random 256-bit encryption key
-    return List<double>.generate(32, (_) => (256 * (0.5 - 0.5 * 2))).toString();
-  }
+    final random = Random.secure();
+    return List<int>.generate(32, (_) => random.nextInt(256))
+        .map((e) => e.toRadixString(16).padLeft(2, '0'))
+        .join();  }
 }
