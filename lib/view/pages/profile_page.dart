@@ -73,11 +73,11 @@ class ProfilePageState extends State<ProfilePage> {
                         children: [
                           CircleAvatar(
                             backgroundImage: user.user.pic
-                                .substring(0, 1)
-                                .compareTo("0") ==
-                                0
+                                        .substring(0, 1)
+                                        .compareTo("0") ==
+                                    0
                                 ? AssetImage(
-                                IconProvider.getAvatar(user.user.pic))
+                                    IconProvider.getAvatar(user.user.pic))
                                 : FileImage(File(user.user.pic)),
                             radius: 100,
                             backgroundColor: Colors.transparent,
@@ -100,24 +100,24 @@ class ProfilePageState extends State<ProfilePage> {
                                           content: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                                MainAxisAlignment.center,
                                             crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                                CrossAxisAlignment.center,
                                             children: [
                                               Column(
                                                 mainAxisSize:
-                                                MainAxisSize.min,
+                                                    MainAxisSize.min,
                                                 children: [
                                                   GestureDetector(
                                                     child: CircleAvatar(
                                                       backgroundImage:
-                                                      AssetImage(
-                                                          IconProvider
-                                                              .getAvatar(
-                                                              "000")),
+                                                          AssetImage(
+                                                              IconProvider
+                                                                  .getAvatar(
+                                                                      "000")),
                                                       radius: 50,
                                                       backgroundColor:
-                                                      Colors.transparent,
+                                                          Colors.transparent,
                                                     ),
                                                     onTap: () {
                                                       showDialog(
@@ -128,103 +128,103 @@ class ProfilePageState extends State<ProfilePage> {
                                                                   .colorProvider
                                                                   .addTaskAlertBackground,
                                                               scrollable:
-                                                              true,
+                                                                  true,
                                                               content:
-                                                              const Column(
+                                                                  const Column(
                                                                 mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
+                                                                    MainAxisSize
+                                                                        .min,
                                                                 children: [
                                                                   Row(
                                                                     mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
+                                                                        MainAxisSize
+                                                                            .min,
                                                                     children: [
                                                                       Avatar(
                                                                           number:
-                                                                          "000"),
+                                                                              "000"),
                                                                       Padding(
                                                                           padding:
-                                                                          EdgeInsets.only(right: 10)),
+                                                                              EdgeInsets.only(right: 10)),
                                                                       Avatar(
                                                                           number:
-                                                                          "001"),
+                                                                              "001"),
                                                                     ],
                                                                   ),
                                                                   Padding(
                                                                       padding:
-                                                                      EdgeInsets.only(bottom: 10)),
+                                                                          EdgeInsets.only(bottom: 10)),
                                                                   Row(
                                                                     mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
+                                                                        MainAxisSize
+                                                                            .min,
                                                                     children: [
                                                                       Avatar(
                                                                           number:
-                                                                          "002"),
+                                                                              "002"),
                                                                       Padding(
                                                                           padding:
-                                                                          EdgeInsets.only(right: 10)),
+                                                                              EdgeInsets.only(right: 10)),
                                                                       Avatar(
                                                                           number:
-                                                                          "003"),
+                                                                              "003"),
                                                                     ],
                                                                   ),
                                                                   Padding(
                                                                       padding:
-                                                                      EdgeInsets.only(bottom: 10)),
+                                                                          EdgeInsets.only(bottom: 10)),
                                                                   Row(
                                                                     mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
+                                                                        MainAxisSize
+                                                                            .min,
                                                                     children: [
                                                                       Avatar(
                                                                           number:
-                                                                          "004"),
+                                                                              "004"),
                                                                       Padding(
                                                                           padding:
-                                                                          EdgeInsets.only(right: 10)),
+                                                                              EdgeInsets.only(right: 10)),
                                                                       Avatar(
                                                                           number:
-                                                                          "005"),
+                                                                              "005"),
                                                                     ],
                                                                   ),
                                                                   Padding(
                                                                       padding:
-                                                                      EdgeInsets.only(bottom: 10)),
+                                                                          EdgeInsets.only(bottom: 10)),
                                                                   Row(
                                                                     mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
+                                                                        MainAxisSize
+                                                                            .min,
                                                                     children: [
                                                                       Avatar(
                                                                           number:
-                                                                          "006"),
+                                                                              "006"),
                                                                       Padding(
                                                                           padding:
-                                                                          EdgeInsets.only(right: 10)),
+                                                                              EdgeInsets.only(right: 10)),
                                                                       Avatar(
                                                                           number:
-                                                                          "007"),
+                                                                              "007"),
                                                                     ],
                                                                   ),
                                                                   Padding(
                                                                       padding:
-                                                                      EdgeInsets.only(bottom: 10)),
+                                                                          EdgeInsets.only(bottom: 10)),
                                                                   Row(
                                                                     mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
+                                                                        MainAxisSize
+                                                                            .min,
                                                                     children: [
                                                                       Avatar(
                                                                           number:
-                                                                          "008"),
+                                                                              "008"),
                                                                       Padding(
                                                                           padding:
-                                                                          EdgeInsets.only(right: 10)),
+                                                                              EdgeInsets.only(right: 10)),
                                                                       Avatar(
                                                                           number:
-                                                                          "009"),
+                                                                              "009"),
                                                                     ],
                                                                   )
                                                                 ],
@@ -245,7 +245,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                       right: 15)),
                                               Column(
                                                 mainAxisSize:
-                                                MainAxisSize.min,
+                                                    MainAxisSize.min,
                                                 children: [
                                                   GestureDetector(
                                                     child: const CircleAvatar(
