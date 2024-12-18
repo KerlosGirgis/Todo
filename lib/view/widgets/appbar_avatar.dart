@@ -63,6 +63,7 @@ class AppbarAvatar extends StatelessWidget {
                                 overflow: TextOverflow.clip,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
                                     color: Colors.white, fontSize: 42),
                               ),
                             ),
