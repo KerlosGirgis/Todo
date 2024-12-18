@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -389,8 +390,9 @@ class ProfilePageState extends State<ProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            AutoSizeText(
                               "Developed with ❤️ by Kerlos Girgis",
+                              minFontSize: 18,
                               style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 22,
