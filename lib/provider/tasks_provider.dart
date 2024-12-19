@@ -53,7 +53,26 @@ class TasksProvider with ChangeNotifier{
     if(await LockManager().isLockEnabled()){
       if(await AuthenticationService().authenticate()){
         try{
-          await DatabaseService().exportToDoToJson();
+          await DatabaseService().exportToDoToJson().then((s){
+            if(s){
+              Fluttertoast.showToast(
+                  msg: "Backup Created",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.green,
+                  textColor: Colors.white,
+                  fontSize: 18.0);
+            }
+            else{
+              Fluttertoast.showToast(
+                  msg: "Backup Failed",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  fontSize: 18.0);
+            }
+          });
         }
         catch(e){
           Fluttertoast.showToast(
@@ -68,7 +87,26 @@ class TasksProvider with ChangeNotifier{
     }
     else{
       try{
-        await DatabaseService().exportToDoToJson();
+        await DatabaseService().exportToDoToJson().then((s){
+          if(s){
+            Fluttertoast.showToast(
+                msg: "Backup Created",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.green,
+                textColor: Colors.white,
+                fontSize: 18.0);
+          }
+          else{
+            Fluttertoast.showToast(
+                msg: "Backup Failed",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 18.0);
+          }
+        });
       }
       catch(e){
         Fluttertoast.showToast(
@@ -84,7 +122,26 @@ class TasksProvider with ChangeNotifier{
 
   Future<void> restore()async {
     try{
-      await DatabaseService().importToDoFromJson();
+      await DatabaseService().importToDoFromJson().then((s){
+        if(s){
+          Fluttertoast.showToast(
+              msg: "Data Restored",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.green,
+              textColor: Colors.white,
+              fontSize: 18.0);
+        }
+        else{
+          Fluttertoast.showToast(
+              msg: "Failed To Restore",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.red,
+              textColor: Colors.white,
+              fontSize: 18.0);
+        }
+      });
       get();
     }
     catch(e){

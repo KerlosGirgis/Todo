@@ -163,7 +163,7 @@ class UpdateNoteDialog extends StatelessWidget {
                                 });
                               } else {
                                 Fluttertoast.showToast(
-                                    msg: "Couldn't read your fingerprint data",
+                                    msg: "Authentication Failed",
                                     toastLength: Toast.LENGTH_SHORT,
                                     gravity: ToastGravity.BOTTOM,
                                     backgroundColor: Colors.red,

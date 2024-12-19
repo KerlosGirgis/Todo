@@ -167,35 +167,59 @@ class DatabaseService {
   }
 
   // Export Notes to JSON
-  Future<void> exportNotesToJson() async {
+  Future<bool> exportNotesToJson() async {
     List<Note> notes = await getNotes();
     String jsonString = jsonEncode(notes.map((note) => note.toMap()).toList());
     Uint8List bytes = utf8.encode(jsonString);
 
-    await FilePicker.platform.saveFile(
+    String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Select location to save Notes JSON file',
       fileName: 'notes.json',
       bytes: bytes
     );
 
+    if(outputPath!=null){
+      if(outputPath.isEmpty){
+        return false;
+      }
+      else{
+        return true;
+      }
+    }
+    else{
+      return false;
+    }
+
   }
 
 
-  Future<void> exportToDoToJson() async {
+  Future<bool> exportToDoToJson() async {
     List<TodoItem> items = await getItems();
     String jsonString = jsonEncode(items.map((item) => item.toMap()).toList());
     Uint8List bytes = utf8.encode(jsonString);
 
-    await FilePicker.platform.saveFile(
+    String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Select location to save ToDo JSON file',
       fileName: 'todo.json',
       bytes: bytes
     );
 
+    if(outputPath!=null){
+      if(outputPath.isEmpty){
+        return false;
+      }
+      else{
+        return true;
+      }
+    }
+    else{
+      return false;
+    }
+
   }
 
   // Import Notes from JSON
-  Future<void> importNotesFromJson() async {
+  Future<bool> importNotesFromJson() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
@@ -210,10 +234,14 @@ class DatabaseService {
         Note note = Note.fromMap(noteMap);
         await insertNote(note);
       }
+      return true;
+    }
+    else{
+      return false;
     }
   }
 
-  Future<void> importToDoFromJson() async {
+  Future<bool> importToDoFromJson() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
@@ -228,6 +256,10 @@ class DatabaseService {
         TodoItem item = TodoItem.fromMap(itemMap);
         await insertItem(item);
       }
+      return true;
+    }
+    else {
+      return false;
     }
   }
 
