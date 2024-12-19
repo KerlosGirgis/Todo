@@ -142,6 +142,7 @@ class _NotesPageState extends State<NotesPage> {
                             childAspectRatio: 0.7),
                         itemBuilder: (context, index) {
                           return AnimationConfiguration.staggeredGrid(
+                            duration: const Duration(milliseconds: 375),
                             position: index,
                             columnCount: MediaQuery.of(context).orientation ==
                                 Orientation.portrait

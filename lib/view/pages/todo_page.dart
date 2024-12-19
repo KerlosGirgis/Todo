@@ -106,164 +106,166 @@ class _TodoPageState extends State<TodoPage> {
                               position: index,
                               child: SlideAnimation(
                                 verticalOffset: 400,
-                                child: Dismissible(
-                                  onDismissed: (direction) async {
-                                    Provider.of<TasksProvider>(context, listen: false)
-                                        .dismissTask(index, tasks.items[index].id!)
-                                        .then((value) async {
-                                      Fluttertoast.showToast(
-                                          msg: "Task Deleted",
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.BOTTOM,
-                                          backgroundColor:
-                                              user.colorProvider.cardBackground,
-                                          textColor: user.colorProvider.appTitle,
-                                          fontSize: 19.0);
-                                    });
-                                  },
-                                  key: Key(taskKey),
-                                  child: Card(
-                                    elevation: 1,
-                                    color: user.colorProvider.cardBackground,
-                                    child: ListTile(
-                                      title: Column(
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: InkWell(
-                                                  child: AutoSizeText(
-                                                      tasks.items[index].title,
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      minFontSize: 18,
-                                                      style: tasks.items[index]
-                                                                  .status ==
-                                                              0
-                                                          ? TextStyle(
-                                                              fontSize: 26,
-                                                              color:
-                                                                  user.colorProvider
-                                                                      .taskTitle)
-                                                          : const TextStyle(
-                                                              color: Colors.grey,
-                                                              fontSize: 26,
-                                                              decoration:
-                                                                  TextDecoration
-                                                                      .lineThrough,
-                                                              decorationThickness:
-                                                                  3)),
-                                                  onLongPress: () {
-                                                    showDialog(
-                                                        context: context,
-                                                        builder: (context) {
-                                                          return UpdateTaskDialog(index: index,);
+                                child: FadeInAnimation(
+                                  child: Dismissible(
+                                    onDismissed: (direction) async {
+                                      Provider.of<TasksProvider>(context, listen: false)
+                                          .dismissTask(index, tasks.items[index].id!)
+                                          .then((value) async {
+                                        Fluttertoast.showToast(
+                                            msg: "Task Deleted",
+                                            toastLength: Toast.LENGTH_SHORT,
+                                            gravity: ToastGravity.BOTTOM,
+                                            backgroundColor:
+                                                user.colorProvider.cardBackground,
+                                            textColor: user.colorProvider.appTitle,
+                                            fontSize: 19.0);
+                                      });
+                                    },
+                                    key: Key(taskKey),
+                                    child: Card(
+                                      elevation: 1,
+                                      color: user.colorProvider.cardBackground,
+                                      child: ListTile(
+                                        title: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: InkWell(
+                                                    child: AutoSizeText(
+                                                        tasks.items[index].title,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        minFontSize: 18,
+                                                        style: tasks.items[index]
+                                                                    .status ==
+                                                                0
+                                                            ? TextStyle(
+                                                                fontSize: 26,
+                                                                color:
+                                                                    user.colorProvider
+                                                                        .taskTitle)
+                                                            : const TextStyle(
+                                                                color: Colors.grey,
+                                                                fontSize: 26,
+                                                                decoration:
+                                                                    TextDecoration
+                                                                        .lineThrough,
+                                                                decorationThickness:
+                                                                    3)),
+                                                    onLongPress: () {
+                                                      showDialog(
+                                                          context: context,
+                                                          builder: (context) {
+                                                            return UpdateTaskDialog(index: index,);
+                                                          });
+                                                    },
+                                                    onTap: () async {
+                                                      if (tasks.items[index].status ==
+                                                          0) {
+                                                        Provider.of<TasksProvider>(
+                                                                context,
+                                                                listen: false)
+                                                            .updateTask(TodoItem(
+                                                                title: tasks
+                                                                    .items[index].title,
+                                                                desc: tasks
+                                                                    .items[index].desc,
+                                                                id: tasks
+                                                                    .items[index].id,
+                                                                status: 1,
+                                                                date: tasks
+                                                                    .items[index].date,
+                                                                time: tasks
+                                                                    .items[index].time))
+                                                            .then((value) {
+                                                          Fluttertoast.showToast(
+                                                              msg: "Task done",
+                                                              toastLength:
+                                                                  Toast.LENGTH_SHORT,
+                                                              gravity:
+                                                                  ToastGravity.BOTTOM,
+                                                              backgroundColor:
+                                                                  Colors.green,
+                                                              textColor: Colors.white,
+                                                              fontSize: 19.0);
                                                         });
-                                                  },
-                                                  onTap: () async {
-                                                    if (tasks.items[index].status ==
-                                                        0) {
-                                                      Provider.of<TasksProvider>(
-                                                              context,
-                                                              listen: false)
-                                                          .updateTask(TodoItem(
-                                                              title: tasks
-                                                                  .items[index].title,
-                                                              desc: tasks
-                                                                  .items[index].desc,
-                                                              id: tasks
-                                                                  .items[index].id,
-                                                              status: 1,
-                                                              date: tasks
-                                                                  .items[index].date,
-                                                              time: tasks
-                                                                  .items[index].time))
-                                                          .then((value) {
-                                                        Fluttertoast.showToast(
-                                                            msg: "Task done",
-                                                            toastLength:
-                                                                Toast.LENGTH_SHORT,
-                                                            gravity:
-                                                                ToastGravity.BOTTOM,
-                                                            backgroundColor:
-                                                                Colors.green,
-                                                            textColor: Colors.white,
-                                                            fontSize: 19.0);
-                                                      });
-                                                    } else {
-                                                      Provider.of<TasksProvider>(
-                                                              context,
-                                                              listen: false)
-                                                          .updateTask(TodoItem(
-                                                              title: tasks
-                                                                  .items[index].title,
-                                                              desc: tasks
-                                                                  .items[index].desc,
-                                                              id: tasks
-                                                                  .items[index].id,
-                                                              status: 0,
-                                                              date: tasks
-                                                                  .items[index].date,
-                                                              time: tasks
-                                                                  .items[index].time))
-                                                          .then((value) {
-                                                        Fluttertoast.showToast(
-                                                            msg: "Task undone",
-                                                            toastLength:
-                                                                Toast.LENGTH_SHORT,
-                                                            gravity:
-                                                                ToastGravity.BOTTOM,
-                                                            backgroundColor: user
-                                                                .colorProvider
-                                                                .cardBackground,
-                                                            textColor: user
-                                                                .colorProvider
-                                                                .appTitle,
-                                                            fontSize: 19.0);
-                                                      });
-                                                    }
-                                                  },
+                                                      } else {
+                                                        Provider.of<TasksProvider>(
+                                                                context,
+                                                                listen: false)
+                                                            .updateTask(TodoItem(
+                                                                title: tasks
+                                                                    .items[index].title,
+                                                                desc: tasks
+                                                                    .items[index].desc,
+                                                                id: tasks
+                                                                    .items[index].id,
+                                                                status: 0,
+                                                                date: tasks
+                                                                    .items[index].date,
+                                                                time: tasks
+                                                                    .items[index].time))
+                                                            .then((value) {
+                                                          Fluttertoast.showToast(
+                                                              msg: "Task undone",
+                                                              toastLength:
+                                                                  Toast.LENGTH_SHORT,
+                                                              gravity:
+                                                                  ToastGravity.BOTTOM,
+                                                              backgroundColor: user
+                                                                  .colorProvider
+                                                                  .cardBackground,
+                                                              textColor: user
+                                                                  .colorProvider
+                                                                  .appTitle,
+                                                              fontSize: 19.0);
+                                                        });
+                                                      }
+                                                    },
+                                                  ),
                                                 ),
-                                              ),
-                                              const Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 10)),
-                                              tasks.items[index].status == 1?
-                                              const Icon(
-                                                Icons.check,
-                                                color: Colors.green,
-                                              ):const Icon(
-                                                Icons.check_outlined,
-                                                color: Colors.grey,
-                                              )
-                                            ],
-                                          ),
-                                          tasks.items[index].date.isNotEmpty ||
-                                                  tasks.items[index].time.isNotEmpty
-                                              ? Row(
-                                                  children: [
-                                                    Text(
-                                                      "${tasks.items[index].date}  ${tasks.items[index].time}",
-                                                      style: TextStyle(
-                                                          color:
-                                                              tasks.items[index].status==0?user.colorProvider.date:Colors.grey,
-                                                          fontWeight:
-                                                              FontWeight.normal,
-                                                          fontSize: 16),
-                                                    )
-                                                  ],
+                                                const Padding(
+                                                    padding:
+                                                        EdgeInsets.only(right: 10)),
+                                                tasks.items[index].status == 1?
+                                                const Icon(
+                                                  Icons.check,
+                                                  color: Colors.green,
+                                                ):const Icon(
+                                                  Icons.check_outlined,
+                                                  color: Colors.grey,
                                                 )
-                                              : const Row()
-                                        ],
+                                              ],
+                                            ),
+                                            tasks.items[index].date.isNotEmpty ||
+                                                    tasks.items[index].time.isNotEmpty
+                                                ? Row(
+                                                    children: [
+                                                      Text(
+                                                        "${tasks.items[index].date}  ${tasks.items[index].time}",
+                                                        style: TextStyle(
+                                                            color:
+                                                                tasks.items[index].status==0?user.colorProvider.date:Colors.grey,
+                                                            fontWeight:
+                                                                FontWeight.normal,
+                                                            fontSize: 16),
+                                                      )
+                                                    ],
+                                                  )
+                                                : const Row()
+                                          ],
+                                        ),
+                                        subtitle: tasks.items[index].desc.isNotEmpty
+                                            ? Text(
+                                                tasks.items[index].desc,
+                                                style: TextStyle(
+                                                    color: tasks.items[index].status==0?user.colorProvider.subtitle:Colors.grey),
+                                              )
+                                            : null,
+                                        isThreeLine: false,
                                       ),
-                                      subtitle: tasks.items[index].desc.isNotEmpty
-                                          ? Text(
-                                              tasks.items[index].desc,
-                                              style: TextStyle(
-                                                  color: tasks.items[index].status==0?user.colorProvider.subtitle:Colors.grey),
-                                            )
-                                          : null,
-                                      isThreeLine: false,
                                     ),
                                   ),
                                 ),
