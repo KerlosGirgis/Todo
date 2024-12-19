@@ -282,6 +282,12 @@ class _TodoPageState extends State<TodoPage> {
             actions: [
               Row(
                 children: [
+                  IconButton(onPressed: () async {
+                    Provider.of<TasksProvider>(context, listen: false).backup();
+                  }, icon: const Icon(Icons.backup,color: Colors.grey,)),
+                  IconButton(onPressed: () async {
+                    Provider.of<TasksProvider>(context, listen: false).restore();
+                  }, icon: const Icon(Icons.settings_backup_restore,color: Colors.grey,)),
                   IconButton(
                       onPressed: () {
                         Navigator.push(

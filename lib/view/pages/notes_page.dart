@@ -51,6 +51,12 @@ class _NotesPageState extends State<NotesPage> {
             actions: [
               Row(
                 children: [
+                  IconButton(onPressed: () async {
+                    Provider.of<NotesProvider>(context, listen: false).backup();
+                  }, icon: const Icon(Icons.backup,color: Colors.grey,)),
+                  IconButton(onPressed: () async {
+                    Provider.of<NotesProvider>(context, listen: false).restore();
+                  }, icon: const Icon(Icons.settings_backup_restore,color: Colors.grey,)),
                   IconButton(
                       onPressed: () {
                         Navigator.push(
@@ -193,24 +199,25 @@ class _NotesPageState extends State<NotesPage> {
                               bool isAuthenticated =
                                   await authService.authenticate();
                               if (isAuthenticated) {
-                                if(context.mounted){
+                                if (context.mounted) {
                                   Navigator.push(
                                     context,
                                     PageRouteBuilder(
                                       pageBuilder: (context, animation,
-                                          secondaryAnimation) =>
+                                              secondaryAnimation) =>
                                           NoteEditorPage(
-                                            note: notes.notes[index],
-                                          ),
+                                        note: notes.notes[index],
+                                      ),
                                       transitionsBuilder: (context, animation,
                                           secondaryAnimation, child) {
                                         const begin = Offset(1.0, 0.0);
                                         const end = Offset.zero;
                                         const curve = Curves.ease;
-                                        var tween = Tween(begin: begin, end: end)
+                                        var tween = Tween(
+                                                begin: begin, end: end)
                                             .chain(CurveTween(curve: curve));
                                         var offsetAnimation =
-                                        animation.drive(tween);
+                                            animation.drive(tween);
                                         return SlideTransition(
                                             position: offsetAnimation,
                                             child: child);
@@ -250,7 +257,7 @@ class _NotesPageState extends State<NotesPage> {
                               bool isAuthenticated =
                                   await authService.authenticate();
                               if (isAuthenticated) {
-                                if(context.mounted){
+                                if (context.mounted) {
                                   showDialog(
                                       context: context,
                                       builder: (context) {

@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:todo/models/todo_item.dart';
@@ -162,4 +165,71 @@ class DatabaseService {
     await db
         .update('User', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
+
+  // Export Notes to JSON
+  Future<void> exportNotesToJson() async {
+    List<Note> notes = await getNotes();
+    String jsonString = jsonEncode(notes.map((note) => note.toMap()).toList());
+    Uint8List bytes = utf8.encode(jsonString);
+
+    await FilePicker.platform.saveFile(
+      dialogTitle: 'Select location to save Notes JSON file',
+      fileName: 'notes.json',
+      bytes: bytes
+    );
+
+  }
+
+
+  Future<void> exportToDoToJson() async {
+    List<TodoItem> items = await getItems();
+    String jsonString = jsonEncode(items.map((item) => item.toMap()).toList());
+    Uint8List bytes = utf8.encode(jsonString);
+
+    await FilePicker.platform.saveFile(
+      dialogTitle: 'Select location to save ToDo JSON file',
+      fileName: 'todo.json',
+      bytes: bytes
+    );
+
+  }
+
+  // Import Notes from JSON
+  Future<void> importNotesFromJson() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      String jsonString = await file.readAsString();
+      List<dynamic> data = jsonDecode(jsonString);
+
+      for (var noteMap in data) {
+        Note note = Note.fromMap(noteMap);
+        await insertNote(note);
+      }
+    }
+  }
+
+  Future<void> importToDoFromJson() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      String jsonString = await file.readAsString();
+      List<dynamic> data = jsonDecode(jsonString);
+
+      for (var itemMap in data) {
+        TodoItem item = TodoItem.fromMap(itemMap);
+        await insertItem(item);
+      }
+    }
+  }
+
+
 }

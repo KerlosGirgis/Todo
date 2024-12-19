@@ -45,13 +45,13 @@ class ProfilePageState extends State<ProfilePage> {
                   )),
               actions: [
                 IconButton(
-                    onPressed: () {
+                    onPressed: () async {
                       Fluttertoast.showToast(
                           msg: "Developed with ❤️ by Kerlos Girgis",
                           toastLength: Toast.LENGTH_SHORT,
                           gravity: ToastGravity.BOTTOM,
                           backgroundColor: Colors.blue,
-                          textColor: user.colorProvider.appTitle,
+                          textColor: Colors.white,
                           fontSize: 18.0);
                     },
                     icon: Icon(
