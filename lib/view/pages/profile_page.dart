@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -289,12 +290,19 @@ class ProfilePageState extends State<ProfilePage> {
                                 return const EditNameDialog();
                               });
                         },
-                        child: Text(
-                          user.user.name,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 40,
-                              color: user.colorProvider.profilePageName),
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width/1.1,
+                          child: AutoSizeText(
+                            user.user.name,
+                            minFontSize: 30,
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              overflow: TextOverflow.clip,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 40,
+                                color: user.colorProvider.profilePageName),
+                          ),
                         ),
                       ),
                     ],
@@ -627,12 +635,19 @@ class ProfilePageState extends State<ProfilePage> {
                                         return const EditNameDialog();
                                       });
                                 },
-                                child: Text(
-                                  user.user.name,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40,
-                                      color: user.colorProvider.profilePageName),
+                                child: SizedBox(
+                                  width: MediaQuery.sizeOf(context).width/4.4,
+                                  child: AutoSizeText(
+                                    user.user.name,
+                                    minFontSize: 30,
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        overflow: TextOverflow.clip,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 40,
+                                        color: user.colorProvider.profilePageName),
+                                  ),
                                 ),
                               ),
                             ],
