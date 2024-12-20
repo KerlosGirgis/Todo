@@ -13,7 +13,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/services/authentication_service.dart';
@@ -29,45 +28,37 @@ import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  final DatabaseService dbService = DatabaseService();
   final bool initialized = await AuthenticationService().initializeApp();
   if (initialized) {
-    final DatabaseService dbService = DatabaseService();
     await dbService.openDb();
     await VerseManager.loadVerses();
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.transparent,
-      ),
-    );
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     runApp(MultiProvider(providers: [
       ChangeNotifierProvider(create: (_) => UserProvider()),
       ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ChangeNotifierProvider(create: (_) => TasksProvider()),
       ChangeNotifierProvider(create: (_) => NotesProvider()),
-    ], child: const MyApp()));  } else {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.transparent,
-      ),
-    );
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    ], child: const MyApp()));
+  } else {
     runApp(MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: 'arial',
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300),
-        useMaterial3: true,
-      ),
-      home:const LockPage()
-    ));
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          fontFamily: 'arial',
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300),
+          useMaterial3: true,
+        ),
+        home: const LockPage()));
   }
-
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
 
   @override
   Widget build(BuildContext context) {

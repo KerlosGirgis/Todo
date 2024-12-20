@@ -254,7 +254,7 @@ class _TodoPageState extends State<TodoPage> {
                                                       )
                                                     ],
                                                   )
-                                                : const Row()
+                                                : const SizedBox.shrink()
                                           ],
                                         ),
                                         subtitle: tasks.items[index].desc.isNotEmpty
@@ -263,7 +263,7 @@ class _TodoPageState extends State<TodoPage> {
                                                 style: TextStyle(
                                                     color: tasks.items[index].status==0?user.colorProvider.subtitle:Colors.grey),
                                               )
-                                            : null,
+                                            : const SizedBox.shrink(),
                                         isThreeLine: false,
                                       ),
                                     ),

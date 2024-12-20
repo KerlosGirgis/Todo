@@ -197,7 +197,7 @@ class _NotesPageState extends State<NotesPage> {
                                                           "assets/lock.png",
                                                           scale: 1.4,
                                                         )
-                                                      : const Row(),
+                                                      : const SizedBox.shrink(),
                                                 ],
                                               )),
                                         );

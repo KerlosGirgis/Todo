@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/main.dart';
 import 'package:todo/services/authentication_service.dart';
@@ -43,12 +42,6 @@ class LockPageState extends State<LockPage> {
               final DatabaseService dbService = DatabaseService();
               await dbService.openDb();
               await VerseManager.loadVerses();
-              SystemChrome.setSystemUIOverlayStyle(
-                const SystemUiOverlayStyle(
-                  systemNavigationBarColor: Colors.transparent,
-                ),
-              );
-              SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
               runApp(MultiProvider(providers: [
                 ChangeNotifierProvider(create: (_) => UserProvider()),
                 ChangeNotifierProvider(create: (_) => ThemeProvider()),
