@@ -201,6 +201,7 @@ class AddNoteDialog extends StatelessWidget {
                 Button(
                   onPressed: () async {
                     if (titleController.text.isNotEmpty) {
+                      Navigator.pop(context);
                       Provider.of<NotesProvider>(context, listen: false)
                           .addNote(Note(
                         title: titleController.text,
@@ -219,7 +220,6 @@ class AddNoteDialog extends StatelessWidget {
                             textColor: user.colorProvider.appTitle,
                             fontSize: 19.0);
                       });
-                      Navigator.pop(context);
                     } else {
                       Fluttertoast.showToast(
                           msg: "Title can't be empty",

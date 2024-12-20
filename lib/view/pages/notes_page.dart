@@ -132,17 +132,17 @@ class _NotesPageState extends State<NotesPage> {
                         scale: 2,
                       ),
                     )
-                  : AnimationLimiter(
-                    child: GridView.builder(
-                        itemCount: notes.notes.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: MediaQuery.of(context).orientation ==
-                                    Orientation.portrait
-                                ? 2
-                                : 4,
-                            childAspectRatio: 0.7),
-                        itemBuilder: (context, index) {
-                          return AnimationConfiguration.staggeredGrid(
+                  : GridView.builder(
+                      itemCount: notes.notes.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: MediaQuery.of(context).orientation ==
+                                  Orientation.portrait
+                              ? 2
+                              : 4,
+                          childAspectRatio: 0.7),
+                      itemBuilder: (context, index) {
+                        return AnimationLimiter(
+                          child: AnimationConfiguration.staggeredGrid(
                             duration: const Duration(milliseconds: 600),
                             position: index,
                             columnCount: MediaQuery.of(context).orientation ==
@@ -286,9 +286,9 @@ class _NotesPageState extends State<NotesPage> {
                                 ),
                               ),
                             ),
-                          );
-                        }),
-                  );
+                          ),
+                        );
+                      });
             },
           ),
         );

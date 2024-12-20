@@ -93,19 +93,19 @@ class _TodoPageState extends State<TodoPage> {
                         scale: 2,
                       ),
                     )
-                  : AnimationLimiter(
-                    child: Theme(
-                        data: ThemeData(canvasColor: Colors.transparent),
-                        child: ReorderableListView.builder(
-                          itemCount: tasks.items.length,
-                          itemBuilder: (context, index) {
-                            final taskKey = tasks.items[index].id.toString();
-                            return AnimationConfiguration.staggeredList(
-                              key: Key(taskKey),
-                              duration: const Duration(milliseconds: 600),
+                  : Theme(
+                      data: ThemeData(canvasColor: Colors.transparent),
+                      child: ReorderableListView.builder(
+                        itemCount: tasks.items.length,
+                        itemBuilder: (context, index) {
+                          final taskKey = tasks.items[index].id.toString();
+                          return AnimationLimiter(
+                            key: Key(taskKey),
+                            child: AnimationConfiguration.staggeredList(
+                              duration: const Duration(milliseconds: 300),
                               position: index,
                               child: SlideAnimation(
-                                verticalOffset: 300,
+                                verticalOffset: 200,
                                 child: FadeInAnimation(
                                   child: Dismissible(
                                     onDismissed: (direction) async {
@@ -132,7 +132,7 @@ class _TodoPageState extends State<TodoPage> {
                                             Row(
                                               children: [
                                                 Expanded(
-                                                  child: InkWell(
+                                                  child: GestureDetector(
                                                     child: AutoSizeText(
                                                         tasks.items[index].title,
                                                         maxLines: 1,
@@ -270,15 +270,15 @@ class _TodoPageState extends State<TodoPage> {
                                   ),
                                 ),
                               ),
-                            );
-                          },
-                          onReorder: (int oldIndex, int newIndex) async {
-                            Provider.of<TasksProvider>(context, listen: false)
-                                .syncAfterReorder(oldIndex, newIndex);
-                          },
-                        ),
+                            ),
+                          );
+                        },
+                        onReorder: (int oldIndex, int newIndex) async {
+                          Provider.of<TasksProvider>(context, listen: false)
+                              .syncAfterReorder(oldIndex, newIndex);
+                        },
                       ),
-                  );
+                    );
             },
           ),
           appBar: AppBar(

@@ -213,6 +213,7 @@ class AddTaskDialog extends StatelessWidget {
                               fontSize: 19.0);
                           return;
                         }
+                        Navigator.pop(context);
                         Provider.of<TasksProvider>(context,
                             listen: false)
                             .addTask(TodoItem(
@@ -233,7 +234,6 @@ class AddTaskDialog extends StatelessWidget {
                               user.colorProvider.appTitle,
                               fontSize: 19.0);
                         });
-                        Navigator.pop(context);
                       },
                       label: 'Save',
                       status: true,
