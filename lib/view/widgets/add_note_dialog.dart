@@ -20,8 +20,8 @@ class AddNoteDialog extends StatelessWidget {
     return Consumer<UserProvider>(
       builder: (context, user, child) {
         int isProtected = 0;
-        int titleColor = Colors.white.value;
-        int coverColor = Colors.grey.shade800.withOpacity(.5).value;
+        String titleColor = Colors.white.hex;
+        String coverColor = Colors.grey.shade800.withValues(alpha: .5).hex;
         return StatefulBuilder(
           builder: (BuildContext context, setState) {
             return AlertDialog(
@@ -97,13 +97,13 @@ class AddNoteDialog extends StatelessWidget {
                       ),
                       GestureDetector(
                         child: CircleAvatar(
-                          backgroundColor: Color(titleColor),
+                          backgroundColor: titleColor.toColor,
                         ),
                         onTap: () {
                           ColorPicker(
                             onColorChanged: (Color color) {
                               setState(() {
-                                titleColor = color.value;
+                                titleColor = color.hex;
                               });
                             },
                           ).showPickerDialog(context);
@@ -112,7 +112,7 @@ class AddNoteDialog extends StatelessWidget {
                       IconButton(
                           onPressed: () {
                             setState(() {
-                              titleColor = Colors.white.value;
+                              titleColor = Colors.white.hex;
                             });
                           },
                           icon: const Icon(Icons.undo_sharp))
@@ -127,13 +127,13 @@ class AddNoteDialog extends StatelessWidget {
                       ),
                       GestureDetector(
                         child: CircleAvatar(
-                          backgroundColor: Color(coverColor),
+                          backgroundColor: coverColor.toColor,
                         ),
                         onTap: () {
                           ColorPicker(
                             onColorChanged: (Color color) {
                               setState(() {
-                                coverColor = color.value;
+                                coverColor = color.hex;
                               });
                             },
                           ).showPickerDialog(context);
@@ -143,7 +143,7 @@ class AddNoteDialog extends StatelessWidget {
                           onPressed: () {
                             setState(() {
                               coverColor =
-                                  Colors.grey.shade800.withOpacity(.5).value;
+                                  Colors.grey.shade800.withValues(alpha: .5).hex;
                             });
                           },
                           icon: const Icon(Icons.undo_sharp))

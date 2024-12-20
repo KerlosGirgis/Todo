@@ -34,8 +34,8 @@ class ColorProvider {
       subtitle = Colors.grey.shade200;
       pageBackground = const Color.fromARGB(255, 24, 24, 24);
       userNameAlert = Colors.white;
-      profileAlertBackground = Colors.grey.shade800.withOpacity(.8);
-      cardBackground = Colors.grey.shade700.withOpacity(.5);
+      profileAlertBackground = const Color(0xff1e1f20);
+      cardBackground = Colors.grey.shade700.withValues(alpha: .5);
       alertButtonsBackground = Colors.black;
       profilePageButtonsBackground = Colors.grey[50];
       profilePageName = Colors.blue[100];

@@ -3,8 +3,8 @@ class Note{
   String title;
   String body;
   int? id;
-  int titleColor;
-  int coverColor;
+  String titleColor;
+  String coverColor;
   int protected;
 
 

@@ -1,3 +1,4 @@
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
@@ -151,14 +152,14 @@ class _NotesPageState extends State<NotesPage> {
                                   child: Container(
                                       width: cardWidth,
                                       decoration: BoxDecoration(
-                                        color: Color(
-                                            notes.notes[index].coverColor),
+                                        color:
+                                            notes.notes[index].coverColor.toColor,
                                         borderRadius:
                                             BorderRadius.circular(12.0),
                                         boxShadow: [
                                           BoxShadow(
                                             color:
-                                                Colors.black.withOpacity(0.2),
+                                                Colors.black.withValues(alpha: 0.2),
                                             blurRadius: 8,
                                             offset: const Offset(0, 4),
                                           ),
@@ -174,8 +175,8 @@ class _NotesPageState extends State<NotesPage> {
                                             overflow: TextOverflow.ellipsis,
                                             notes.notes[index].title,
                                             style: TextStyle(
-                                                color: Color(notes
-                                                    .notes[index].titleColor),
+                                                color: notes
+                                                    .notes[index].titleColor.toColor,
                                                 fontSize: 24,
                                                 fontWeight: FontWeight.bold),
                                           ),

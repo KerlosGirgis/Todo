@@ -74,8 +74,8 @@ class DatabaseService {
       id INTEGER PRIMARY KEY,
       title TEXT,
       body TEXT,
-      titleColor INTEGER,
-      coverColor INTEGER,
+      titleColor TEXT,
+      coverColor TEXT,
       protected INTEGER
     )
     ''');

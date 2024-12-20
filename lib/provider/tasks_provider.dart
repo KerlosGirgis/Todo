@@ -16,7 +16,6 @@ class TasksProvider with ChangeNotifier{
   Future<void> updateTask(TodoItem todo) async {
     await DatabaseService().updateItem(todo);
     get();
-    notifyListeners();
   }
 
   Future<void> deleteTask(int id) async {
@@ -35,18 +34,15 @@ class TasksProvider with ChangeNotifier{
       await DatabaseService().insertItem(item); // Reinsert items in new order
     }
     get();
-    notifyListeners();
   }
   Future<void> addTask(TodoItem todo) async {
     await DatabaseService().insertItem(todo);
     get();
-    notifyListeners();
   }
   Future<void> dismissTask(int index,int id) async {
     items.removeAt(index);
     DatabaseService().deleteItem(id);
     get();
-    notifyListeners();
   }
 
   Future<void> backup()async {
