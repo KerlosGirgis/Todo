@@ -143,7 +143,7 @@ class UpdateNoteDialog extends StatelessWidget {
                           onPressed: () {
                             setState(() {
                               coverColor =
-                                  Colors.grey.shade800.withValues(alpha: .5).hex;
+                                  const Color(0xff1E1E1E).hex;
                             });
                           },
                           icon: const Icon(Icons.undo_sharp))

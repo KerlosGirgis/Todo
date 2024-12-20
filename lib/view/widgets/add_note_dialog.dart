@@ -21,7 +21,7 @@ class AddNoteDialog extends StatelessWidget {
       builder: (context, user, child) {
         int isProtected = 0;
         String titleColor = Colors.white.hex;
-        String coverColor = Colors.grey.shade800.withValues(alpha: .5).hex;
+        String coverColor = const Color(0xff1E1E1E).hex;
         return StatefulBuilder(
           builder: (BuildContext context, setState) {
             return AlertDialog(
@@ -143,7 +143,7 @@ class AddNoteDialog extends StatelessWidget {
                           onPressed: () {
                             setState(() {
                               coverColor =
-                                  Colors.grey.shade800.withValues(alpha: .5).hex;
+                                  const Color(0xff1E1E1E).hex;
                             });
                           },
                           icon: const Icon(Icons.undo_sharp))

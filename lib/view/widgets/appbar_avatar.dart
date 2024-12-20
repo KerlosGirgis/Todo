@@ -35,22 +35,25 @@ class AppbarAvatar extends StatelessWidget {
                 builder: (e) {
                   return AlertDialog(
                     scrollable: true,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
                     backgroundColor:
                     user.colorProvider.profileAlertBackground,
-                    title: CircleAvatar(
-                      radius: 130,
-                      backgroundColor: Colors.transparent,
-                      backgroundImage: user.user.pic
-                          .substring(0, 1)
-                          .compareTo("0") ==
-                          0
-                          ? AssetImage(
-                          IconProvider.getAvatar(user.user.pic))
-                          : FileImage(File(user.user.pic)),
-                    ),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        CircleAvatar(
+                          radius: 130,
+                          backgroundColor: Colors.transparent,
+                          backgroundImage: user.user.pic
+                              .substring(0, 1)
+                              .compareTo("0") ==
+                              0
+                              ? AssetImage(
+                              IconProvider.getAvatar(user.user.pic))
+                              : FileImage(File(user.user.pic)),
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
