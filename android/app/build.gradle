@@ -30,11 +30,12 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.k.todo"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34 //flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
     ndkVersion "26.1.10909125"
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -49,6 +50,7 @@ android {
         targetSdk = 34 //flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
+        multiDexEnabled true
     }
     kotlinOptions {
         jvmTarget = "1.8" // Ensure this matches the Java version
@@ -74,8 +76,11 @@ android {
     }
 
     dependencies {
+        coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
         implementation 'com.google.crypto.tink:tink-android:1.15.0'
         implementation 'com.google.errorprone:error_prone_annotations:2.23.0'
+        implementation 'androidx.window:window:1.0.0'
+        implementation 'androidx.window:window-java:1.0.0'
     }
 
 }

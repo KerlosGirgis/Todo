@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/provider/user_provider.dart';
+import 'package:uuid/v4.dart';
 import '../../models/todo_item.dart';
 import '../../provider/tasks_provider.dart';
 import 'button.dart';
@@ -18,13 +19,12 @@ class AddTaskDialog extends StatelessWidget {
     TextEditingController titleController = TextEditingController();
     TextEditingController descController = TextEditingController();
     return Consumer<UserProvider>(
-      builder: (context,user,child) {
+      builder: (context, user, child) {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
               scrollable: true,
-              backgroundColor:
-              user.colorProvider.addTaskAlertBackground,
+              backgroundColor: user.colorProvider.addTaskAlertBackground,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -48,9 +48,7 @@ class AddTaskDialog extends StatelessWidget {
                   ),
                   const Text(
                     "Add Task",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
                   ),
                   const Spacer(
                     flex: 10,
@@ -63,8 +61,7 @@ class AddTaskDialog extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey.shade300,
                       shape: const RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.all(Radius.circular(8)),
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
                     ),
                   )
@@ -81,11 +78,9 @@ class AddTaskDialog extends StatelessWidget {
                         labelText: "Title",
                         labelStyle: TextStyle(
                             fontSize: 30,
-                            color: user
-                                .colorProvider.addTaskAlertText),
+                            color: user.colorProvider.addTaskAlertText),
                         border: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.circular(15))),
+                            borderRadius: BorderRadius.circular(15))),
                   ),
                   TextField(
                     controller: descController,
@@ -96,21 +91,21 @@ class AddTaskDialog extends StatelessWidget {
                         labelText: "Description",
                         labelStyle: TextStyle(
                             fontSize: 30,
-                            color: user
-                                .colorProvider.addTaskAlertText),
+                            color: user.colorProvider.addTaskAlertText),
                         border: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.circular(15))),
+                            borderRadius: BorderRadius.circular(15))),
                   ),
                   Row(
                     children: [
                       IconButton(
                           onPressed: () {
                             showDatePicker(
-                                context: context,
-                                firstDate: DateTime(DateTime.now().year,
-                                    DateTime.now().month, DateTime.now().day),
-                                lastDate: DateTime(DateTime.now().year + 5))
+                                    context: context,
+                                    firstDate: DateTime(
+                                        DateTime.now().year,
+                                        DateTime.now().month,
+                                        DateTime.now().day),
+                                    lastDate: DateTime(DateTime.now().year + 5))
                                 .then((dateValue) {
                               if (dateValue != null) {
                                 setState(() {
@@ -127,13 +122,15 @@ class AddTaskDialog extends StatelessWidget {
                           Row(
                             children: [
                               Text(date),
-                              if(date.isNotEmpty)
-                                IconButton(onPressed: (){
-                                  setState(() {
-                                    date = "";
-                                    time="";
-                                  });
-                                }, icon: const Icon(Icons.clear))
+                              if (date.isNotEmpty)
+                                IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        date = "";
+                                        time = "";
+                                      });
+                                    },
+                                    icon: const Icon(Icons.clear))
                             ],
                           ),
                         ],
@@ -145,16 +142,19 @@ class AddTaskDialog extends StatelessWidget {
                       IconButton(
                           onPressed: () {
                             showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay(
-                                    hour: DateTime.now().hour,
-                                    minute: DateTime.now().minute))
+                                    context: context,
+                                    initialTime: TimeOfDay(
+                                        hour: DateTime.now().hour,
+                                        minute: DateTime.now().minute))
                                 .then((timeValue) {
                               if (timeValue != null) {
                                 setState(() {
                                   time = timeValue.format(context);
-                                  if(date.isEmpty){
-                                    date=DateTime.now().toString().split(" ").first;
+                                  if (date.isEmpty) {
+                                    date = DateTime.now()
+                                        .toString()
+                                        .split(" ")
+                                        .first;
                                   }
                                 });
                               }
@@ -168,12 +168,14 @@ class AddTaskDialog extends StatelessWidget {
                           Row(
                             children: [
                               Text(time),
-                              if(time.isNotEmpty)
-                                IconButton(onPressed: (){
-                                  setState(() {
-                                    time="";
-                                  });
-                                }, icon: const Icon(Icons.clear))
+                              if (time.isNotEmpty)
+                                IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        time = "";
+                                      });
+                                    },
+                                    icon: const Icon(Icons.clear))
                             ],
                           ),
                         ],
@@ -197,10 +199,7 @@ class AddTaskDialog extends StatelessWidget {
                     ),
                     Padding(
                         padding: EdgeInsets.only(
-                            right: MediaQuery.of(context)
-                                .size
-                                .width /
-                                25)),
+                            right: MediaQuery.of(context).size.width / 25)),
                     Button(
                       onPressed: () async {
                         if (titleController.text.isEmpty) {
@@ -214,24 +213,24 @@ class AddTaskDialog extends StatelessWidget {
                           return;
                         }
                         Navigator.pop(context);
-                        Provider.of<TasksProvider>(context,
-                            listen: false)
+                        Provider.of<TasksProvider>(context, listen: false)
                             .addTask(TodoItem(
                           title: titleController.text,
                           desc: descController.text,
                           status: 0,
                           date: date,
                           time: time,
+                          uuid: const UuidV4().generate(),
+                          notification: 0,
                         ))
                             .then((value) {
                           Fluttertoast.showToast(
                               msg: "Task Added",
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.BOTTOM,
-                              backgroundColor: user
-                                  .colorProvider.cardBackground,
-                              textColor:
-                              user.colorProvider.appTitle,
+                              backgroundColor:
+                                  user.colorProvider.cardBackground,
+                              textColor: user.colorProvider.appTitle,
                               fontSize: 19.0);
                         });
                       },

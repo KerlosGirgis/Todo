@@ -102,30 +102,33 @@ class _TodoPageState extends State<TodoPage> {
                           return AnimationLimiter(
                             key: Key(taskKey),
                             child: AnimationConfiguration.staggeredList(
-                              duration: const Duration(milliseconds: 300),
                               position: index,
                               child: SlideAnimation(
-                                verticalOffset: 200,
+                                verticalOffset: 100,
                                 child: FadeInAnimation(
                                   child: Dismissible(
                                     onDismissed: (direction) async {
-                                      Provider.of<TasksProvider>(context, listen: false)
-                                          .dismissTask(index, tasks.items[index].id!)
+                                      Provider.of<TasksProvider>(context,
+                                              listen: false)
+                                          .dismissTask(
+                                              index, tasks.items[index].id!)
                                           .then((value) async {
                                         Fluttertoast.showToast(
                                             msg: "Task Deleted",
                                             toastLength: Toast.LENGTH_SHORT,
                                             gravity: ToastGravity.BOTTOM,
-                                            backgroundColor:
-                                                user.colorProvider.cardBackground,
-                                            textColor: user.colorProvider.appTitle,
+                                            backgroundColor: user
+                                                .colorProvider.cardBackground,
+                                            textColor:
+                                                user.colorProvider.appTitle,
                                             fontSize: 19.0);
                                       });
                                     },
                                     key: Key(taskKey),
                                     child: Card(
                                       elevation: 3,
-                                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 6),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(25),
                                       ),
@@ -133,7 +136,8 @@ class _TodoPageState extends State<TodoPage> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(16.0),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Row(
                                               children: [
@@ -142,70 +146,132 @@ class _TodoPageState extends State<TodoPage> {
                                                     child: AutoSizeText(
                                                       tasks.items[index].title,
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                       minFontSize: 18,
-                                                      style: tasks.items[index].status == 0
+                                                      style: tasks.items[index]
+                                                                  .status ==
+                                                              0
                                                           ? TextStyle(
-                                                        fontSize: 26,
-                                                        color: user.colorProvider.taskTitle,
-                                                      )
+                                                              fontSize: 26,
+                                                              color: user
+                                                                  .colorProvider
+                                                                  .taskTitle,
+                                                            )
                                                           : const TextStyle(
-                                                        color: Colors.grey,
-                                                        fontSize: 26,
-                                                        decoration: TextDecoration.lineThrough,
-                                                        decorationThickness: 3,
-                                                      ),
+                                                              color:
+                                                                  Colors.grey,
+                                                              fontSize: 26,
+                                                              decoration:
+                                                                  TextDecoration
+                                                                      .lineThrough,
+                                                              decorationThickness:
+                                                                  3,
+                                                            ),
                                                     ),
                                                     onLongPress: () {
                                                       showDialog(
                                                         context: context,
                                                         builder: (context) {
-                                                          return UpdateTaskDialog(index: index);
+                                                          return UpdateTaskDialog(
+                                                              index: index);
                                                         },
                                                       );
                                                     },
                                                     onTap: () async {
-                                                      if (tasks.items[index].status == 0) {
-                                                        Provider.of<TasksProvider>(context, listen: false)
+                                                      if (tasks.items[index]
+                                                              .status ==
+                                                          0) {
+                                                        Provider.of<TasksProvider>(
+                                                                context,
+                                                                listen: false)
                                                             .updateTask(
                                                           TodoItem(
-                                                            title: tasks.items[index].title,
-                                                            desc: tasks.items[index].desc,
-                                                            id: tasks.items[index].id,
+                                                            title: tasks
+                                                                .items[index]
+                                                                .title,
+                                                            desc: tasks
+                                                                .items[index]
+                                                                .desc,
+                                                            id: tasks
+                                                                .items[index]
+                                                                .id,
                                                             status: 1,
-                                                            date: tasks.items[index].date,
-                                                            time: tasks.items[index].time,
+                                                            date: tasks
+                                                                .items[index]
+                                                                .date,
+                                                            time: tasks
+                                                                .items[index]
+                                                                .time,
+                                                            uuid: tasks
+                                                                .items[index]
+                                                                .uuid,
+                                                            notification: tasks
+                                                                .items[index]
+                                                                .notification,
                                                           ),
                                                         )
                                                             .then((value) {
-                                                          Fluttertoast.showToast(
+                                                          Fluttertoast
+                                                              .showToast(
                                                             msg: "Task done",
-                                                            toastLength: Toast.LENGTH_SHORT,
-                                                            gravity: ToastGravity.BOTTOM,
-                                                            backgroundColor: Colors.green,
-                                                            textColor: Colors.white,
+                                                            toastLength: Toast
+                                                                .LENGTH_SHORT,
+                                                            gravity:
+                                                                ToastGravity
+                                                                    .BOTTOM,
+                                                            backgroundColor:
+                                                                Colors.green,
+                                                            textColor:
+                                                                Colors.white,
                                                             fontSize: 19.0,
                                                           );
                                                         });
                                                       } else {
-                                                        Provider.of<TasksProvider>(context, listen: false)
+                                                        Provider.of<TasksProvider>(
+                                                                context,
+                                                                listen: false)
                                                             .updateTask(
                                                           TodoItem(
-                                                            title: tasks.items[index].title,
-                                                            desc: tasks.items[index].desc,
-                                                            id: tasks.items[index].id,
+                                                            title: tasks
+                                                                .items[index]
+                                                                .title,
+                                                            desc: tasks
+                                                                .items[index]
+                                                                .desc,
+                                                            id: tasks
+                                                                .items[index]
+                                                                .id,
                                                             status: 0,
-                                                            date: tasks.items[index].date,
-                                                            time: tasks.items[index].time,
+                                                            date: tasks
+                                                                .items[index]
+                                                                .date,
+                                                            time: tasks
+                                                                .items[index]
+                                                                .time,
+                                                            uuid: tasks
+                                                                .items[index]
+                                                                .uuid,
+                                                            notification: tasks
+                                                                .items[index]
+                                                                .notification,
                                                           ),
                                                         )
                                                             .then((value) {
-                                                          Fluttertoast.showToast(
+                                                          Fluttertoast
+                                                              .showToast(
                                                             msg: "Task undone",
-                                                            toastLength: Toast.LENGTH_SHORT,
-                                                            gravity: ToastGravity.BOTTOM,
-                                                            backgroundColor: user.colorProvider.cardBackground,
-                                                            textColor: user.colorProvider.appTitle,
+                                                            toastLength: Toast
+                                                                .LENGTH_SHORT,
+                                                            gravity:
+                                                                ToastGravity
+                                                                    .BOTTOM,
+                                                            backgroundColor: user
+                                                                .colorProvider
+                                                                .cardBackground,
+                                                            textColor: user
+                                                                .colorProvider
+                                                                .appTitle,
                                                             fontSize: 19.0,
                                                           );
                                                         });
@@ -213,50 +279,96 @@ class _TodoPageState extends State<TodoPage> {
                                                     },
                                                   ),
                                                 ),
-                                                const Padding(padding: EdgeInsets.only(right: 10)),
+                                                const Padding(
+                                                    padding: EdgeInsets.only(
+                                                        right: 10)),
+                                                tasks.items[index].status==0?
+                                                tasks.items[index].notification == 1
+                                                    ? IconButton(
+                                                        icon: const Icon(
+                                                          Icons.notifications,
+                                                          color: Colors.blue,
+                                                        ),
+                                                        onPressed: () {
+                                                          tasks.changeNotification(index);
+                                                        },
+                                                      )
+                                                    : IconButton(
+                                                        icon: const Icon(
+                                                          Icons.notifications,
+                                                          color: Colors.grey,
+                                                        ),
+                                                        onPressed: () {
+                                                          tasks.changeNotification(index);
+                                                        },
+                                                      ):const SizedBox.shrink(),
+                                                const Padding(
+                                                    padding: EdgeInsets.only(
+                                                        right: 10)),
                                                 tasks.items[index].status == 1
                                                     ? const Icon(
-                                                  Icons.check,
-                                                  color: Colors.green,
-                                                )
+                                                        Icons.check,
+                                                        color: Colors.green,
+                                                      )
                                                     : const Icon(
-                                                  Icons.check_outlined,
-                                                  color: Colors.grey,
-                                                ),
+                                                        Icons.check_outlined,
+                                                        color: Colors.grey,
+                                                      ),
                                               ],
                                             ),
-                                            tasks.items[index].desc.isNotEmpty?
-                                            Padding(
-                                              padding: const EdgeInsets.only(top: 6.0),
-                                              child: Text(
-                                                tasks.items[index].desc,
-                                                style: TextStyle(
-                                                  fontSize: 20,
-                                                  color: tasks.items[index].status == 0
-                                                      ? user.colorProvider.subtitle
-                                                      : Colors.grey,
-                                                ),
-                                              ),
-                                            ):const SizedBox.shrink(),
-                                            tasks.items[index].date.isNotEmpty ||
-                                                tasks.items[index].time.isNotEmpty?
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 6.0),
-                                                child: Row(
-                                                  children: [
-                                                    Text(
-                                                      "${tasks.items[index].date}  ${tasks.items[index].time}",
+                                            tasks.items[index].desc.isNotEmpty
+                                                ? Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 6.0),
+                                                    child: Text(
+                                                      tasks.items[index].desc,
                                                       style: TextStyle(
-                                                        color: tasks.items[index].status == 0
-                                                            ? user.colorProvider.date
+                                                        fontSize: 20,
+                                                        color: tasks
+                                                                    .items[
+                                                                        index]
+                                                                    .status ==
+                                                                0
+                                                            ? user.colorProvider
+                                                                .subtitle
                                                             : Colors.grey,
-                                                        fontWeight: FontWeight.normal,
-                                                        fontSize: 16,
                                                       ),
                                                     ),
-                                                  ],
-                                                ),
-                                              ):const SizedBox.shrink(),
+                                                  )
+                                                : const SizedBox.shrink(),
+                                            tasks.items[index].date
+                                                        .isNotEmpty ||
+                                                    tasks.items[index].time
+                                                        .isNotEmpty
+                                                ? Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 6.0),
+                                                    child: Row(
+                                                      children: [
+                                                        Text(
+                                                          "${tasks.items[index].date}  ${tasks.items[index].time}",
+                                                          style: TextStyle(
+                                                            color: tasks
+                                                                        .items[
+                                                                            index]
+                                                                        .status ==
+                                                                    0
+                                                                ? user
+                                                                    .colorProvider
+                                                                    .date
+                                                                : Colors.grey,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .normal,
+                                                            fontSize: 16,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )
+                                                : const SizedBox.shrink(),
                                           ],
                                         ),
                                       ),
@@ -268,7 +380,8 @@ class _TodoPageState extends State<TodoPage> {
                           );
                         },
                         onReorder: (int oldIndex, int newIndex) async {
-                          await Provider.of<TasksProvider>(context, listen: false)
+                          await Provider.of<TasksProvider>(context,
+                                  listen: false)
                               .syncAfterReorder(oldIndex, newIndex);
                         },
                       ),
@@ -289,12 +402,24 @@ class _TodoPageState extends State<TodoPage> {
             actions: [
               Row(
                 children: [
-                  IconButton(onPressed: () async {
-                    Provider.of<TasksProvider>(context, listen: false).backup();
-                  }, icon: const Icon(Icons.backup,color: Colors.grey,)),
-                  IconButton(onPressed: () async {
-                    Provider.of<TasksProvider>(context, listen: false).restore();
-                  }, icon: const Icon(Icons.settings_backup_restore,color: Colors.grey,)),
+                  IconButton(
+                      onPressed: () async {
+                        Provider.of<TasksProvider>(context, listen: false)
+                            .backup();
+                      },
+                      icon: const Icon(
+                        Icons.backup,
+                        color: Colors.grey,
+                      )),
+                  IconButton(
+                      onPressed: () async {
+                        Provider.of<TasksProvider>(context, listen: false)
+                            .restore();
+                      },
+                      icon: const Icon(
+                        Icons.settings_backup_restore,
+                        color: Colors.grey,
+                      )),
                   IconButton(
                       onPressed: () {
                         Navigator.push(
@@ -332,5 +457,3 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 }
-
-

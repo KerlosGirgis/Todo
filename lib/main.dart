@@ -16,6 +16,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/services/authentication_service.dart';
+import 'package:todo/services/notification.dart';
 import 'package:todo/services/verse_manager.dart';
 import 'package:todo/view/pages/lock_page.dart';
 import 'package:todo/view/pages/todo_page.dart';
@@ -25,6 +26,7 @@ import 'package:todo/provider/theme_provider.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:flutter/services.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +37,8 @@ void main() async {
   );
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   final DatabaseService dbService = DatabaseService();
+  await NotificationService.init();
+  tz.initializeTimeZones();
   final bool initialized = await AuthenticationService().initializeApp();
   if (initialized) {
     await dbService.openDb();

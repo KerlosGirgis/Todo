@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/provider/tasks_provider.dart';
 import 'package:todo/provider/user_provider.dart';
 
 import '../../models/todo_item.dart';
+import '../../services/notification.dart';
 import 'button.dart';
 
 class UpdateTaskDialog extends StatelessWidget {
@@ -122,13 +124,15 @@ class UpdateTaskDialog extends StatelessWidget {
                         Row(
                           children: [
                             Text(date),
-                            if(date.isNotEmpty)
-                            IconButton(onPressed: (){
-                              setState(() {
-                                date = "";
-                                time="";
-                              });
-                            }, icon: const Icon(Icons.clear))
+                            if (date.isNotEmpty)
+                              IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      date = "";
+                                      time = "";
+                                    });
+                                  },
+                                  icon: const Icon(Icons.clear))
                           ],
                         ),
                       ],
@@ -146,12 +150,15 @@ class UpdateTaskDialog extends StatelessWidget {
                                       minute: DateTime.now().minute))
                               .then((timeValue) {
                             if (timeValue != null) {
-                                setState(() {
-                                  time = timeValue.format(context);
-                                  if(date.isEmpty){
-                                    date=DateTime.now().toString().split(" ").first;
-                                  }
-                                });
+                              setState(() {
+                                time = timeValue.format(context);
+                                if (date.isEmpty) {
+                                  date = DateTime.now()
+                                      .toString()
+                                      .split(" ")
+                                      .first;
+                                }
+                              });
                             }
                           });
                         },
@@ -163,12 +170,14 @@ class UpdateTaskDialog extends StatelessWidget {
                         Row(
                           children: [
                             Text(time),
-                            if(time.isNotEmpty)
-                              IconButton(onPressed: (){
-                              setState(() {
-                                time="";
-                              });
-                            }, icon: const Icon(Icons.clear))
+                            if (time.isNotEmpty)
+                              IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      time = "";
+                                    });
+                                  },
+                                  icon: const Icon(Icons.clear))
                           ],
                         ),
                       ],
@@ -192,6 +201,7 @@ class UpdateTaskDialog extends StatelessWidget {
                       right: MediaQuery.of(context).size.width / 25)),
               Button(
                 onPressed: () async {
+                  int not = tasks.items[index].notification;
                   if (titleController.text.isEmpty) {
                     Fluttertoast.showToast(
                         msg: "Task title can't be empty",
@@ -202,9 +212,21 @@ class UpdateTaskDialog extends StatelessWidget {
                         fontSize: 19.0);
                     return;
                   }
-                  /*
+                  if(tasks.items[index].notification==1){
+                    FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
+                    if(time.isNotEmpty&&TasksProvider().stringToDateTime(date, time).isAfter(DateTime.now())){
+                      NotificationService.scheduleNotification(
+                        tasks.items[index].uuid.hashCode,
+                        tasks.items[index].title,
+                        tasks.items[index].desc,
+                        TasksProvider().stringToDateTime(date, time),
+                      );
+                    }
+                    else{
+                      not=0;
+                    }
+                  }
 
-             */
                   Provider.of<TasksProvider>(context, listen: false)
                       .updateTask(TodoItem(
                           title: titleController.text,
@@ -212,7 +234,9 @@ class UpdateTaskDialog extends StatelessWidget {
                           id: tasks.items[index].id,
                           status: tasks.items[index].status,
                           date: date,
-                          time: time))
+                          time: time,
+                          uuid: tasks.items[index].uuid,
+                          notification: not))
                       .then((value) {
                     Fluttertoast.showToast(
                         msg: "Task Updated",
