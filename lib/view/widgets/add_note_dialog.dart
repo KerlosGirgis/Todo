@@ -200,27 +200,7 @@ class AddNoteDialog extends StatelessWidget {
                         right: MediaQuery.of(context).size.width / 25)),
                 Button(
                   onPressed: () async {
-                    if (titleController.text.isNotEmpty) {
-                      Navigator.pop(context);
-                      Provider.of<NotesProvider>(context, listen: false)
-                          .addNote(Note(
-                        title: titleController.text,
-                        body: '',
-                        titleColor: titleColor,
-                        coverColor: coverColor,
-                        protected: isProtected,
-                      ))
-                          .then((value) {
-                        titleController.clear();
-                        Fluttertoast.showToast(
-                            msg: "Note Added",
-                            toastLength: Toast.LENGTH_SHORT,
-                            gravity: ToastGravity.BOTTOM,
-                            backgroundColor: user.colorProvider.cardBackground,
-                            textColor: user.colorProvider.appTitle,
-                            fontSize: 19.0);
-                      });
-                    } else {
+                    if (titleController.text.isEmpty) {
                       Fluttertoast.showToast(
                           msg: "Title can't be empty",
                           toastLength: Toast.LENGTH_SHORT,
@@ -228,7 +208,26 @@ class AddNoteDialog extends StatelessWidget {
                           backgroundColor: Colors.red,
                           textColor: Colors.white,
                           fontSize: 19.0);
+                      return;
                     }
+                    Navigator.pop(context);
+                    Provider.of<NotesProvider>(context, listen: false)
+                        .addNote(Note(
+                      title: titleController.text,
+                      body: '',
+                      titleColor: titleColor,
+                      coverColor: coverColor,
+                      protected: isProtected,
+                    ))
+                        .then((value) {
+                      Fluttertoast.showToast(
+                          msg: "Note Added",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: user.colorProvider.cardBackground,
+                          textColor: user.colorProvider.appTitle,
+                          fontSize: 19.0);
+                    });
                   },
                   label: 'Save',
                   status: true,

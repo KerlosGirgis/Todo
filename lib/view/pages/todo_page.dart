@@ -102,9 +102,10 @@ class _TodoPageState extends State<TodoPage> {
                           return AnimationLimiter(
                             key: Key(taskKey),
                             child: AnimationConfiguration.staggeredList(
+                              duration: const Duration(milliseconds: 400),
                               position: index,
                               child: SlideAnimation(
-                                verticalOffset: 100,
+                                verticalOffset: 300,
                                 child: FadeInAnimation(
                                   child: Dismissible(
                                     onDismissed: (direction) async {
