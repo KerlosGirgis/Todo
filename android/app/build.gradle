@@ -40,6 +40,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    flavorDimensions "default"
+    productFlavors {
+        fdroid {
+            dimension "default"
+            // You can add any specific configuration for the F-Droid flavor here.
+        }
+    }
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
@@ -68,9 +75,25 @@ android {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.release
+            //signingConfig = signingConfigs.release
+
+            release {
+                // Disable signing for F-Droid builds
+                if (!project.hasProperty('isFdroidBuild') || !isFdroidBuild) {
+                    signingConfig signingConfigs.release
+                }
+            }
         }
     }
+
+    productFlavors {
+        fdroid {
+            dimension "default"
+            // Set this flag to true when building for F-Droid
+            buildConfigField "boolean", "IS_FDROID", "true"
+        }
+    }
+
     buildFeatures {
         viewBinding true
     }
