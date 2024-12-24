@@ -57,42 +57,12 @@ android {
     }
     signingConfigs {
         release {
-
-            if (!keystorePropertiesFile.exists()) return;
-
             keyAlias = keystoreProperties['keyAlias']
             keyPassword = keystoreProperties['keyPassword']
             storeFile = keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
             storePassword = keystoreProperties['storePassword']
         }
     }
-    flavorDimensions "deploy"
-
-    productFlavors {
-        fdroid {
-            dimension "deploy"
-            signingConfig null
-        }
-
-        fdebug {
-            dimension "deploy"
-            signingConfig null
-        }
-
-        fmain {
-            dimension "deploy"
-            signingConfig signingConfigs.release
-        }
-    }
-
-    android.applicationVariants.all { variant ->
-        if (variant.flavorName == "fdroid") {
-            variant.outputs.all { output ->
-                output.outputFileName = "app-fdroid-release.apk"
-            }
-        }
-    }
-
 
     buildTypes {
         release {
