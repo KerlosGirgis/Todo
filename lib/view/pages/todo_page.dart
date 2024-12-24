@@ -109,11 +109,11 @@ class _TodoPageState extends State<TodoPage> {
                                 child: FadeInAnimation(
                                   child: Dismissible(
                                     onDismissed: (direction) async {
-                                      Provider.of<TasksProvider>(context,
+                                      await Provider.of<TasksProvider>(context,
                                               listen: false)
                                           .dismissTask(
                                               index, tasks.items[index].id!)
-                                          .then((value) async {
+                                          .then((value){
                                         Fluttertoast.showToast(
                                             msg: "Task Deleted",
                                             toastLength: Toast.LENGTH_SHORT,

@@ -15,15 +15,15 @@ class NotesProvider with ChangeNotifier{
     notifyListeners();
   }
   Future<void> addNote(Note note) async {
-    DatabaseService().insertNote(note);
+    await DatabaseService().insertNote(note);
     get();
   }
   Future<void> updateNote(Note note) async {
-    DatabaseService().updateNote(note);
+    await DatabaseService().updateNote(note);
     get();
   }
   Future<void> deleteNote(int id) async {
-    DatabaseService().deleteNote(id);
+    await DatabaseService().deleteNote(id);
     get();
   }
 

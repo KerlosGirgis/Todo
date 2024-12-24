@@ -48,7 +48,8 @@ class TasksProvider with ChangeNotifier {
   Future<void> dismissTask(int index, int id) async {
     cancelNotification(index);
     items.removeAt(index);
-    DatabaseService().deleteItem(id);
+    notifyListeners();
+    await DatabaseService().deleteItem(id);
     get();
   }
 
