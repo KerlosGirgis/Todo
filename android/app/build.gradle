@@ -85,12 +85,14 @@ android {
             }
         }
     }
-
+    flavorDimensions "default"
     productFlavors {
         fdroid {
             dimension "default"
             // Set this flag to true when building for F-Droid
             buildConfigField "boolean", "IS_FDROID", "true"
+            applicationIdSuffix ".fdroid"
+            versionNameSuffix "-fdroid"
         }
     }
 
