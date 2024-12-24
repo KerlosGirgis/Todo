@@ -26,6 +26,7 @@ class AddTaskDialog extends StatelessWidget {
               scrollable: true,
               backgroundColor: user.colorProvider.addTaskAlertBackground,
               title: Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const Spacer(
@@ -96,6 +97,7 @@ class AddTaskDialog extends StatelessWidget {
                             borderRadius: BorderRadius.circular(15))),
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                           onPressed: () {
@@ -116,6 +118,7 @@ class AddTaskDialog extends StatelessWidget {
                           },
                           icon: const Icon(Icons.calendar_month)),
                       Column(
+                        mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -134,10 +137,12 @@ class AddTaskDialog extends StatelessWidget {
                             ],
                           ),
                         ],
-                      )
+                      ),
+                      const Spacer(flex: 1,)
                     ],
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                           onPressed: () {
@@ -162,6 +167,7 @@ class AddTaskDialog extends StatelessWidget {
                           },
                           icon: const Icon(Icons.access_time_filled_sharp)),
                       Column(
+                        mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -179,13 +185,15 @@ class AddTaskDialog extends StatelessWidget {
                             ],
                           ),
                         ],
-                      )
+                      ),
+                      const Spacer(flex: 1,)
                     ],
                   ),
                 ],
               ),
               actions: [
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Button(
@@ -201,7 +209,7 @@ class AddTaskDialog extends StatelessWidget {
                         padding: EdgeInsets.only(
                             right: MediaQuery.of(context).size.width / 25)),
                     Button(
-                      onPressed: () async {
+                      onPressed: () {
                         if (titleController.text.isEmpty) {
                           Fluttertoast.showToast(
                               msg: "Task title can't be empty",

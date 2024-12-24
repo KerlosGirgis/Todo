@@ -29,6 +29,7 @@ class UpdateTaskDialog extends StatelessWidget {
           return AlertDialog(
             scrollable: true,
             title: Row(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 const Spacer(
@@ -100,6 +101,7 @@ class UpdateTaskDialog extends StatelessWidget {
                           borderRadius: BorderRadius.circular(15))),
                 ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                         onPressed: () {
@@ -118,6 +120,7 @@ class UpdateTaskDialog extends StatelessWidget {
                         },
                         icon: const Icon(Icons.calendar_month)),
                     Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -136,10 +139,12 @@ class UpdateTaskDialog extends StatelessWidget {
                           ],
                         ),
                       ],
-                    )
+                    ),
+                    const Spacer(flex: 1,)
                   ],
                 ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                         onPressed: () {
@@ -164,10 +169,12 @@ class UpdateTaskDialog extends StatelessWidget {
                         },
                         icon: const Icon(Icons.access_time_filled_sharp)),
                     Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(time),
                             if (time.isNotEmpty)
@@ -177,81 +184,87 @@ class UpdateTaskDialog extends StatelessWidget {
                                       time = "";
                                     });
                                   },
-                                  icon: const Icon(Icons.clear))
+                                  icon: const Icon(Icons.clear)),
                           ],
                         ),
                       ],
-                    )
+                    ),
+                    const Spacer(flex: 1,)
                   ],
                 ),
               ],
             ),
             actions: [
-              Button(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                label: "Cancel",
-                status: false,
-                fontSize: 18,
-                size: 1,
-              ),
-              Padding(
-                  padding: EdgeInsets.only(
-                      right: MediaQuery.of(context).size.width / 25)),
-              Button(
-                onPressed: () async {
-                  int not = tasks.items[index].notification;
-                  if (titleController.text.isEmpty) {
-                    Fluttertoast.showToast(
-                        msg: "Task title can't be empty",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.red,
-                        textColor: Colors.white,
-                        fontSize: 19.0);
-                    return;
-                  }
-                  if(tasks.items[index].notification==1){
-                    FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
-                    if(time.isNotEmpty&&TasksProvider().stringToDateTime(date, time).isAfter(DateTime.now())){
-                      NotificationService.scheduleNotification(
-                        tasks.items[index].uuid.hashCode,
-                        "Don't Forget Your Task!",
-                        tasks.items[index].title,
-                        TasksProvider().stringToDateTime(date, time),
-                      );
-                    }
-                    else{
-                      not=0;
-                    }
-                  }
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Button(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    label: "Cancel",
+                    status: false,
+                    fontSize: 18,
+                    size: 1,
+                  ),
+                  Padding(
+                      padding: EdgeInsets.only(
+                          right: MediaQuery.of(context).size.width / 25)),
+                  Button(
+                    onPressed: () {
+                      int not = tasks.items[index].notification;
+                      if (titleController.text.isEmpty) {
+                        Fluttertoast.showToast(
+                            msg: "Task title can't be empty",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.red,
+                            textColor: Colors.white,
+                            fontSize: 19.0);
+                        return;
+                      }
+                      if(tasks.items[index].notification==1){
+                        FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
+                        if(time.isNotEmpty&&TasksProvider().stringToDateTime(date, time).isAfter(DateTime.now())){
+                          NotificationService.scheduleNotification(
+                            tasks.items[index].uuid.hashCode,
+                            "Don't Forget Your Task!",
+                            tasks.items[index].title,
+                            TasksProvider().stringToDateTime(date, time),
+                          );
+                        }
+                        else{
+                          not=0;
+                        }
+                      }
 
-                  Provider.of<TasksProvider>(context, listen: false)
-                      .updateTask(TodoItem(
-                          title: titleController.text,
-                          desc: descController.text,
-                          id: tasks.items[index].id,
-                          status: tasks.items[index].status,
-                          date: date,
-                          time: time,
-                          uuid: tasks.items[index].uuid,
-                          notification: not))
-                      .then((value) {
-                    Fluttertoast.showToast(
-                        msg: "Task Updated",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: user.colorProvider.cardBackground,
-                        textColor: user.colorProvider.appTitle,
-                        fontSize: 19.0);
-                  });
-                  Navigator.of(context).pop();
-                },
-                label: 'Update',
-                status: true,
-                fontSize: 18,
-                size: 1,
+                      Provider.of<TasksProvider>(context, listen: false)
+                          .updateTask(TodoItem(
+                              title: titleController.text,
+                              desc: descController.text,
+                              id: tasks.items[index].id,
+                              status: tasks.items[index].status,
+                              date: date,
+                              time: time,
+                              uuid: tasks.items[index].uuid,
+                              notification: not))
+                          .then((value) {
+                        Fluttertoast.showToast(
+                            msg: "Task Updated",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: user.colorProvider.cardBackground,
+                            textColor: user.colorProvider.appTitle,
+                            fontSize: 19.0);
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    label: 'Update',
+                    status: true,
+                    fontSize: 18,
+                    size: 1,
+                  ),
+                ],
               ),
             ],
           );

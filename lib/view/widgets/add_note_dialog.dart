@@ -32,6 +32,7 @@ class AddNoteDialog extends StatelessWidget {
               scrollable: true,
               backgroundColor: user.colorProvider.addTaskAlertBackground,
               title: Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const Spacer(
@@ -90,6 +91,7 @@ class AddNoteDialog extends StatelessWidget {
                   ),
                   const Padding(padding: EdgeInsets.only(bottom: 15)),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
                         "Title : ",
@@ -115,11 +117,15 @@ class AddNoteDialog extends StatelessWidget {
                               titleColor = Colors.white.hex;
                             });
                           },
-                          icon: const Icon(Icons.undo_sharp))
+                          icon: const Icon(Icons.undo_sharp)),
+                      const Spacer(
+                        flex: 1,
+                      ),
                     ],
                   ),
                   const Padding(padding: EdgeInsets.only(bottom: 15)),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
                         "Cover : ",
@@ -142,16 +148,21 @@ class AddNoteDialog extends StatelessWidget {
                       IconButton(
                           onPressed: () {
                             setState(() {
-                              coverColor =
-                                  const Color(0xff1E1E1E).hex;
+                              coverColor = const Color(0xff1E1E1E).hex;
                             });
                           },
-                          icon: const Icon(Icons.undo_sharp))
+                          icon: const Icon(Icons.undo_sharp)),
+                      const Spacer(
+                        flex: 1,
+                      ),
                     ],
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      const Spacer(
+                        flex: 1,
+                      ),
                       IconButton(
                           onPressed: () async {
                             if (isProtected == 0) {
@@ -180,7 +191,7 @@ class AddNoteDialog extends StatelessWidget {
                             Icons.fingerprint_sharp,
                             color:
                                 isProtected == 0 ? Colors.black : Colors.green,
-                          ))
+                          )),
                     ],
                   )
                 ],
@@ -199,7 +210,7 @@ class AddNoteDialog extends StatelessWidget {
                     padding: EdgeInsets.only(
                         right: MediaQuery.of(context).size.width / 25)),
                 Button(
-                  onPressed: () async {
+                  onPressed: () {
                     if (titleController.text.isEmpty) {
                       Fluttertoast.showToast(
                           msg: "Title can't be empty",

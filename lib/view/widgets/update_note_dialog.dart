@@ -32,6 +32,7 @@ class UpdateNoteDialog extends StatelessWidget {
               scrollable: true,
               backgroundColor: user.colorProvider.addTaskAlertBackground,
               title: Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const Spacer(
@@ -90,6 +91,7 @@ class UpdateNoteDialog extends StatelessWidget {
                   ),
                   const Padding(padding: EdgeInsets.only(bottom: 15)),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
                         "Title : ",
@@ -115,11 +117,13 @@ class UpdateNoteDialog extends StatelessWidget {
                               titleColor = Colors.white.hex;
                             });
                           },
-                          icon: const Icon(Icons.undo_sharp))
+                          icon: const Icon(Icons.undo_sharp)),
+                      const Spacer(flex: 1,)
                     ],
                   ),
                   const Padding(padding: EdgeInsets.only(bottom: 15)),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
                         "Cover : ",
@@ -146,12 +150,15 @@ class UpdateNoteDialog extends StatelessWidget {
                                   const Color(0xff1E1E1E).hex;
                             });
                           },
-                          icon: const Icon(Icons.undo_sharp))
+                          icon: const Icon(Icons.undo_sharp)),
+                      const Spacer(flex: 1,)
                     ],
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      const Spacer(flex: 1,),
                       IconButton(
                           onPressed: () async {
                             if (isProtected == 0) {
@@ -180,59 +187,64 @@ class UpdateNoteDialog extends StatelessWidget {
                             Icons.fingerprint_sharp,
                             color:
                                 isProtected == 0 ? Colors.black : Colors.green,
-                          ))
+                          )),
                     ],
                   )
                 ],
               ),
               actions: [
-                Button(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  label: 'Cancel',
-                  status: false,
-                  fontSize: 18,
-                  size: 1,
-                ),
-                Padding(
-                    padding: EdgeInsets.only(
-                        right: MediaQuery.of(context).size.width / 25)),
-                Button(
-                  onPressed: () async {
-                    if (titleController.text.isEmpty) {
-                      Fluttertoast.showToast(
-                          msg: "Title can't be empty",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          backgroundColor: Colors.red,
-                          textColor: Colors.white,
-                          fontSize: 19.0);
-                      return;
-                    }
-                    Navigator.pop(context);
-                    Provider.of<NotesProvider>(context, listen: false)
-                        .updateNote(Note(
-                        id: notes.notes[index].id,
-                        title: titleController.text,
-                        body: notes.notes[index].body,
-                        titleColor: titleColor,
-                        coverColor: coverColor,
-                        protected: isProtected))
-                        .then((value) {
-                      Fluttertoast.showToast(
-                          msg: "Note Edited",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          backgroundColor: user.colorProvider.cardBackground,
-                          textColor: user.colorProvider.appTitle,
-                          fontSize: 19.0);
-                    });
-                  },
-                  label: 'Update',
-                  status: true,
-                  fontSize: 18,
-                  size: 1,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Button(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      label: 'Cancel',
+                      status: false,
+                      fontSize: 18,
+                      size: 1,
+                    ),
+                    Padding(
+                        padding: EdgeInsets.only(
+                            right: MediaQuery.of(context).size.width / 25)),
+                    Button(
+                      onPressed: () {
+                        if (titleController.text.isEmpty) {
+                          Fluttertoast.showToast(
+                              msg: "Title can't be empty",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: Colors.red,
+                              textColor: Colors.white,
+                              fontSize: 19.0);
+                          return;
+                        }
+                        Navigator.pop(context);
+                        Provider.of<NotesProvider>(context, listen: false)
+                            .updateNote(Note(
+                            id: notes.notes[index].id,
+                            title: titleController.text,
+                            body: notes.notes[index].body,
+                            titleColor: titleColor,
+                            coverColor: coverColor,
+                            protected: isProtected))
+                            .then((value) {
+                          Fluttertoast.showToast(
+                              msg: "Note Edited",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: user.colorProvider.cardBackground,
+                              textColor: user.colorProvider.appTitle,
+                              fontSize: 19.0);
+                        });
+                      },
+                      label: 'Update',
+                      status: true,
+                      fontSize: 18,
+                      size: 1,
+                    ),
+                  ],
                 ),
               ],
             );
