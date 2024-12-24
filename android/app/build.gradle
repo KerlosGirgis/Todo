@@ -77,14 +77,15 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             //signingConfig = signingConfigs.release
 
-            release {
+            /*release {
                 // Disable signing for F-Droid builds
                 if (!project.hasProperty('isFdroidBuild') || !isFdroidBuild) {
                     signingConfig signingConfigs.release
                 }
-            }
+            }*/
         }
     }
+
     flavorDimensions "default"
     productFlavors {
         fdroid {
