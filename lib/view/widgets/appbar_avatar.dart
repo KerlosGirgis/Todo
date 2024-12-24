@@ -72,7 +72,9 @@ class AppbarAvatar extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height/60)),
+                        user.user.verse==1?
+                        Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height/60)):const SizedBox.shrink(),
+                        user.user.verse==1?
                         Center(
                           child: GestureDetector(
                             onLongPress: (){
@@ -123,7 +125,7 @@ class AppbarAvatar extends StatelessWidget {
                               ),
                             ),
                           ),
-                        )
+                        ):const SizedBox.shrink()
                       ],
                     ),
                   );

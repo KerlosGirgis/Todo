@@ -143,14 +143,14 @@ class _NotesPageState extends State<NotesPage> {
                       itemBuilder: (context, index) {
                         return AnimationLimiter(
                           child: AnimationConfiguration.staggeredGrid(
-                            duration: const Duration(milliseconds: 400),
+                            duration: const Duration(milliseconds: 600),
                             position: index,
                             columnCount: MediaQuery.of(context).orientation ==
                                 Orientation.portrait
                                 ? 2
                                 : 4,
                             child: SlideAnimation(
-                              verticalOffset: 300,
+                              verticalOffset: 400,
                               child: FadeInAnimation(
                                 child: GestureDetector(
                                   child: Container(

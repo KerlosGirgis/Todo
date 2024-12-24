@@ -5,6 +5,10 @@ class UserProfile {
   int? id;
   int autoSave;
   int casual;
+  int verse;
+  int count;
+  int finished;
+  int unFinished;
 
   UserProfile(
       {required this.name,
@@ -12,15 +16,25 @@ class UserProfile {
       required this.theme,
       this.id,
       required this.autoSave,
-      required this.casual
-      });
+      required this.casual,
+      required this.verse,
+      required this.count,
+      required this.finished,
+      required this.unFinished});
+
+
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
         id: map['id'],
         name: map['name'],
         pic: map['pic'],
         theme: map['theme'],
-        autoSave: map['autoSave'], casual: map['casual']);
+        autoSave: map['autoSave'],
+        casual: map['casual'],
+        verse: map['verse'],
+        count: map['count'],
+        finished: map['finished'],
+        unFinished: map['unFinished']);
   }
   toMap() {
     return {
@@ -28,7 +42,11 @@ class UserProfile {
       'pic': pic,
       'theme': theme,
       'autoSave': autoSave,
-      'casual': casual
+      'casual': casual,
+      'verse': verse,
+      'count': count,
+      'finished': finished,
+      'unFinished': unFinished,
     };
   }
 }

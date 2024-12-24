@@ -12,7 +12,7 @@ import '../services/color_provider.dart';
 import '../services/database_service.dart';
 
 class UserProvider with ChangeNotifier {
-  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0);
+  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0);
 
   ColorProvider colorProvider =ColorProvider(1);
 
@@ -85,6 +85,63 @@ class UserProvider with ChangeNotifier {
       await DatabaseService().updateUser(user);
       notifyListeners();
     }
+  }
+
+  changeCount() async {
+    if(user.count==1){
+      user.count=0;
+      await DatabaseService().updateUser(user);
+      notifyListeners();
+    }
+    else{
+      user.count=1;
+      await DatabaseService().updateUser(user);
+      notifyListeners();
+    }
+  }
+
+  changeVerse() async {
+    if(user.verse==1){
+      user.verse=0;
+      await DatabaseService().updateUser(user);
+      notifyListeners();
+    }
+    else{
+      user.verse=1;
+      await DatabaseService().updateUser(user);
+      notifyListeners();
+    }
+  }
+
+  increaseFinished() async {
+    user.finished++;
+    if(user.unFinished>0){
+      user.unFinished--;
+    }
+    await DatabaseService().updateUser(user);
+    notifyListeners();
+  }
+
+  increaseUnFinished() async {
+    user.unFinished++;
+    await DatabaseService().updateUser(user);
+    notifyListeners();
+  }
+
+  decreaseFinished() async {
+    user.unFinished++;
+    if(user.finished>0){
+      user.finished--;
+    }
+    await DatabaseService().updateUser(user);
+    notifyListeners();
+  }
+
+  resetPlot() async {
+    user.unFinished=0;
+    user.finished=0;
+    await DatabaseService().updateUser(user);
+    notifyListeners();
   }
 
   changeLock() async {

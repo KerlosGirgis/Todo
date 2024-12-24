@@ -24,14 +24,14 @@ class SettingsButton extends StatelessWidget {
           ? MediaQuery.of(context).size.height / 13*size
           : MediaQuery.of(context).size.height / 5*size,
       width: MediaQuery.of(context).orientation == Orientation.portrait
-          ? MediaQuery.of(context).size.width / 3.7*size
+          ? MediaQuery.of(context).size.width / 5*size
           : MediaQuery.of(context).size.width / 10*size,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
             elevation: 2,
             shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(100)),
+              borderRadius: BorderRadius.all(Radius.circular(25)),
             ),
             backgroundColor: status ? const Color(0xff3D5AFE) : Colors.white),
         child: Center(

@@ -217,8 +217,8 @@ class UpdateTaskDialog extends StatelessWidget {
                     if(time.isNotEmpty&&TasksProvider().stringToDateTime(date, time).isAfter(DateTime.now())){
                       NotificationService.scheduleNotification(
                         tasks.items[index].uuid.hashCode,
+                        "Don't Forget Your Task!",
                         tasks.items[index].title,
-                        tasks.items[index].desc,
                         TasksProvider().stringToDateTime(date, time),
                       );
                     }

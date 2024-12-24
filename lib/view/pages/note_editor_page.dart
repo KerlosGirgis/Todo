@@ -64,6 +64,12 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       color: user.colorProvider.noteEditorBackButton,
                     )),
                 actions: [
+                  user.user.count==1?
+                  Text("${bodyController.text.length}",style: TextStyle(
+                      fontSize: 22,
+                      color: user.colorProvider.appTitle
+                  ),):const SizedBox.shrink(),
+                  Padding(padding: EdgeInsets.only(right: MediaQuery.sizeOf(context).width/50)),
                   IconButton(
                       onPressed: () {
                         try {
@@ -223,7 +229,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

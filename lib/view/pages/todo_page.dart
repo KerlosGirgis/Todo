@@ -183,51 +183,106 @@ class _TodoPageState extends State<TodoPage> {
                                                       if (tasks.items[index]
                                                               .status ==
                                                           0) {
-                                                        Provider.of<TasksProvider>(
+                                                        if(tasks.items[index]
+                                                            .notification ==
+                                                            1){
+                                                          tasks.cancelNotification(index);
+                                                          if(context.mounted){
+                                                            Provider.of<TasksProvider>(
                                                                 context,
                                                                 listen: false)
-                                                            .updateTask(
-                                                          TodoItem(
-                                                            title: tasks
-                                                                .items[index]
-                                                                .title,
-                                                            desc: tasks
-                                                                .items[index]
-                                                                .desc,
-                                                            id: tasks
-                                                                .items[index]
-                                                                .id,
-                                                            status: 1,
-                                                            date: tasks
-                                                                .items[index]
-                                                                .date,
-                                                            time: tasks
-                                                                .items[index]
-                                                                .time,
-                                                            uuid: tasks
-                                                                .items[index]
-                                                                .uuid,
-                                                            notification: tasks
-                                                                .items[index]
-                                                                .notification,
-                                                          ),
-                                                        )
-                                                            .then((value) {
-                                                          Fluttertoast
-                                                              .showToast(
-                                                            msg: "Task done",
-                                                            toastLength: Toast
-                                                                .LENGTH_SHORT,
-                                                            gravity:
+                                                                .updateTask(
+                                                              TodoItem(
+                                                                title: tasks
+                                                                    .items[index]
+                                                                    .title,
+                                                                desc: tasks
+                                                                    .items[index]
+                                                                    .desc,
+                                                                id: tasks
+                                                                    .items[index]
+                                                                    .id,
+                                                                status: 1,
+                                                                date: tasks
+                                                                    .items[index]
+                                                                    .date,
+                                                                time: tasks
+                                                                    .items[index]
+                                                                    .time,
+                                                                uuid: tasks
+                                                                    .items[index]
+                                                                    .uuid,
+                                                                notification: 0,
+                                                              ),
+                                                            )
+                                                                .then((value) {
+                                                              user.increaseFinished();
+                                                              Fluttertoast
+                                                                  .showToast(
+                                                                msg: "Task done",
+                                                                toastLength: Toast
+                                                                    .LENGTH_SHORT,
+                                                                gravity:
                                                                 ToastGravity
                                                                     .BOTTOM,
-                                                            backgroundColor:
+                                                                backgroundColor:
                                                                 Colors.green,
-                                                            textColor:
+                                                                textColor:
                                                                 Colors.white,
-                                                            fontSize: 19.0,
-                                                          );
-                                                        });
+                                                                fontSize: 19.0,
+                                                              );
+                                                            });
+                                                          }
+                                                        }
+                                                        else{
+                                                          Provider.of<TasksProvider>(
+                                                              context,
+                                                              listen: false)
+                                                              .updateTask(
+                                                            TodoItem(
+                                                              title: tasks
+                                                                  .items[index]
+                                                                  .title,
+                                                              desc: tasks
+                                                                  .items[index]
+                                                                  .desc,
+                                                              id: tasks
+                                                                  .items[index]
+                                                                  .id,
+                                                              status: 1,
+                                                              date: tasks
+                                                                  .items[index]
+                                                                  .date,
+                                                              time: tasks
+                                                                  .items[index]
+                                                                  .time,
+                                                              uuid: tasks
+                                                                  .items[index]
+                                                                  .uuid,
+                                                              notification: tasks
+                                                                  .items[index]
+                                                                  .notification,
+                                                            ),
+                                                          )
+                                                              .then((value) {
+                                                            user.increaseFinished();
+                                                            Fluttertoast
+                                                                .showToast(
+                                                              msg: "Task done",
+                                                              toastLength: Toast
+                                                                  .LENGTH_SHORT,
+                                                              gravity:
+                                                              ToastGravity
+                                                                  .BOTTOM,
+                                                              backgroundColor:
+                                                              Colors.green,
+                                                              textColor:
+                                                              Colors.white,
+                                                              fontSize: 19.0,
+                                                            );
+                                                          });
+                                                        }
+
                                                       } else {
                                                         Provider.of<TasksProvider>(
                                                                 context,
@@ -259,6 +314,7 @@ class _TodoPageState extends State<TodoPage> {
                                                           ),
                                                         )
                                                             .then((value) {
+                                                          user.decreaseFinished();
                                                           Fluttertoast
                                                               .showToast(
                                                             msg: "Task undone",
@@ -283,26 +339,37 @@ class _TodoPageState extends State<TodoPage> {
                                                 const Padding(
                                                     padding: EdgeInsets.only(
                                                         right: 10)),
-                                                tasks.items[index].status==0?
-                                                tasks.items[index].notification == 1
-                                                    ? IconButton(
-                                                        icon: const Icon(
-                                                          Icons.notifications,
-                                                          color: Colors.blue,
-                                                        ),
-                                                        onPressed: () {
-                                                          tasks.changeNotification(index);
-                                                        },
-                                                      )
-                                                    : IconButton(
-                                                        icon: const Icon(
-                                                          Icons.notifications,
-                                                          color: Colors.grey,
-                                                        ),
-                                                        onPressed: () {
-                                                          tasks.changeNotification(index);
-                                                        },
-                                                      ):const SizedBox.shrink(),
+                                                tasks.items[index].status == 0
+                                                    ? tasks.items[index]
+                                                                .notification ==
+                                                            1
+                                                        ? IconButton(
+                                                            icon: const Icon(
+                                                              Icons
+                                                                  .notifications,
+                                                              color:
+                                                                  Colors.blue,
+                                                            ),
+                                                            onPressed: () {
+                                                              tasks
+                                                                  .changeNotification(
+                                                                      index);
+                                                            },
+                                                          )
+                                                        : IconButton(
+                                                            icon: const Icon(
+                                                              Icons
+                                                                  .notifications,
+                                                              color:
+                                                                  Colors.grey,
+                                                            ),
+                                                            onPressed: () {
+                                                              tasks
+                                                                  .changeNotification(
+                                                                      index);
+                                                            },
+                                                          )
+                                                    : const SizedBox.shrink(),
                                                 const Padding(
                                                     padding: EdgeInsets.only(
                                                         right: 10)),

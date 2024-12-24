@@ -223,7 +223,8 @@ class AddTaskDialog extends StatelessWidget {
                           uuid: const UuidV4().generate(),
                           notification: 0,
                         ))
-                            .then((value) {
+                            .then((value) async {
+                          user.increaseUnFinished();
                           Fluttertoast.showToast(
                               msg: "Task Added",
                               toastLength: Toast.LENGTH_SHORT,
