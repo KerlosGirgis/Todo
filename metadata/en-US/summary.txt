@@ -1,0 +1,1 @@
+Offline, secure, To-Do app with encrypted storage, fingerprint lock, and import/export support. Your productivity, your way!
