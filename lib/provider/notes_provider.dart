@@ -7,32 +7,35 @@ import 'package:flutter/material.dart';
 
 import '../services/lock_manager.dart';
 
-class NotesProvider with ChangeNotifier{
+class NotesProvider with ChangeNotifier {
   List<Note> notes = [];
 
   Future<void> get() async {
     notes = await DatabaseService().getNotes();
     notifyListeners();
   }
+
   Future<void> addNote(Note note) async {
     await DatabaseService().insertNote(note);
     get();
   }
+
   Future<void> updateNote(Note note) async {
     await DatabaseService().updateNote(note);
     get();
   }
+
   Future<void> deleteNote(int id) async {
     await DatabaseService().deleteNote(id);
     get();
   }
 
-  Future<void> backup()async {
-    if(await LockManager().isLockEnabled()){
-      if(await AuthenticationService().authenticate()){
-        try{
-          await DatabaseService().exportNotesToJson().then((s){
-            if(s){
+  Future<void> backup() async {
+    if (await LockManager().isLockEnabled()) {
+      if (await AuthenticationService().authenticate()) {
+        try {
+          await DatabaseService().exportNotesToJson().then((s) {
+            if (s) {
               Fluttertoast.showToast(
                   msg: "Backup Created",
                   toastLength: Toast.LENGTH_SHORT,
@@ -40,8 +43,7 @@ class NotesProvider with ChangeNotifier{
                   backgroundColor: Colors.green,
                   textColor: Colors.white,
                   fontSize: 18.0);
-            }
-            else{
+            } else {
               Fluttertoast.showToast(
                   msg: "Backup Failed",
                   toastLength: Toast.LENGTH_SHORT,
@@ -51,8 +53,7 @@ class NotesProvider with ChangeNotifier{
                   fontSize: 18.0);
             }
           });
-        }
-        catch(e){
+        } catch (e) {
           Fluttertoast.showToast(
               msg: "Backup Failed",
               toastLength: Toast.LENGTH_SHORT,
@@ -62,11 +63,10 @@ class NotesProvider with ChangeNotifier{
               fontSize: 18.0);
         }
       }
-    }
-    else{
-      try{
-        await DatabaseService().exportNotesToJson().then((s){
-          if(s){
+    } else {
+      try {
+        await DatabaseService().exportNotesToJson().then((s) {
+          if (s) {
             Fluttertoast.showToast(
                 msg: "Backup Created",
                 toastLength: Toast.LENGTH_SHORT,
@@ -74,8 +74,7 @@ class NotesProvider with ChangeNotifier{
                 backgroundColor: Colors.green,
                 textColor: Colors.white,
                 fontSize: 18.0);
-          }
-          else{
+          } else {
             Fluttertoast.showToast(
                 msg: "Backup Failed",
                 toastLength: Toast.LENGTH_SHORT,
@@ -85,8 +84,7 @@ class NotesProvider with ChangeNotifier{
                 fontSize: 18.0);
           }
         });
-      }
-      catch(e){
+      } catch (e) {
         Fluttertoast.showToast(
             msg: "Backup Failed",
             toastLength: Toast.LENGTH_SHORT,
@@ -98,10 +96,10 @@ class NotesProvider with ChangeNotifier{
     }
   }
 
-  Future<void> restore()async {
-    try{
-      await DatabaseService().importNotesFromJson().then((s){
-        if(s){
+  Future<void> restore() async {
+    try {
+      await DatabaseService().importNotesFromJson().then((s) {
+        if (s) {
           Fluttertoast.showToast(
               msg: "Data Restored",
               toastLength: Toast.LENGTH_SHORT,
@@ -109,8 +107,7 @@ class NotesProvider with ChangeNotifier{
               backgroundColor: Colors.green,
               textColor: Colors.white,
               fontSize: 18.0);
-        }
-        else{
+        } else {
           Fluttertoast.showToast(
               msg: "Failed To Restore",
               toastLength: Toast.LENGTH_SHORT,
@@ -121,8 +118,7 @@ class NotesProvider with ChangeNotifier{
         }
       });
       get();
-    }
-    catch(e){
+    } catch (e) {
       Fluttertoast.showToast(
           msg: "Failed To Restore",
           toastLength: Toast.LENGTH_SHORT,
@@ -132,5 +128,4 @@ class NotesProvider with ChangeNotifier{
           fontSize: 18.0);
     }
   }
-
-  }
+}

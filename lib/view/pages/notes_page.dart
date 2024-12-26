@@ -53,12 +53,24 @@ class _NotesPageState extends State<NotesPage> {
             actions: [
               Row(
                 children: [
-                  IconButton(onPressed: () async {
-                    Provider.of<NotesProvider>(context, listen: false).backup();
-                  }, icon: const Icon(Icons.backup,color: Colors.grey,)),
-                  IconButton(onPressed: () async {
-                    Provider.of<NotesProvider>(context, listen: false).restore();
-                  }, icon: const Icon(Icons.settings_backup_restore,color: Colors.grey,)),
+                  IconButton(
+                      onPressed: () async {
+                        Provider.of<NotesProvider>(context, listen: false)
+                            .backup();
+                      },
+                      icon: const Icon(
+                        Icons.backup,
+                        color: Colors.grey,
+                      )),
+                  IconButton(
+                      onPressed: () async {
+                        Provider.of<NotesProvider>(context, listen: false)
+                            .restore();
+                      },
+                      icon: const Icon(
+                        Icons.settings_backup_restore,
+                        color: Colors.grey,
+                      )),
                   IconButton(
                       onPressed: () {
                         Navigator.push(
@@ -122,7 +134,6 @@ class _NotesPageState extends State<NotesPage> {
               ),
             ],
           ),
-
           body: Consumer<NotesProvider>(
             builder: (context, notes, child) {
               return notes.notes.isEmpty
@@ -146,7 +157,7 @@ class _NotesPageState extends State<NotesPage> {
                             duration: const Duration(milliseconds: 600),
                             position: index,
                             columnCount: MediaQuery.of(context).orientation ==
-                                Orientation.portrait
+                                    Orientation.portrait
                                 ? 2
                                 : 4,
                             child: SlideAnimation(
@@ -157,46 +168,66 @@ class _NotesPageState extends State<NotesPage> {
                                     margin: const EdgeInsets.all(16),
                                     child: LayoutBuilder(
                                       builder: (context, constraints) {
-                                        final cardWidth = screenSize.width * 0.8;
+                                        final cardWidth =
+                                            screenSize.width * 0.8;
                                         const aspectRatio = 16 / 9;
                                         return AspectRatio(
                                           aspectRatio: aspectRatio,
                                           child: Container(
                                               width: cardWidth,
                                               decoration: BoxDecoration(
-                                                color:
-                                                    notes.notes[index].coverColor.toColor,
+                                                color: notes.notes[index]
+                                                    .coverColor.toColor,
                                                 borderRadius:
                                                     BorderRadius.circular(12.0),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color:
-                                                        Colors.black.withValues(alpha: 0.2),
+                                                    color: Colors.black
+                                                        .withValues(alpha: 0.2),
                                                     blurRadius: 8,
                                                     offset: const Offset(0, 4),
                                                   ),
                                                 ],
                                               ),
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
+                                              child: Stack(
                                                 children: [
-                                                  Text(
-                                                    maxLines: 5,
-                                                    textAlign: TextAlign.center,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    notes.notes[index].title,
-                                                    style: TextStyle(
-                                                        color: notes
-                                                            .notes[index].titleColor.toColor,
-                                                        fontSize: 24,
-                                                        fontWeight: FontWeight.bold),
+                                                  Center(
+                                                    child: Text(
+                                                      maxLines: 5,
+                                                      textAlign: TextAlign.center,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      notes.notes[index].title,
+                                                      style: TextStyle(
+                                                          color: notes
+                                                              .notes[index]
+                                                              .titleColor
+                                                              .toColor,
+                                                          fontSize: 24,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
                                                   ),
-                                                  notes.notes[index].protected == 1
-                                                      ? Image.asset(
-                                                          "assets/lock.png",
-                                                          scale: 1.4,
-                                                        )
+                                                  notes.notes[index]
+                                                              .protected ==
+                                                          1
+                                                      ? Column(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                        children: [
+                                                          Row(
+                                                            mainAxisAlignment: MainAxisAlignment.end,
+                                                            children: [
+                                                              Padding(
+                                                                padding: const EdgeInsets.all(7),
+                                                                child: Image.asset(
+                                                                    "assets/lock.png",
+                                                                    scale: 4,
+                                                                  ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      )
                                                       : const SizedBox.shrink(),
                                                 ],
                                               )),
@@ -218,14 +249,17 @@ class _NotesPageState extends State<NotesPage> {
                                                   NoteEditorPage(
                                                 note: notes.notes[index],
                                               ),
-                                              transitionsBuilder: (context, animation,
-                                                  secondaryAnimation, child) {
+                                              transitionsBuilder: (context,
+                                                  animation,
+                                                  secondaryAnimation,
+                                                  child) {
                                                 const begin = Offset(1.0, 0.0);
                                                 const end = Offset.zero;
                                                 const curve = Curves.ease;
                                                 var tween = Tween(
                                                         begin: begin, end: end)
-                                                    .chain(CurveTween(curve: curve));
+                                                    .chain(CurveTween(
+                                                        curve: curve));
                                                 var offsetAnimation =
                                                     animation.drive(tween);
                                                 return SlideTransition(
@@ -245,13 +279,17 @@ class _NotesPageState extends State<NotesPage> {
                                               NoteEditorPage(
                                             note: notes.notes[index],
                                           ),
-                                          transitionsBuilder: (context, animation,
-                                              secondaryAnimation, child) {
+                                          transitionsBuilder: (context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child) {
                                             const begin = Offset(1.0, 0.0);
                                             const end = Offset.zero;
                                             const curve = Curves.ease;
-                                            var tween = Tween(begin: begin, end: end)
-                                                .chain(CurveTween(curve: curve));
+                                            var tween = Tween(
+                                                    begin: begin, end: end)
+                                                .chain(
+                                                    CurveTween(curve: curve));
                                             var offsetAnimation =
                                                 animation.drive(tween);
                                             return SlideTransition(
@@ -271,7 +309,8 @@ class _NotesPageState extends State<NotesPage> {
                                           showDialog(
                                               context: context,
                                               builder: (context) {
-                                                return UpdateNoteDialog(index: index);
+                                                return UpdateNoteDialog(
+                                                    index: index);
                                               });
                                         }
                                       }
@@ -279,7 +318,8 @@ class _NotesPageState extends State<NotesPage> {
                                       showDialog(
                                           context: context,
                                           builder: (context) {
-                                            return UpdateNoteDialog(index: index);
+                                            return UpdateNoteDialog(
+                                                index: index);
                                           });
                                     }
                                   },

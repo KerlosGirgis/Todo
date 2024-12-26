@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -99,16 +100,21 @@ class AppbarAvatar extends StatelessWidget {
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Text(
-                                      maxLines: 1,
-                                      //overflow: TextOverflow.visible,
-                                      "🕯️Verse Of The Day🕯️",
-                                      style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blueAccent,
+                                    SizedBox(
+                                      width: MediaQuery.sizeOf(context).width,
+                                      height: MediaQuery.sizeOf(context).height/25,
+                                      child: const AutoSizeText(
+                                        minFontSize: 18,
+                                        maxLines: 1,
+                                        //overflow: TextOverflow.visible,
+                                        "🕯️Verse Of The Day🕯️",
+                                        style: TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blueAccent,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
-                                      textAlign: TextAlign.center,
                                     ),
                                     const SizedBox(height: 12),
                                     Text(

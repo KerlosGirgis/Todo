@@ -118,7 +118,9 @@ class UpdateNoteDialog extends StatelessWidget {
                             });
                           },
                           icon: const Icon(Icons.undo_sharp)),
-                      const Spacer(flex: 1,)
+                      const Spacer(
+                        flex: 1,
+                      )
                     ],
                   ),
                   const Padding(padding: EdgeInsets.only(bottom: 15)),
@@ -146,19 +148,22 @@ class UpdateNoteDialog extends StatelessWidget {
                       IconButton(
                           onPressed: () {
                             setState(() {
-                              coverColor =
-                                  const Color(0xff1E1E1E).hex;
+                              coverColor = const Color(0xff1E1E1E).hex;
                             });
                           },
                           icon: const Icon(Icons.undo_sharp)),
-                      const Spacer(flex: 1,)
+                      const Spacer(
+                        flex: 1,
+                      )
                     ],
                   ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      const Spacer(flex: 1,),
+                      const Spacer(
+                        flex: 1,
+                      ),
                       IconButton(
                           onPressed: () async {
                             if (isProtected == 0) {
@@ -223,18 +228,19 @@ class UpdateNoteDialog extends StatelessWidget {
                         Navigator.pop(context);
                         Provider.of<NotesProvider>(context, listen: false)
                             .updateNote(Note(
-                            id: notes.notes[index].id,
-                            title: titleController.text,
-                            body: notes.notes[index].body,
-                            titleColor: titleColor,
-                            coverColor: coverColor,
-                            protected: isProtected))
+                                id: notes.notes[index].id,
+                                title: titleController.text,
+                                body: notes.notes[index].body,
+                                titleColor: titleColor,
+                                coverColor: coverColor,
+                                protected: isProtected))
                             .then((value) {
                           Fluttertoast.showToast(
                               msg: "Note Edited",
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.BOTTOM,
-                              backgroundColor: user.colorProvider.cardBackground,
+                              backgroundColor:
+                                  user.colorProvider.cardBackground,
                               textColor: user.colorProvider.appTitle,
                               fontSize: 19.0);
                         });
