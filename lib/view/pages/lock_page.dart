@@ -9,7 +9,6 @@ import '../../provider/theme_provider.dart';
 import '../../provider/user_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/verse_manager.dart';
-import '../widgets/button.dart';
 
 class LockPage extends StatefulWidget {
   const LockPage({
