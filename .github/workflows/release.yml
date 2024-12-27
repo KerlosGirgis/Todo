@@ -22,6 +22,9 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
 
+      - name: Increase watcher limit
+        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+
       - name: Decode and save the keystore file
         run: |
           echo "$RELEASE_KEYSTORE" | base64 --decode > "$HOME/release-key.jks"
@@ -40,6 +43,7 @@ jobs:
       - name: Build APK (Android)
         run: flutter build apk --release
         env:
+          JAVA_HOME: /opt/hostedtoolcache/Java_Adopt_jdk/17.0.13-11/x64
           RELEASE_STORE_FILE: "$HOME/release-key.jks"
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
