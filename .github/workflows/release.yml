@@ -22,6 +22,10 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
 
+      - name: Decode and save the keystore file
+        run: |
+          echo "$RELEASE_KEYSTORE" | base64 --decode > "$HOME/release-key.jks"
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -35,6 +39,11 @@ jobs:
 
       - name: Build APK (Android)
         run: flutter build apk --release
+        env:
+          RELEASE_STORE_FILE: "$HOME/release-key.jks"
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
 
       - name: Upload APK to release
         uses: actions/upload-artifact@v3
