@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Triggers workflow on version tag (e.g., v1.0.0)
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Flutter environment
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.0' # Flutter version for the project
+
+      # Step 3: Install project dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Step 4: Analyze and format code (Optional but recommended)
+      - name: Analyze and format code
+        run: |
+          flutter analyze
+          flutter format --set-exit-if-changed .
+
+      # Step 5: Run tests (Optional but recommended)
+      - name: Run tests
+        run: flutter test
+
+      # Step 6: Build APK for Android
+      - name: Build APK (Android)
+        run: flutter build apk --release
+
+      # Step 7: Build IPA for iOS (Optional, macOS required)
+      - name: Build IPA (iOS)
+        if: runner.os == 'macOS'
+        run: flutter build ipa --release
+
+      # Step 8: Upload APK as an artifact
+      - name: Upload APK to release
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      # Step 9: Create a GitHub Release
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: build/app/outputs/flutter-apk/app-release.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## Release Notes
+            - Built using Flutter version: 3.27.0
+            - Commit: `${{ github.sha }}`
+            - Repository: [Todo](https://github.com/KerlosGirgis/Todo)
