@@ -26,24 +26,23 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 4: Analyze and format code (Optional but recommended)
+      # Step 4: Analyze and format code
       - name: Analyze and format code
         run: |
           flutter analyze
           flutter format --set-exit-if-changed .
 
-      # Step 5: Run tests (Optional but recommended)
+      # Step 5: Run tests
       - name: Run tests
         run: flutter test
 
-      # Step 6: Build APK for Android
+      # Step 6: disable analytics
+      - name: disable analytics
+        run: flutter config --no-analytics
+
+      # Step 7: Build APK for Android
       - name: Build APK (Android)
         run: flutter build apk --release
-
-      # Step 7: Build IPA for iOS (Optional, macOS required)
-      - name: Build IPA (iOS)
-        if: runner.os == 'macOS'
-        run: flutter build ipa --release
 
       # Step 8: Upload APK as an artifact
       - name: Upload APK to release
