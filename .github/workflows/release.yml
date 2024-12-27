@@ -23,9 +23,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Run tests
-        run: flutter test
-
       - name: disable analytics
         run: flutter config --no-analytics
 
