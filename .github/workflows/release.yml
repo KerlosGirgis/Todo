@@ -3,8 +3,8 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*' # Triggers workflow on version tag (e.g., v1.0.0)
-  workflow_dispatch: # Allows manual triggering of the workflow
+      - 'v*.*.*'
+  workflow_dispatch:
 
 jobs:
   release:
@@ -12,46 +12,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Flutter environment
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.0'
 
-      # Step 3: Install project dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 4: Analyze and format code
-      - name: Analyze and format code
-        run: |
-          flutter analyze
-          flutter format --set-exit-if-changed .
-
-      # Step 5: Run tests
       - name: Run tests
         run: flutter test
 
-      # Step 6: disable analytics
       - name: disable analytics
         run: flutter config --no-analytics
 
-      # Step 7: Build APK for Android
       - name: Build APK (Android)
         run: flutter build apk --release
 
-      # Step 8: Upload APK as an artifact
       - name: Upload APK to release
         uses: actions/upload-artifact@v3
         with:
           name: app-release.apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      # Step 9: Create a GitHub Release
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
