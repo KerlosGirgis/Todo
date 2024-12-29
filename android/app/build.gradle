@@ -91,6 +91,7 @@ android {
         githubRelease {
             applicationIdSuffix ".githubRelease"
             versionNameSuffix "-github"
+            signingConfig signingConfigs.githubRelease
             // Additional flavor-specific configurations
         }
     }
