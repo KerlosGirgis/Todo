@@ -39,7 +39,6 @@ jobs:
 
       - name: Build Android APK
         env:
-          JAVA_HOME: /opt/hostedtoolcache/Java_17/$(ls /opt/hostedtoolcache/Java_17)
           ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
