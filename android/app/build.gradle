@@ -41,7 +41,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-
+    flavorDimensions "github"
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.k.todo"
@@ -89,6 +89,7 @@ android {
 
     productFlavors {
         githubRelease {
+            dimension "github"
             applicationIdSuffix ".githubRelease"
             versionNameSuffix "-github"
             signingConfig signingConfigs.githubRelease
