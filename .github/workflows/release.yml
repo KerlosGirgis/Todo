@@ -67,7 +67,7 @@ jobs:
           artifacts: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          name: Todo ${{ github.ref_name }}
           body: |
             ## Release Notes
             - Built using Flutter version: 3.27.1
