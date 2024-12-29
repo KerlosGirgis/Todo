@@ -6,13 +6,17 @@ allowing you to keep track of your tasks without needing an internet connection.
 
 ## Features
 
-- **Offline Support**: No internet connection required to use the app.
-- **Add Tasks**: Easily create tasks with descriptions and due dates.
-- **Mark as Completed**: Complete your tasks and get a sense of accomplishment.
-- **Delete Tasks**: Delete tasks when they are no longer needed.
-- **Task List**: View all your tasks in a single place.
-- **Notes**: Take notes quick and easy.
-- **Secure**: Lock your private notes with fingerprint.
+- **Offline Support**: Fully functional without an internet connection.
+- **Task Management**: Create, update, delete, and mark tasks as completed.
+- **Notes Management**: Add, update, reorder, and delete notes with a grid-view layout.
+- **Daily Bible Verse**: Start your day with an inspiring Bible verse, randomized daily.
+- **User-Friendly Interface**: Simple and intuitive design for easy task and note management.
+- **Home Screen Widget**: Access tasks and notes directly from your device's home screen.
+- **Notifications**: Stay on top of your tasks with timely reminders.
+- **Encryption**: Securely stores tasks and notes locally using encryption.
+- **Customization**: Reorder tasks and notes to match your workflow.
+- **Secure Access**: Optional fingerprint authentication for app locking.
+- **Import & Export**: Backup or restore tasks and notes without exposing sensitive data.
 
 ## Screenshots
 
