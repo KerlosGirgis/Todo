@@ -1,16 +1,12 @@
 name: Release
 
+on: [push, pull_request]
+
 permissions:
   contents: read
   packages: write
   issues: write
   pull-requests: write
-
-on:
-  push:
-    tags:
-      - 'v*.*.*'
-  workflow_dispatch:
 
 jobs:
   release:
