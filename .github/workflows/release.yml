@@ -39,18 +39,19 @@ jobs:
 
       - name: Build Android APK
         env:
+          JAVA_HOME: /opt/hostedtoolcache/Java_17/$(ls /opt/hostedtoolcache/Java_17)
           ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
         run: |
-          echo $ANDROID_SIGNING_KEY | base64 --decode > $HOME/kkey.keystore
+          echo $ANDROID_SIGNING_KEY | base64 --decode > ${{ github.workspace }}/android/app/kkey.keystore
           flutter build apk --release --split-per-abi --target-platform="android-arm64"
 
       - name: Upload APK to release
         uses: actions/upload-artifact@v3
         with:
-          name: app-release.apk
+          name: app-arm64-v8a-release.apk.apk
           path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 
       - name: Create GitHub Release
