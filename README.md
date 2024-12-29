@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/2c66c3c7-2f21-4de8-a305-d380e2f39a41)# Minimal To-Do App
+# Minimal To-Do App
 
 A simple application for managing your daily tasks.
 This To-Do app works completely offline,
