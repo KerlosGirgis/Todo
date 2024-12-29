@@ -58,10 +58,17 @@ android {
     }
     signingConfigs {
         release {
+
+            storeFile file("android/app/kkey.keystore")
+            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            keyAlias System.getenv("RELEASE_KEY_ALIAS")
+            keyPassword System.getenv("ANDROID_KEY_ALIAS_PASSWORD")
+
+            /*
             keyAlias = keystoreProperties['keyAlias']
             keyPassword = keystoreProperties['keyPassword']
             storeFile = keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-            storePassword = keystoreProperties['storePassword']
+            storePassword = keystoreProperties['storePassword']*/
         }
     }
 
