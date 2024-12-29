@@ -1,5 +1,11 @@
 name: Release
 
+permissions:
+  contents: read
+  packages: write
+  issues: write
+  pull-requests: write
+
 on:
   push:
     tags:
