@@ -57,7 +57,7 @@ android {
         jvmTarget = "1.8" // Ensure this matches the Java version
     }
     signingConfigs {
-        gitHubRelease {
+        githubRelease {
 
             storeFile file("RELEASE_STORE_FILE")
             storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
@@ -81,16 +81,20 @@ android {
             //signingConfig signingConfigs.release
             signingConfig = signingConfigs.release
         }
-        gitHubRelease {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            //signingConfig signingConfigs.release
-            signingConfig = signingConfigs.release
-        }
+
         /*debug {
             applicationIdSuffix ".debug"
         }*/
     }
+
+    productFlavors {
+        githubRelease {
+            applicationIdSuffix ".githubRelease"
+            versionNameSuffix "-github"
+            // Additional flavor-specific configurations
+        }
+    }
+
     buildFeatures {
         viewBinding true
     }
