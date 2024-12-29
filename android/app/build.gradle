@@ -59,7 +59,7 @@ android {
 
         release {
 
-            storeFile file("RELEASE_STORE_FILE")
+            storeFile file("kkey.keystore")
             storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
             keyAlias System.getenv("RELEASE_KEY_ALIAS")
             keyPassword System.getenv("ANDROID_KEY_ALIAS_PASSWORD")
