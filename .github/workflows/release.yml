@@ -3,8 +3,9 @@ name: Release
 on: [push, pull_request]
 
 permissions:
-  contents: read
+  contents: write
   packages: write
+  actions: write
   issues: write
   pull-requests: write
 
