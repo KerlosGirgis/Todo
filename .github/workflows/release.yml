@@ -44,7 +44,7 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
         run: |
-          echo $ANDROID_SIGNING_KEY | base64 --decode > /home/runner/work/Todo/Todo/android/app/android/app/kkey.keystore
+          echo $ANDROID_SIGNING_KEY | base64 --decode > android/app/android/app/kkey.keystore
           flutter build apk --release --split-per-abi --target-platform="android-arm64"
 
       - name: Upload APK to release
