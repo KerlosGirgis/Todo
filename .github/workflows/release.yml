@@ -46,7 +46,7 @@ jobs:
           ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
         run: |
           echo $ANDROID_SIGNING_KEY | base64 --decode > ${{ github.workspace }}/android/app/kkey.keystore
-          flutter build apk --gitHubRelease --split-per-abi --target-platform="android-arm64"
+          flutter build apk --flavor githubRelease --release --split-per-abi --target-platform="android-arm64"
 
       - name: Upload APK to release
         uses: actions/upload-artifact@v3
