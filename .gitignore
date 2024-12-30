@@ -41,5 +41,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-/kkey.keystore
+/android/app/kkey.keystore
 /release-key.jks.base64
+/build_release.sh
+/kkey.base64
+/kkeyc.base64
