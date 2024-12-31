@@ -17,14 +17,11 @@ class AppbarAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<UserProvider>(
-      builder: (context,user,child) {
+      builder: (context, user, child) {
         return GestureDetector(
           child: CircleAvatar(
             backgroundColor: Colors.transparent,
-            backgroundImage: user.user.pic
-                .substring(0, 1)
-                .compareTo("0") ==
-                0
+            backgroundImage: user.user.pic.substring(0, 1).compareTo("0") == 0
                 ? AssetImage(IconProvider.getAvatar(user.user.pic))
                 : FileImage(File(user.user.pic)),
             radius: 18,
@@ -39,18 +36,15 @@ class AppbarAvatar extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
-                    backgroundColor:
-                    user.colorProvider.profileAlertBackground,
-                    content: Column(
+                    backgroundColor: user.colorProvider.profileAlertBackground,
+                    title: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         CircleAvatar(
                           radius: 130,
                           backgroundColor: Colors.transparent,
-                          backgroundImage: user.user.pic
-                              .substring(0, 1)
-                              .compareTo("0") ==
-                              0
+                          backgroundImage:
+                          user.user.pic.substring(0, 1).compareTo("0") == 0
                               ? AssetImage(
                               IconProvider.getAvatar(user.user.pic))
                               : FileImage(File(user.user.pic)),
@@ -59,79 +53,91 @@ class AppbarAvatar extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width/1.5,
-                              child: Text(
-                                user.user.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.clip,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
+                            Text(
+                              user.user.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                    color: Colors.white, fontSize: 42),
-                              ),
+                                  color: Colors.white,
+                                  fontSize: 42),
                             ),
                           ],
                         ),
-                        user.user.verse==1?
-                        Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).size.height/60)):const SizedBox.shrink(),
-                        user.user.verse==1?
-                        Center(
-                          child: GestureDetector(
-                            onLongPress: (){
-                              Clipboard.setData(ClipboardData(text: VerseManager.getDailyVerse())).then((_) {
-                                Fluttertoast.showToast(
-                                    msg: "Verse copied to clipboard",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.BOTTOM,
-                                    backgroundColor:
-                                    user.colorProvider.cardBackground,
-                                    textColor: user.colorProvider.appTitle,
-                                    fontSize: 19.0);
-                              });
-                            },
-                            child: Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      width: MediaQuery.sizeOf(context).width,
-                                      height: MediaQuery.sizeOf(context).height/25,
-                                      child: const AutoSizeText(
-                                        minFontSize: 18,
-                                        maxLines: 1,
-                                        //overflow: TextOverflow.visible,
-                                        "🕯️Verse Of The Day🕯️",
-                                        style: TextStyle(
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blueAccent,
-                                        ),
-                                        textAlign: TextAlign.center,
+                      ],
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        user.user.verse == 1
+                            ? Center(
+                                child: GestureDetector(
+                                  onLongPress: () {
+                                    Clipboard.setData(ClipboardData(
+                                            text: VerseManager.getDailyVerse()))
+                                        .then((_) {
+                                      Fluttertoast.showToast(
+                                          msg: "Verse copied to clipboard",
+                                          toastLength: Toast.LENGTH_SHORT,
+                                          gravity: ToastGravity.BOTTOM,
+                                          backgroundColor:
+                                              user.colorProvider.cardBackground,
+                                          textColor:
+                                              user.colorProvider.appTitle,
+                                          fontSize: 19.0);
+                                    });
+                                  },
+                                  child: Card(
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(
+                                            width: MediaQuery.sizeOf(context)
+                                                .width,
+                                            height: MediaQuery.of(context)
+                                                        .orientation ==
+                                                    Orientation.portrait
+                                                ? MediaQuery.sizeOf(context)
+                                                        .height /
+                                                    25
+                                                : MediaQuery.sizeOf(context)
+                                                        .height /
+                                                    10,
+                                            child: const AutoSizeText(
+                                              "🕯️Bible Verse🕯️",
+                                              textAlign: TextAlign.center,
+                                              minFontSize: 22,
+                                              style: TextStyle(
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.blueAccent,
+                                              ),
+                                            )
+                                            ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            VerseManager.getDailyVerse(),
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontStyle: FontStyle.italic,
+                                              color: Colors.black87,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      VerseManager.getDailyVerse(),
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.black87,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        ):const SizedBox.shrink()
+                              )
+                            : const SizedBox.shrink()
                       ],
                     ),
                   );
