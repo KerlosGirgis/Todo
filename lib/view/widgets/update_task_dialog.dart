@@ -196,7 +196,7 @@ class UpdateTaskDialog extends StatelessWidget {
             ),
             actions: [
               Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Button(
                     onPressed: () {

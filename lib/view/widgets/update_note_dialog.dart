@@ -199,7 +199,7 @@ class UpdateNoteDialog extends StatelessWidget {
               ),
               actions: [
                 Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Button(
                       onPressed: () {

@@ -51,7 +51,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   crypto: ^3.0.5
   fluttertoast: ^8.2.8
-  shared_preferences: ^2.3.3
+  shared_preferences: ^2.3.4
   file_picker: ^8.1.6
   flutter_staggered_animations: ^1.1.1
   flutter_local_notifications: ^18.0.1

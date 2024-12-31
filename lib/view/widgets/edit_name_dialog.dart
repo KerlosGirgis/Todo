@@ -79,48 +79,53 @@ class EditNameDialog extends StatelessWidget {
               ],
             ),
             actions: [
-              Button(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                label: "Cancel",
-                status: false,
-                fontSize: 18,
-                size: 1,
-              ),
-              Padding(
-                  padding: EdgeInsets.only(
-                      right: MediaQuery.of(context).size.width / 25)),
-              Button(
-                onPressed: () async {
-                  if (nameController.text.isNotEmpty) {
-                    Provider.of<UserProvider>(context, listen: false)
-                        .editName(nameController.text)
-                        .then((value) {
-                      Fluttertoast.showToast(
-                          msg: "Name Updated",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          backgroundColor: user.colorProvider.cardBackground,
-                          textColor: user.colorProvider.appTitle,
-                          fontSize: 19.0);
-                    });
-                    Navigator.of(context).pop();
-                  }
-                  else{
-                    Fluttertoast.showToast(
-                        msg: "Name can't be empty",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.red,
-                        textColor: Colors.white,
-                        fontSize: 19.0);
-                  }
-                },
-                label: 'Update',
-                status: true,
-                fontSize: 18,
-                size: 1,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Button(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    label: "Cancel",
+                    status: false,
+                    fontSize: 18,
+                    size: 1,
+                  ),
+                  Padding(
+                      padding: EdgeInsets.only(
+                          right: MediaQuery.of(context).size.width / 25)),
+                  Button(
+                    onPressed: () async {
+                      if (nameController.text.isNotEmpty) {
+                        Provider.of<UserProvider>(context, listen: false)
+                            .editName(nameController.text)
+                            .then((value) {
+                          Fluttertoast.showToast(
+                              msg: "Name Updated",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: user.colorProvider.cardBackground,
+                              textColor: user.colorProvider.appTitle,
+                              fontSize: 19.0);
+                        });
+                        Navigator.of(context).pop();
+                      }
+                      else{
+                        Fluttertoast.showToast(
+                            msg: "Name can't be empty",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: Colors.red,
+                            textColor: Colors.white,
+                            fontSize: 19.0);
+                      }
+                    },
+                    label: 'Update',
+                    status: true,
+                    fontSize: 18,
+                    size: 1,
+                  ),
+                ],
               ),
             ],
           );
