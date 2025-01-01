@@ -503,7 +503,7 @@ class ProfilePageState extends State<ProfilePage> {
                                           listen: false)
                                       .changeVerse();
                                 },
-                                label: "Enable V.O.T.D",
+                                label: "Daily Verse",
                                 status: user.user.verse == 1 ? true : false,
                                 fontSize: 22,
                                 size: 1.5),
@@ -966,7 +966,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                   listen: false)
                                               .changeVerse();
                                         },
-                                        label: "Enable V.O.T.D",
+                                        label: "Daily Verse",
                                         status:
                                             user.user.verse == 1 ? true : false,
                                         fontSize: 22,

@@ -9,8 +9,10 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:crypto/crypto.dart';
+import 'package:todo/provider/tasks_provider.dart';
 
 import '../models/note.dart';
+import 'notification.dart';
 
 class DatabaseService {
   late Database db;
@@ -21,7 +23,8 @@ class DatabaseService {
 
   String generateStrongKey({int length = 32}) {
     final Random random = Random.secure();
-    final List<int> values = List<int>.generate(length, (i) => random.nextInt(256));
+    final List<int> values =
+        List<int>.generate(length, (i) => random.nextInt(256));
 
     // Optional: Hash the random bytes to further strengthen the key
     final Digest key = sha256.convert(values);
@@ -32,10 +35,11 @@ class DatabaseService {
   Future<void> storeEncryptionKey() async {
     String? key = await secureStorage.read(key: 'dbKey');
     if (key == null) {
-      key = generateStrongKey();  // Your function to generate a secure key
+      key = generateStrongKey(); // Your function to generate a secure key
       await secureStorage.write(key: 'dbKey', value: key);
     }
   }
+
   Future<String?> getEncryptionKey() async {
     return await secureStorage.read(key: 'dbKey');
   }
@@ -44,7 +48,8 @@ class DatabaseService {
     var databasesPath = await getDatabasesPath();
     String path = '${databasesPath}Database.db';
     String? dbKey = await getEncryptionKey();
-    db = await openDatabase(path,password: dbKey,version: 1, onCreate: _onCreate);
+    db = await openDatabase(path,
+        password: dbKey, version: 1, onCreate: _onCreate);
     return db;
   }
 
@@ -100,8 +105,16 @@ class DatabaseService {
   }
 
   Future<List<TodoItem>> getItems() async {
-    List<Map<String, dynamic>> maps = await db.query('ToDo',
-        columns: ['id', 'title', 'desc', 'status', 'date', 'time','uuid','notification']);
+    List<Map<String, dynamic>> maps = await db.query('ToDo', columns: [
+      'id',
+      'title',
+      'desc',
+      'status',
+      'date',
+      'time',
+      'uuid',
+      'notification'
+    ]);
     List<TodoItem> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {
@@ -130,8 +143,18 @@ class DatabaseService {
   }
 
   Future<List<UserProfile>> getUser() async {
-    List<Map<String, dynamic>> maps = await db.query('User',
-        columns: ['id', 'name', 'pic', 'theme','autoSave','casual','verse','count','finished','unFinished']);
+    List<Map<String, dynamic>> maps = await db.query('User', columns: [
+      'id',
+      'name',
+      'pic',
+      'theme',
+      'autoSave',
+      'casual',
+      'verse',
+      'count',
+      'finished',
+      'unFinished'
+    ]);
     List<UserProfile> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {
@@ -179,25 +202,20 @@ class DatabaseService {
     Uint8List bytes = utf8.encode(jsonString);
 
     String? outputPath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Select location to save Notes JSON file',
-      fileName: 'notes.json',
-      bytes: bytes
-    );
+        dialogTitle: 'Select location to save Notes JSON file',
+        fileName: 'notes.json',
+        bytes: bytes);
 
-    if(outputPath!=null){
-      if(outputPath.isEmpty){
+    if (outputPath != null) {
+      if (outputPath.isEmpty) {
         return false;
-      }
-      else{
+      } else {
         return true;
       }
-    }
-    else{
+    } else {
       return false;
     }
-
   }
-
 
   Future<bool> exportToDoToJson() async {
     List<TodoItem> items = await getItems();
@@ -205,23 +223,19 @@ class DatabaseService {
     Uint8List bytes = utf8.encode(jsonString);
 
     String? outputPath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Select location to save ToDo JSON file',
-      fileName: 'todo.json',
-      bytes: bytes
-    );
+        dialogTitle: 'Select location to save ToDo JSON file',
+        fileName: 'todo.json',
+        bytes: bytes);
 
-    if(outputPath!=null){
-      if(outputPath.isEmpty){
+    if (outputPath != null) {
+      if (outputPath.isEmpty) {
         return false;
-      }
-      else{
+      } else {
         return true;
       }
-    }
-    else{
+    } else {
       return false;
     }
-
   }
 
   // Import Notes from JSON
@@ -241,8 +255,7 @@ class DatabaseService {
         await insertNote(note);
       }
       return true;
-    }
-    else{
+    } else {
       return false;
     }
   }
@@ -261,13 +274,24 @@ class DatabaseService {
       for (var itemMap in data) {
         TodoItem item = TodoItem.fromMap(itemMap);
         await insertItem(item);
+        if(item.notification==1){
+          if (item.time.isNotEmpty) {
+            DateTime scheduledTime =
+            TasksProvider().stringToDateTime(item.date, item.time);
+            if (scheduledTime.isAfter(DateTime.now()) && item.status == 0) {
+              NotificationService.scheduleNotification(
+                item.uuid.hashCode,
+                "Don't Forget Your Task!",
+                item.title,
+                scheduledTime,
+              );
+            }
+          }
+        }
       }
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
-
-
 }
