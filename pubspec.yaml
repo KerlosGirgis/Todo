@@ -40,7 +40,7 @@ dependencies:
   path_provider: ^2.1.4
   permission_handler: ^11.3.1
   intl: ^0.19.0
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.2
   auto_size_text: ^3.0.0
   flex_color_picker: ^3.5.1
   local_auth: ^2.3.0
@@ -51,7 +51,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   crypto: ^3.0.5
   fluttertoast: ^8.2.8
-  shared_preferences: ^2.3.4
+  shared_preferences: ^2.3.5
   file_picker: ^8.1.6
   flutter_staggered_animations: ^1.1.1
   flutter_local_notifications: ^18.0.1
@@ -68,7 +68,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^3.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
