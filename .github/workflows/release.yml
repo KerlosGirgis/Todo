@@ -70,6 +70,4 @@ jobs:
           name: Todo ${{ github.ref_name }}
           body: |
             ## Release Notes
-            - Built using Flutter version: 3.27.1
-            - Commit: `${{ github.sha }}`
-            - Repository: [Todo](https://github.com/KerlosGirgis/Todo)
+            - Minor Fixes
