@@ -47,7 +47,6 @@ class UpdateNoteDialog extends StatelessWidget {
                     child: const Icon(
                       Icons.edit,
                       color: Color(0xff3D5AFE),
-                      size: 20,
                     ),
                   ),
                   const Spacer(
@@ -157,15 +156,21 @@ class UpdateNoteDialog extends StatelessWidget {
                       )
                     ],
                   ),
+                  const Padding(padding: EdgeInsets.only(bottom: 15)),
                   Row(
                     mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      Text(
+                        "Fingerprint",
+                        style: TextStyle(fontSize: 24),
+                      ),
                       const Spacer(
                         flex: 1,
                       ),
-                      IconButton(
-                          onPressed: () async {
+                      Switch(
+                          value: isProtected == 0 ? false : true,
+                          activeColor: Color(0xff3D5AFE),
+                          onChanged: (v) async {
                             if (isProtected == 0) {
                               bool isBioAvailable =
                                   await authService.authenticate();
@@ -187,14 +192,9 @@ class UpdateNoteDialog extends StatelessWidget {
                                 isProtected = 0;
                               });
                             }
-                          },
-                          icon: Icon(
-                            Icons.fingerprint_sharp,
-                            color:
-                                isProtected == 0 ? Colors.black : Colors.green,
-                          )),
+                          })
                     ],
-                  )
+                  ),
                 ],
               ),
               actions: [

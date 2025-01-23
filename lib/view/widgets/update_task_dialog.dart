@@ -44,7 +44,6 @@ class UpdateTaskDialog extends StatelessWidget {
                   child: const Icon(
                     Icons.edit,
                     color: Color(0xff3D5AFE),
-                    size: 20,
                   ),
                 ),
                 const Spacer(

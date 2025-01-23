@@ -47,7 +47,6 @@ class AddNoteDialog extends StatelessWidget {
                     child: const Icon(
                       Icons.add_task,
                       color: Color(0xff3D5AFE),
-                      size: 20,
                     ),
                   ),
                   const Spacer(
@@ -157,14 +156,21 @@ class AddNoteDialog extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const Padding(padding: EdgeInsets.only(bottom: 15)),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Text(
+                        "Fingerprint",
+                        style: TextStyle(fontSize: 24),
+                      ),
                       const Spacer(
                         flex: 1,
                       ),
-                      IconButton(
-                          onPressed: () async {
+                      Switch(
+                          value: isProtected == 0 ? false : true,
+                          activeColor: Color(0xff3D5AFE),
+                          onChanged: (v) async {
                             if (isProtected == 0) {
                               bool isBioAvailable =
                                   await authService.authenticate();
@@ -186,14 +192,9 @@ class AddNoteDialog extends StatelessWidget {
                                 isProtected = 0;
                               });
                             }
-                          },
-                          icon: Icon(
-                            Icons.fingerprint_sharp,
-                            color:
-                                isProtected == 0 ? Colors.black : Colors.green,
-                          )),
+                          })
                     ],
-                  )
+                  ),
                 ],
               ),
               actions: [
@@ -238,7 +239,8 @@ class AddNoteDialog extends StatelessWidget {
                               msg: "Note Added",
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.BOTTOM,
-                              backgroundColor: user.colorProvider.cardBackground,
+                              backgroundColor:
+                                  user.colorProvider.cardBackground,
                               textColor: user.colorProvider.appTitle,
                               fontSize: 19.0);
                         });

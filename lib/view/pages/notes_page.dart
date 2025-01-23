@@ -9,6 +9,7 @@ import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/view/widgets/add_note_dialog.dart';
 import 'package:todo/services/authentication_service.dart';
+import 'package:todo/view/widgets/reorder_notes_dialog.dart';
 import '../widgets/appbar_avatar.dart';
 import '../widgets/update_note_dialog.dart';
 
@@ -53,6 +54,18 @@ class _NotesPageState extends State<NotesPage> {
             actions: [
               Row(
                 children: [
+                  IconButton(
+                      onPressed: () async {
+                        showDialog(
+                            context: context,
+                            builder: (context) {
+                              return ReorderNotesDialog();
+                            });
+                      },
+                      icon: const Icon(
+                        Icons.reorder,
+                        color: Colors.grey,
+                      )),
                   IconButton(
                       onPressed: () async {
                         Provider.of<NotesProvider>(context, listen: false)

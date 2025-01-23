@@ -30,6 +30,19 @@ class NotesProvider with ChangeNotifier {
     get();
   }
 
+  Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final oldNote = notes.removeAt(oldIndex);
+    notes.insert(newIndex, oldNote);
+    await DatabaseService().deleteAllNotes();
+    for (var note in notes) {
+      await DatabaseService().insertNote(note); // Reinsert items in new order
+    }
+    get();
+  }
+
   Future<void> backup() async {
     if (await LockManager().isLockEnabled()) {
       if (await AuthenticationService().authenticate()) {

@@ -1,5 +1,7 @@
 # Minimal To-Do App
 
+<a href="https://f-droid.org/en/packages/com.k.todo/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height=80/></a>
+
 A simple application for managing your daily tasks.
 This To-Do app works completely offline,
 allowing you to keep track of your tasks without needing an internet connection.

@@ -41,7 +41,6 @@ class AddTaskDialog extends StatelessWidget {
                     child: const Icon(
                       Icons.add_task,
                       color: Color(0xff3D5AFE),
-                      size: 20,
                     ),
                   ),
                   const Spacer(
