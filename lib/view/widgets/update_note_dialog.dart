@@ -239,9 +239,8 @@ class UpdateNoteDialog extends StatelessWidget {
                               msg: "Note Edited",
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.BOTTOM,
-                              backgroundColor:
-                                  user.colorProvider.cardBackground,
-                              textColor: user.colorProvider.appTitle,
+                              backgroundColor: const Color(0xff1E1E1E),
+                              textColor: Colors.white,
                               fontSize: 19.0);
                         });
                       },

@@ -62,27 +62,27 @@ class _NotesPageState extends State<NotesPage> {
                               return ReorderNotesDialog();
                             });
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.reorder,
-                        color: Colors.grey,
+                        color: user.colorProvider.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () async {
                         Provider.of<NotesProvider>(context, listen: false)
                             .backup();
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.backup,
-                        color: Colors.grey,
+                        color: user.colorProvider.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () async {
                         Provider.of<NotesProvider>(context, listen: false)
                             .restore();
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.settings_backup_restore,
-                        color: Colors.grey,
+                        color: user.colorProvider.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () {
@@ -106,9 +106,9 @@ class _NotesPageState extends State<NotesPage> {
                           ),
                         );
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.settings,
-                        color: Colors.grey,
+                        color: user.colorProvider.appBarIcons,
                       )),
                   const AppbarAvatar(),
                   const Padding(padding: EdgeInsets.only(right: 18))

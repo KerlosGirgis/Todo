@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'package:todo/provider/user_provider.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
 import '../services/database_service.dart';
@@ -246,8 +245,8 @@ class TasksProvider with ChangeNotifier {
             msg: "Notification Disabled",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
-            backgroundColor: UserProvider().colorProvider.cardBackground,
-            textColor: UserProvider().colorProvider.appTitle,
+            backgroundColor: const Color(0xff1E1E1E),
+            textColor: Colors.white,
             fontSize: 19.0,
           );
         });

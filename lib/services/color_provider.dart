@@ -23,6 +23,7 @@ class ColorProvider {
   Color? noteEditorBackButton;
   Color? noteEditorText;
   Color? noteEditorButtons;
+  Color? appBarIcons;
 
   ColorProvider(this.theme) {
     if (theme == 1) {
@@ -48,20 +49,19 @@ class ColorProvider {
       noteEditorBackButton= Colors.white;
       noteEditorText=Colors.white;
       noteEditorButtons=Colors.white;
-
-
+      appBarIcons=Colors.grey;
 
     } else {
-      floatingActionButtonBackground = Colors.blue.shade300;
+      floatingActionButtonBackground = Color(0xff3D5AFE);
       floatingActionButtonForeground = Colors.white;
       taskTitle = Colors.black;
       date = Colors.black;
       appTitle = Colors.black;
       subtitle = Colors.grey.shade800;
-      pageBackground = Colors.white;
+      pageBackground = Color(0xffEDEDED);
       userNameAlert = Colors.white;
       profileAlertBackground = Colors.grey;
-      cardBackground = const Color(0xffF8F9FF);
+      cardBackground = const Color(0xffF5F5F5);
       alertButtonsBackground = Colors.white;
       profilePageButtonsBackground = Colors.white;
       profilePageName = Colors.blue;
@@ -74,6 +74,7 @@ class ColorProvider {
       noteEditorBackButton= Colors.black;
       noteEditorText=Colors.black;
       noteEditorButtons=Colors.black;
+      appBarIcons=const Color(0xff616161);
     }
   }
 }

@@ -239,9 +239,8 @@ class AddNoteDialog extends StatelessWidget {
                               msg: "Note Added",
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.BOTTOM,
-                              backgroundColor:
-                                  user.colorProvider.cardBackground,
-                              textColor: user.colorProvider.appTitle,
+                              backgroundColor: const Color(0xff1E1E1E),
+                              textColor: Colors.white,
                               fontSize: 19.0);
                         });
                       },

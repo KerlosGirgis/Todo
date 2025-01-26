@@ -94,7 +94,7 @@ class _TodoPageState extends State<TodoPage> {
                       ),
                     )
                   : Theme(
-                      data: ThemeData(canvasColor: Colors.transparent),
+                      data: ThemeData(canvasColor: Colors.transparent,useMaterial3: true,colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300)),
                       child: ReorderableListView.builder(
                         itemCount: tasks.items.length,
                         itemBuilder: (context, index) {
@@ -118,10 +118,8 @@ class _TodoPageState extends State<TodoPage> {
                                             msg: "Task Deleted",
                                             toastLength: Toast.LENGTH_SHORT,
                                             gravity: ToastGravity.BOTTOM,
-                                            backgroundColor: user
-                                                .colorProvider.cardBackground,
-                                            textColor:
-                                                user.colorProvider.appTitle,
+                                            backgroundColor: const Color(0xff1E1E1E),
+                                            textColor: Colors.white,
                                             fontSize: 19.0);
                                       });
                                     },
@@ -333,12 +331,8 @@ class _TodoPageState extends State<TodoPage> {
                                                             gravity:
                                                                 ToastGravity
                                                                     .BOTTOM,
-                                                            backgroundColor: user
-                                                                .colorProvider
-                                                                .cardBackground,
-                                                            textColor: user
-                                                                .colorProvider
-                                                                .appTitle,
+                                                            backgroundColor: const Color(0xff1E1E1E),
+                                                            textColor: Colors.white,
                                                             fontSize: 19.0,
                                                           );
                                                         });
@@ -526,18 +520,18 @@ class _TodoPageState extends State<TodoPage> {
                         Provider.of<TasksProvider>(context, listen: false)
                             .backup();
                       },
-                      icon: const Icon(
+                      icon:  Icon(
                         Icons.backup,
-                        color: Colors.grey,
+                        color: user.colorProvider.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () async {
                         Provider.of<TasksProvider>(context, listen: false)
                             .restore();
                       },
-                      icon: const Icon(
+                      icon:  Icon(
                         Icons.settings_backup_restore,
-                        color: Colors.grey,
+                        color: user.colorProvider.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () {
@@ -561,9 +555,9 @@ class _TodoPageState extends State<TodoPage> {
                           ),
                         );
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.settings,
-                        color: Colors.grey,
+                        color: user.colorProvider.appBarIcons,
                       )),
                   const AppbarAvatar(),
                   const Padding(padding: EdgeInsets.only(right: 18))

@@ -33,9 +33,9 @@ class ProfilePageState extends State<ProfilePage> {
       builder: (context, user, child) {
         return Scaffold(
             appBar: AppBar(
-              surfaceTintColor: Colors.transparent,
+              surfaceTintColor: user.colorProvider.pageBackground,
               toolbarHeight: 40,
-              backgroundColor: Colors.transparent,
+              backgroundColor: user.colorProvider.pageBackground,
               leading: IconButton(
                   onPressed: () {
                     Navigator.pop(context);
