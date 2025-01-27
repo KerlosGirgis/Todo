@@ -10,6 +10,7 @@ import 'package:todo/provider/user_provider.dart';
 import 'package:todo/view/pages/profile_page.dart';
 import 'package:todo/view/widgets/add_task_dialog.dart';
 import '../widgets/appbar_avatar.dart';
+import '../widgets/expandable_menu.dart';
 import '../widgets/update_task_dialog.dart';
 
 class TodoPage extends StatefulWidget {
@@ -94,7 +95,11 @@ class _TodoPageState extends State<TodoPage> {
                       ),
                     )
                   : Theme(
-                      data: ThemeData(canvasColor: Colors.transparent,useMaterial3: true,colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300)),
+                      data: ThemeData(
+                          canvasColor: Colors.transparent,
+                          useMaterial3: true,
+                          colorScheme: ColorScheme.fromSeed(
+                              seedColor: Colors.blue.shade300)),
                       child: ReorderableListView.builder(
                         itemCount: tasks.items.length,
                         itemBuilder: (context, index) {
@@ -118,7 +123,8 @@ class _TodoPageState extends State<TodoPage> {
                                             msg: "Task Deleted",
                                             toastLength: Toast.LENGTH_SHORT,
                                             gravity: ToastGravity.BOTTOM,
-                                            backgroundColor: const Color(0xff1E1E1E),
+                                            backgroundColor:
+                                                const Color(0xff1E1E1E),
                                             textColor: Colors.white,
                                             fontSize: 19.0);
                                       });
@@ -331,8 +337,11 @@ class _TodoPageState extends State<TodoPage> {
                                                             gravity:
                                                                 ToastGravity
                                                                     .BOTTOM,
-                                                            backgroundColor: const Color(0xff1E1E1E),
-                                                            textColor: Colors.white,
+                                                            backgroundColor:
+                                                                const Color(
+                                                                    0xff1E1E1E),
+                                                            textColor:
+                                                                Colors.white,
                                                             fontSize: 19.0,
                                                           );
                                                         });
@@ -422,12 +431,14 @@ class _TodoPageState extends State<TodoPage> {
                                                         Icon(
                                                           Icons.date_range,
                                                           color: tasks
-                                                              .items[
-                                                          index]
-                                                              .status ==
-                                                              0?user
-                                                              .colorProvider
-                                                              .appTitle:Colors.grey,
+                                                                      .items[
+                                                                          index]
+                                                                      .status ==
+                                                                  0
+                                                              ? user
+                                                                  .colorProvider
+                                                                  .appTitle
+                                                              : Colors.grey,
                                                         ),
                                                         Text(
                                                           " ${tasks.items[index].date} ",
@@ -448,18 +459,23 @@ class _TodoPageState extends State<TodoPage> {
                                                           ),
                                                         ),
                                                         tasks.items[index].time
-                                                            .isNotEmpty?
-                                                        Icon(
-                                                          Icons
-                                                              .access_time_filled_sharp,
-                                                          color: tasks
-                                                              .items[
-                                                          index]
-                                                              .status ==
-                                                              0?user
-                                                              .colorProvider
-                                                              .appTitle:Colors.grey,
-                                                        ):const SizedBox.shrink(),
+                                                                .isNotEmpty
+                                                            ? Icon(
+                                                                Icons
+                                                                    .access_time_filled_sharp,
+                                                                color: tasks
+                                                                            .items[
+                                                                                index]
+                                                                            .status ==
+                                                                        0
+                                                                    ? user
+                                                                        .colorProvider
+                                                                        .appTitle
+                                                                    : Colors
+                                                                        .grey,
+                                                              )
+                                                            : const SizedBox
+                                                                .shrink(),
                                                         Text(
                                                           " ${tasks.items[index].time}",
                                                           style: TextStyle(
@@ -515,50 +531,60 @@ class _TodoPageState extends State<TodoPage> {
             actions: [
               Row(
                 children: [
-                  IconButton(
-                      onPressed: () async {
-                        Provider.of<TasksProvider>(context, listen: false)
-                            .backup();
-                      },
-                      icon:  Icon(
-                        Icons.backup,
-                        color: user.colorProvider.appBarIcons,
-                      )),
-                  IconButton(
-                      onPressed: () async {
-                        Provider.of<TasksProvider>(context, listen: false)
-                            .restore();
-                      },
-                      icon:  Icon(
-                        Icons.settings_backup_restore,
-                        color: user.colorProvider.appBarIcons,
-                      )),
-                  IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                    const ProfilePage(),
-                            transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) {
-                              const begin = Offset(0.0, 1.0);
-                              const end = Offset.zero;
-                              const curve = Curves.ease;
-                              var tween = Tween(begin: begin, end: end)
-                                  .chain(CurveTween(curve: curve));
-                              var offsetAnimation = animation.drive(tween);
-                              return SlideTransition(
-                                  position: offsetAnimation, child: child);
-                            },
-                          ),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.settings,
-                        color: user.colorProvider.appBarIcons,
-                      )),
+                  ExpandableMenu(
+                    animationSpeed: 500,
+                    width: MediaQuery.orientationOf(context) ==
+                            Orientation.portrait
+                        ? MediaQuery.sizeOf(context).width / 14
+                        : MediaQuery.sizeOf(context).width / 30,
+                    height: 45,
+                    items: [
+                      IconButton(
+                          onPressed: () async {
+                            Provider.of<TasksProvider>(context, listen: false)
+                                .restore();
+                          },
+                          icon: Icon(
+                            Icons.settings_backup_restore,
+                            color: user.colorProvider.appBarIcons,
+                          )),
+                      IconButton(
+                          onPressed: () async {
+                            Provider.of<TasksProvider>(context, listen: false)
+                                .backup();
+                          },
+                          icon: Icon(
+                            Icons.backup,
+                            color: user.colorProvider.appBarIcons,
+                          )),
+                      IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const ProfilePage(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = Offset(0.0, 1.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.ease;
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  var offsetAnimation = animation.drive(tween);
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
+                                },
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            Icons.settings,
+                            color: user.colorProvider.appBarIcons,
+                          )),
+                    ],
+                  ),
                   const AppbarAvatar(),
                   const Padding(padding: EdgeInsets.only(right: 18))
                 ],

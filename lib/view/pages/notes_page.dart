@@ -4,11 +4,12 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view/pages/note_editor_page.dart';
-import 'package:todo/view/pages/profile_page.dart';
 import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view/pages/profile_page.dart';
 import 'package:todo/view/widgets/add_note_dialog.dart';
 import 'package:todo/services/authentication_service.dart';
+import 'package:todo/view/widgets/expandable_menu.dart';
 import 'package:todo/view/widgets/reorder_notes_dialog.dart';
 import '../widgets/appbar_avatar.dart';
 import '../widgets/update_note_dialog.dart';
@@ -54,66 +55,77 @@ class _NotesPageState extends State<NotesPage> {
             actions: [
               Row(
                 children: [
-                  IconButton(
-                      onPressed: () async {
-                        showDialog(
-                            context: context,
-                            builder: (context) {
-                              return ReorderNotesDialog();
-                            });
-                      },
-                      icon: Icon(
-                        Icons.reorder,
-                        color: user.colorProvider.appBarIcons,
-                      )),
-                  IconButton(
-                      onPressed: () async {
-                        Provider.of<NotesProvider>(context, listen: false)
-                            .backup();
-                      },
-                      icon: Icon(
-                        Icons.backup,
-                        color: user.colorProvider.appBarIcons,
-                      )),
-                  IconButton(
-                      onPressed: () async {
-                        Provider.of<NotesProvider>(context, listen: false)
-                            .restore();
-                      },
-                      icon: Icon(
-                        Icons.settings_backup_restore,
-                        color: user.colorProvider.appBarIcons,
-                      )),
-                  IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                    const ProfilePage(),
-                            transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) {
-                              const begin = Offset(0.0, 1.0);
-                              const end = Offset.zero;
-                              const curve = Curves.ease;
-                              var tween = Tween(begin: begin, end: end)
-                                  .chain(CurveTween(curve: curve));
-                              var offsetAnimation = animation.drive(tween);
-                              return SlideTransition(
-                                  position: offsetAnimation, child: child);
+                  ExpandableMenu(
+                      animationSpeed: 500,
+                      width: MediaQuery.orientationOf(context) ==
+                              Orientation.portrait
+                          ? MediaQuery.sizeOf(context).width / 14
+                          : MediaQuery.sizeOf(context).width / 22,
+                      height: 45,
+                      items: [
+                        IconButton(
+                            onPressed: () async {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return ReorderNotesDialog();
+                                  });
                             },
-                          ),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.settings,
-                        color: user.colorProvider.appBarIcons,
-                      )),
+                            icon: Icon(
+                              Icons.reorder,
+                              color: user.colorProvider.appBarIcons,
+                            )),
+                        IconButton(
+                            onPressed: () async {
+                              Provider.of<NotesProvider>(context, listen: false)
+                                  .restore();
+                            },
+                            icon: Icon(
+                              Icons.settings_backup_restore,
+                              color: user.colorProvider.appBarIcons,
+                            )),
+                        IconButton(
+                            onPressed: () async {
+                              Provider.of<NotesProvider>(context, listen: false)
+                                  .backup();
+                            },
+                            icon: Icon(
+                              Icons.backup,
+                              color: user.colorProvider.appBarIcons,
+                            )),
+                        IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      const ProfilePage(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = Offset(0.0, 1.0);
+                                    const end = Offset.zero;
+                                    const curve = Curves.ease;
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+                                    var offsetAnimation =
+                                        animation.drive(tween);
+                                    return SlideTransition(
+                                        position: offsetAnimation,
+                                        child: child);
+                                  },
+                                ),
+                              );
+                            },
+                            icon: Icon(
+                              Icons.settings,
+                              color: user.colorProvider.appBarIcons,
+                            )),
+                      ]),
                   const AppbarAvatar(),
-                  const Padding(padding: EdgeInsets.only(right: 18))
+                  const Padding(padding: EdgeInsets.only(right: 18)),
                 ],
-              )
+              ),
             ],
           ),
           floatingActionButton: Column(
@@ -207,7 +219,8 @@ class _NotesPageState extends State<NotesPage> {
                                                   Center(
                                                     child: Text(
                                                       maxLines: 5,
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                       notes.notes[index].title,
@@ -225,22 +238,30 @@ class _NotesPageState extends State<NotesPage> {
                                                               .protected ==
                                                           1
                                                       ? Column(
-                                                    mainAxisAlignment: MainAxisAlignment.end,
-                                                        children: [
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.end,
-                                                            children: [
-                                                              Padding(
-                                                                padding: const EdgeInsets.all(7),
-                                                                child: Image.asset(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .end,
+                                                          children: [
+                                                            Row(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .end,
+                                                              children: [
+                                                                Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(
+                                                                          7),
+                                                                  child: Image
+                                                                      .asset(
                                                                     "assets/lock.png",
                                                                     scale: 4,
                                                                   ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      )
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        )
                                                       : const SizedBox.shrink(),
                                                 ],
                                               )),
