@@ -529,66 +529,63 @@ class _TodoPageState extends State<TodoPage> {
               ),
             ),
             actions: [
-              Row(
-                children: [
-                  ExpandableMenu(
-                    animationSpeed: 500,
-                    width: MediaQuery.orientationOf(context) ==
-                            Orientation.portrait
-                        ? MediaQuery.sizeOf(context).width / 14
-                        : MediaQuery.sizeOf(context).width / 30,
-                    height: 45,
-                    items: [
-                      IconButton(
-                          onPressed: () async {
-                            Provider.of<TasksProvider>(context, listen: false)
-                                .restore();
-                          },
-                          icon: Icon(
-                            Icons.settings_backup_restore,
-                            color: user.colorProvider.appBarIcons,
-                          )),
-                      IconButton(
-                          onPressed: () async {
-                            Provider.of<TasksProvider>(context, listen: false)
-                                .backup();
-                          },
-                          icon: Icon(
-                            Icons.backup,
-                            color: user.colorProvider.appBarIcons,
-                          )),
-                      IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        const ProfilePage(),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = Offset(0.0, 1.0);
-                                  const end = Offset.zero;
-                                  const curve = Curves.ease;
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-                                  var offsetAnimation = animation.drive(tween);
-                                  return SlideTransition(
-                                      position: offsetAnimation, child: child);
-                                },
-                              ),
-                            );
-                          },
-                          icon: Icon(
-                            Icons.settings,
-                            color: user.colorProvider.appBarIcons,
-                          )),
-                    ],
-                  ),
-                  const AppbarAvatar(),
-                  const Padding(padding: EdgeInsets.only(right: 18))
+              ExpandableMenu(
+                iconColor: user.colorProvider.appBarIcons,
+                animationSpeed: 500,
+                width: MediaQuery.orientationOf(context) ==
+                        Orientation.portrait
+                    ? MediaQuery.sizeOf(context).width / 14
+                    : MediaQuery.sizeOf(context).width / 30,
+                height: 45,
+                items: [
+                  IconButton(
+                      onPressed: () async {
+                        Provider.of<TasksProvider>(context, listen: false)
+                            .restore();
+                      },
+                      icon: Icon(
+                        Icons.settings_backup_restore,
+                        color: user.colorProvider.appBarIcons,
+                      )),
+                  IconButton(
+                      onPressed: () async {
+                        Provider.of<TasksProvider>(context, listen: false)
+                            .backup();
+                      },
+                      icon: Icon(
+                        Icons.backup,
+                        color: user.colorProvider.appBarIcons,
+                      )),
+                  IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const ProfilePage(),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              const begin = Offset(0.0, 1.0);
+                              const end = Offset.zero;
+                              const curve = Curves.ease;
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
+                              var offsetAnimation = animation.drive(tween);
+                              return SlideTransition(
+                                  position: offsetAnimation, child: child);
+                            },
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        Icons.settings,
+                        color: user.colorProvider.appBarIcons,
+                      )),
                 ],
-              )
+              ),
+              const AppbarAvatar(),
+              const Padding(padding: EdgeInsets.only(right: 18))
             ],
           ),
         );

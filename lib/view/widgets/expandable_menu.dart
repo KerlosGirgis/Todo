@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
 
 import 'expandable_icon.dart';
-/// A controller for programmatic control of ExpandableMenu.
 
-
-/// The main ExpandableMenu widget that supports animation and an expandable menu list.
 class ExpandableMenu extends StatefulWidget {
   final double width, height;
   final int animationSpeed;
   final List<Widget> items;
-  final Color iconColor;
+  final Color? iconColor;
 
   const ExpandableMenu({
     super.key,
-    this.width = 70.0,
-    this.height = 70.0,
+    required this.width,
+    required this.height,
     this.animationSpeed = 800,
     required this.items,
     this.iconColor = Colors.white,
   });
 
   @override
-  State<ExpandableMenu> createState() => ExpandableMenuState();
+  State<ExpandableMenu> createState() => _ExpandableMenuState();
 }
 
-class ExpandableMenuState extends State<ExpandableMenu> {
+class _ExpandableMenuState extends State<ExpandableMenu> {
   bool _isExpanded = false;
 
   @override

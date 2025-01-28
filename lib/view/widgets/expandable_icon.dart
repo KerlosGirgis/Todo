@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ExpandableIcon extends StatefulWidget {
   final VoidCallback onClicked;
   final double width, height;
-  final Color iconColor;
+  final Color? iconColor;
   final int animationSpeed;
 
   const ExpandableIcon({
@@ -65,15 +65,5 @@ class _ExpandableIconState extends State<ExpandableIcon>
         color: widget.iconColor,
       ),
     );
-
-    /*GestureDetector(
-      onTap: _toggleAnimation,
-      child: AnimatedIcon(
-        icon: AnimatedIcons.menu_arrow,
-        progress: _animation,
-        size: widget.height * 0.7,
-        color: widget.iconColor,
-      ),
-    );*/
   }
 }
