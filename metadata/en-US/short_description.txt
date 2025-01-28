@@ -1,1 +1,1 @@
-Offline, secure, To-Do app with encrypted storage, fingerprint lock
+Offline, secure, To-Do and Notes app with encrypted storage, fingerprint lock
