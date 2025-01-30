@@ -24,6 +24,7 @@ class ColorProvider {
   Color? noteEditorText;
   Color? noteEditorButtons;
   Color? appBarIcons;
+  Color? moreLess;
 
   ColorProvider(this.theme) {
     if (theme == 1) {
@@ -50,6 +51,7 @@ class ColorProvider {
       noteEditorText=Colors.white;
       noteEditorButtons=Colors.white;
       appBarIcons=Colors.grey;
+      moreLess = const Color(0xff90CAF9);
 
     } else {
       floatingActionButtonBackground = Color(0xff3D5AFE);
@@ -75,6 +77,7 @@ class ColorProvider {
       noteEditorText=Colors.black;
       noteEditorButtons=Colors.black;
       appBarIcons=const Color(0xff616161);
+      moreLess = const Color(0xff3D5AFE);
     }
   }
 }

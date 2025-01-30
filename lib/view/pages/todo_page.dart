@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:readmore/readmore.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/view/pages/notes_page.dart';
 import 'package:todo/provider/tasks_provider.dart';
@@ -402,7 +403,13 @@ class _TodoPageState extends State<TodoPage> {
                                                     padding:
                                                         const EdgeInsets.only(
                                                             top: 2.0),
-                                                    child: Text(
+                                                    child: ReadMoreText(
+                                                      moreStyle: TextStyle(color: user.colorProvider.moreLess),
+                                                      trimExpandedText: " Show Less",
+                                                      trimCollapsedText: "Show More",
+                                                      lessStyle: TextStyle(color: user.colorProvider.moreLess),
+                                                      trimLines: 2,
+                                                      trimMode: TrimMode.Line,
                                                       tasks.items[index].desc,
                                                       style: TextStyle(
                                                         fontSize: 20,

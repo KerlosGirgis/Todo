@@ -215,7 +215,7 @@ class _NotesPageState extends State<NotesPage> {
                                                 children: [
                                                   Center(
                                                     child: Text(
-                                                      maxLines: 5,
+                                                      maxLines: 4,
                                                       textAlign:
                                                           TextAlign.center,
                                                       overflow:

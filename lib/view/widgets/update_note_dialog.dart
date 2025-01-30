@@ -79,7 +79,6 @@ class UpdateNoteDialog extends StatelessWidget {
                   TextField(
                     controller: titleController,
                     maxLines: 1,
-                    maxLength: 50,
                     decoration: InputDecoration(
                         labelText: "Title",
                         labelStyle: TextStyle(

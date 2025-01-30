@@ -43,14 +43,14 @@ class ReorderNotesDialog extends StatelessWidget {
                   const Spacer(
                     flex: 10,
                   ),
-                  const Text(
+                  Text(
                     "Reorder",
                     maxLines: 1,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 32,
-                        color: Colors.white),
+                        color: user.colorProvider.homePageText),
                     overflow: TextOverflow.clip,
                   ),
                   const Spacer(
@@ -90,7 +90,7 @@ class ReorderNotesDialog extends StatelessWidget {
                                         Orientation.portrait
                                 ? (MediaQuery.sizeOf(context).height / 11) *
                                     notes.notes.length
-                                : MediaQuery.sizeOf(context).height / 2.5,
+                                : MediaQuery.sizeOf(context).height / 2.8,
                             width: MediaQuery.sizeOf(context).width,
                             child: ReorderableListView.builder(
                               itemCount: notes.notes.length,

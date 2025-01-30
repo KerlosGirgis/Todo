@@ -77,7 +77,6 @@ class UpdateTaskDialog extends StatelessWidget {
                 TextField(
                   controller: titleController,
                   maxLines: 1,
-                  maxLength: 40,
                   decoration: InputDecoration(
                       labelText: "Title",
                       labelStyle: TextStyle(
@@ -86,11 +85,11 @@ class UpdateTaskDialog extends StatelessWidget {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15))),
                 ),
+                Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/60)),
                 TextField(
                   controller: descController,
                   keyboardType: TextInputType.multiline,
                   maxLines: 4,
-                  maxLength: 250,
                   decoration: InputDecoration(
                       labelText: "Description",
                       labelStyle: TextStyle(
@@ -99,6 +98,7 @@ class UpdateTaskDialog extends StatelessWidget {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15))),
                 ),
+                Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/90)),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
