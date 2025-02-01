@@ -3,6 +3,8 @@ package com.k.todo
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.SharedPreferences
+import android.graphics.Typeface
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 
@@ -29,12 +31,24 @@ class Note : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        val prefs: SharedPreferences =
+            context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE)
+        val useCasualFont: Boolean = prefs.getBoolean("useCasualFont", false)
         // There may be multiple widgets active, so update all of them
         val widgetData = HomeWidgetPlugin.getData(context)
         val note = widgetData.getString("note","Note")
         for (appWidgetId in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.note)
-            views.setTextViewText(R.id.noteText,note)
+
+            if (useCasualFont) {
+                views.setTextViewText(R.id.noteTextC,note)
+                views.setViewVisibility(R.id.noteTextA, android.view.View.GONE)
+                views.setViewVisibility(R.id.noteTextC, android.view.View.VISIBLE)
+            } else {
+                views.setTextViewText(R.id.noteTextA,note)
+                views.setViewVisibility(R.id.noteTextA, android.view.View.VISIBLE)
+                views.setViewVisibility(R.id.noteTextC, android.view.View.GONE)
+            }
             appWidgetManager.updateAppWidget(appWidgetId,views)
         }
     }

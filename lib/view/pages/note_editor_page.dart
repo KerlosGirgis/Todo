@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/user_provider.dart';
@@ -16,12 +15,6 @@ class NoteEditorPage extends StatefulWidget {
 }
 
 class _NoteEditorPageState extends State<NoteEditorPage> {
-  void updateAndroidWidget(String note) {
-    HomeWidget.saveWidgetData("note", note);
-    HomeWidget.updateWidget(
-      androidName: "Note",
-    );
-  }
 
   final AuthenticationService authService = AuthenticationService();
   TextEditingController bodyController = TextEditingController();
@@ -112,7 +105,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       onPressed: () {
                         if (widget.note.body.isNotEmpty) {
                           try {
-                            updateAndroidWidget(widget.note.body);
+                            notes.updateAndroidWidget(widget.note.body);
                           } catch (e) {
                             Fluttertoast.showToast(
                                 msg: "Sorry, Something went wrong",

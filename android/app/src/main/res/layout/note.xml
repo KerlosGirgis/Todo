@@ -8,7 +8,22 @@
 
 
     <TextView
-        android:id="@+id/noteText"
+        android:id="@+id/noteTextA"
+        style="@style/Theme.Android.AppWidgetContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="0dp"
+        android:contentDescription="@string/appwidget_text"
+        android:text="@string/appwidget_text"
+        android:textSize="22sp"
+        android:fontFamily="arial"
+        android:textStyle="bold" />
+    <TextView
+        android:id="@+id/noteTextC"
         style="@style/Theme.Android.AppWidgetContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -21,7 +36,8 @@
         android:text="@string/appwidget_text"
         android:textSize="22sp"
         android:fontFamily="casual"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:visibility="gone"/>
 
 
 </RelativeLayout>

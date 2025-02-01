@@ -1,4 +1,5 @@
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:home_widget/home_widget.dart';
 
 import '../models/note.dart';
 import '../services/authentication_service.dart';
@@ -13,6 +14,13 @@ class NotesProvider with ChangeNotifier {
   Future<void> get() async {
     notes = await DatabaseService().getNotes();
     notifyListeners();
+  }
+
+  void updateAndroidWidget(String note) {
+    HomeWidget.saveWidgetData("note", note);
+    HomeWidget.updateWidget(
+      androidName: "Note",
+    );
   }
 
   Future<void> addNote(Note note) async {

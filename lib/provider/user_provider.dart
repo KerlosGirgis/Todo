@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/lock_manager.dart';
@@ -73,16 +75,25 @@ class UserProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+  Future<void> setFontPreference(bool useCasual) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('useCasualFont', useCasual);
 
+    // Update the home widget after changing the font preference
+    await HomeWidget.saveWidgetData('useCasualFont', useCasual);
+    await HomeWidget.updateWidget(name: 'Note');
+  }
   changeFont() async {
     if(user.casual==1){
       user.casual=0;
       await DatabaseService().updateUser(user);
+      setFontPreference(false);
       notifyListeners();
     }
     else{
       user.casual=1;
       await DatabaseService().updateUser(user);
+      setFontPreference(true);
       notifyListeners();
     }
   }
