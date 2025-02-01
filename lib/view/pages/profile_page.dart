@@ -66,6 +66,7 @@ class ProfilePageState extends State<ProfilePage> {
             body: MediaQuery.of(context).orientation == Orientation.portrait
                 ? SingleChildScrollView(
                     scrollDirection: Axis.vertical,
+                    physics: NeverScrollableScrollPhysics(),
                     child: Column(
                       children: [
                         Row(
@@ -353,17 +354,25 @@ class ProfilePageState extends State<ProfilePage> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               SizedBox(
-                                                width: MediaQuery.sizeOf(context).width/1.1,
-                                                  height: MediaQuery.sizeOf(context).height/10,
+                                                  width:
+                                                      MediaQuery.sizeOf(context)
+                                                              .width /
+                                                          1.1,
+                                                  height:
+                                                      MediaQuery.sizeOf(context)
+                                                              .height /
+                                                          10,
                                                   child: const AutoSizeText(
-                                                "Are you sure you want to reset?",
-                                                style:
-                                                    TextStyle(fontSize: 26,fontWeight: FontWeight.w600),
-                                                maxLines: 3,
-                                                minFontSize: 16,
-                                                overflow:
-                                                    TextOverflow.ellipsis,
-                                              )),
+                                                    "Are you sure you want to reset?",
+                                                    style: TextStyle(
+                                                        fontSize: 26,
+                                                        fontWeight:
+                                                            FontWeight.w600),
+                                                    maxLines: 3,
+                                                    minFontSize: 16,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  )),
                                               Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
@@ -427,108 +436,182 @@ class ProfilePageState extends State<ProfilePage> {
                             padding: EdgeInsets.only(
                                 bottom:
                                     MediaQuery.of(context).size.height / 20)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Spacer(
-                              flex: 2,
-                            ),
-                            SettingsButton(
-                                onPressed: () {
-                                  Provider.of<UserProvider>(context,
-                                          listen: false)
-                                      .changeTheme();
-                                },
-                                label: "Dark Mode",
-                                status: user.user.theme == 1 ? true : false,
-                                fontSize: 22,
-                                size: 1.5),
-                            const Spacer(
-                              flex: 1,
-                            ),
-                            SettingsButton(
-                                onPressed: () {
-                                  Provider.of<UserProvider>(context,
-                                          listen: false)
-                                      .changeCount();
-                                },
-                                label: "Word Count",
-                                status: user.user.count == 1 ? true : false,
-                                fontSize: 22,
-                                size: 1.5),
-                            const Spacer(
-                              flex: 1,
-                            ),
-                            SettingsButton(
-                                onPressed: () {
-                                  Provider.of<UserProvider>(context,
-                                          listen: false)
-                                      .changeAutoSave();
-                                },
-                                label: "Auto Save",
-                                status: user.user.autoSave == 1 ? true : false,
-                                fontSize: 22,
-                                size: 1.5),
-                            const Spacer(
-                              flex: 2,
-                            ),
-                          ],
+                        SizedBox(
+                          height: MediaQuery.sizeOf(context).height/3.4,
+                          width: MediaQuery.sizeOf(context).width,
+                          child: PageView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Spacer(
+                                        flex: 2,
+                                      ),
+                                      SettingsButton(
+                                          onPressed: () {
+                                            Provider.of<UserProvider>(context,
+                                                    listen: false)
+                                                .changeTheme();
+                                          },
+                                          label: "Dark Mode",
+                                          status: user.user.theme == 1
+                                              ? true
+                                              : false,
+                                          fontSize: 22,
+                                          size: 1.5),
+                                      const Spacer(
+                                        flex: 1,
+                                      ),
+                                      SettingsButton(
+                                          onPressed: () {
+                                            Provider.of<UserProvider>(context,
+                                                    listen: false)
+                                                .changeCount();
+                                          },
+                                          label: "Word Count",
+                                          status: user.user.count == 1
+                                              ? true
+                                              : false,
+                                          fontSize: 22,
+                                          size: 1.5),
+                                      const Spacer(
+                                        flex: 1,
+                                      ),
+                                      SettingsButton(
+                                          onPressed: () {
+                                            Provider.of<UserProvider>(context,
+                                                    listen: false)
+                                                .changeAutoSave();
+                                          },
+                                          label: "Auto Save",
+                                          status: user.user.autoSave == 1
+                                              ? true
+                                              : false,
+                                          fontSize: 22,
+                                          size: 1.5),
+                                      const Spacer(
+                                        flex: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  Padding(
+                                      padding: EdgeInsets.only(
+                                          bottom: MediaQuery.of(context)
+                                                  .size
+                                                  .height /
+                                              40)),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Spacer(
+                                        flex: 2,
+                                      ),
+                                      SettingsButton(
+                                          onPressed: () {
+                                            Provider.of<UserProvider>(context,
+                                                    listen: false)
+                                                .changeFont();
+                                          },
+                                          label: "Casual Font",
+                                          status: user.user.casual == 1
+                                              ? true
+                                              : false,
+                                          fontSize: 22,
+                                          size: 1.5),
+                                      const Spacer(
+                                        flex: 1,
+                                      ),
+                                      SettingsButton(
+                                          onPressed: () {
+                                            Provider.of<UserProvider>(context,
+                                                    listen: false)
+                                                .changeVerse();
+                                          },
+                                          label: "Daily Verse",
+                                          status: user.user.verse == 1
+                                              ? true
+                                              : false,
+                                          fontSize: 22,
+                                          size: 1.5),
+                                      const Spacer(
+                                        flex: 1,
+                                      ),
+                                      SettingsButton(
+                                          onPressed: () {
+                                            Provider.of<UserProvider>(context,
+                                                    listen: false)
+                                                .changeLock();
+                                          },
+                                          label: "App Lock",
+                                          status: user.isEnabled ? true : false,
+                                          fontSize: 22,
+                                          size: 1.5),
+                                      const Spacer(
+                                        flex: 2,
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                spacing: 25,
+                                children: [
+                                  Text(
+                                    "Notes Font Size",
+                                    style: TextStyle(
+                                        fontSize: 28,
+                                        color: user.colorProvider.homePageText),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Expanded(
+                                        flex: 10,
+                                        child: Slider(
+                                          activeColor: const Color(0xff3D5AFE),
+                                            value: user.tempNotesTextSize,
+                                            min: .25,
+                                            max: 2,
+                                            onChanged: (v) {
+                                              user.setTempNotesSize(v);
+                                            }),
+                                      ),
+                                      Expanded(
+                                          flex: 1,
+                                          child: Text(
+                                            maxLines: 1,
+                                            user.tempNotesTextSize
+                                                .toStringAsPrecision(2),
+                                            style: TextStyle(
+                                                fontSize: 22,
+                                                color: user.colorProvider
+                                                    .homePageText),
+                                          ))
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Button(onPressed: (){
+                                        user.setNotesTextSize();
+                                      }, label: "Apply", status: double.parse(user.tempNotesTextSize.toStringAsPrecision(2))!=user.user.notesTextSize, fontSize: 24, size: 1)
+                                    ],
+                                  )
+                                ],
+                              )
+                            ],
+                          ),
                         ),
-                        Padding(
-                            padding: EdgeInsets.only(
-                                bottom:
-                                    MediaQuery.of(context).size.height / 40)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Spacer(
-                              flex: 2,
-                            ),
-                            SettingsButton(
-                                onPressed: () {
-                                  Provider.of<UserProvider>(context,
-                                          listen: false)
-                                      .changeFont();
-                                },
-                                label: "Casual Font",
-                                status: user.user.casual == 1 ? true : false,
-                                fontSize: 22,
-                                size: 1.5),
-                            const Spacer(
-                              flex: 1,
-                            ),
-                            SettingsButton(
-                                onPressed: () {
-                                  Provider.of<UserProvider>(context,
-                                          listen: false)
-                                      .changeVerse();
-                                },
-                                label: "Daily Verse",
-                                status: user.user.verse == 1 ? true : false,
-                                fontSize: 22,
-                                size: 1.5),
-                            const Spacer(
-                              flex: 1,
-                            ),
-                            SettingsButton(
-                                onPressed: () {
-                                  Provider.of<UserProvider>(context,
-                                          listen: false)
-                                      .changeLock();
-                                },
-                                label: "App Lock",
-                                status: user.isEnabled ? true : false,
-                                fontSize: 22,
-                                size: 1.5),
-                            const Spacer(
-                              flex: 2,
-                            ),
-                          ],
-                        )
                       ],
                     ),
                   )
                 : SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+                    physics: NeverScrollableScrollPhysics(),
                     child: Column(
                       children: [
                         Padding(
@@ -757,58 +840,61 @@ class ProfilePageState extends State<ProfilePage> {
                                   child: GestureDetector(
                                     child: PieChart(
                                       user.user.unFinished == 0 &&
-                                          user.user.finished == 0
+                                              user.user.finished == 0
                                           ? PieChartData(
-                                        startDegreeOffset: 15,
-                                        sectionsSpace: 0,
-                                        centerSpaceRadius: 40,
-                                        sections: [
-                                          PieChartSectionData(
-                                              color: Colors.grey,
-                                              value: 1,
-                                              title: " ",
-                                              radius: 60,
-                                              titleStyle: const TextStyle(
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                  overflow:
-                                                  TextOverflow.ellipsis)),
-                                        ],
-                                      )
+                                              startDegreeOffset: 15,
+                                              sectionsSpace: 0,
+                                              centerSpaceRadius: 40,
+                                              sections: [
+                                                PieChartSectionData(
+                                                    color: Colors.grey,
+                                                    value: 1,
+                                                    title: " ",
+                                                    radius: 60,
+                                                    titleStyle: const TextStyle(
+                                                        fontSize: 22,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.white,
+                                                        overflow: TextOverflow
+                                                            .ellipsis)),
+                                              ],
+                                            )
                                           : PieChartData(
-                                        startDegreeOffset: 15,
-                                        sectionsSpace: 0,
-                                        centerSpaceRadius: 40,
-                                        sections: [
-                                          PieChartSectionData(
-                                              color: Colors.blue,
-                                              value: user.user.finished
-                                                  .toDouble(),
-                                              title:
-                                              "${((user.user.finished / (user.user.finished + user.user.unFinished)) * 100).ceil()}%",
-                                              radius: 60,
-                                              titleStyle: const TextStyle(
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                  overflow:
-                                                  TextOverflow.ellipsis)),
-                                          PieChartSectionData(
-                                              color: Colors.grey,
-                                              value: user.user.unFinished
-                                                  .toDouble(),
-                                              title:
-                                              "${((user.user.unFinished / (user.user.finished + user.user.unFinished)) * 100).floor()}%",
-                                              radius: 50,
-                                              titleStyle: const TextStyle(
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                  overflow:
-                                                  TextOverflow.ellipsis))
-                                        ],
-                                      ),
+                                              startDegreeOffset: 15,
+                                              sectionsSpace: 0,
+                                              centerSpaceRadius: 40,
+                                              sections: [
+                                                PieChartSectionData(
+                                                    color: Colors.blue,
+                                                    value: user.user.finished
+                                                        .toDouble(),
+                                                    title:
+                                                        "${((user.user.finished / (user.user.finished + user.user.unFinished)) * 100).ceil()}%",
+                                                    radius: 60,
+                                                    titleStyle: const TextStyle(
+                                                        fontSize: 22,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.white,
+                                                        overflow: TextOverflow
+                                                            .ellipsis)),
+                                                PieChartSectionData(
+                                                    color: Colors.grey,
+                                                    value: user.user.unFinished
+                                                        .toDouble(),
+                                                    title:
+                                                        "${((user.user.unFinished / (user.user.finished + user.user.unFinished)) * 100).floor()}%",
+                                                    radius: 50,
+                                                    titleStyle: const TextStyle(
+                                                        fontSize: 22,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.white,
+                                                        overflow: TextOverflow
+                                                            .ellipsis))
+                                              ],
+                                            ),
                                     ),
                                     onLongPress: () {
                                       showDialog(
@@ -817,31 +903,44 @@ class ProfilePageState extends State<ProfilePage> {
                                             return AlertDialog(
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
-                                                BorderRadius.circular(25),
+                                                    BorderRadius.circular(25),
                                               ),
-                                              backgroundColor: user.colorProvider
+                                              backgroundColor: user
+                                                  .colorProvider
                                                   .addTaskAlertBackground,
                                               content: Column(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   SizedBox(
-                                                      width: MediaQuery.sizeOf(context).width/3,
-                                                      height: MediaQuery.sizeOf(context).height/5,
+                                                      width:
+                                                          MediaQuery.sizeOf(
+                                                                      context)
+                                                                  .width /
+                                                              3,
+                                                      height: MediaQuery.sizeOf(
+                                                                  context)
+                                                              .height /
+                                                          5,
                                                       child: const AutoSizeText(
                                                         "Are you sure you want to reset?",
-                                                        style:
-                                                        TextStyle(fontSize: 26,fontWeight: FontWeight.w600),
+                                                        style: TextStyle(
+                                                            fontSize: 26,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600),
                                                         maxLines: 3,
                                                         minFontSize: 16,
-                                                        overflow:
-                                                        TextOverflow.ellipsis,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                       )),
                                                   Row(
-                                                    mainAxisSize: MainAxisSize.min,
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
                                                     children: [
                                                       Button(
                                                         onPressed: () {
-                                                          Navigator.pop(context);
+                                                          Navigator.pop(
+                                                              context);
                                                         },
                                                         label: 'Cancel',
                                                         status: false,
@@ -853,7 +952,8 @@ class ProfilePageState extends State<ProfilePage> {
                                                       ),
                                                       Button(
                                                         onPressed: () {
-                                                          Navigator.pop(context);
+                                                          Navigator.pop(
+                                                              context);
                                                           user.resetPlot();
                                                         },
                                                         label: 'Reset',
@@ -875,121 +975,174 @@ class ProfilePageState extends State<ProfilePage> {
                             const Spacer(
                               flex: 1,
                             ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Padding(
-                                    padding: EdgeInsets.only(
-                                        bottom:
-                                            MediaQuery.of(context).size.height /
-                                                40)),
-                                Row(
+                            SizedBox(
+                              width: MediaQuery.sizeOf(context).width/2,
+                              height: MediaQuery.sizeOf(context).height/1.50,
+                              child: PageView(
+                                scrollDirection: Axis.horizontal,
+                                children: [Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    SettingsButton(
-                                        onPressed: () {
-                                          Provider.of<UserProvider>(context,
+                                    Padding(
+                                        padding: EdgeInsets.only(
+                                            bottom:
+                                            MediaQuery.of(context).size.height /
+                                                40)),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        SettingsButton(
+                                            onPressed: () {
+                                              Provider.of<UserProvider>(context,
                                                   listen: false)
-                                              .changeTheme();
-                                        },
-                                        label: "Dark Mode",
-                                        status:
+                                                  .changeTheme();
+                                            },
+                                            label: "Dark Mode",
+                                            status:
                                             user.user.theme == 1 ? true : false,
-                                        fontSize: 22,
-                                        size: 1.5),
-                                    Padding(
-                                        padding: EdgeInsets.only(
-                                            right: MediaQuery.of(context)
+                                            fontSize: 22,
+                                            size: 1.5),
+                                        Padding(
+                                            padding: EdgeInsets.only(
+                                                right: MediaQuery.of(context)
                                                     .size
                                                     .width /
-                                                60)),
-                                    SettingsButton(
-                                        onPressed: () {
-                                          Provider.of<UserProvider>(context,
+                                                    60)),
+                                        SettingsButton(
+                                            onPressed: () {
+                                              Provider.of<UserProvider>(context,
                                                   listen: false)
-                                              .changeCount();
-                                        },
-                                        label: "Word Count",
-                                        status:
+                                                  .changeCount();
+                                            },
+                                            label: "Word Count",
+                                            status:
                                             user.user.count == 1 ? true : false,
-                                        fontSize: 22,
-                                        size: 1.5),
-                                    Padding(
-                                        padding: EdgeInsets.only(
-                                            right: MediaQuery.of(context)
+                                            fontSize: 22,
+                                            size: 1.5),
+                                        Padding(
+                                            padding: EdgeInsets.only(
+                                                right: MediaQuery.of(context)
                                                     .size
                                                     .width /
-                                                60)),
-                                    SettingsButton(
-                                        onPressed: () {
-                                          Provider.of<UserProvider>(context,
+                                                    60)),
+                                        SettingsButton(
+                                            onPressed: () {
+                                              Provider.of<UserProvider>(context,
                                                   listen: false)
-                                              .changeAutoSave();
-                                        },
-                                        label: "Auto Save",
-                                        status: user.user.autoSave == 1
-                                            ? true
-                                            : false,
-                                        fontSize: 22,
-                                        size: 1.5),
-                                  ],
-                                ),
-                                Padding(
-                                    padding: EdgeInsets.only(
-                                        bottom:
+                                                  .changeAutoSave();
+                                            },
+                                            label: "Auto Save",
+                                            status: user.user.autoSave == 1
+                                                ? true
+                                                : false,
+                                            fontSize: 22,
+                                            size: 1.5),
+                                      ],
+                                    ),
+                                    Padding(
+                                        padding: EdgeInsets.only(
+                                            bottom:
                                             MediaQuery.of(context).size.height /
                                                 40)),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SettingsButton(
-                                        onPressed: () {
-                                          Provider.of<UserProvider>(context,
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        SettingsButton(
+                                            onPressed: () {
+                                              Provider.of<UserProvider>(context,
                                                   listen: false)
-                                              .changeFont();
-                                        },
-                                        label: "Casual Font",
-                                        status: user.user.casual == 1
-                                            ? true
-                                            : false,
-                                        fontSize: 22,
-                                        size: 1.5),
-                                    Padding(
-                                        padding: EdgeInsets.only(
-                                            right: MediaQuery.of(context)
+                                                  .changeFont();
+                                            },
+                                            label: "Casual Font",
+                                            status: user.user.casual == 1
+                                                ? true
+                                                : false,
+                                            fontSize: 22,
+                                            size: 1.5),
+                                        Padding(
+                                            padding: EdgeInsets.only(
+                                                right: MediaQuery.of(context)
                                                     .size
                                                     .width /
-                                                60)),
-                                    SettingsButton(
-                                        onPressed: () {
-                                          Provider.of<UserProvider>(context,
+                                                    60)),
+                                        SettingsButton(
+                                            onPressed: () {
+                                              Provider.of<UserProvider>(context,
                                                   listen: false)
-                                              .changeVerse();
-                                        },
-                                        label: "Daily Verse",
-                                        status:
+                                                  .changeVerse();
+                                            },
+                                            label: "Daily Verse",
+                                            status:
                                             user.user.verse == 1 ? true : false,
-                                        fontSize: 22,
-                                        size: 1.5),
-                                    Padding(
-                                        padding: EdgeInsets.only(
-                                            right: MediaQuery.of(context)
+                                            fontSize: 22,
+                                            size: 1.5),
+                                        Padding(
+                                            padding: EdgeInsets.only(
+                                                right: MediaQuery.of(context)
                                                     .size
                                                     .width /
-                                                60)),
-                                    SettingsButton(
-                                        onPressed: () {
-                                          Provider.of<UserProvider>(context,
+                                                    60)),
+                                        SettingsButton(
+                                            onPressed: () {
+                                              Provider.of<UserProvider>(context,
                                                   listen: false)
-                                              .changeLock();
-                                        },
-                                        label: "App Lock",
-                                        status: user.isEnabled ? true : false,
-                                        fontSize: 22,
-                                        size: 1.5),
+                                                  .changeLock();
+                                            },
+                                            label: "App Lock",
+                                            status: user.isEnabled ? true : false,
+                                            fontSize: 22,
+                                            size: 1.5),
+                                      ],
+                                    )
                                   ],
-                                )
-                              ],
+                                ),Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  spacing: 25,
+                                  children: [
+                                    Text(
+                                      "Notes Font Size",
+                                      style: TextStyle(
+                                          fontSize: 28,
+                                          color: user.colorProvider.homePageText),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          flex: 10,
+                                          child: Slider(
+                                              activeColor: const Color(0xff3D5AFE),
+                                              value: user.tempNotesTextSize,
+                                              min: .25,
+                                              max: 2,
+                                              onChanged: (v) {
+                                                user.setTempNotesSize(v);
+                                              }),
+                                        ),
+                                        Expanded(
+                                            flex: 1,
+                                            child: Text(
+                                              maxLines: 1,
+                                              user.tempNotesTextSize
+                                                  .toStringAsPrecision(2),
+                                              style: TextStyle(
+                                                  fontSize: 22,
+                                                  color: user.colorProvider
+                                                      .homePageText),
+                                            ))
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Button(onPressed: (){
+                                          user.setNotesTextSize();
+                                        }, label: "Apply", status: double.parse(user.tempNotesTextSize.toStringAsPrecision(2))!=user.user.notesTextSize, fontSize: 24, size: 1)
+                                      ],
+                                    )
+                                  ],
+                                )],
+                              ),
                             ),
                             const Spacer(
                               flex: 1,

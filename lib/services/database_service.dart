@@ -20,7 +20,7 @@ class DatabaseService {
   factory DatabaseService() => _instance;
   DatabaseService._internal();
   final secureStorage = const FlutterSecureStorage();
-
+  static const int _databaseVersion = 2;
   String generateStrongKey({int length = 32}) {
     final Random random = Random.secure();
     final List<int> values =
@@ -49,7 +49,7 @@ class DatabaseService {
     String path = '${databasesPath}Database.db';
     String? dbKey = await getEncryptionKey();
     db = await openDatabase(path,
-        password: dbKey, version: 1, onCreate: _onCreate);
+        password: dbKey, version: _databaseVersion, onCreate: _onCreate,onUpgrade: _onUpgrade);
     return db;
   }
 
@@ -77,7 +77,8 @@ class DatabaseService {
       verse INTEGER,
       count INTEGER,
       finished INTEGER,
-      unFinished INTEGER
+      unFinished INTEGER,
+      notesTextSize REAL
     )
     ''');
     await db.execute('''
@@ -90,6 +91,11 @@ class DatabaseService {
       protected INTEGER
     )
     ''');
+  }
+  _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE User ADD COLUMN notesTextSize REAL DEFAULT 1');
+    }
   }
 
   Future<void> insertItem(TodoItem item) {
@@ -153,7 +159,8 @@ class DatabaseService {
       'verse',
       'count',
       'finished',
-      'unFinished'
+      'unFinished',
+      'notesTextSize'
     ]);
     List<UserProfile> items = [];
     if (maps.isNotEmpty) {

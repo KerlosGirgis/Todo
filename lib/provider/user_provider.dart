@@ -14,11 +14,13 @@ import '../services/color_provider.dart';
 import '../services/database_service.dart';
 
 class UserProvider with ChangeNotifier {
-  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0);
+  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1);
 
   ColorProvider colorProvider =ColorProvider(1);
 
   late bool isEnabled;
+  late double tempNotesTextSize;
+
 
   Future<void> get() async {
     List users;
@@ -33,7 +35,8 @@ class UserProvider with ChangeNotifier {
       user = users.first;
       colorProvider =ColorProvider(user.theme);
     }
-     isEnabled=await LockManager().isLockEnabled();
+    isEnabled=await LockManager().isLockEnabled();
+    tempNotesTextSize=user.notesTextSize;
     notifyListeners();
   }
 
@@ -78,7 +81,6 @@ class UserProvider with ChangeNotifier {
   Future<void> setFontPreference(bool useCasual) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('useCasualFont', useCasual);
-
     // Update the home widget after changing the font preference
     await HomeWidget.saveWidgetData('useCasualFont', useCasual);
     await HomeWidget.updateWidget(name: 'Note');
@@ -179,6 +181,34 @@ class UserProvider with ChangeNotifier {
           backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 19.0);
+    }
+  }
+  setNotesTextSize()async{
+    if(tempNotesTextSize>=0.25&&tempNotesTextSize<=2){
+      user.notesTextSize=double.parse(tempNotesTextSize.toStringAsPrecision(2));
+      print(user.notesTextSize*26);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
+      await HomeWidget.saveWidgetData('widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
+      await HomeWidget.updateWidget(name: 'Note');
+      await DatabaseService().updateUser(user);
+      notifyListeners();
+    }
+    else{
+      Fluttertoast.showToast(
+          msg: "Enter Valid Value",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 19.0);
+    }
+  }
+
+  setTempNotesSize(double size){
+    if(size>=0.25&&size<=2){
+      tempNotesTextSize=size;
+      notifyListeners();
     }
   }
 

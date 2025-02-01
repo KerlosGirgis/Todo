@@ -206,7 +206,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                     ? FontWeight.w600
                                     : FontWeight.w400,
                                 color: user.colorProvider.noteEditorText,
-                                fontSize: 26,
+                                fontSize: (26*user.user.notesTextSize),
                                 decoration: TextDecoration.none,
                                 decorationColor:
                                     user.colorProvider.noteEditorText),
