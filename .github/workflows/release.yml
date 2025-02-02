@@ -70,5 +70,5 @@ jobs:
           name: Todo ${{ github.ref_name }}
           body: |
             ## Release Notes
-            - Notes Reorder
-            - UI Improvements
+            - UI Fixes and improvements
+            - Home Screen Widget Font Options

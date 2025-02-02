@@ -36,7 +36,7 @@ class Note : AppWidgetProvider() {
             context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE)
         val useCasualFont: Boolean = prefs.getBoolean("useCasualFont", false)
         var  textSize=22f
-        val textSizeString = prefs.getString("widgetTextSize", "22")
+        val textSizeString = prefs.getString("widgetTextSize", "1")
         if(textSizeString!=null){
             val tempTextSize = textSizeString.toFloatOrNull()
             if(tempTextSize!=null){
