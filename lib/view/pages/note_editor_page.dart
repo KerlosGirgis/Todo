@@ -58,7 +58,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     )),
                 actions: [
                   user.user.count==1?
-                  Text("${bodyController.text.length}",style: TextStyle(
+                  Text("${bodyController.text.replaceAll("\n", "").replaceAll(" ", "").length}",style: TextStyle(
                       fontSize: 22,
                       color: user.colorProvider.appTitle
                   ),):const SizedBox.shrink(),
