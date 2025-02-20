@@ -21,11 +21,11 @@ class Button extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: MediaQuery.of(context).orientation == Orientation.portrait
-          ? MediaQuery.of(context).size.height / 22*size
-          : MediaQuery.of(context).size.height / 10*size,
+          ? (MediaQuery.of(context).size.height / 22)*size
+          : (MediaQuery.of(context).size.height / 10)*size,
       width: MediaQuery.of(context).orientation == Orientation.portrait
-          ? MediaQuery.of(context).size.width / 3.7*size
-          : MediaQuery.of(context).size.width / 7.7*size,
+          ? (MediaQuery.of(context).size.width / 3.7)*size
+          : (MediaQuery.of(context).size.width / 7.7)*size,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -37,7 +37,10 @@ class Button extends StatelessWidget {
         child: Center(
           child: AutoSizeText(
             label,
+            maxLines: 1,
+            minFontSize: 4,
             style: TextStyle(
+              overflow: TextOverflow.ellipsis,
                 color: status ? Colors.white : const Color(0xff3D5AFE),
                 fontSize: fontSize),
           ),

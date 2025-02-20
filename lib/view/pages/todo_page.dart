@@ -447,22 +447,25 @@ class _TodoPageState extends State<TodoPage> {
                                                                   .appTitle
                                                               : Colors.grey,
                                                         ),
-                                                        Text(
-                                                          " ${tasks.items[index].date} ",
-                                                          style: TextStyle(
-                                                            color: tasks
-                                                                        .items[
-                                                                            index]
-                                                                        .status ==
-                                                                    0
-                                                                ? user
-                                                                    .colorProvider
-                                                                    .date
-                                                                : Colors.grey,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .normal,
-                                                            fontSize: 16,
+                                                        Flexible(
+                                                          child: Text(
+                                                            " ${tasks.items[index].date} ",
+                                                            overflow: TextOverflow.ellipsis,
+                                                            style: TextStyle(
+                                                              color: tasks
+                                                                          .items[
+                                                                              index]
+                                                                          .status ==
+                                                                      0
+                                                                  ? user
+                                                                      .colorProvider
+                                                                      .date
+                                                                  : Colors.grey,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .normal,
+                                                              fontSize: 16,
+                                                            ),
                                                           ),
                                                         ),
                                                         tasks.items[index].time
@@ -483,22 +486,25 @@ class _TodoPageState extends State<TodoPage> {
                                                               )
                                                             : const SizedBox
                                                                 .shrink(),
-                                                        Text(
-                                                          " ${tasks.items[index].time}",
-                                                          style: TextStyle(
-                                                            color: tasks
-                                                                        .items[
-                                                                            index]
-                                                                        .status ==
-                                                                    0
-                                                                ? user
-                                                                    .colorProvider
-                                                                    .date
-                                                                : Colors.grey,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .normal,
-                                                            fontSize: 16,
+                                                        Flexible(
+                                                          child: Text(
+                                                            " ${tasks.items[index].time}",
+                                                            overflow: TextOverflow.ellipsis,
+                                                            style: TextStyle(
+                                                              color: tasks
+                                                                          .items[
+                                                                              index]
+                                                                          .status ==
+                                                                      0
+                                                                  ? user
+                                                                      .colorProvider
+                                                                      .date
+                                                                  : Colors.grey,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .normal,
+                                                              fontSize: 16,
+                                                            ),
                                                           ),
                                                         ),
                                                       ],
@@ -527,8 +533,10 @@ class _TodoPageState extends State<TodoPage> {
           appBar: AppBar(
             automaticallyImplyLeading: false,
             backgroundColor: user.colorProvider.pageBackground,
+            surfaceTintColor: Colors.transparent,
             title: Text(
               "ToDo",
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 30,
                 color: user.colorProvider.appTitle,
@@ -591,7 +599,7 @@ class _TodoPageState extends State<TodoPage> {
                       )),
                 ],
               ),
-              const AppbarAvatar(),
+              Flexible(child: const AppbarAvatar()),
               const Padding(padding: EdgeInsets.only(right: 18))
             ],
           ),

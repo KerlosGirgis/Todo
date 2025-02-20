@@ -48,6 +48,7 @@ class _NotesPageState extends State<NotesPage> {
               "Notes",
               style: TextStyle(
                 fontSize: 30,
+                overflow: TextOverflow.ellipsis,
                 color: user.colorProvider.appTitle,
                 fontWeight: FontWeight.bold,
               ),
@@ -121,7 +122,7 @@ class _NotesPageState extends State<NotesPage> {
                           color: user.colorProvider.appBarIcons,
                         )),
                   ]),
-              const AppbarAvatar(),
+              Flexible(child: const AppbarAvatar()),
               const Padding(padding: EdgeInsets.only(right: 18)),
             ],
           ),

@@ -1,0 +1,83 @@
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:todo/provider/user_provider.dart';
+
+import 'button.dart';
+
+class ResetPlotDialog extends StatelessWidget {
+  const ResetPlotDialog({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<UserProvider>(builder: (context, user, child) {
+      return StatefulBuilder(builder: (context,setState) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius:
+            BorderRadius.circular(25),
+          ),
+          backgroundColor: user.colorProvider
+              .addTaskAlertBackground,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: MediaQuery.sizeOf(context).width,
+                height: MediaQuery.sizeOf(context).height/10,
+                child: const AutoSizeText(
+                  minFontSize: 4,
+                  "Are you sure you want to reset?",
+                  style: TextStyle(
+                      fontSize: 26,
+                      fontWeight:
+                      FontWeight.w600),
+                  maxLines: 2,
+                  overflow:
+                  TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Row(
+              spacing: MediaQuery.sizeOf(context).width/25,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Expanded(
+                  child: Button(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    label: 'Cancel',
+                    status: false,
+                    fontSize: 22,
+                    size: 1,
+                  ),
+                ),
+                Expanded(
+                  child: Button(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      user.resetPlot();
+                    },
+                    label: 'Reset',
+                    status: true,
+                    fontSize: 22,
+                    size: 1,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+      );
+    },
+
+    );
+  }
+}

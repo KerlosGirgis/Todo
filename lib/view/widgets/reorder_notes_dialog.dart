@@ -26,48 +26,46 @@ class ReorderNotesDialog extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  const Spacer(
-                    flex: 1,
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 64, 64, 64),
-                      borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 64, 64, 64),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.reorder,
+                        color: Colors.white,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.reorder,
-                      color: Colors.white,
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Text(
+                      "Reorder",
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 32,
+                          color: user.colorProvider.homePageText),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Spacer(
-                    flex: 10,
-                  ),
-                  Text(
-                    "Reorder",
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                        color: user.colorProvider.homePageText),
-                    overflow: TextOverflow.clip,
-                  ),
-                  const Spacer(
-                    flex: 10,
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 64, 64, 64),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                  Expanded(
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 64, 64, 64),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
                       ),
                     ),
                   )
