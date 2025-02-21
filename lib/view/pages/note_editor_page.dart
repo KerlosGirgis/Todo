@@ -160,68 +160,70 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       )),
                 ],
               ),
-              body: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width / 1.1,
-                          child: TextField(
-                            onChanged: (value) {
-                              if (user.user.autoSave == 1) {
-                                try {
-                                  Provider.of<NotesProvider>(context,
-                                          listen: false)
-                                      .updateNote(Note(
-                                          id: widget.note.id,
-                                          title: widget.note.title,
-                                          body: bodyController.text,
-                                          titleColor: widget.note.titleColor,
-                                          coverColor: widget.note.coverColor,
-                                          protected: widget.note.protected))
-                                      .then((onValue) {
-                                    widget.note.body = bodyController.text;
-                                  });
-                                } catch (e) {
-                                  Fluttertoast.showToast(
-                                      msg:
-                                          "Sorry, Something went wrong,note not saved",
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.BOTTOM,
-                                      backgroundColor: Colors.red,
-                                      textColor: Colors.white,
-                                      fontSize: 19.0);
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width / 1.1,
+                            child: TextField(
+                              onChanged: (value) {
+                                if (user.user.autoSave == 1) {
+                                  try {
+                                    Provider.of<NotesProvider>(context,
+                                            listen: false)
+                                        .updateNote(Note(
+                                            id: widget.note.id,
+                                            title: widget.note.title,
+                                            body: bodyController.text,
+                                            titleColor: widget.note.titleColor,
+                                            coverColor: widget.note.coverColor,
+                                            protected: widget.note.protected))
+                                        .then((onValue) {
+                                      widget.note.body = bodyController.text;
+                                    });
+                                  } catch (e) {
+                                    Fluttertoast.showToast(
+                                        msg:
+                                            "Sorry, Something went wrong,note not saved",
+                                        toastLength: Toast.LENGTH_SHORT,
+                                        gravity: ToastGravity.BOTTOM,
+                                        backgroundColor: Colors.red,
+                                        textColor: Colors.white,
+                                        fontSize: 19.0);
+                                  }
                                 }
-                              }
-                            },
-                            controller: bodyController,
-                            maxLines: null,
-                            style: TextStyle(
-                                fontFamily:
-                                    user.user.casual == 1 ? 'casual' : 'arial',
-                                fontWeight: user.user.casual == 1
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                color: user.colorProvider.noteEditorText,
-                                fontSize: (26*user.user.notesTextSize),
-                                decoration: TextDecoration.none,
-                                decorationColor:
-                                    user.colorProvider.noteEditorText),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
+                              },
+                              controller: bodyController,
+                              maxLines: null,
+                              style: TextStyle(
+                                  fontFamily:
+                                      user.user.casual == 1 ? 'casual' : 'arial',
+                                  fontWeight: user.user.casual == 1
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  color: user.colorProvider.noteEditorText,
+                                  fontSize: (26*user.user.notesTextSize),
+                                  decoration: TextDecoration.none,
+                                  decorationColor:
+                                      user.colorProvider.noteEditorText),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

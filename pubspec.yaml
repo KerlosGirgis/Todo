@@ -118,4 +118,4 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   image_path: "assets/icon.png"
-  min_sdk_android: 31 # android min sdk min:16, default 21
+  min_sdk_android: 30 # android min sdk min:16, default 21

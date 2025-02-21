@@ -46,7 +46,7 @@ android {
         applicationId = "com.k.todo"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = 31 //flutter.minSdkVersion
+        minSdk = 30 //flutter.minSdkVersion
         targetSdk = 34 //flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName

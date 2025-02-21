@@ -157,211 +157,213 @@ class _NotesPageState extends State<NotesPage> {
               ),
             ],
           ),
-          body: Consumer<NotesProvider>(
-            builder: (context, notes, child) {
-              return notes.notes.isEmpty
-                  ? Center(
-                      child: Image.asset(
-                        "assets/empty_notes.png",
-                        scale: 2,
-                      ),
-                    )
-                  : GridView.builder(
-                      itemCount: notes.notes.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: MediaQuery.of(context).orientation ==
-                                  Orientation.portrait
-                              ? 2
-                              : 4,
-                          childAspectRatio: 0.7),
-                      itemBuilder: (context, index) {
-                        return AnimationLimiter(
-                          child: AnimationConfiguration.staggeredGrid(
-                            duration: const Duration(milliseconds: 600),
-                            position: index,
-                            columnCount: MediaQuery.of(context).orientation ==
+          body: SafeArea(
+            child: Consumer<NotesProvider>(
+              builder: (context, notes, child) {
+                return notes.notes.isEmpty
+                    ? Center(
+                        child: Image.asset(
+                          "assets/empty_notes.png",
+                          scale: 2,
+                        ),
+                      )
+                    : GridView.builder(
+                        itemCount: notes.notes.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: MediaQuery.of(context).orientation ==
                                     Orientation.portrait
                                 ? 2
                                 : 4,
-                            child: SlideAnimation(
-                              verticalOffset: 400,
-                              child: FadeInAnimation(
-                                child: GestureDetector(
-                                  child: Container(
-                                    margin: const EdgeInsets.all(16),
-                                    child: LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        final cardWidth =
-                                            screenSize.width * 0.8;
-                                        const aspectRatio = 16 / 9;
-                                        return AspectRatio(
-                                          aspectRatio: aspectRatio,
-                                          child: Container(
-                                              width: cardWidth,
-                                              decoration: BoxDecoration(
-                                                color: notes.notes[index]
-                                                    .coverColor.toColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withValues(alpha: 0.2),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 4),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Stack(
-                                                children: [
-                                                  Center(
-                                                    child: Text(
-                                                      maxLines: 4,
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      notes.notes[index].title,
-                                                      style: TextStyle(
-                                                          color: notes
-                                                              .notes[index]
-                                                              .titleColor
-                                                              .toColor,
-                                                          fontSize: 24,
-                                                          fontWeight:
-                                                              FontWeight.bold),
+                            childAspectRatio: 0.7),
+                        itemBuilder: (context, index) {
+                          return AnimationLimiter(
+                            child: AnimationConfiguration.staggeredGrid(
+                              duration: const Duration(milliseconds: 600),
+                              position: index,
+                              columnCount: MediaQuery.of(context).orientation ==
+                                      Orientation.portrait
+                                  ? 2
+                                  : 4,
+                              child: SlideAnimation(
+                                verticalOffset: 400,
+                                child: FadeInAnimation(
+                                  child: GestureDetector(
+                                    child: Container(
+                                      margin: const EdgeInsets.all(16),
+                                      child: LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          final cardWidth =
+                                              screenSize.width * 0.8;
+                                          const aspectRatio = 16 / 9;
+                                          return AspectRatio(
+                                            aspectRatio: aspectRatio,
+                                            child: Container(
+                                                width: cardWidth,
+                                                decoration: BoxDecoration(
+                                                  color: notes.notes[index]
+                                                      .coverColor.toColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12.0),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withValues(alpha: 0.2),
+                                                      blurRadius: 8,
+                                                      offset: const Offset(0, 4),
                                                     ),
-                                                  ),
-                                                  notes.notes[index]
-                                                              .protected ==
-                                                          1
-                                                      ? Column(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .end,
-                                                          children: [
-                                                            Row(
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .end,
-                                                              children: [
-                                                                Padding(
-                                                                  padding:
-                                                                      const EdgeInsets
-                                                                          .all(
-                                                                          7),
-                                                                  child: Image
-                                                                      .asset(
-                                                                    "assets/lock.png",
-                                                                    scale: 4,
+                                                  ],
+                                                ),
+                                                child: Stack(
+                                                  children: [
+                                                    Center(
+                                                      child: Text(
+                                                        maxLines: 4,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        overflow:
+                                                            TextOverflow.ellipsis,
+                                                        notes.notes[index].title,
+                                                        style: TextStyle(
+                                                            color: notes
+                                                                .notes[index]
+                                                                .titleColor
+                                                                .toColor,
+                                                            fontSize: 24,
+                                                            fontWeight:
+                                                                FontWeight.bold),
+                                                      ),
+                                                    ),
+                                                    notes.notes[index]
+                                                                .protected ==
+                                                            1
+                                                        ? Column(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .end,
+                                                            children: [
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .end,
+                                                                children: [
+                                                                  Padding(
+                                                                    padding:
+                                                                        const EdgeInsets
+                                                                            .all(
+                                                                            7),
+                                                                    child: Image
+                                                                        .asset(
+                                                                      "assets/lock.png",
+                                                                      scale: 4,
+                                                                    ),
                                                                   ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        )
-                                                      : const SizedBox.shrink(),
-                                                ],
-                                              )),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  onTap: () async {
-                                    if (notes.notes[index].protected == 1) {
-                                      bool isAuthenticated =
-                                          await authService.authenticate();
-                                      if (isAuthenticated) {
-                                        if (context.mounted) {
-                                          Navigator.push(
-                                            context,
-                                            PageRouteBuilder(
-                                              pageBuilder: (context, animation,
-                                                      secondaryAnimation) =>
-                                                  NoteEditorPage(
-                                                note: notes.notes[index],
-                                              ),
-                                              transitionsBuilder: (context,
-                                                  animation,
-                                                  secondaryAnimation,
-                                                  child) {
-                                                const begin = Offset(1.0, 0.0);
-                                                const end = Offset.zero;
-                                                const curve = Curves.ease;
-                                                var tween = Tween(
-                                                        begin: begin, end: end)
-                                                    .chain(CurveTween(
-                                                        curve: curve));
-                                                var offsetAnimation =
-                                                    animation.drive(tween);
-                                                return SlideTransition(
-                                                    position: offsetAnimation,
-                                                    child: child);
-                                              },
-                                            ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          )
+                                                        : const SizedBox.shrink(),
+                                                  ],
+                                                )),
                                           );
+                                        },
+                                      ),
+                                    ),
+                                    onTap: () async {
+                                      if (notes.notes[index].protected == 1) {
+                                        bool isAuthenticated =
+                                            await authService.authenticate();
+                                        if (isAuthenticated) {
+                                          if (context.mounted) {
+                                            Navigator.push(
+                                              context,
+                                              PageRouteBuilder(
+                                                pageBuilder: (context, animation,
+                                                        secondaryAnimation) =>
+                                                    NoteEditorPage(
+                                                  note: notes.notes[index],
+                                                ),
+                                                transitionsBuilder: (context,
+                                                    animation,
+                                                    secondaryAnimation,
+                                                    child) {
+                                                  const begin = Offset(1.0, 0.0);
+                                                  const end = Offset.zero;
+                                                  const curve = Curves.ease;
+                                                  var tween = Tween(
+                                                          begin: begin, end: end)
+                                                      .chain(CurveTween(
+                                                          curve: curve));
+                                                  var offsetAnimation =
+                                                      animation.drive(tween);
+                                                  return SlideTransition(
+                                                      position: offsetAnimation,
+                                                      child: child);
+                                                },
+                                              ),
+                                            );
+                                          }
                                         }
-                                      }
-                                    } else {
-                                      Navigator.push(
-                                        context,
-                                        PageRouteBuilder(
-                                          pageBuilder: (context, animation,
-                                                  secondaryAnimation) =>
-                                              NoteEditorPage(
-                                            note: notes.notes[index],
+                                      } else {
+                                        Navigator.push(
+                                          context,
+                                          PageRouteBuilder(
+                                            pageBuilder: (context, animation,
+                                                    secondaryAnimation) =>
+                                                NoteEditorPage(
+                                              note: notes.notes[index],
+                                            ),
+                                            transitionsBuilder: (context,
+                                                animation,
+                                                secondaryAnimation,
+                                                child) {
+                                              const begin = Offset(1.0, 0.0);
+                                              const end = Offset.zero;
+                                              const curve = Curves.ease;
+                                              var tween = Tween(
+                                                      begin: begin, end: end)
+                                                  .chain(
+                                                      CurveTween(curve: curve));
+                                              var offsetAnimation =
+                                                  animation.drive(tween);
+                                              return SlideTransition(
+                                                  position: offsetAnimation,
+                                                  child: child);
+                                            },
                                           ),
-                                          transitionsBuilder: (context,
-                                              animation,
-                                              secondaryAnimation,
-                                              child) {
-                                            const begin = Offset(1.0, 0.0);
-                                            const end = Offset.zero;
-                                            const curve = Curves.ease;
-                                            var tween = Tween(
-                                                    begin: begin, end: end)
-                                                .chain(
-                                                    CurveTween(curve: curve));
-                                            var offsetAnimation =
-                                                animation.drive(tween);
-                                            return SlideTransition(
-                                                position: offsetAnimation,
-                                                child: child);
-                                          },
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  onLongPress: () async {
-                                    if (notes.notes[index].protected == 1) {
-                                      bool isAuthenticated =
-                                          await authService.authenticate();
-                                      if (isAuthenticated) {
-                                        if (context.mounted) {
-                                          showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return UpdateNoteDialog(
-                                                    index: index);
-                                              });
-                                        }
+                                        );
                                       }
-                                    } else {
-                                      showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return UpdateNoteDialog(
-                                                index: index);
-                                          });
-                                    }
-                                  },
+                                    },
+                                    onLongPress: () async {
+                                      if (notes.notes[index].protected == 1) {
+                                        bool isAuthenticated =
+                                            await authService.authenticate();
+                                        if (isAuthenticated) {
+                                          if (context.mounted) {
+                                            showDialog(
+                                                context: context,
+                                                builder: (context) {
+                                                  return UpdateNoteDialog(
+                                                      index: index);
+                                                });
+                                          }
+                                        }
+                                      } else {
+                                        showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return UpdateNoteDialog(
+                                                  index: index);
+                                            });
+                                      }
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      });
-            },
+                          );
+                        });
+              },
+            ),
           ),
         );
       },
