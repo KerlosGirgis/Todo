@@ -29,27 +29,31 @@ class LockPageState extends State<LockPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(flex: 3,),
-          Image.asset("assets/locked.png"),
-          const Spacer(flex: 1,),
-          IconButton(onPressed: () async {
-    final bool initialized = await AuthenticationService().initializeApp();
-    if (initialized) {
-    final DatabaseService dbService = DatabaseService();
-    await dbService.openDb();
-    await VerseManager.loadVerses();
-    runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (_) => UserProvider()),
-    ChangeNotifierProvider(create: (_) => ThemeProvider()),
-    ChangeNotifierProvider(create: (_) => TasksProvider()),
-    ChangeNotifierProvider(create: (_) => NotesProvider()),
-    ], child: const MyApp()));  }
-    }, icon: const Icon(Icons.refresh_sharp,size: 70,color: Color(0xff3D5AFE),)),
-          const Spacer(flex: 5,),
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Image.asset("assets/locked.png"),
+            ),
+            Expanded(
+              child: IconButton(onPressed: () async {
+                  final bool initialized = await AuthenticationService().initializeApp();
+                  if (initialized) {
+                  final DatabaseService dbService = DatabaseService();
+                  await dbService.openDb();
+                  await VerseManager.loadVerses();
+                  runApp(MultiProvider(providers: [
+                  ChangeNotifierProvider(create: (_) => UserProvider()),
+                  ChangeNotifierProvider(create: (_) => ThemeProvider()),
+                  ChangeNotifierProvider(create: (_) => TasksProvider()),
+                  ChangeNotifierProvider(create: (_) => NotesProvider()),
+                  ], child: const MyApp()));  }
+                  }, icon: const Icon(Icons.refresh_sharp,size: 70,color: Color(0xff3D5AFE),)),
+            ),
+          ],
+        ),
       ),
     );
   }
