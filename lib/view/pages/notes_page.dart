@@ -65,11 +65,64 @@ class _NotesPageState extends State<NotesPage> {
                   items: [
                     IconButton(
                         onPressed: () async {
-                          showDialog(
-                              context: context,
-                              builder: (context) {
-                                return ReorderNotesDialog();
-                              });
+                          showGeneralDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                            pageBuilder: (BuildContext
+                            context,
+                                Animation<double>
+                                animation,
+                                Animation<double>
+                                secondaryAnimation) {
+                              return ReorderNotesDialog();
+                            },
+                            transitionBuilder:
+                                (context,
+                                animation,
+                                secondaryAnimation,
+                                child) {
+                              var fadeAnimation =
+                              CurvedAnimation(
+                                  parent:
+                                  animation,
+                                  curve: Curves
+                                      .easeInOutSine);
+                              var scaleAnimation =
+                              Tween<double>(
+                                  begin:
+                                  0.95,
+                                  end:
+                                  1.0)
+                                  .animate(
+                                  fadeAnimation); // Subtle grow
+                              var slideAnimation = Tween<
+                                  Offset>(
+                                  begin: Offset(
+                                      0,
+                                      0.05),
+                                  end: Offset
+                                      .zero)
+                                  .animate(
+                                  fadeAnimation); // Gentle rise
+
+                              return FadeTransition(
+                                opacity:
+                                fadeAnimation,
+                                child:
+                                ScaleTransition(
+                                  scale:
+                                  scaleAnimation,
+                                  child:
+                                  SlideTransition(
+                                    position:
+                                    slideAnimation,
+                                    child: child,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                         },
                         icon: Icon(
                           Icons.reorder,
@@ -147,11 +200,64 @@ class _NotesPageState extends State<NotesPage> {
                 foregroundColor:
                     user.colorProvider.floatingActionButtonForeground,
                 onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return const AddNoteDialog();
-                      });
+                  showGeneralDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                    pageBuilder: (BuildContext
+                    context,
+                        Animation<double>
+                        animation,
+                        Animation<double>
+                        secondaryAnimation) {
+                      return AddNoteDialog();
+                    },
+                    transitionBuilder:
+                        (context,
+                        animation,
+                        secondaryAnimation,
+                        child) {
+                      var fadeAnimation =
+                      CurvedAnimation(
+                          parent:
+                          animation,
+                          curve: Curves
+                              .easeInOutSine);
+                      var scaleAnimation =
+                      Tween<double>(
+                          begin:
+                          0.95,
+                          end:
+                          1.0)
+                          .animate(
+                          fadeAnimation); // Subtle grow
+                      var slideAnimation = Tween<
+                          Offset>(
+                          begin: Offset(
+                              0,
+                              0.05),
+                          end: Offset
+                              .zero)
+                          .animate(
+                          fadeAnimation); // Gentle rise
+
+                      return FadeTransition(
+                        opacity:
+                        fadeAnimation,
+                        child:
+                        ScaleTransition(
+                          scale:
+                          scaleAnimation,
+                          child:
+                          SlideTransition(
+                            position:
+                            slideAnimation,
+                            child: child,
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 },
                 child: const Icon(Icons.add),
               ),
@@ -246,15 +352,17 @@ class _NotesPageState extends State<NotesPage> {
                                                                     MainAxisAlignment
                                                                         .end,
                                                                 children: [
-                                                                  Padding(
-                                                                    padding:
-                                                                        const EdgeInsets
-                                                                            .all(
-                                                                            7),
-                                                                    child: Image
-                                                                        .asset(
-                                                                      "assets/lock.png",
-                                                                      scale: 4,
+                                                                  Flexible(
+                                                                    child: Padding(
+                                                                      padding:
+                                                                          const EdgeInsets
+                                                                              .all(
+                                                                              7),
+                                                                      child: Image
+                                                                          .asset(
+                                                                        "assets/lock.png",
+                                                                        scale: 4,
+                                                                      ),
                                                                     ),
                                                                   ),
                                                                 ],
@@ -339,21 +447,63 @@ class _NotesPageState extends State<NotesPage> {
                                             await authService.authenticate();
                                         if (isAuthenticated) {
                                           if (context.mounted) {
-                                            showDialog(
-                                                context: context,
-                                                builder: (context) {
-                                                  return UpdateNoteDialog(
-                                                      index: index);
-                                                });
+                                            showGeneralDialog(
+                                              context: context,
+                                              barrierDismissible: true,
+                                              barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                                              pageBuilder: (BuildContext
+                                              context,
+                                                  Animation<double>
+                                                  animation,
+                                                  Animation<double>
+                                                  secondaryAnimation) {
+                                                return UpdateNoteDialog(index: index);
+                                              },
+                                              transitionBuilder:
+                                                  (context, animation, secondaryAnimation, child) {
+                                                var fadeAnimation = CurvedAnimation(
+                                                    parent: animation, curve: Curves.easeInOutSine);
+                                                var scaleAnimation =
+                                                Tween<double>(begin: 0.2, end: 1).animate(fadeAnimation);
+                                                return FadeTransition(
+                                                  opacity: fadeAnimation,
+                                                  child: ScaleTransition(
+                                                    scale: scaleAnimation,
+                                                    child: child,
+                                                  ),
+                                                );
+                                              },
+                                            );
                                           }
                                         }
                                       } else {
-                                        showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return UpdateNoteDialog(
-                                                  index: index);
-                                            });
+                                        showGeneralDialog(
+                                          context: context,
+                                          barrierDismissible: true,
+                                          barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                                          pageBuilder: (BuildContext
+                                          context,
+                                              Animation<double>
+                                              animation,
+                                              Animation<double>
+                                              secondaryAnimation) {
+                                            return UpdateNoteDialog(index: index);
+                                          },
+                                          transitionBuilder:
+                                              (context, animation, secondaryAnimation, child) {
+                                            var fadeAnimation = CurvedAnimation(
+                                                parent: animation, curve: Curves.easeInOutSine);
+                                            var scaleAnimation =
+                                            Tween<double>(begin: 0.2, end: 1).animate(fadeAnimation);
+                                            return FadeTransition(
+                                              opacity: fadeAnimation,
+                                              child: ScaleTransition(
+                                                scale: scaleAnimation,
+                                                child: child,
+                                              ),
+                                            );
+                                          },
+                                        );
                                       }
                                     },
                                   ),

@@ -26,70 +26,72 @@ class AppbarAvatar extends StatelessWidget {
             radius: 18,
           ),
           onTap: () {
-            showDialog(
-                useRootNavigator: true,
-                context: context,
-                builder: (e) {
-                  return StatefulBuilder(
-                    builder:
-                        (BuildContext context, setState) {
-                      return AlertDialog(
-                        scrollable: true,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        backgroundColor:
-                            user.colorProvider.profileAlertBackground,
-                        title: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircleAvatar(
-                              radius: 130,
-                              backgroundColor: Colors.transparent,
-                              backgroundImage: user.user.pic
-                                          .substring(0, 1)
-                                          .compareTo("0") ==
-                                      0
-                                  ? AssetImage(
-                                      IconProvider.getAvatar(user.user.pic))
-                                  : FileImage(File(user.user.pic)),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    user.user.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        fontSize: 42),
-                                  ),
+            showGeneralDialog(
+              useRootNavigator: true,
+              context: context,
+              barrierDismissible: true,
+              barrierLabel:
+                  MaterialLocalizations.of(context).modalBarrierDismissLabel,
+              pageBuilder: (BuildContext context, Animation<double> animation,
+                  Animation<double> secondaryAnimation) {
+                return StatefulBuilder(
+                  builder: (BuildContext context, setState) {
+                    return AlertDialog(
+                      scrollable: true,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      backgroundColor:
+                          user.colorProvider.profileAlertBackground,
+                      title: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 130,
+                            backgroundColor: Colors.transparent,
+                            backgroundImage:
+                                user.user.pic.substring(0, 1).compareTo("0") ==
+                                        0
+                                    ? AssetImage(
+                                        IconProvider.getAvatar(user.user.pic))
+                                    : FileImage(File(user.user.pic)),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  user.user.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontSize: 42),
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        content: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            user.user.verse == 1
-                                ? GestureDetector(
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      content: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          user.user.verse == 1
+                              ? GestureDetector(
                                   onLongPress: () {
                                     Clipboard.setData(ClipboardData(
-                                            text: VerseManager
-                                                .getDailyVerse()))
+                                            text: VerseManager.getDailyVerse()))
                                         .then((_) {
                                       Fluttertoast.showToast(
                                           msg: "Verse copied to clipboard",
                                           toastLength: Toast.LENGTH_SHORT,
                                           gravity: ToastGravity.BOTTOM,
-                                          backgroundColor: const Color(0xff1E1E1E),
+                                          backgroundColor:
+                                              const Color(0xff1E1E1E),
                                           textColor: Colors.white,
                                           fontSize: 19.0);
                                     });
@@ -97,8 +99,7 @@ class AppbarAvatar extends StatelessWidget {
                                   child: Card(
                                     elevation: 2,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.all(16.0),
@@ -113,8 +114,7 @@ class AppbarAvatar extends StatelessWidget {
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(
                                                     fontSize: 28,
-                                                    fontWeight:
-                                                        FontWeight.bold,
+                                                    fontWeight: FontWeight.bold,
                                                     color: Colors.blueAccent,
                                                   ),
                                                 ),
@@ -136,13 +136,28 @@ class AppbarAvatar extends StatelessWidget {
                                     ),
                                   ),
                                 )
-                                : const SizedBox.shrink()
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                });
+                              : const SizedBox.shrink()
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+              transitionBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                var fadeAnimation = CurvedAnimation(
+                    parent: animation, curve: Curves.easeInOutSine);
+                var scaleAnimation =
+                    Tween<double>(begin: 0.2, end: 1).animate(fadeAnimation);
+                return FadeTransition(
+                  opacity: fadeAnimation,
+                  child: ScaleTransition(
+                    scale: scaleAnimation,
+                    child: child,
+                  ),
+                );
+              },
+            );
           },
         );
       },

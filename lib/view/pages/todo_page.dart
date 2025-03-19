@@ -75,10 +75,36 @@ class _TodoPageState extends State<TodoPage> {
                 foregroundColor:
                     user.colorProvider.floatingActionButtonForeground,
                 onPressed: () {
-                  showDialog(
+                  showGeneralDialog(
                     context: context,
-                    builder: (context) {
-                      return const AddTaskDialog();
+                    barrierDismissible: true,
+                    barrierLabel: MaterialLocalizations.of(context)
+                        .modalBarrierDismissLabel,
+                    pageBuilder: (BuildContext context,
+                        Animation<double> animation,
+                        Animation<double> secondaryAnimation) {
+                      return AddTaskDialog();
+                    },
+                    transitionBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                      var fadeAnimation = CurvedAnimation(
+                          parent: animation, curve: Curves.easeInOutSine);
+                      var scaleAnimation = Tween<double>(begin: 0.95, end: 1.0)
+                          .animate(fadeAnimation); // Subtle grow
+                      var slideAnimation = Tween<Offset>(
+                              begin: Offset(0, 0.05), end: Offset.zero)
+                          .animate(fadeAnimation); // Gentle rise
+
+                      return FadeTransition(
+                        opacity: fadeAnimation,
+                        child: ScaleTransition(
+                          scale: scaleAnimation,
+                          child: SlideTransition(
+                            position: slideAnimation,
+                            child: child,
+                          ),
+                        ),
+                      );
                     },
                   );
                 },
@@ -116,7 +142,8 @@ class _TodoPageState extends State<TodoPage> {
                                   child: FadeInAnimation(
                                     child: Dismissible(
                                       onDismissed: (direction) async {
-                                        await Provider.of<TasksProvider>(context,
+                                        await Provider.of<TasksProvider>(
+                                                context,
                                                 listen: false)
                                             .dismissTask(
                                                 index, tasks.items[index].id!)
@@ -137,9 +164,11 @@ class _TodoPageState extends State<TodoPage> {
                                         margin: const EdgeInsets.symmetric(
                                             horizontal: 8, vertical: 6),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(25),
+                                          borderRadius:
+                                              BorderRadius.circular(25),
                                         ),
-                                        color: user.colorProvider.cardBackground,
+                                        color:
+                                            user.colorProvider.cardBackground,
                                         child: Padding(
                                           padding: const EdgeInsets.all(16.0),
                                           child: Column(
@@ -151,12 +180,15 @@ class _TodoPageState extends State<TodoPage> {
                                                   Expanded(
                                                     child: GestureDetector(
                                                       child: AutoSizeText(
-                                                        tasks.items[index].title,
+                                                        tasks
+                                                            .items[index].title,
                                                         maxLines: 1,
-                                                        overflow:
-                                                            TextOverflow.ellipsis,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                         minFontSize: 18,
-                                                        style: tasks.items[index]
+                                                        style: tasks
+                                                                    .items[
+                                                                        index]
                                                                     .status ==
                                                                 0
                                                             ? TextStyle(
@@ -177,11 +209,32 @@ class _TodoPageState extends State<TodoPage> {
                                                               ),
                                                       ),
                                                       onLongPress: () {
-                                                        showDialog(
+                                                        showGeneralDialog(
                                                           context: context,
-                                                          builder: (context) {
+                                                          barrierDismissible: true,
+                                                          barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                                                          pageBuilder: (BuildContext
+                                                                  context,
+                                                              Animation<double>
+                                                                  animation,
+                                                              Animation<double>
+                                                                  secondaryAnimation) {
                                                             return UpdateTaskDialog(
                                                                 index: index);
+                                                          },
+                                                          transitionBuilder:
+                                                              (context, animation, secondaryAnimation, child) {
+                                                            var fadeAnimation = CurvedAnimation(
+                                                                parent: animation, curve: Curves.easeInOutSine);
+                                                            var scaleAnimation =
+                                                            Tween<double>(begin: 0.2, end: 1).animate(fadeAnimation);
+                                                            return FadeTransition(
+                                                              opacity: fadeAnimation,
+                                                              child: ScaleTransition(
+                                                                scale: scaleAnimation,
+                                                                child: child,
+                                                              ),
+                                                            );
                                                           },
                                                         );
                                                       },
@@ -195,7 +248,8 @@ class _TodoPageState extends State<TodoPage> {
                                                             tasks
                                                                 .cancelNotification(
                                                                     index);
-                                                            if (context.mounted) {
+                                                            if (context
+                                                                .mounted) {
                                                               Provider.of<TasksProvider>(
                                                                       context,
                                                                       listen:
@@ -227,10 +281,12 @@ class _TodoPageState extends State<TodoPage> {
                                                                       .items[
                                                                           index]
                                                                       .uuid,
-                                                                  notification: 0,
+                                                                  notification:
+                                                                      0,
                                                                 ),
                                                               )
-                                                                  .then((value) {
+                                                                  .then(
+                                                                      (value) {
                                                                 user.increaseFinished();
                                                                 Fluttertoast
                                                                     .showToast(
@@ -247,37 +303,46 @@ class _TodoPageState extends State<TodoPage> {
                                                                   textColor:
                                                                       Colors
                                                                           .white,
-                                                                  fontSize: 19.0,
+                                                                  fontSize:
+                                                                      19.0,
                                                                 );
                                                               });
                                                             }
                                                           } else {
                                                             Provider.of<TasksProvider>(
                                                                     context,
-                                                                    listen: false)
+                                                                    listen:
+                                                                        false)
                                                                 .updateTask(
                                                               TodoItem(
                                                                 title: tasks
-                                                                    .items[index]
+                                                                    .items[
+                                                                        index]
                                                                     .title,
                                                                 desc: tasks
-                                                                    .items[index]
+                                                                    .items[
+                                                                        index]
                                                                     .desc,
                                                                 id: tasks
-                                                                    .items[index]
+                                                                    .items[
+                                                                        index]
                                                                     .id,
                                                                 status: 1,
                                                                 date: tasks
-                                                                    .items[index]
+                                                                    .items[
+                                                                        index]
                                                                     .date,
                                                                 time: tasks
-                                                                    .items[index]
+                                                                    .items[
+                                                                        index]
                                                                     .time,
                                                                 uuid: tasks
-                                                                    .items[index]
+                                                                    .items[
+                                                                        index]
                                                                     .uuid,
                                                                 notification: tasks
-                                                                    .items[index]
+                                                                    .items[
+                                                                        index]
                                                                     .notification,
                                                               ),
                                                             )
@@ -285,16 +350,19 @@ class _TodoPageState extends State<TodoPage> {
                                                               user.increaseFinished();
                                                               Fluttertoast
                                                                   .showToast(
-                                                                msg: "Task done",
+                                                                msg:
+                                                                    "Task done",
                                                                 toastLength: Toast
                                                                     .LENGTH_SHORT,
                                                                 gravity:
                                                                     ToastGravity
                                                                         .BOTTOM,
                                                                 backgroundColor:
-                                                                    Colors.green,
+                                                                    Colors
+                                                                        .green,
                                                                 textColor:
-                                                                    Colors.white,
+                                                                    Colors
+                                                                        .white,
                                                                 fontSize: 19.0,
                                                               );
                                                             });
@@ -333,7 +401,8 @@ class _TodoPageState extends State<TodoPage> {
                                                             user.decreaseFinished();
                                                             Fluttertoast
                                                                 .showToast(
-                                                              msg: "Task undone",
+                                                              msg:
+                                                                  "Task undone",
                                                               toastLength: Toast
                                                                   .LENGTH_SHORT,
                                                               gravity:
@@ -405,10 +474,18 @@ class _TodoPageState extends State<TodoPage> {
                                                           const EdgeInsets.only(
                                                               top: 2.0),
                                                       child: ReadMoreText(
-                                                        moreStyle: TextStyle(color: user.colorProvider.moreLess),
-                                                        trimExpandedText: " Show Less",
-                                                        trimCollapsedText: "Show More",
-                                                        lessStyle: TextStyle(color: user.colorProvider.moreLess),
+                                                        moreStyle: TextStyle(
+                                                            color: user
+                                                                .colorProvider
+                                                                .moreLess),
+                                                        trimExpandedText:
+                                                            " Show Less",
+                                                        trimCollapsedText:
+                                                            "Show More",
+                                                        lessStyle: TextStyle(
+                                                            color: user
+                                                                .colorProvider
+                                                                .moreLess),
                                                         trimLines: 2,
                                                         trimMode: TrimMode.Line,
                                                         tasks.items[index].desc,
@@ -419,7 +496,8 @@ class _TodoPageState extends State<TodoPage> {
                                                                           index]
                                                                       .status ==
                                                                   0
-                                                              ? user.colorProvider
+                                                              ? user
+                                                                  .colorProvider
                                                                   .subtitle
                                                               : Colors.grey,
                                                         ),
@@ -451,7 +529,9 @@ class _TodoPageState extends State<TodoPage> {
                                                           Flexible(
                                                             child: Text(
                                                               " ${tasks.items[index].date} ",
-                                                              overflow: TextOverflow.ellipsis,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                               style: TextStyle(
                                                                 color: tasks
                                                                             .items[
@@ -461,7 +541,8 @@ class _TodoPageState extends State<TodoPage> {
                                                                     ? user
                                                                         .colorProvider
                                                                         .date
-                                                                    : Colors.grey,
+                                                                    : Colors
+                                                                        .grey,
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .normal,
@@ -469,7 +550,9 @@ class _TodoPageState extends State<TodoPage> {
                                                               ),
                                                             ),
                                                           ),
-                                                          tasks.items[index].time
+                                                          tasks
+                                                                  .items[index]
+                                                                  .time
                                                                   .isNotEmpty
                                                               ? Icon(
                                                                   Icons
@@ -490,7 +573,9 @@ class _TodoPageState extends State<TodoPage> {
                                                           Flexible(
                                                             child: Text(
                                                               " ${tasks.items[index].time}",
-                                                              overflow: TextOverflow.ellipsis,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                               style: TextStyle(
                                                                 color: tasks
                                                                             .items[
@@ -500,7 +585,8 @@ class _TodoPageState extends State<TodoPage> {
                                                                     ? user
                                                                         .colorProvider
                                                                         .date
-                                                                    : Colors.grey,
+                                                                    : Colors
+                                                                        .grey,
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .normal,
@@ -549,8 +635,7 @@ class _TodoPageState extends State<TodoPage> {
               ExpandableMenu(
                 iconColor: user.colorProvider.appBarIcons,
                 animationSpeed: 500,
-                width: MediaQuery.orientationOf(context) ==
-                        Orientation.portrait
+                width: MediaQuery.orientationOf(context) == Orientation.portrait
                     ? MediaQuery.sizeOf(context).width / 14
                     : MediaQuery.sizeOf(context).width / 30,
                 height: 45,
