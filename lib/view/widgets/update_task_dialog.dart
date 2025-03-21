@@ -105,18 +105,29 @@ class UpdateTaskDialog extends StatelessWidget {
                     Flexible(
                       child: IconButton(
                           onPressed: () {
-                            showDatePicker(
-                                context: context,
-                                firstDate: DateTime(DateTime.now().year,
-                                    DateTime.now().month, DateTime.now().day),
-                                lastDate: DateTime(DateTime.now().year + 5))
-                                .then((dateValue) {
-                              if (dateValue != null) {
-                                setState(() {
-                                  date = dateValue.toString().split(" ").first;
-                                });
-                              }
-                            });
+                            if(tasks.items[index].notification!=2){
+                              showDatePicker(
+                                  context: context,
+                                  firstDate: DateTime(DateTime.now().year,
+                                      DateTime.now().month, DateTime.now().day),
+                                  lastDate: DateTime(DateTime.now().year + 5))
+                                  .then((dateValue) {
+                                if (dateValue != null) {
+                                  setState(() {
+                                    date = dateValue.toString().split(" ").first;
+                                  });
+                                }
+                              });
+                            }
+                            else{
+                              Fluttertoast.showToast(
+                                  msg: "Daily Tasks Don't Need A Date",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                  backgroundColor: const Color(0xff1E1E1E),
+                                  textColor: Colors.white,
+                                  fontSize: 19.0);
+                            }
                           },
                           icon: const Icon(Icons.calendar_month)),
                     ),
@@ -149,7 +160,7 @@ class UpdateTaskDialog extends StatelessWidget {
                               if (timeValue != null) {
                                 setState(() {
                                   time = timeValue.format(context);
-                                  if (date.isEmpty) {
+                                  if (date.isEmpty&&tasks.items[index].notification!=2) {
                                     date = DateTime.now()
                                         .toString()
                                         .split(" ")
@@ -216,6 +227,28 @@ class UpdateTaskDialog extends StatelessWidget {
                             }
                             else{
                               not=0;
+                            }
+                          }
+                          else if(tasks.items[index].notification==2){
+                            FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
+                            if(time.isNotEmpty){
+                              date = "";
+                              try{
+                                NotificationService.scheduleDailyNotification(
+                                  tasks.items[index].uuid.hashCode,
+                                  "Don't Forget Your Task!",
+                                  tasks.items[index].title,
+                                  tasks.parseTime(time),
+                                ).then((onValue){
+                                  not = 2;
+                                });
+                              }
+                              catch(e){
+                                not = 0;
+                              }
+                            }
+                            else{
+                              not = 0;
                             }
                           }
 

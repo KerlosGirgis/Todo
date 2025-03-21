@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -6,8 +7,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   static Future<void> onDidReceiveNotification(
-      NotificationResponse notificationResponse) async {
-  }
+      NotificationResponse notificationResponse) async {}
 
   static Future<void> init() async {
     const AndroidInitializationSettings androidInitializationSettings =
@@ -72,5 +72,38 @@ class NotificationService {
       matchDateTimeComponents: DateTimeComponents.dateAndTime,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
+  }
+
+  static Future<void> scheduleDailyNotification(
+      int id, String title, String body, TimeOfDay scheduledTime) async {
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      _nextInstanceOfTime(scheduledTime),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'daily_channel',
+          'Daily Notifications',
+          channelDescription: 'Daily notification channel',
+        ),
+      ),
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
+
+  static tz.TZDateTime _nextInstanceOfTime(TimeOfDay time) {
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate = tz.TZDateTime.from(
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day,
+            time.hour, time.minute),
+        tz.local);
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    return scheduledDate;
   }
 }

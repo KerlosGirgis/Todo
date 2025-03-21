@@ -253,8 +253,113 @@ class TasksProvider with ChangeNotifier {
       });
     }
   }
+  TimeOfDay parseTime(String timeStr) {
+    // This RegExp matches time in the format "hh:mm AM" or "hh:mm PM"
+    final regex = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false);
+    final match = regex.firstMatch(timeStr.trim());
+
+    if (match != null) {
+      int hour = int.parse(match.group(1)!);
+      int minute = int.parse(match.group(2)!);
+      final period = match.group(3)!.toUpperCase();
+
+      // Convert to 24-hour format
+      if (period == 'PM' && hour != 12) {
+        hour += 12;
+      } else if (period == 'AM' && hour == 12) {
+        hour = 0;
+      }
+
+      return TimeOfDay(hour: hour, minute: minute);
+    } else {
+      throw FormatException("Invalid time format. Expected format is 'hh:mm AM/PM'.");
+    }
+  }
+
+  Future<void> changeDailyNotification(int index) async{
+      if(items[index].notification==1){
+        await changeNotification(index);
+      }
+      if(items[index].notification==2){
+        FlutterLocalNotificationsPlugin().cancel(items[index].uuid.hashCode).then((onValue){
+          updateTask(
+            TodoItem(
+              title: items[index].title,
+              desc: items[index].desc,
+              id: items[index].id,
+              status: items[index].status,
+              date: items[index].date,
+              time: items[index].time,
+              uuid: items[index].uuid,
+              notification: 0,
+            ),
+          ).then((value) {
+            Fluttertoast.showToast(
+              msg: "Notification Disabled",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: const Color(0xff1E1E1E),
+              textColor: Colors.white,
+              fontSize: 19.0,
+            );
+          });
+        });
+        return;
+      }
+      if(items[index].time.isNotEmpty){
+        try{
+          NotificationService.scheduleDailyNotification(
+            items[index].uuid.hashCode,
+            "Don't Forget Your Task!",
+            items[index].title,
+            parseTime(items[index].time),
+          ).then((onValue){
+            updateTask(
+              TodoItem(
+                title: items[index].title,
+                desc: items[index].desc,
+                id: items[index].id,
+                status: items[index].status,
+                date: "",
+                time: items[index].time,
+                uuid: items[index].uuid,
+                notification: 2,
+              ),
+            ).then((value) {
+              Fluttertoast.showToast(
+                msg: "Notification Enabled",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.green,
+                textColor: Colors.white,
+                fontSize: 19.0,
+              );
+            });
+          });
+        }
+        catch(e){
+          Fluttertoast.showToast(
+            msg: "Failed to Enable Notification",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 19.0,
+          );
+        }
+      }else{
+        Fluttertoast.showToast(
+          msg: "Oops!!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 19.0,
+        );
+      }
+  }
   void cancelNotification(int index){
-    if(items[index].notification==1){
+    if(items[index].notification==1||items[index].notification==2){
       FlutterLocalNotificationsPlugin().cancel(items[index].uuid.hashCode);
     }
   }

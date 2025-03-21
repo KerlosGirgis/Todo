@@ -148,7 +148,7 @@ class AppbarAvatar extends StatelessWidget {
                 var fadeAnimation = CurvedAnimation(
                     parent: animation, curve: Curves.easeInOutSine);
                 var scaleAnimation =
-                    Tween<double>(begin: 0.2, end: 1).animate(fadeAnimation);
+                    Tween<double>(begin: 0.95, end: 1).animate(fadeAnimation);
                 return FadeTransition(
                   opacity: fadeAnimation,
                   child: ScaleTransition(

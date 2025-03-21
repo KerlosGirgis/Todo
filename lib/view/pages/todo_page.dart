@@ -211,8 +211,12 @@ class _TodoPageState extends State<TodoPage> {
                                                       onLongPress: () {
                                                         showGeneralDialog(
                                                           context: context,
-                                                          barrierDismissible: true,
-                                                          barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                                                          barrierDismissible:
+                                                              true,
+                                                          barrierLabel:
+                                                              MaterialLocalizations
+                                                                      .of(context)
+                                                                  .modalBarrierDismissLabel,
                                                           pageBuilder: (BuildContext
                                                                   context,
                                                               Animation<double>
@@ -223,15 +227,30 @@ class _TodoPageState extends State<TodoPage> {
                                                                 index: index);
                                                           },
                                                           transitionBuilder:
-                                                              (context, animation, secondaryAnimation, child) {
-                                                            var fadeAnimation = CurvedAnimation(
-                                                                parent: animation, curve: Curves.easeInOutSine);
+                                                              (context,
+                                                                  animation,
+                                                                  secondaryAnimation,
+                                                                  child) {
+                                                            var fadeAnimation =
+                                                                CurvedAnimation(
+                                                                    parent:
+                                                                        animation,
+                                                                    curve: Curves
+                                                                        .easeInOutSine);
                                                             var scaleAnimation =
-                                                            Tween<double>(begin: 0.2, end: 1).animate(fadeAnimation);
+                                                                Tween<double>(
+                                                                        begin:
+                                                                            0.2,
+                                                                        end: 1)
+                                                                    .animate(
+                                                                        fadeAnimation);
                                                             return FadeTransition(
-                                                              opacity: fadeAnimation,
-                                                              child: ScaleTransition(
-                                                                scale: scaleAnimation,
+                                                              opacity:
+                                                                  fadeAnimation,
+                                                              child:
+                                                                  ScaleTransition(
+                                                                scale:
+                                                                    scaleAnimation,
                                                                 child: child,
                                                               ),
                                                             );
@@ -244,7 +263,8 @@ class _TodoPageState extends State<TodoPage> {
                                                             0) {
                                                           if (tasks.items[index]
                                                                   .notification ==
-                                                              1) {
+                                                              1||tasks.items[index]
+                                                              .notification ==2) {
                                                             tasks
                                                                 .cancelNotification(
                                                                     index);
@@ -425,8 +445,11 @@ class _TodoPageState extends State<TodoPage> {
                                                           right: 10)),
                                                   tasks.items[index].status == 0
                                                       ? tasks.items[index]
-                                                                  .notification ==
-                                                              1
+                                                                      .notification ==
+                                                                  1 ||
+                                                              tasks.items[index]
+                                                                      .notification ==
+                                                                  2
                                                           ? IconButton(
                                                               icon: const Icon(
                                                                 Icons
@@ -437,6 +460,11 @@ class _TodoPageState extends State<TodoPage> {
                                                               onPressed: () {
                                                                 tasks
                                                                     .changeNotification(
+                                                                        index);
+                                                              },
+                                                              onLongPress: () {
+                                                                tasks
+                                                                    .changeDailyNotification(
                                                                         index);
                                                               },
                                                             )
@@ -450,6 +478,11 @@ class _TodoPageState extends State<TodoPage> {
                                                               onPressed: () {
                                                                 tasks
                                                                     .changeNotification(
+                                                                        index);
+                                                              },
+                                                              onLongPress: () {
+                                                                tasks
+                                                                    .changeDailyNotification(
                                                                         index);
                                                               },
                                                             )
@@ -514,6 +547,7 @@ class _TodoPageState extends State<TodoPage> {
                                                               top: 7.0),
                                                       child: Row(
                                                         children: [
+                                                          tasks.items[index].date.isNotEmpty?
                                                           Icon(
                                                             Icons.date_range,
                                                             color: tasks
@@ -525,7 +559,8 @@ class _TodoPageState extends State<TodoPage> {
                                                                     .colorProvider
                                                                     .appTitle
                                                                 : Colors.grey,
-                                                          ),
+                                                          ):SizedBox.shrink(),
+                                                          tasks.items[index].date.isNotEmpty?
                                                           Flexible(
                                                             child: Text(
                                                               " ${tasks.items[index].date} ",
@@ -549,7 +584,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                 fontSize: 16,
                                                               ),
                                                             ),
-                                                          ),
+                                                          ):SizedBox.shrink(),
                                                           tasks
                                                                   .items[index]
                                                                   .time
@@ -594,6 +629,64 @@ class _TodoPageState extends State<TodoPage> {
                                                               ),
                                                             ),
                                                           ),
+                                                          tasks.items[index]
+                                                                      .notification ==
+                                                                  2
+                                                              ? Flexible(
+                                                                  child:
+                                                                      Padding(
+                                                                  padding: EdgeInsets
+                                                                      .only(
+                                                                          left:
+                                                                              20),
+                                                                  child:
+                                                                      Container(
+                                                                        constraints: BoxConstraints(
+                                                                          maxWidth: 100,
+                                                                        ),
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      gradient:
+                                                                          const LinearGradient(
+                                                                        colors: [
+                                                                          Color(
+                                                                              0xFF0D47A1),
+                                                                          Color(
+                                                                              0xFF1976D2),
+                                                                        ],
+                                                                        begin: Alignment
+                                                                            .topLeft,
+                                                                        end: Alignment
+                                                                            .bottomRight,
+                                                                      ),
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              16),
+                                                                    ),
+                                                                    child:
+                                                                        const Center(
+                                                                      child:
+                                                                          Text(
+                                                                        'Daily',
+                                                                        textAlign:
+                                                                            TextAlign.center,
+                                                                        maxLines:
+                                                                            1,
+                                                                        overflow:
+                                                                            TextOverflow.fade,
+                                                                        style:
+                                                                            TextStyle(
+                                                                          color:
+                                                                              Colors.white,
+                                                                          fontSize:
+                                                                              16,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ))
+                                                              : const SizedBox
+                                                                  .shrink()
                                                         ],
                                                       ),
                                                     )

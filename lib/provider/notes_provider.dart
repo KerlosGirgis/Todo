@@ -11,8 +11,10 @@ import '../services/lock_manager.dart';
 class NotesProvider with ChangeNotifier {
   List<Note> notes = [];
 
+  final DatabaseService _databaseService = DatabaseService();
+
   Future<void> get() async {
-    notes = await DatabaseService().getNotes();
+    notes = await _databaseService.getNotes();
     notifyListeners();
   }
 
@@ -24,17 +26,17 @@ class NotesProvider with ChangeNotifier {
   }
 
   Future<void> addNote(Note note) async {
-    await DatabaseService().insertNote(note);
+    await _databaseService.insertNote(note);
     get();
   }
 
   Future<void> updateNote(Note note) async {
-    await DatabaseService().updateNote(note);
+    await _databaseService.updateNote(note);
     get();
   }
 
   Future<void> deleteNote(int id) async {
-    await DatabaseService().deleteNote(id);
+    await _databaseService.deleteNote(id);
     get();
   }
 
@@ -44,9 +46,9 @@ class NotesProvider with ChangeNotifier {
     }
     final oldNote = notes.removeAt(oldIndex);
     notes.insert(newIndex, oldNote);
-    await DatabaseService().deleteAllNotes();
+    await _databaseService.deleteAllNotes();
     for (var note in notes) {
-      await DatabaseService().insertNote(note); // Reinsert items in new order
+      await _databaseService.insertNote(note); // Reinsert items in new order
     }
     get();
   }
@@ -55,7 +57,7 @@ class NotesProvider with ChangeNotifier {
     if (await LockManager().isLockEnabled()) {
       if (await AuthenticationService().authenticate()) {
         try {
-          await DatabaseService().exportNotesToJson().then((s) {
+          await _databaseService.exportNotesToJson().then((s) {
             if (s) {
               Fluttertoast.showToast(
                   msg: "Backup Created",
@@ -86,7 +88,7 @@ class NotesProvider with ChangeNotifier {
       }
     } else {
       try {
-        await DatabaseService().exportNotesToJson().then((s) {
+        await _databaseService.exportNotesToJson().then((s) {
           if (s) {
             Fluttertoast.showToast(
                 msg: "Backup Created",
@@ -119,7 +121,7 @@ class NotesProvider with ChangeNotifier {
 
   Future<void> restore() async {
     try {
-      await DatabaseService().importNotesFromJson().then((s) {
+      await _databaseService.importNotesFromJson().then((s) {
         if (s) {
           Fluttertoast.showToast(
               msg: "Data Restored",
