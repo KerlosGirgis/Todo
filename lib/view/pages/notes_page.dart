@@ -313,7 +313,7 @@ class _NotesPageState extends State<NotesPage> {
                                                   boxShadow: [
                                                     BoxShadow(
                                                       color: Colors.black
-                                                          .withValues(alpha: 0.2),
+                                                          .withValues(alpha: 0.8),
                                                       blurRadius: 8,
                                                       offset: const Offset(0, 4),
                                                     ),
@@ -464,7 +464,7 @@ class _NotesPageState extends State<NotesPage> {
                                                 var fadeAnimation = CurvedAnimation(
                                                     parent: animation, curve: Curves.easeInOutSine);
                                                 var scaleAnimation =
-                                                Tween<double>(begin: 0.2, end: 1).animate(fadeAnimation);
+                                                Tween<double>(begin: 0.8, end: 1).animate(fadeAnimation);
                                                 return FadeTransition(
                                                   opacity: fadeAnimation,
                                                   child: ScaleTransition(
@@ -494,7 +494,7 @@ class _NotesPageState extends State<NotesPage> {
                                             var fadeAnimation = CurvedAnimation(
                                                 parent: animation, curve: Curves.easeInOutSine);
                                             var scaleAnimation =
-                                            Tween<double>(begin: 0.2, end: 1).animate(fadeAnimation);
+                                            Tween<double>(begin: 0.8, end: 1).animate(fadeAnimation);
                                             return FadeTransition(
                                               opacity: fadeAnimation,
                                               child: ScaleTransition(

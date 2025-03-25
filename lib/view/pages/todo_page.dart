@@ -239,7 +239,7 @@ class _TodoPageState extends State<TodoPage> {
                                                             var scaleAnimation =
                                                                 Tween<double>(
                                                                         begin:
-                                                                            0.2,
+                                                                            0.8,
                                                                         end: 1)
                                                                     .animate(
                                                                         fadeAnimation);
