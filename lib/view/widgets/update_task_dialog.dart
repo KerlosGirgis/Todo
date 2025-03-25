@@ -99,6 +99,7 @@ class UpdateTaskDialog extends StatelessWidget {
                           borderRadius: BorderRadius.circular(15))),
                 ),
                 Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/90)),
+                tasks.items[index].notification!=2?
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -144,7 +145,7 @@ class UpdateTaskDialog extends StatelessWidget {
                             icon: const Icon(Icons.clear)),
                       ),
                   ],
-                ),
+                ):SizedBox.shrink(),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
