@@ -132,7 +132,8 @@ class UpdateTaskDialog extends StatelessWidget {
                           },
                           icon: const Icon(Icons.calendar_month)),
                     ),
-                    Flexible(child: Text(date,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.ellipsis,)),
+                    Flexible(
+                        child: Text(date,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.visible,)),
                     if (date.isNotEmpty)
                       Flexible(
                         child: IconButton(
@@ -173,7 +174,8 @@ class UpdateTaskDialog extends StatelessWidget {
                           },
                           icon: const Icon(Icons.access_time_filled_sharp)),
                     ),
-                    Flexible(child: Text(time,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.ellipsis,)),
+                    Flexible(
+                        child: Text(time,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.ellipsis,)),
                     if (time.isNotEmpty)
                       Flexible(
                         child: IconButton(
@@ -186,104 +188,105 @@ class UpdateTaskDialog extends StatelessWidget {
                       ),
                   ],
                 ),
-                Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/60)),
-                Row(
-                  spacing: MediaQuery.of(context).size.width / 25,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Button(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        label: "Cancel",
-                        status: false,
-                        fontSize: 18,
-                        size: 1,
-                      ),
+              ],
+            ),
+            actions: [
+              Row(
+                spacing: MediaQuery.of(context).size.width / 25,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Button(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      label: "Cancel",
+                      status: false,
+                      fontSize: 18,
+                      size: 1,
                     ),
-                    Expanded(
-                      child: Button(
-                        onPressed: () {
-                          int not = tasks.items[index].notification;
-                          if (titleController.text.isEmpty) {
-                            Fluttertoast.showToast(
-                                msg: "Task title can't be empty",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                                fontSize: 19.0);
-                            return;
+                  ),
+                  Expanded(
+                    child: Button(
+                      onPressed: () {
+                        int not = tasks.items[index].notification;
+                        if (titleController.text.isEmpty) {
+                          Fluttertoast.showToast(
+                              msg: "Task title can't be empty",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: Colors.red,
+                              textColor: Colors.white,
+                              fontSize: 19.0);
+                          return;
+                        }
+                        if(tasks.items[index].notification==1){
+                          FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
+                          if(time.isNotEmpty&&TasksProvider().stringToDateTime(date, time).isAfter(DateTime.now())){
+                            NotificationService.scheduleNotification(
+                              tasks.items[index].uuid.hashCode,
+                              "Don't Forget Your Task!",
+                              tasks.items[index].title,
+                              TasksProvider().stringToDateTime(date, time),
+                            );
                           }
-                          if(tasks.items[index].notification==1){
-                            FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
-                            if(time.isNotEmpty&&TasksProvider().stringToDateTime(date, time).isAfter(DateTime.now())){
-                              NotificationService.scheduleNotification(
+                          else{
+                            not=0;
+                          }
+                        }
+                        else if(tasks.items[index].notification==2){
+                          FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
+                          if(time.isNotEmpty){
+                            date = "";
+                            try{
+                              NotificationService.scheduleDailyNotification(
                                 tasks.items[index].uuid.hashCode,
                                 "Don't Forget Your Task!",
                                 tasks.items[index].title,
-                                TasksProvider().stringToDateTime(date, time),
-                              );
+                                tasks.parseTime(time),
+                              ).then((onValue){
+                                not = 2;
+                              });
                             }
-                            else{
-                              not=0;
-                            }
-                          }
-                          else if(tasks.items[index].notification==2){
-                            FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
-                            if(time.isNotEmpty){
-                              date = "";
-                              try{
-                                NotificationService.scheduleDailyNotification(
-                                  tasks.items[index].uuid.hashCode,
-                                  "Don't Forget Your Task!",
-                                  tasks.items[index].title,
-                                  tasks.parseTime(time),
-                                ).then((onValue){
-                                  not = 2;
-                                });
-                              }
-                              catch(e){
-                                not = 0;
-                              }
-                            }
-                            else{
+                            catch(e){
                               not = 0;
                             }
                           }
+                          else{
+                            not = 0;
+                          }
+                        }
 
-                          Provider.of<TasksProvider>(context, listen: false)
-                              .updateTask(TodoItem(
-                              title: titleController.text,
-                              desc: descController.text,
-                              id: tasks.items[index].id,
-                              status: tasks.items[index].status,
-                              date: date,
-                              time: time,
-                              uuid: tasks.items[index].uuid,
-                              notification: not))
-                              .then((value) {
-                            Fluttertoast.showToast(
-                                msg: "Task Updated",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: const Color(0xff1E1E1E),
-                                textColor: Colors.white,
-                                fontSize: 19.0);
-                          });
-                          Navigator.of(context).pop();
-                        },
-                        label: 'Update',
-                        status: true,
-                        fontSize: 18,
-                        size: 1,
-                      ),
+                        Provider.of<TasksProvider>(context, listen: false)
+                            .updateTask(TodoItem(
+                            title: titleController.text,
+                            desc: descController.text,
+                            id: tasks.items[index].id,
+                            status: tasks.items[index].status,
+                            date: date,
+                            time: time,
+                            uuid: tasks.items[index].uuid,
+                            notification: not))
+                            .then((value) {
+                          Fluttertoast.showToast(
+                              msg: "Task Updated",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: const Color(0xff1E1E1E),
+                              textColor: Colors.white,
+                              fontSize: 19.0);
+                        });
+                        Navigator.of(context).pop();
+                      },
+                      label: 'Update',
+                      status: true,
+                      fontSize: 18,
+                      size: 1,
                     ),
-                  ],
-                )
-              ],
-            ),
+                  ),
+                ],
+              )
+            ],
           );
         });
       },

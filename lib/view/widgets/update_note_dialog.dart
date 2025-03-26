@@ -93,6 +93,7 @@ class UpdateNoteDialog extends StatelessWidget {
                     children: [
                       Flexible(
                         child: const Text(
+                          overflow: TextOverflow.ellipsis,
                           "Title : ",
                           style: TextStyle(fontSize: 24),
                         ),
@@ -130,6 +131,7 @@ class UpdateNoteDialog extends StatelessWidget {
                       Flexible(
                         child: const Text(
                           "Cover : ",
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 24),
                         ),
                       ),
@@ -167,6 +169,7 @@ class UpdateNoteDialog extends StatelessWidget {
                         flex: 3,
                         child: Text(
                           "Fingerprint",
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 24),
                         ),
                       ),
@@ -200,63 +203,65 @@ class UpdateNoteDialog extends StatelessWidget {
                       )
                     ],
                   ),
-                  Row(
-                    spacing: MediaQuery.of(context).size.width / 25,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Button(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          label: 'Cancel',
-                          status: false,
-                          fontSize: 18,
-                          size: 1,
-                        ),
-                      ),
-                      Expanded(
-                        child: Button(
-                          onPressed: () {
-                            if (titleController.text.isEmpty) {
-                              Fluttertoast.showToast(
-                                  msg: "Title can't be empty",
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.BOTTOM,
-                                  backgroundColor: Colors.red,
-                                  textColor: Colors.white,
-                                  fontSize: 19.0);
-                              return;
-                            }
-                            Navigator.pop(context);
-                            Provider.of<NotesProvider>(context, listen: false)
-                                .updateNote(Note(
-                                id: notes.notes[index].id,
-                                title: titleController.text,
-                                body: notes.notes[index].body,
-                                titleColor: titleColor,
-                                coverColor: coverColor,
-                                protected: isProtected))
-                                .then((value) {
-                              Fluttertoast.showToast(
-                                  msg: "Note Edited",
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.BOTTOM,
-                                  backgroundColor: const Color(0xff1E1E1E),
-                                  textColor: Colors.white,
-                                  fontSize: 19.0);
-                            });
-                          },
-                          label: 'Update',
-                          status: true,
-                          fontSize: 18,
-                          size: 1,
-                        ),
-                      ),
-                    ],
-                  )
                 ],
               ),
+              actions: [
+                Row(
+                  spacing: MediaQuery.of(context).size.width / 25,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Button(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        label: 'Cancel',
+                        status: false,
+                        fontSize: 18,
+                        size: 1,
+                      ),
+                    ),
+                    Expanded(
+                      child: Button(
+                        onPressed: () {
+                          if (titleController.text.isEmpty) {
+                            Fluttertoast.showToast(
+                                msg: "Title can't be empty",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 19.0);
+                            return;
+                          }
+                          Navigator.pop(context);
+                          Provider.of<NotesProvider>(context, listen: false)
+                              .updateNote(Note(
+                              id: notes.notes[index].id,
+                              title: titleController.text,
+                              body: notes.notes[index].body,
+                              titleColor: titleColor,
+                              coverColor: coverColor,
+                              protected: isProtected))
+                              .then((value) {
+                            Fluttertoast.showToast(
+                                msg: "Note Edited",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: const Color(0xff1E1E1E),
+                                textColor: Colors.white,
+                                fontSize: 19.0);
+                          });
+                        },
+                        label: 'Update',
+                        status: true,
+                        fontSize: 18,
+                        size: 1,
+                      ),
+                    ),
+                  ],
+                )
+              ],
             );
           },
         );

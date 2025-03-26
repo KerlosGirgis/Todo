@@ -174,68 +174,71 @@ class AddTaskDialog extends StatelessWidget {
                     ],
                   ),
                   Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/60)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Button(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          label: 'Cancel',
-                          status: false,
-                          fontSize: 18,
-                          size: 1,
-                        ),
-                      ),
-                      Padding(
-                          padding: EdgeInsets.only(
-                              right: MediaQuery.of(context).size.width / 25)),
-                      Expanded(
-                        child: Button(
-                          onPressed: () {
-                            if (titleController.text.isEmpty) {
-                              Fluttertoast.showToast(
-                                  msg: "Task title can't be empty",
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.BOTTOM,
-                                  backgroundColor: Colors.red,
-                                  textColor: Colors.white,
-                                  fontSize: 19.0);
-                              return;
-                            }
-                            Navigator.pop(context);
-                            Provider.of<TasksProvider>(context, listen: false)
-                                .addTask(TodoItem(
-                              title: titleController.text,
-                              desc: descController.text,
-                              status: 0,
-                              date: date,
-                              time: time,
-                              uuid: const UuidV4().generate(),
-                              notification: 0,
-                            ))
-                                .then((value) async {
-                              user.increaseUnFinished();
-                              Fluttertoast.showToast(
-                                  msg: "Task Added",
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.BOTTOM,
-                                  backgroundColor: const Color(0xff1E1E1E),
-                                  textColor: Colors.white,
-                                  fontSize: 19.0);
-                            });
-                          },
-                          label: 'Save',
-                          status: true,
-                          fontSize: 18,
-                          size: 1,
-                        ),
-                      ),
-                    ],
-                  )
+
                 ],
               ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Button(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        label: 'Cancel',
+                        status: false,
+                        fontSize: 18,
+                        size: 1,
+                      ),
+                    ),
+                    Padding(
+                        padding: EdgeInsets.only(
+                            right: MediaQuery.of(context).size.width / 25)),
+                    Expanded(
+                      child: Button(
+                        onPressed: () {
+                          if (titleController.text.isEmpty) {
+                            Fluttertoast.showToast(
+                                msg: "Task title can't be empty",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 19.0);
+                            return;
+                          }
+                          Navigator.pop(context);
+                          Provider.of<TasksProvider>(context, listen: false)
+                              .addTask(TodoItem(
+                            title: titleController.text,
+                            desc: descController.text,
+                            status: 0,
+                            date: date,
+                            time: time,
+                            uuid: const UuidV4().generate(),
+                            notification: 0,
+                          ))
+                              .then((value) async {
+                            user.increaseUnFinished();
+                            Fluttertoast.showToast(
+                                msg: "Task Added",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: const Color(0xff1E1E1E),
+                                textColor: Colors.white,
+                                fontSize: 19.0);
+                          });
+                        },
+                        label: 'Save',
+                        status: true,
+                        fontSize: 18,
+                        size: 1,
+                      ),
+                    ),
+                  ],
+                )
+              ],
             );
           },
         );
