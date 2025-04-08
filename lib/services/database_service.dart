@@ -4,7 +4,9 @@ import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
@@ -282,17 +284,49 @@ class DatabaseService {
         TodoItem item = TodoItem.fromMap(itemMap);
         await insertItem(item);
         if(item.notification==1){
-          if (item.time.isNotEmpty) {
+          if (item.time.isNotEmpty&&item.date.isNotEmpty) {
             DateTime scheduledTime =
             TasksProvider().stringToDateTime(item.date, item.time);
             if (scheduledTime.isAfter(DateTime.now()) && item.status == 0) {
-              NotificationService.scheduleNotification(
-                item.uuid.hashCode,
-                "Don't Forget Your Task!",
-                item.title,
-                scheduledTime,
-              );
+              try{
+                NotificationService.scheduleNotification(
+                  item.uuid.hashCode,
+                  "Don't Forget Your Task!",
+                  item.title,
+                  scheduledTime,
+                );
+              }catch(e){
+                Fluttertoast.showToast(
+                    msg: "Couldn't enable notification for ${item.title}",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                    fontSize: 19.0);
+              }
             }
+          }
+        }
+        else if(item.notification==2){
+          if (item.time.isNotEmpty&&item.date.isNotEmpty&&item.status==0) {
+            TimeOfDay time = TasksProvider().parseTime(item.time);
+            try{
+              NotificationService.scheduleDailyNotification(
+                  item.uuid.hashCode,
+                  "Don't Forget Your Task!",
+                  item.title,
+                  time);
+            }
+            catch(e){
+              Fluttertoast.showToast(
+                  msg: "Couldn't enable notification for ${item.title}",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  fontSize: 19.0);
+            }
+
           }
         }
       }

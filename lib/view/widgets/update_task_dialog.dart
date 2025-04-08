@@ -85,7 +85,7 @@ class UpdateTaskDialog extends StatelessWidget {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15))),
                 ),
-                Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/60)),
+                Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/50)),
                 TextField(
                   controller: descController,
                   keyboardType: TextInputType.multiline,
@@ -133,7 +133,9 @@ class UpdateTaskDialog extends StatelessWidget {
                           icon: const Icon(Icons.calendar_month)),
                     ),
                     Flexible(
-                        child: Text(date,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.visible,)),
+                      flex: 4,
+                      fit: FlexFit.loose,
+                        child: Text(date,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.ellipsis,)),
                     if (date.isNotEmpty)
                       Flexible(
                         child: IconButton(
@@ -175,6 +177,8 @@ class UpdateTaskDialog extends StatelessWidget {
                           icon: const Icon(Icons.access_time_filled_sharp)),
                     ),
                     Flexible(
+                        flex: 4,
+                        fit: FlexFit.loose,
                         child: Text(time,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.ellipsis,)),
                     if (time.isNotEmpty)
                       Flexible(
