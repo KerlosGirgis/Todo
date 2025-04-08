@@ -1,0 +1,2 @@
+UI improvements
+Tasks Daily notifications (Long press on the notification icon)

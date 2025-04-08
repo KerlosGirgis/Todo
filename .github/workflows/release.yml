@@ -35,7 +35,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
+          flutter-version: '3.29.2'
 
       - name: Install dependencies
         run: flutter pub get
@@ -69,5 +69,5 @@ jobs:
           name: Todo ${{ github.ref_name }}
           body: |
             ## Release Notes
-            - UI Fixes and improvements
-            - Fixed Word Count
+            - UI improvements
+            - Tasks Daily notifications (Long press on the notification icon)
