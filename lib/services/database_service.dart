@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +8,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
-import 'package:crypto/crypto.dart';
 import 'package:todo/provider/tasks_provider.dart';
+import 'package:todo/services/key_manager.dart';
 
 import '../models/note.dart';
 import 'notification.dart';
@@ -23,33 +21,11 @@ class DatabaseService {
   DatabaseService._internal();
   final secureStorage = const FlutterSecureStorage();
   static const int _databaseVersion = 2;
-  String generateStrongKey({int length = 32}) {
-    final Random random = Random.secure();
-    final List<int> values =
-        List<int>.generate(length, (i) => random.nextInt(256));
-
-    // Optional: Hash the random bytes to further strengthen the key
-    final Digest key = sha256.convert(values);
-
-    return base64Url.encode(key.bytes);
-  }
-
-  Future<void> storeEncryptionKey() async {
-    String? key = await secureStorage.read(key: 'dbKey');
-    if (key == null) {
-      key = generateStrongKey(); // Your function to generate a secure key
-      await secureStorage.write(key: 'dbKey', value: key);
-    }
-  }
-
-  Future<String?> getEncryptionKey() async {
-    return await secureStorage.read(key: 'dbKey');
-  }
 
   Future<Database> openDb() async {
     var databasesPath = await getDatabasesPath();
-    String path = '${databasesPath}Database.db';
-    String? dbKey = await getEncryptionKey();
+    String path = '$databasesPath/Database.db';
+    String? dbKey = await KeyManager().getOrCreateEncryptionKey();
     db = await openDatabase(path,
         password: dbKey, version: _databaseVersion, onCreate: _onCreate,onUpgrade: _onUpgrade);
     return db;

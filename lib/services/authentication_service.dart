@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 
-import 'key_management_service.dart';
+import 'key_manager.dart';
 import 'lock_manager.dart';
 
 class AuthenticationService {
   final LocalAuthentication _auth = LocalAuthentication();
-  final KeyManagementService _keyService = KeyManagementService();
+  final KeyManager _keyService = KeyManager();
 
   Future<bool> authenticate() async {
     try {
