@@ -5,7 +5,6 @@ import 'package:todo/services/authentication_service.dart';
 
 import '../../provider/notes_provider.dart';
 import '../../provider/tasks_provider.dart';
-import '../../provider/theme_provider.dart';
 import '../../provider/user_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/verse_manager.dart';
@@ -46,7 +45,6 @@ class LockPageState extends State<LockPage> {
                   await VerseManager.loadVerses();
                   runApp(MultiProvider(providers: [
                   ChangeNotifierProvider(create: (_) => UserProvider()),
-                  ChangeNotifierProvider(create: (_) => ThemeProvider()),
                   ChangeNotifierProvider(create: (_) => TasksProvider()),
                   ChangeNotifierProvider(create: (_) => NotesProvider()),
                   ], child: const MyApp()));  }

@@ -69,7 +69,7 @@ class UpdateTaskDialog extends StatelessWidget {
                 )
               ],
             ),
-            backgroundColor: user.colorProvider.addTaskAlertBackground,
+            backgroundColor: user.colorManager.addTaskAlertBackground,
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -81,7 +81,7 @@ class UpdateTaskDialog extends StatelessWidget {
                       labelText: "Title",
                       labelStyle: TextStyle(
                           fontSize: 30,
-                          color: user.colorProvider.addTaskAlertText),
+                          color: user.colorManager.addTaskAlertText),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15))),
                 ),
@@ -94,7 +94,7 @@ class UpdateTaskDialog extends StatelessWidget {
                       labelText: "Description",
                       labelStyle: TextStyle(
                           fontSize: 30,
-                          color: user.colorProvider.addTaskAlertText),
+                          color: user.colorManager.addTaskAlertText),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15))),
                 ),

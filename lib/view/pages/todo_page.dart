@@ -35,16 +35,16 @@ class _TodoPageState extends State<TodoPage> {
     return Consumer<UserProvider>(
       builder: (context, user, child) {
         return Scaffold(
-          backgroundColor: user.colorProvider.pageBackground,
+          backgroundColor: user.colorManager.pageBackground,
           floatingActionButton: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FloatingActionButton(
                   heroTag: 0,
                   backgroundColor:
-                      user.colorProvider.floatingActionButtonBackground,
+                      user.colorManager.floatingActionButtonBackground,
                   foregroundColor:
-                      user.colorProvider.floatingActionButtonForeground,
+                      user.colorManager.floatingActionButtonForeground,
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -70,9 +70,9 @@ class _TodoPageState extends State<TodoPage> {
               FloatingActionButton(
                 heroTag: 1,
                 backgroundColor:
-                    user.colorProvider.floatingActionButtonBackground,
+                    user.colorManager.floatingActionButtonBackground,
                 foregroundColor:
-                    user.colorProvider.floatingActionButtonForeground,
+                    user.colorManager.floatingActionButtonForeground,
                 onPressed: () {
                   showGeneralDialog(
                     context: context,
@@ -167,7 +167,7 @@ class _TodoPageState extends State<TodoPage> {
                                               BorderRadius.circular(25),
                                         ),
                                         color:
-                                            user.colorProvider.cardBackground,
+                                            user.colorManager.cardBackground,
                                         child: Padding(
                                           padding: const EdgeInsets.all(16.0),
                                           child: Column(
@@ -193,7 +193,7 @@ class _TodoPageState extends State<TodoPage> {
                                                             ? TextStyle(
                                                                 fontSize: 26,
                                                                 color: user
-                                                                    .colorProvider
+                                                                    .colorManager
                                                                     .taskTitle,
                                                               )
                                                             : const TextStyle(
@@ -331,7 +331,7 @@ class _TodoPageState extends State<TodoPage> {
                                                       child: ReadMoreText(
                                                         moreStyle: TextStyle(
                                                             color: user
-                                                                .colorProvider
+                                                                .colorManager
                                                                 .moreLess),
                                                         trimExpandedText:
                                                             " Show Less",
@@ -339,7 +339,7 @@ class _TodoPageState extends State<TodoPage> {
                                                             "Show More",
                                                         lessStyle: TextStyle(
                                                             color: user
-                                                                .colorProvider
+                                                                .colorManager
                                                                 .moreLess),
                                                         trimLines: 2,
                                                         trimMode: TrimMode.Line,
@@ -352,7 +352,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                       .status ==
                                                                   0
                                                               ? user
-                                                                  .colorProvider
+                                                                  .colorManager
                                                                   .subtitle
                                                               : Colors.grey,
                                                         ),
@@ -382,7 +382,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                               .status ==
                                                                           0
                                                                       ? user
-                                                                          .colorProvider
+                                                                          .colorManager
                                                                           .appTitle
                                                                       : Colors
                                                                           .grey,
@@ -403,7 +403,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                         TextStyle(
                                                                       color: tasks.items[index].status == 0
                                                                           ? user
-                                                                              .colorProvider
+                                                                              .colorManager
                                                                               .date
                                                                           : Colors
                                                                               .grey,
@@ -430,7 +430,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                               .status ==
                                                                           0
                                                                       ? user
-                                                                          .colorProvider
+                                                                          .colorManager
                                                                           .appTitle
                                                                       : Colors
                                                                           .grey,
@@ -450,7 +450,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                             .status ==
                                                                         0
                                                                     ? user
-                                                                        .colorProvider
+                                                                        .colorManager
                                                                         .date
                                                                     : Colors
                                                                         .grey,
@@ -547,20 +547,20 @@ class _TodoPageState extends State<TodoPage> {
           ),
           appBar: AppBar(
             automaticallyImplyLeading: false,
-            backgroundColor: user.colorProvider.pageBackground,
+            backgroundColor: user.colorManager.pageBackground,
             surfaceTintColor: Colors.transparent,
             title: Text(
               "ToDo",
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 30,
-                color: user.colorProvider.appTitle,
+                color: user.colorManager.appTitle,
                 fontWeight: FontWeight.bold,
               ),
             ),
             actions: [
               ExpandableMenu(
-                iconColor: user.colorProvider.appBarIcons,
+                iconColor: user.colorManager.appBarIcons,
                 animationSpeed: 500,
                 width: MediaQuery.orientationOf(context) == Orientation.portrait
                     ? MediaQuery.sizeOf(context).width / 14
@@ -574,7 +574,7 @@ class _TodoPageState extends State<TodoPage> {
                       },
                       icon: Icon(
                         Icons.settings_backup_restore,
-                        color: user.colorProvider.appBarIcons,
+                        color: user.colorManager.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () async {
@@ -583,7 +583,7 @@ class _TodoPageState extends State<TodoPage> {
                       },
                       icon: Icon(
                         Icons.backup,
-                        color: user.colorProvider.appBarIcons,
+                        color: user.colorManager.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () {
@@ -609,7 +609,7 @@ class _TodoPageState extends State<TodoPage> {
                       },
                       icon: Icon(
                         Icons.settings,
-                        color: user.colorProvider.appBarIcons,
+                        color: user.colorManager.appBarIcons,
                       )),
                 ],
               ),

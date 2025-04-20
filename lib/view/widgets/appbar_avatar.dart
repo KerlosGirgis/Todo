@@ -42,7 +42,7 @@ class AppbarAvatar extends StatelessWidget {
                         borderRadius: BorderRadius.circular(25),
                       ),
                       backgroundColor:
-                          user.colorProvider.profileAlertBackground,
+                          user.colorManager.profileAlertBackground,
                       title: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [

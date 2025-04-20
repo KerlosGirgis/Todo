@@ -34,16 +34,16 @@ class ProfilePageState extends State<ProfilePage> {
       builder: (context, user, child) {
         return Scaffold(
             appBar: AppBar(
-              surfaceTintColor: user.colorProvider.pageBackground,
+              surfaceTintColor: user.colorManager.pageBackground,
               toolbarHeight: 40,
-              backgroundColor: user.colorProvider.pageBackground,
+              backgroundColor: user.colorManager.pageBackground,
               leading: IconButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
                   icon: Icon(
                     Icons.arrow_back,
-                    color: user.colorProvider.appTitle,
+                    color: user.colorManager.appTitle,
                     size: 32,
                   )),
               actions: [
@@ -59,11 +59,11 @@ class ProfilePageState extends State<ProfilePage> {
                     },
                     icon: Icon(
                       Icons.question_mark,
-                      color: user.colorProvider.appTitle,
+                      color: user.colorManager.appTitle,
                     ))
               ],
             ),
-            backgroundColor: user.colorProvider.pageBackground,
+            backgroundColor: user.colorManager.pageBackground,
             body: MediaQuery.of(context).orientation == Orientation.portrait ||
                     MediaQuery.sizeOf(context).aspectRatio < 1.5
                 ? SafeArea(
@@ -102,7 +102,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             MediaQuery.sizeOf(context).width /
                                                 10,
                                         child: FloatingActionButton(
-                                          backgroundColor: user.colorProvider
+                                          backgroundColor: user.colorManager
                                               .editPicButtonBackground,
                                           elevation: 3,
                                           shape: const CircleBorder(),
@@ -111,7 +111,7 @@ class ProfilePageState extends State<ProfilePage> {
                                               context: context,
                                               builder: (context) => AlertDialog(
                                                 backgroundColor: user
-                                                    .colorProvider
+                                                    .colorManager
                                                     .addTaskAlertBackground,
                                                 content: Row(
                                                   mainAxisSize:
@@ -217,7 +217,7 @@ class ProfilePageState extends State<ProfilePage> {
                                         fontWeight: FontWeight.bold,
                                         fontSize: 40,
                                         color:
-                                            user.colorProvider.profilePageName),
+                                            user.colorManager.profilePageName),
                                   ),
                                 ),
                               ),
@@ -313,13 +313,13 @@ class ProfilePageState extends State<ProfilePage> {
                                         color: Colors.blue,
                                         text: 'Finished',
                                         isSquare: true,
-                                        textColor: user.colorProvider.appTitle,
+                                        textColor: user.colorManager.appTitle,
                                       ),
                                       Indicator(
                                         color: Colors.grey,
                                         text: 'UnFinished',
                                         isSquare: true,
-                                        textColor: user.colorProvider.appTitle,
+                                        textColor: user.colorManager.appTitle,
                                       ),
                                     ],
                                   ),
@@ -489,7 +489,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             overflow: TextOverflow.ellipsis,
                                             fontSize: 28,
                                             color: user
-                                                .colorProvider.homePageText),
+                                                .colorManager.homePageText),
                                       ),
                                       Row(
                                         mainAxisAlignment:
@@ -515,7 +515,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                     .toStringAsPrecision(2),
                                                 style: TextStyle(
                                                     fontSize: 22,
-                                                    color: user.colorProvider
+                                                    color: user.colorManager
                                                         .homePageText),
                                               ))
                                         ],
@@ -595,7 +595,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             child: FloatingActionButton(
                                               shape:
                                                   const CircleBorder(), // Ensures circular shape
-                                              backgroundColor: user.colorProvider
+                                              backgroundColor: user.colorManager
                                                   .editPicButtonBackground,
                                               elevation: 3,
                                               onPressed: () {
@@ -604,7 +604,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                   builder: (context) =>
                                                       AlertDialog(
                                                     backgroundColor: user
-                                                        .colorProvider
+                                                        .colorManager
                                                         .addTaskAlertBackground,
                                                     content: Row(
                                                       mainAxisSize:
@@ -710,7 +710,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                   fontWeight: FontWeight.bold,
                                                   fontSize:
                                                       35, // Adjusted for landscape
-                                                  color: user.colorProvider
+                                                  color: user.colorManager
                                                       .profilePageName,
                                                 ),
                                               ),
@@ -950,7 +950,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 overflow: TextOverflow.ellipsis,
                                                 fontSize: 28,
                                                 color: user
-                                                    .colorProvider.homePageText),
+                                                    .colorManager.homePageText),
                                           ),
                                           Row(
                                             mainAxisAlignment:
@@ -976,7 +976,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                         .toStringAsPrecision(2),
                                                     style: TextStyle(
                                                         fontSize: 22,
-                                                        color: user.colorProvider
+                                                        color: user.colorManager
                                                             .homePageText),
                                                   ))
                                             ],

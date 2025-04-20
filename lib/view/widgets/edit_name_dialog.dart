@@ -59,7 +59,7 @@ class EditNameDialog extends StatelessWidget {
                 )
               ],
             ),
-            backgroundColor: user.colorProvider.addTaskAlertBackground,
+            backgroundColor: user.colorManager.addTaskAlertBackground,
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -71,7 +71,7 @@ class EditNameDialog extends StatelessWidget {
                       labelText: "Name",
                       labelStyle: TextStyle(
                           fontSize: 30,
-                          color: user.colorProvider.addTaskAlertText),
+                          color: user.colorManager.addTaskAlertText),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15))),
                 ),

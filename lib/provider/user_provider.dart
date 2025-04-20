@@ -11,12 +11,12 @@ import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/lock_manager.dart';
 import 'package:todo/services/user_repository.dart';
-import '../services/color_provider.dart';
+import '../services/color_manager.dart';
 
 class UserProvider with ChangeNotifier {
   UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1);
 
-  ColorProvider colorProvider =ColorProvider(1);
+  ColorManager colorManager =ColorManager(isDark: true);
 
   late bool isEnabled;
   late double tempNotesTextSize;
@@ -30,11 +30,11 @@ class UserProvider with ChangeNotifier {
       userRepository.insertUser(user);
       users = await userRepository.getUser();
       user = users.first;
-      colorProvider =ColorProvider(1);
+      colorManager =ColorManager(isDark: true);
     }
     else{
       user = users.first;
-      colorProvider =ColorProvider(user.theme);
+      colorManager =ColorManager(isDark: user.theme==1?true:false);
     }
     isEnabled=await LockManager().isLockEnabled();
     tempNotesTextSize=user.notesTextSize;
@@ -56,13 +56,13 @@ class UserProvider with ChangeNotifier {
   changeTheme() async {
     if(user.theme==1){
       user.theme=0;
-      colorProvider =ColorProvider(0);
+      colorManager =ColorManager(isDark: false);
       await userRepository.updateUser(user);
       notifyListeners();
     }
     else{
       user.theme=1;
-      colorProvider =ColorProvider(1);
+      colorManager =ColorManager(isDark: true);
       await userRepository.updateUser(user);
       notifyListeners();
     }

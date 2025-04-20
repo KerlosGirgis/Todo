@@ -19,7 +19,7 @@ class ResetPlotDialog extends StatelessWidget {
             borderRadius:
             BorderRadius.circular(25),
           ),
-          backgroundColor: user.colorProvider
+          backgroundColor: user.colorManager
               .addTaskAlertBackground,
           content: Column(
             mainAxisSize: MainAxisSize.min,

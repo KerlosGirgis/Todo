@@ -21,7 +21,7 @@ class ReorderNotesDialog extends StatelessWidget {
               ),
               elevation: 2,
               scrollable: true,
-              backgroundColor: user.colorProvider.pageBackground,
+              backgroundColor: user.colorManager.pageBackground,
               title: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -48,7 +48,7 @@ class ReorderNotesDialog extends StatelessWidget {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
-                          color: user.colorProvider.homePageText),
+                          color: user.colorManager.homePageText),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -112,7 +112,7 @@ class ReorderNotesDialog extends StatelessWidget {
                                                 BorderRadius.circular(25),
                                           ),
                                           color:
-                                              user.colorProvider.cardBackground,
+                                              user.colorManager.cardBackground,
                                           child: Padding(
                                             padding: const EdgeInsets.all(16.0),
                                             child: Column(
@@ -131,7 +131,7 @@ class ReorderNotesDialog extends StatelessWidget {
                                                           style: TextStyle(
                                                             fontSize: 26,
                                                             color: user
-                                                                .colorProvider
+                                                                .colorManager
                                                                 .taskTitle,
                                                           )),
                                                     ),

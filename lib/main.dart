@@ -22,7 +22,6 @@ import 'package:todo/view/pages/lock_page.dart';
 import 'package:todo/view/pages/todo_page.dart';
 import 'package:todo/provider/notes_provider.dart';
 import 'package:todo/provider/tasks_provider.dart';
-import 'package:todo/provider/theme_provider.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:flutter/services.dart';
@@ -45,7 +44,6 @@ void main() async {
     await VerseManager.loadVerses();
     runApp(MultiProvider(providers: [
       ChangeNotifierProvider(create: (_) => UserProvider()),
-      ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ChangeNotifierProvider(create: (_) => TasksProvider()),
       ChangeNotifierProvider(create: (_) => NotesProvider()),
     ], child: const MyApp()));

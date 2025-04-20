@@ -30,7 +30,7 @@ class UpdateNoteDialog extends StatelessWidget {
           builder: (BuildContext context, setState) {
             return AlertDialog(
               scrollable: true,
-              backgroundColor: user.colorProvider.addTaskAlertBackground,
+              backgroundColor: user.colorManager.addTaskAlertBackground,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -84,7 +84,7 @@ class UpdateNoteDialog extends StatelessWidget {
                         labelText: "Title",
                         labelStyle: TextStyle(
                             fontSize: 30,
-                            color: user.colorProvider.addTaskAlertText),
+                            color: user.colorManager.addTaskAlertText),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15))),
                   ),

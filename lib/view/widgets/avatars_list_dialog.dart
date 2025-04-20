@@ -16,7 +16,7 @@ class AvatarsListDialog extends StatelessWidget {
         return StatefulBuilder(builder: (context,setState) {
           return AlertDialog(
             backgroundColor: user
-                .colorProvider
+                .colorManager
                 .addTaskAlertBackground,
             scrollable:
             true,

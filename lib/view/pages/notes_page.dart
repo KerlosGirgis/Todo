@@ -39,23 +39,23 @@ class _NotesPageState extends State<NotesPage> {
     return Consumer<UserProvider>(
       builder: (context, user, child) {
         return Scaffold(
-          backgroundColor: user.colorProvider.pageBackground,
+          backgroundColor: user.colorManager.pageBackground,
           appBar: AppBar(
             surfaceTintColor: Colors.transparent,
             automaticallyImplyLeading: false,
-            backgroundColor: user.colorProvider.pageBackground,
+            backgroundColor: user.colorManager.pageBackground,
             title: Text(
               "Notes",
               style: TextStyle(
                 fontSize: 30,
                 overflow: TextOverflow.ellipsis,
-                color: user.colorProvider.appTitle,
+                color: user.colorManager.appTitle,
                 fontWeight: FontWeight.bold,
               ),
             ),
             actions: [
               ExpandableMenu(
-                  iconColor: user.colorProvider.appBarIcons,
+                  iconColor: user.colorManager.appBarIcons,
                   animationSpeed: 500,
                   width: MediaQuery.orientationOf(context) ==
                           Orientation.portrait
@@ -126,7 +126,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.reorder,
-                          color: user.colorProvider.appBarIcons,
+                          color: user.colorManager.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () async {
@@ -135,7 +135,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.settings_backup_restore,
-                          color: user.colorProvider.appBarIcons,
+                          color: user.colorManager.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () async {
@@ -144,7 +144,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.backup,
-                          color: user.colorProvider.appBarIcons,
+                          color: user.colorManager.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () {
@@ -172,7 +172,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.settings,
-                          color: user.colorProvider.appBarIcons,
+                          color: user.colorManager.appBarIcons,
                         )),
                   ]),
               Flexible(child: const AppbarAvatar()),
@@ -185,9 +185,9 @@ class _NotesPageState extends State<NotesPage> {
               FloatingActionButton(
                   heroTag: 0,
                   backgroundColor:
-                      user.colorProvider.floatingActionButtonBackground,
+                      user.colorManager.floatingActionButtonBackground,
                   foregroundColor:
-                      user.colorProvider.floatingActionButtonForeground,
+                      user.colorManager.floatingActionButtonForeground,
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -196,9 +196,9 @@ class _NotesPageState extends State<NotesPage> {
               FloatingActionButton(
                 heroTag: 1,
                 backgroundColor:
-                    user.colorProvider.floatingActionButtonBackground,
+                    user.colorManager.floatingActionButtonBackground,
                 foregroundColor:
-                    user.colorProvider.floatingActionButtonForeground,
+                    user.colorManager.floatingActionButtonForeground,
                 onPressed: () {
                   showGeneralDialog(
                     context: context,
