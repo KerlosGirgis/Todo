@@ -10,8 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/lock_manager.dart';
+import 'package:todo/services/user_repository.dart';
 import '../services/color_provider.dart';
-import '../services/database_service.dart';
 
 class UserProvider with ChangeNotifier {
   UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1);
@@ -21,13 +21,14 @@ class UserProvider with ChangeNotifier {
   late bool isEnabled;
   late double tempNotesTextSize;
 
+  UserRepository userRepository = UserRepository();
 
   Future<void> get() async {
     List users;
-    users = await DatabaseService().getUser();
+    users = await userRepository.getUser();
     if(users.isEmpty){
-      DatabaseService().insertUser(user);
-      users = await DatabaseService().getUser();
+      userRepository.insertUser(user);
+      users = await userRepository.getUser();
       user = users.first;
       colorProvider =ColorProvider(1);
     }
@@ -42,13 +43,13 @@ class UserProvider with ChangeNotifier {
 
   editName(String name) async {
     user.name = name;
-    await DatabaseService().updateUser(user);
+    await userRepository.updateUser(user);
     notifyListeners();
   }
 
   editPic(String pic) async {
     user.pic = pic;
-    await DatabaseService().updateUser(user);
+    await userRepository.updateUser(user);
     notifyListeners();
   }
 
@@ -56,25 +57,25 @@ class UserProvider with ChangeNotifier {
     if(user.theme==1){
       user.theme=0;
       colorProvider =ColorProvider(0);
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
     else{
       user.theme=1;
       colorProvider =ColorProvider(1);
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
   }
   changeAutoSave() async {
     if(user.autoSave==1){
       user.autoSave=0;
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
     else{
       user.autoSave=1;
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
   }
@@ -88,13 +89,13 @@ class UserProvider with ChangeNotifier {
   changeFont() async {
     if(user.casual==1){
       user.casual=0;
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       setFontPreference(false);
       notifyListeners();
     }
     else{
       user.casual=1;
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       setFontPreference(true);
       notifyListeners();
     }
@@ -103,12 +104,12 @@ class UserProvider with ChangeNotifier {
   changeCount() async {
     if(user.count==1){
       user.count=0;
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
     else{
       user.count=1;
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
   }
@@ -116,12 +117,12 @@ class UserProvider with ChangeNotifier {
   changeVerse() async {
     if(user.verse==1){
       user.verse=0;
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
     else{
       user.verse=1;
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
   }
@@ -131,13 +132,13 @@ class UserProvider with ChangeNotifier {
     if(user.unFinished>0){
       user.unFinished--;
     }
-    await DatabaseService().updateUser(user);
+    await userRepository.updateUser(user);
     notifyListeners();
   }
 
   increaseUnFinished() async {
     user.unFinished++;
-    await DatabaseService().updateUser(user);
+    await userRepository.updateUser(user);
     notifyListeners();
   }
 
@@ -146,14 +147,14 @@ class UserProvider with ChangeNotifier {
     if(user.finished>0){
       user.finished--;
     }
-    await DatabaseService().updateUser(user);
+    await userRepository.updateUser(user);
     notifyListeners();
   }
 
   resetPlot() async {
     user.unFinished=0;
     user.finished=0;
-    await DatabaseService().updateUser(user);
+    await userRepository.updateUser(user);
     notifyListeners();
   }
 
@@ -186,12 +187,11 @@ class UserProvider with ChangeNotifier {
   setNotesTextSize()async{
     if(tempNotesTextSize>=0.25&&tempNotesTextSize<=2){
       user.notesTextSize=double.parse(tempNotesTextSize.toStringAsPrecision(2));
-      print(user.notesTextSize*26);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
       await HomeWidget.saveWidgetData('widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
       await HomeWidget.updateWidget(name: 'Note');
-      await DatabaseService().updateUser(user);
+      await userRepository.updateUser(user);
       notifyListeners();
     }
     else{
