@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/services/verse_manager.dart';
 
-import '../../services/icon_provider.dart';
+import '../../services/avatar_manager.dart';
 
 class AppbarAvatar extends StatelessWidget {
   const AppbarAvatar({
@@ -21,7 +21,7 @@ class AppbarAvatar extends StatelessWidget {
           child: CircleAvatar(
             backgroundColor: Colors.transparent,
             backgroundImage: user.user.pic.substring(0, 1).compareTo("0") == 0
-                ? AssetImage(IconProvider.getAvatar(user.user.pic))
+                ? AssetImage(AvatarManager.getAvatar(user.user.pic))
                 : FileImage(File(user.user.pic)),
             radius: 18,
           ),
@@ -53,7 +53,7 @@ class AppbarAvatar extends StatelessWidget {
                                 user.user.pic.substring(0, 1).compareTo("0") ==
                                         0
                                     ? AssetImage(
-                                        IconProvider.getAvatar(user.user.pic))
+                                        AvatarManager.getAvatar(user.user.pic))
                                     : FileImage(File(user.user.pic)),
                           ),
                           Row(

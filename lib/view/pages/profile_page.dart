@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:todo/provider/user_provider.dart';
 import 'package:todo/view/widgets/edit_name_dialog.dart';
 import 'package:todo/view/widgets/settings_button.dart';
-import '../../services/icon_provider.dart';
+import '../../services/avatar_manager.dart';
 import '../widgets/avatars_list_dialog.dart';
 import '../widgets/button.dart';
 import '../widgets/indicator.dart';
@@ -81,7 +81,7 @@ class ProfilePageState extends State<ProfilePage> {
                                     CircleAvatar(
                                       backgroundImage: user.user.pic
                                               .startsWith("0")
-                                          ? AssetImage(IconProvider.getAvatar(
+                                          ? AssetImage(AvatarManager.getAvatar(
                                               user.user.pic))
                                           : FileImage(File(user.user.pic))
                                               as ImageProvider,
@@ -127,7 +127,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                         child: CircleAvatar(
                                                           backgroundImage:
                                                               AssetImage(
-                                                                  IconProvider
+                                                                  AvatarManager
                                                                       .getAvatar(
                                                                           "000")),
                                                           radius:
@@ -569,7 +569,7 @@ class ProfilePageState extends State<ProfilePage> {
                                         CircleAvatar(
                                           backgroundImage: user.user.pic
                                                   .startsWith("0")
-                                              ? AssetImage(IconProvider.getAvatar(
+                                              ? AssetImage(AvatarManager.getAvatar(
                                                   user.user.pic))
                                               : FileImage(File(user.user.pic))
                                                   as ImageProvider,
@@ -620,7 +620,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                           child: GestureDetector(
                                                             child: CircleAvatar(
                                                               backgroundImage:
-                                                                  AssetImage(IconProvider
+                                                                  AssetImage(AvatarManager
                                                                       .getAvatar(
                                                                           "000")),
                                                               radius: MediaQuery

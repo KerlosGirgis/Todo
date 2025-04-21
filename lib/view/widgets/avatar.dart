@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/user_provider.dart';
-import '../../services/icon_provider.dart';
+import '../../services/avatar_manager.dart';
 
 class Avatar extends StatelessWidget {
   const Avatar({super.key, required this.number});
@@ -13,7 +13,7 @@ class Avatar extends StatelessWidget {
       child: GestureDetector(
         child: CircleAvatar(
           backgroundColor: Colors.transparent,
-          backgroundImage: AssetImage(IconProvider.getAvatar(number)),
+          backgroundImage: AssetImage(AvatarManager.getAvatar(number)),
           radius: MediaQuery.orientationOf(context)==Orientation.portrait?MediaQuery.sizeOf(context).width/7:MediaQuery.sizeOf(context).height/7,
         ),
         onTap: () {

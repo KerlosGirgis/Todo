@@ -10,11 +10,9 @@ class AuthenticationService {
 
   Future<bool> authenticate() async {
     try {
-      // Check if the device supports biometric authentication
       final isAvailable = await _auth.canCheckBiometrics;
       if (!isAvailable) return false;
 
-      // Attempt biometric authentication
       return await _auth.authenticate(
         localizedReason: 'Please authenticate',
         options: const AuthenticationOptions(
@@ -40,7 +38,6 @@ class AuthenticationService {
     );
 
     if (authenticated) {
-      // Trigger key fetching as a security layer.
       await _keyService.getOrCreateEncryptionKey();
     }
 
@@ -48,24 +45,20 @@ class AuthenticationService {
   }
 
   Future<bool> initializeApp() async {
-    final AuthenticationService authService = AuthenticationService();
     final LockManager lockManager = LockManager();
 
     try {
-      // Check if the lock is enabled.
       bool isLockEnabled = await lockManager.isLockEnabled();
 
       if (isLockEnabled) {
-        // Perform authentication if lock is enabled.
-        bool authenticated = await authService.authenticateApp();
+        bool authenticated = await authenticateApp();
         if (!authenticated) {
-          return false; // Exit if authentication fails.
+          return false;
         }
       }
 
-      return true; // Proceed to load the app.
+      return true;
     } catch (e) {
-      // Log any initialization errors.
       if (kDebugMode) {
         print('Initialization Error: $e');
       }
