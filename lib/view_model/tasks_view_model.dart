@@ -8,7 +8,7 @@ import '../services/authentication_service.dart';
 import '../services/lock_manager.dart';
 import '../services/notification.dart';
 
-class TasksProvider with ChangeNotifier {
+class TasksViewModel with ChangeNotifier {
   List<TodoItem> items = [];
 
   TasksRepository tasksRepository = TasksRepository();

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../models/todo_item.dart';
-import '../provider/tasks_provider.dart';
+import '../view_model/tasks_view_model.dart';
 import 'database_service.dart';
 import 'notification.dart';
 
@@ -89,7 +89,7 @@ class TasksRepository{
         if(item.notification==1){
           if (item.time.isNotEmpty&&item.date.isNotEmpty) {
             DateTime scheduledTime =
-            TasksProvider().stringToDateTime(item.date, item.time);
+            TasksViewModel().stringToDateTime(item.date, item.time);
             if (scheduledTime.isAfter(DateTime.now()) && item.status == 0) {
               try{
                 NotificationService.scheduleNotification(
@@ -112,7 +112,7 @@ class TasksRepository{
         }
         else if(item.notification==2){
           if (item.time.isNotEmpty&&item.date.isNotEmpty&&item.status==0) {
-            TimeOfDay time = TasksProvider().parseTime(item.time);
+            TimeOfDay time = TasksViewModel().parseTime(item.time);
             try{
               NotificationService.scheduleDailyNotification(
                   item.uuid.hashCode,

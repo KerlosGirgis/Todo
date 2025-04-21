@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/services/verse_manager.dart';
 
 import '../../services/avatar_manager.dart';
@@ -15,7 +15,7 @@ class AppbarAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return GestureDetector(
           child: CircleAvatar(

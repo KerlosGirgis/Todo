@@ -4,14 +4,14 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
-import 'package:todo/view/widgets/edit_name_dialog.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import 'package:todo/view/screens/user/edit_name_dialog.dart';
 import 'package:todo/view/widgets/settings_button.dart';
-import '../../services/avatar_manager.dart';
-import '../widgets/avatars_list_dialog.dart';
-import '../widgets/button.dart';
-import '../widgets/indicator.dart';
-import '../widgets/reset_plot_dialog.dart';
+import '../../../services/avatar_manager.dart';
+import 'avatars_list_dialog.dart';
+import '../../widgets/button.dart';
+import '../../widgets/indicator.dart';
+import 'reset_plot_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
@@ -30,7 +30,7 @@ class ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return Scaffold(
             appBar: AppBar(
@@ -362,7 +362,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeTheme();
@@ -377,7 +377,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeCount();
@@ -392,7 +392,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeAutoSave();
@@ -428,7 +428,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeFont();
@@ -444,7 +444,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeVerse();
@@ -459,7 +459,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeLock();
@@ -834,7 +834,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeTheme();
@@ -849,7 +849,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeCount();
@@ -864,7 +864,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeAutoSave();
@@ -891,7 +891,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeFont();
@@ -907,7 +907,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeVerse();
@@ -922,7 +922,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeLock();

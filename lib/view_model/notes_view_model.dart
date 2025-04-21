@@ -6,7 +6,7 @@ import '../services/authentication_service.dart';
 import 'package:flutter/material.dart';
 import '../services/lock_manager.dart';
 
-class NotesProvider with ChangeNotifier {
+class NotesViewModel with ChangeNotifier {
   List<Note> notes = [];
 
   final NotesRepository notesRepository = NotesRepository();

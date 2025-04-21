@@ -4,14 +4,14 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
-import 'package:todo/view/pages/notes_page.dart';
-import 'package:todo/provider/tasks_provider.dart';
-import 'package:todo/provider/user_provider.dart';
-import 'package:todo/view/pages/profile_page.dart';
-import 'package:todo/view/widgets/add_task_dialog.dart';
-import '../widgets/appbar_avatar.dart';
-import '../widgets/expandable_menu.dart';
-import '../widgets/update_task_dialog.dart';
+import 'package:todo/view/screens/notes/notes_page.dart';
+import 'package:todo/view_model/tasks_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import 'package:todo/view/screens/user/profile_page.dart';
+import 'package:todo/view/screens/tasks/add_task_dialog.dart';
+import '../../widgets/appbar_avatar.dart';
+import '../../widgets/expandable_menu.dart';
+import 'update_task_dialog.dart';
 
 class TodoPage extends StatefulWidget {
   const TodoPage({
@@ -25,14 +25,14 @@ class _TodoPageState extends State<TodoPage> {
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TasksProvider>(context, listen: false).get();
+      Provider.of<TasksViewModel>(context, listen: false).get();
     });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return Scaffold(
           backgroundColor: user.colorManager.pageBackground,
@@ -112,7 +112,7 @@ class _TodoPageState extends State<TodoPage> {
             ],
           ),
           body: SafeArea(
-            child: Consumer<TasksProvider>(
+            child: Consumer<TasksViewModel>(
               builder: (context, tasks, child) {
                 return tasks.items.isEmpty
                     ? Center(
@@ -141,7 +141,7 @@ class _TodoPageState extends State<TodoPage> {
                                   child: FadeInAnimation(
                                     child: Dismissible(
                                       onDismissed: (direction) async {
-                                        await Provider.of<TasksProvider>(
+                                        await Provider.of<TasksViewModel>(
                                                 context,
                                                 listen: false)
                                             .dismissTask(
@@ -536,7 +536,7 @@ class _TodoPageState extends State<TodoPage> {
                             );
                           },
                           onReorder: (int oldIndex, int newIndex) async {
-                            await Provider.of<TasksProvider>(context,
+                            await Provider.of<TasksViewModel>(context,
                                     listen: false)
                                 .syncAfterReorder(oldIndex, newIndex);
                           },
@@ -569,7 +569,7 @@ class _TodoPageState extends State<TodoPage> {
                 items: [
                   IconButton(
                       onPressed: () async {
-                        Provider.of<TasksProvider>(context, listen: false)
+                        Provider.of<TasksViewModel>(context, listen: false)
                             .restore();
                       },
                       icon: Icon(
@@ -578,7 +578,7 @@ class _TodoPageState extends State<TodoPage> {
                       )),
                   IconButton(
                       onPressed: () async {
-                        Provider.of<TasksProvider>(context, listen: false)
+                        Provider.of<TasksViewModel>(context, listen: false)
                             .backup();
                       },
                       icon: Icon(

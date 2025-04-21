@@ -18,11 +18,11 @@ import 'package:provider/provider.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/notification.dart';
 import 'package:todo/services/verse_manager.dart';
-import 'package:todo/view/pages/lock_page.dart';
-import 'package:todo/view/pages/todo_page.dart';
-import 'package:todo/provider/notes_provider.dart';
-import 'package:todo/provider/tasks_provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view/screens/lock_page.dart';
+import 'package:todo/view/screens/tasks/todo_page.dart';
+import 'package:todo/view_model/notes_view_model.dart';
+import 'package:todo/view_model/tasks_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -43,9 +43,9 @@ void main() async {
     await dbService.openDb();
     await VerseManager.loadVerses();
     runApp(MultiProvider(providers: [
-      ChangeNotifierProvider(create: (_) => UserProvider()),
-      ChangeNotifierProvider(create: (_) => TasksProvider()),
-      ChangeNotifierProvider(create: (_) => NotesProvider()),
+      ChangeNotifierProvider(create: (_) => UserViewModel()),
+      ChangeNotifierProvider(create: (_) => TasksViewModel()),
+      ChangeNotifierProvider(create: (_) => NotesViewModel()),
     ], child: const MyApp()));
   } else {
     runApp(MaterialApp(
@@ -72,7 +72,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: FutureBuilder(
-        future: Provider.of<UserProvider>(context, listen: false).get(),
+        future: Provider.of<UserViewModel>(context, listen: false).get(),
         builder: (context, snapshot) {
             return const TodoPage();
         },

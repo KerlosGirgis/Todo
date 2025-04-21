@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/notes_provider.dart';
-import 'package:todo/provider/user_provider.dart';
-import '../../models/note.dart';
-import '../../services/authentication_service.dart';
+import 'package:todo/view_model/notes_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import '../../../models/note.dart';
+import '../../../services/authentication_service.dart';
 
 class NoteEditorPage extends StatefulWidget {
   const NoteEditorPage({super.key, required this.note});
@@ -31,9 +31,9 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
-        return Consumer<NotesProvider>(
+        return Consumer<NotesViewModel>(
           builder: (context, notes, child) {
             return Scaffold(
               backgroundColor: user.colorManager.pageBackground,
@@ -66,7 +66,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                   IconButton(
                       onPressed: () {
                         try {
-                          Provider.of<NotesProvider>(context, listen: false)
+                          Provider.of<NotesViewModel>(context, listen: false)
                               .updateNote(Note(
                                   id: widget.note.id,
                                   title: widget.note.title,
@@ -149,7 +149,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                 fontSize: 19.0);
                           }
                         } else {
-                          Provider.of<NotesProvider>(context, listen: false)
+                          Provider.of<NotesViewModel>(context, listen: false)
                               .deleteNote(widget.note.id!);
                           Navigator.pop(context);
                         }
@@ -174,7 +174,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               onChanged: (value) {
                                 if (user.user.autoSave == 1) {
                                   try {
-                                    Provider.of<NotesProvider>(context,
+                                    Provider.of<NotesViewModel>(context,
                                             listen: false)
                                         .updateNote(Note(
                                             id: widget.note.id,

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/tasks_provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/tasks_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
 
-import '../../models/todo_item.dart';
-import '../../services/notification.dart';
-import 'button.dart';
+import '../../../models/todo_item.dart';
+import '../../../services/notification.dart';
+import '../../widgets/button.dart';
 
 class UpdateTaskDialog extends StatelessWidget {
   const UpdateTaskDialog({
@@ -17,7 +17,7 @@ class UpdateTaskDialog extends StatelessWidget {
   final int index;
   @override
   Widget build(BuildContext context) {
-    return Consumer2<UserProvider, TasksProvider>(
+    return Consumer2<UserViewModel, TasksViewModel>(
       builder: (context, user, tasks, child) {
         String date = tasks.items[index].date;
         String time = tasks.items[index].time;
@@ -226,12 +226,12 @@ class UpdateTaskDialog extends StatelessWidget {
                         }
                         if(tasks.items[index].notification==1){
                           FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
-                          if(time.isNotEmpty&&TasksProvider().stringToDateTime(date, time).isAfter(DateTime.now())){
+                          if(time.isNotEmpty&&TasksViewModel().stringToDateTime(date, time).isAfter(DateTime.now())){
                             NotificationService.scheduleNotification(
                               tasks.items[index].uuid.hashCode,
                               "Don't Forget Your Task!",
                               tasks.items[index].title,
-                              TasksProvider().stringToDateTime(date, time),
+                              TasksViewModel().stringToDateTime(date, time),
                             );
                           }
                           else{
@@ -261,7 +261,7 @@ class UpdateTaskDialog extends StatelessWidget {
                           }
                         }
 
-                        Provider.of<TasksProvider>(context, listen: false)
+                        Provider.of<TasksViewModel>(context, listen: false)
                             .updateTask(TodoItem(
                             title: titleController.text,
                             desc: descController.text,

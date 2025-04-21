@@ -13,7 +13,7 @@ import 'package:todo/services/lock_manager.dart';
 import 'package:todo/services/user_repository.dart';
 import '../services/color_manager.dart';
 
-class UserProvider with ChangeNotifier {
+class UserViewModel with ChangeNotifier {
   UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1);
 
   ColorManager colorManager =ColorManager(isDark: true);

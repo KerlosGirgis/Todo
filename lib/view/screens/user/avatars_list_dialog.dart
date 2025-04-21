@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/user_view_model.dart';
 
-import 'avatar.dart';
+import '../../widgets/avatar.dart';
 
 class AvatarsListDialog extends StatelessWidget {
   const AvatarsListDialog({
@@ -11,7 +11,7 @@ class AvatarsListDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user,child) {
         return StatefulBuilder(builder: (context,setState) {
           return AlertDialog(

@@ -2,33 +2,33 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/notes_provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import '../../../models/note.dart';
+import '../../../view_model/notes_view_model.dart';
+import '../../../services/authentication_service.dart';
+import '../../widgets/button.dart';
 
-import '../../models/note.dart';
-import '../../services/authentication_service.dart';
-import 'button.dart';
-
-class UpdateNoteDialog extends StatelessWidget {
-  const UpdateNoteDialog({
+class AddNoteDialog extends StatelessWidget {
+  const AddNoteDialog({
     super.key,
-    required this.index,
   });
-  final int index;
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<UserProvider, NotesProvider>(
-      builder: (context, user, notes, child) {
-        final AuthenticationService authService = AuthenticationService();
-        TextEditingController titleController = TextEditingController();
-        titleController.text = notes.notes[index].title;
-        int isProtected = notes.notes[index].protected;
-        String titleColor = notes.notes[index].titleColor;
-        String coverColor = notes.notes[index].coverColor;
+    final AuthenticationService authService = AuthenticationService();
+    TextEditingController titleController = TextEditingController();
+    return Consumer<UserViewModel>(
+      builder: (context, user, child) {
+        int isProtected = 0;
+        String titleColor = Colors.white.hex;
+        String coverColor = const Color(0xff1E1E1E).hex;
         return StatefulBuilder(
           builder: (BuildContext context, setState) {
             return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 2,
               scrollable: true,
               backgroundColor: user.colorManager.addTaskAlertBackground,
               title: Row(
@@ -42,7 +42,7 @@ class UpdateNoteDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
-                        Icons.edit_note,
+                        Icons.note_add,
                         color: Color(0xff3D5AFE),
                       ),
                     ),
@@ -50,7 +50,7 @@ class UpdateNoteDialog extends StatelessWidget {
                   Expanded(
                     flex: 5,
                     child: const Text(
-                      "Edit Note",
+                      "Add Note",
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
@@ -73,7 +73,7 @@ class UpdateNoteDialog extends StatelessWidget {
                 ],
               ),
               content: Column(
-                spacing: MediaQuery.sizeOf(context).height/50,
+                spacing: MediaQuery.of(context).size.height / 50,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -93,8 +93,9 @@ class UpdateNoteDialog extends StatelessWidget {
                     children: [
                       Flexible(
                         child: const Text(
-                          overflow: TextOverflow.ellipsis,
                           "Title : ",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 24),
                         ),
                       ),
@@ -131,6 +132,7 @@ class UpdateNoteDialog extends StatelessWidget {
                       Flexible(
                         child: const Text(
                           "Cover : ",
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 24),
                         ),
@@ -169,6 +171,7 @@ class UpdateNoteDialog extends StatelessWidget {
                         flex: 3,
                         child: Text(
                           "Fingerprint",
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 24),
                         ),
@@ -207,8 +210,7 @@ class UpdateNoteDialog extends StatelessWidget {
               ),
               actions: [
                 Row(
-                  spacing: MediaQuery.of(context).size.width / 25,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: MediaQuery.sizeOf(context).width/25,
                   children: [
                     Expanded(
                       child: Button(
@@ -235,17 +237,17 @@ class UpdateNoteDialog extends StatelessWidget {
                             return;
                           }
                           Navigator.pop(context);
-                          Provider.of<NotesProvider>(context, listen: false)
-                              .updateNote(Note(
-                              id: notes.notes[index].id,
-                              title: titleController.text,
-                              body: notes.notes[index].body,
-                              titleColor: titleColor,
-                              coverColor: coverColor,
-                              protected: isProtected))
+                          Provider.of<NotesViewModel>(context, listen: false)
+                              .addNote(Note(
+                            title: titleController.text,
+                            body: '',
+                            titleColor: titleColor,
+                            coverColor: coverColor,
+                            protected: isProtected,
+                          ))
                               .then((value) {
                             Fluttertoast.showToast(
-                                msg: "Note Edited",
+                                msg: "Note Added",
                                 toastLength: Toast.LENGTH_SHORT,
                                 gravity: ToastGravity.BOTTOM,
                                 backgroundColor: const Color(0xff1E1E1E),
@@ -253,7 +255,7 @@ class UpdateNoteDialog extends StatelessWidget {
                                 fontSize: 19.0);
                           });
                         },
-                        label: 'Update',
+                        label: 'Save',
                         status: true,
                         fontSize: 18,
                         size: 1,
