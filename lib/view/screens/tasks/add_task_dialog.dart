@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/user_view_model.dart';
 import 'package:uuid/v4.dart';
-import '../../models/todo_item.dart';
-import '../../provider/tasks_provider.dart';
-import 'button.dart';
+import '../../../models/todo_item.dart';
+import '../../../view_model/tasks_view_model.dart';
+import '../../widgets/button.dart';
 
 class AddTaskDialog extends StatelessWidget {
   const AddTaskDialog({
@@ -18,13 +18,13 @@ class AddTaskDialog extends StatelessWidget {
     String time = "";
     TextEditingController titleController = TextEditingController();
     TextEditingController descController = TextEditingController();
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
               scrollable: true,
-              backgroundColor: user.colorProvider.addTaskAlertBackground,
+              backgroundColor: user.colorManager.addTaskAlertBackground,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -78,7 +78,7 @@ class AddTaskDialog extends StatelessWidget {
                         labelText: "Title",
                         labelStyle: TextStyle(
                             fontSize: 30,
-                            color: user.colorProvider.addTaskAlertText),
+                            color: user.colorManager.addTaskAlertText),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15))),
                   ),
@@ -91,7 +91,7 @@ class AddTaskDialog extends StatelessWidget {
                         labelText: "Description",
                         labelStyle: TextStyle(
                             fontSize: 30,
-                            color: user.colorProvider.addTaskAlertText),
+                            color: user.colorManager.addTaskAlertText),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15))),
                   ),
@@ -213,7 +213,7 @@ class AddTaskDialog extends StatelessWidget {
                             return;
                           }
                           Navigator.pop(context);
-                          Provider.of<TasksProvider>(context, listen: false)
+                          Provider.of<TasksViewModel>(context, listen: false)
                               .addTask(TodoItem(
                             title: titleController.text,
                             desc: descController.text,

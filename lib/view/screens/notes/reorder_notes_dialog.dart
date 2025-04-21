@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/notes_provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/notes_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
 
 class ReorderNotesDialog extends StatelessWidget {
   const ReorderNotesDialog({
@@ -11,7 +11,7 @@ class ReorderNotesDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return StatefulBuilder(
           builder: (BuildContext context, setState) {
@@ -21,7 +21,7 @@ class ReorderNotesDialog extends StatelessWidget {
               ),
               elevation: 2,
               scrollable: true,
-              backgroundColor: user.colorProvider.pageBackground,
+              backgroundColor: user.colorManager.pageBackground,
               title: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -48,7 +48,7 @@ class ReorderNotesDialog extends StatelessWidget {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
-                          color: user.colorProvider.homePageText),
+                          color: user.colorManager.homePageText),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -71,7 +71,7 @@ class ReorderNotesDialog extends StatelessWidget {
                   )
                 ],
               ),
-              content: Consumer<NotesProvider>(
+              content: Consumer<NotesViewModel>(
                 builder: (context, notes, child) {
                   return notes.notes.isEmpty
                       ? Center(
@@ -112,7 +112,7 @@ class ReorderNotesDialog extends StatelessWidget {
                                                 BorderRadius.circular(25),
                                           ),
                                           color:
-                                              user.colorProvider.cardBackground,
+                                              user.colorManager.cardBackground,
                                           child: Padding(
                                             padding: const EdgeInsets.all(16.0),
                                             child: Column(
@@ -131,7 +131,7 @@ class ReorderNotesDialog extends StatelessWidget {
                                                           style: TextStyle(
                                                             fontSize: 26,
                                                             color: user
-                                                                .colorProvider
+                                                                .colorManager
                                                                 .taskTitle,
                                                           )),
                                                     ),
@@ -151,7 +151,7 @@ class ReorderNotesDialog extends StatelessWidget {
                                 );
                               },
                               onReorder: (int oldIndex, int newIndex) async {
-                                await Provider.of<NotesProvider>(context,
+                                await Provider.of<NotesViewModel>(context,
                                         listen: false)
                                     .syncAfterReorder(oldIndex, newIndex);
                               },

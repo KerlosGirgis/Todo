@@ -1,9 +1,9 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/user_view_model.dart';
 
-import 'button.dart';
+import '../../widgets/button.dart';
 
 class ResetPlotDialog extends StatelessWidget {
   const ResetPlotDialog({
@@ -12,14 +12,14 @@ class ResetPlotDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(builder: (context, user, child) {
+    return Consumer<UserViewModel>(builder: (context, user, child) {
       return StatefulBuilder(builder: (context,setState) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius:
             BorderRadius.circular(25),
           ),
-          backgroundColor: user.colorProvider
+          backgroundColor: user.colorManager
               .addTaskAlertBackground,
           content: Column(
             mainAxisSize: MainAxisSize.min,

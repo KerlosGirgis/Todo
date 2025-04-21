@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/notes_provider.dart';
-import 'package:todo/provider/user_provider.dart';
-import '../../models/note.dart';
-import '../../services/authentication_service.dart';
+import 'package:todo/view_model/notes_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import '../../../models/note.dart';
+import '../../../services/authentication_service.dart';
 
 class NoteEditorPage extends StatefulWidget {
   const NoteEditorPage({super.key, required this.note});
@@ -31,42 +31,42 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
-        return Consumer<NotesProvider>(
+        return Consumer<NotesViewModel>(
           builder: (context, notes, child) {
             return Scaffold(
-              backgroundColor: user.colorProvider.pageBackground,
+              backgroundColor: user.colorManager.pageBackground,
               appBar: AppBar(
                 surfaceTintColor: Colors.transparent,
                 title: Text(
                   widget.note.title,
                   style: TextStyle(
                     fontSize: 30,
-                    color: user.colorProvider.appTitle,
+                    color: user.colorManager.appTitle,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                backgroundColor: user.colorProvider.pageBackground,
+                backgroundColor: user.colorManager.pageBackground,
                 leading: IconButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
                     icon: Icon(
                       Icons.arrow_back_ios,
-                      color: user.colorProvider.noteEditorBackButton,
+                      color: user.colorManager.noteEditorBackButton,
                     )),
                 actions: [
                   user.user.count==1?
                   Text("${bodyController.text.replaceAll("\n", "").replaceAll(" ", "").length}",style: TextStyle(
                       fontSize: 22,
-                      color: user.colorProvider.appTitle
+                      color: user.colorManager.appTitle
                   ),):const SizedBox.shrink(),
                   Padding(padding: EdgeInsets.only(right: MediaQuery.sizeOf(context).width/50)),
                   IconButton(
                       onPressed: () {
                         try {
-                          Provider.of<NotesProvider>(context, listen: false)
+                          Provider.of<NotesViewModel>(context, listen: false)
                               .updateNote(Note(
                                   id: widget.note.id,
                                   title: widget.note.title,
@@ -98,7 +98,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                         Icons.save_sharp,
                         color:
                             widget.note.body.compareTo(bodyController.text) == 0
-                                ? user.colorProvider.noteEditorButtons
+                                ? user.colorManager.noteEditorButtons
                                 : Colors.lightBlue,
                       )),
                   IconButton(
@@ -127,7 +127,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       },
                       icon: Icon(
                         Icons.sticky_note_2_sharp,
-                        color: user.colorProvider.noteEditorButtons,
+                        color: user.colorManager.noteEditorButtons,
                       )),
                   IconButton(
                       onPressed: () async {
@@ -149,7 +149,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                 fontSize: 19.0);
                           }
                         } else {
-                          Provider.of<NotesProvider>(context, listen: false)
+                          Provider.of<NotesViewModel>(context, listen: false)
                               .deleteNote(widget.note.id!);
                           Navigator.pop(context);
                         }
@@ -174,7 +174,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               onChanged: (value) {
                                 if (user.user.autoSave == 1) {
                                   try {
-                                    Provider.of<NotesProvider>(context,
+                                    Provider.of<NotesViewModel>(context,
                                             listen: false)
                                         .updateNote(Note(
                                             id: widget.note.id,
@@ -206,11 +206,11 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                   fontWeight: user.user.casual == 1
                                       ? FontWeight.w600
                                       : FontWeight.w400,
-                                  color: user.colorProvider.noteEditorText,
+                                  color: user.colorManager.noteEditorText,
                                   fontSize: (26*user.user.notesTextSize),
                                   decoration: TextDecoration.none,
                                   decorationColor:
-                                      user.colorProvider.noteEditorText),
+                                      user.colorManager.noteEditorText),
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 focusedBorder: InputBorder.none,

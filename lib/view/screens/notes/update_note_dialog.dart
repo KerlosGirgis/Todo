@@ -2,12 +2,12 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/notes_provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/notes_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
 
-import '../../models/note.dart';
-import '../../services/authentication_service.dart';
-import 'button.dart';
+import '../../../models/note.dart';
+import '../../../services/authentication_service.dart';
+import '../../widgets/button.dart';
 
 class UpdateNoteDialog extends StatelessWidget {
   const UpdateNoteDialog({
@@ -18,7 +18,7 @@ class UpdateNoteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<UserProvider, NotesProvider>(
+    return Consumer2<UserViewModel, NotesViewModel>(
       builder: (context, user, notes, child) {
         final AuthenticationService authService = AuthenticationService();
         TextEditingController titleController = TextEditingController();
@@ -30,7 +30,7 @@ class UpdateNoteDialog extends StatelessWidget {
           builder: (BuildContext context, setState) {
             return AlertDialog(
               scrollable: true,
-              backgroundColor: user.colorProvider.addTaskAlertBackground,
+              backgroundColor: user.colorManager.addTaskAlertBackground,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -84,7 +84,7 @@ class UpdateNoteDialog extends StatelessWidget {
                         labelText: "Title",
                         labelStyle: TextStyle(
                             fontSize: 30,
-                            color: user.colorProvider.addTaskAlertText),
+                            color: user.colorManager.addTaskAlertText),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15))),
                   ),
@@ -235,7 +235,7 @@ class UpdateNoteDialog extends StatelessWidget {
                             return;
                           }
                           Navigator.pop(context);
-                          Provider.of<NotesProvider>(context, listen: false)
+                          Provider.of<NotesViewModel>(context, listen: false)
                               .updateNote(Note(
                               id: notes.notes[index].id,
                               title: titleController.text,

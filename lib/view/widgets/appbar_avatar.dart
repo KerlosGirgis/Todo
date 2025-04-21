@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
+import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/services/verse_manager.dart';
 
-import '../../services/icon_provider.dart';
+import '../../services/avatar_manager.dart';
 
 class AppbarAvatar extends StatelessWidget {
   const AppbarAvatar({
@@ -15,13 +15,13 @@ class AppbarAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return GestureDetector(
           child: CircleAvatar(
             backgroundColor: Colors.transparent,
             backgroundImage: user.user.pic.substring(0, 1).compareTo("0") == 0
-                ? AssetImage(IconProvider.getAvatar(user.user.pic))
+                ? AssetImage(AvatarManager.getAvatar(user.user.pic))
                 : FileImage(File(user.user.pic)),
             radius: 18,
           ),
@@ -42,7 +42,7 @@ class AppbarAvatar extends StatelessWidget {
                         borderRadius: BorderRadius.circular(25),
                       ),
                       backgroundColor:
-                          user.colorProvider.profileAlertBackground,
+                          user.colorManager.profileAlertBackground,
                       title: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -53,7 +53,7 @@ class AppbarAvatar extends StatelessWidget {
                                 user.user.pic.substring(0, 1).compareTo("0") ==
                                         0
                                     ? AssetImage(
-                                        IconProvider.getAvatar(user.user.pic))
+                                        AvatarManager.getAvatar(user.user.pic))
                                     : FileImage(File(user.user.pic)),
                           ),
                           Row(

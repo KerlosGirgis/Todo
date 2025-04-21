@@ -2,27 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:todo/services/tasks_repository.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
-import '../services/database_service.dart';
 import '../services/lock_manager.dart';
 import '../services/notification.dart';
 
-class TasksProvider with ChangeNotifier {
+class TasksViewModel with ChangeNotifier {
   List<TodoItem> items = [];
 
+  TasksRepository tasksRepository = TasksRepository();
+
   Future<void> get() async {
-    items = await DatabaseService().getItems();
+    items = await tasksRepository.getItems();
     notifyListeners();
   }
 
   Future<void> updateTask(TodoItem todo) async {
-    await DatabaseService().updateItem(todo);
+    await tasksRepository.updateItem(todo);
     get();
   }
 
   Future<void> deleteTask(int id) async {
-    await DatabaseService().deleteItem(id);
+    await tasksRepository.deleteItem(id);
     notifyListeners();
   }
 
@@ -32,15 +34,15 @@ class TasksProvider with ChangeNotifier {
     }
     final oldTodo = items.removeAt(oldIndex);
     items.insert(newIndex, oldTodo);
-    await DatabaseService().deleteAllItems();
+    await tasksRepository.deleteAllItems();
     for (var item in items) {
-      await DatabaseService().insertItem(item); // Reinsert items in new order
+      await tasksRepository.insertItem(item); // Reinsert items in new order
     }
     get();
   }
 
   Future<void> addTask(TodoItem todo) async {
-    await DatabaseService().insertItem(todo);
+    await tasksRepository.insertItem(todo);
     get();
   }
 
@@ -48,7 +50,7 @@ class TasksProvider with ChangeNotifier {
     cancelNotification(index);
     items.removeAt(index);
     notifyListeners();
-    await DatabaseService().deleteItem(id);
+    await tasksRepository.deleteItem(id);
     get();
   }
 
@@ -132,7 +134,7 @@ class TasksProvider with ChangeNotifier {
     if (await LockManager().isLockEnabled()) {
       if (await AuthenticationService().authenticate()) {
         try {
-          await DatabaseService().exportToDoToJson().then((s) {
+          await tasksRepository.exportToDoToJson().then((s) {
             if (s) {
               Fluttertoast.showToast(
                   msg: "Backup Created",
@@ -163,7 +165,7 @@ class TasksProvider with ChangeNotifier {
       }
     } else {
       try {
-        await DatabaseService().exportToDoToJson().then((s) {
+        await tasksRepository.exportToDoToJson().then((s) {
           if (s) {
             Fluttertoast.showToast(
                 msg: "Backup Created",
@@ -196,7 +198,7 @@ class TasksProvider with ChangeNotifier {
 
   Future<void> restore() async {
     try {
-      await DatabaseService().importToDoFromJson().then((s) {
+      await tasksRepository.importToDoFromJson().then((s) {
         if (s) {
           Fluttertoast.showToast(
               msg: "Data Restored",

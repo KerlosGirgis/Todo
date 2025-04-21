@@ -2,11 +2,11 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
-import '../../models/note.dart';
-import '../../provider/notes_provider.dart';
-import '../../services/authentication_service.dart';
-import 'button.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import '../../../models/note.dart';
+import '../../../view_model/notes_view_model.dart';
+import '../../../services/authentication_service.dart';
+import '../../widgets/button.dart';
 
 class AddNoteDialog extends StatelessWidget {
   const AddNoteDialog({
@@ -17,7 +17,7 @@ class AddNoteDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final AuthenticationService authService = AuthenticationService();
     TextEditingController titleController = TextEditingController();
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         int isProtected = 0;
         String titleColor = Colors.white.hex;
@@ -30,7 +30,7 @@ class AddNoteDialog extends StatelessWidget {
               ),
               elevation: 2,
               scrollable: true,
-              backgroundColor: user.colorProvider.addTaskAlertBackground,
+              backgroundColor: user.colorManager.addTaskAlertBackground,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -84,7 +84,7 @@ class AddNoteDialog extends StatelessWidget {
                         labelText: "Title",
                         labelStyle: TextStyle(
                             fontSize: 30,
-                            color: user.colorProvider.addTaskAlertText),
+                            color: user.colorManager.addTaskAlertText),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15))),
                   ),
@@ -237,7 +237,7 @@ class AddNoteDialog extends StatelessWidget {
                             return;
                           }
                           Navigator.pop(context);
-                          Provider.of<NotesProvider>(context, listen: false)
+                          Provider.of<NotesViewModel>(context, listen: false)
                               .addNote(Note(
                             title: titleController.text,
                             body: '',

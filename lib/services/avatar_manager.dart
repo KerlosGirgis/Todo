@@ -1,4 +1,4 @@
-class IconProvider{
+class AvatarManager{
   static String getAvatar(String num){
     switch(num){
       case "000" :

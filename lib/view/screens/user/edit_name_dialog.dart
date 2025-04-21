@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
-import 'button.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import '../../widgets/button.dart';
 
 class EditNameDialog extends StatelessWidget {
   const EditNameDialog({
@@ -11,7 +11,7 @@ class EditNameDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         TextEditingController nameController = TextEditingController();
         nameController.text = user.user.name;
@@ -59,7 +59,7 @@ class EditNameDialog extends StatelessWidget {
                 )
               ],
             ),
-            backgroundColor: user.colorProvider.addTaskAlertBackground,
+            backgroundColor: user.colorManager.addTaskAlertBackground,
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -71,7 +71,7 @@ class EditNameDialog extends StatelessWidget {
                       labelText: "Name",
                       labelStyle: TextStyle(
                           fontSize: 30,
-                          color: user.colorProvider.addTaskAlertText),
+                          color: user.colorManager.addTaskAlertText),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15))),
                 ),
@@ -99,7 +99,7 @@ class EditNameDialog extends StatelessWidget {
                     child: Button(
                       onPressed: () async {
                         if (nameController.text.isNotEmpty) {
-                          Provider.of<UserProvider>(context, listen: false)
+                          Provider.of<UserViewModel>(context, listen: false)
                               .editName(nameController.text)
                               .then((value) {
                             Fluttertoast.showToast(

@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/view/pages/note_editor_page.dart';
-import 'package:todo/provider/notes_provider.dart';
-import 'package:todo/provider/user_provider.dart';
-import 'package:todo/view/pages/profile_page.dart';
-import 'package:todo/view/widgets/add_note_dialog.dart';
+import 'package:todo/view/screens/notes/note_editor_page.dart';
+import 'package:todo/view_model/notes_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import 'package:todo/view/screens/user/profile_page.dart';
+import 'package:todo/view/screens/notes/add_note_dialog.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
-import 'package:todo/view/widgets/reorder_notes_dialog.dart';
-import '../widgets/appbar_avatar.dart';
-import '../widgets/update_note_dialog.dart';
+import 'package:todo/view/screens/notes/reorder_notes_dialog.dart';
+import '../../widgets/appbar_avatar.dart';
+import 'update_note_dialog.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -28,7 +28,7 @@ class _NotesPageState extends State<NotesPage> {
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotesProvider>(context, listen: false).get();
+      Provider.of<NotesViewModel>(context, listen: false).get();
     });
     super.initState();
   }
@@ -36,26 +36,26 @@ class _NotesPageState extends State<NotesPage> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return Scaffold(
-          backgroundColor: user.colorProvider.pageBackground,
+          backgroundColor: user.colorManager.pageBackground,
           appBar: AppBar(
             surfaceTintColor: Colors.transparent,
             automaticallyImplyLeading: false,
-            backgroundColor: user.colorProvider.pageBackground,
+            backgroundColor: user.colorManager.pageBackground,
             title: Text(
               "Notes",
               style: TextStyle(
                 fontSize: 30,
                 overflow: TextOverflow.ellipsis,
-                color: user.colorProvider.appTitle,
+                color: user.colorManager.appTitle,
                 fontWeight: FontWeight.bold,
               ),
             ),
             actions: [
               ExpandableMenu(
-                  iconColor: user.colorProvider.appBarIcons,
+                  iconColor: user.colorManager.appBarIcons,
                   animationSpeed: 500,
                   width: MediaQuery.orientationOf(context) ==
                           Orientation.portrait
@@ -126,25 +126,25 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.reorder,
-                          color: user.colorProvider.appBarIcons,
+                          color: user.colorManager.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () async {
-                          Provider.of<NotesProvider>(context, listen: false)
+                          Provider.of<NotesViewModel>(context, listen: false)
                               .restore();
                         },
                         icon: Icon(
                           Icons.settings_backup_restore,
-                          color: user.colorProvider.appBarIcons,
+                          color: user.colorManager.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () async {
-                          Provider.of<NotesProvider>(context, listen: false)
+                          Provider.of<NotesViewModel>(context, listen: false)
                               .backup();
                         },
                         icon: Icon(
                           Icons.backup,
-                          color: user.colorProvider.appBarIcons,
+                          color: user.colorManager.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () {
@@ -172,7 +172,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.settings,
-                          color: user.colorProvider.appBarIcons,
+                          color: user.colorManager.appBarIcons,
                         )),
                   ]),
               Flexible(child: const AppbarAvatar()),
@@ -185,9 +185,9 @@ class _NotesPageState extends State<NotesPage> {
               FloatingActionButton(
                   heroTag: 0,
                   backgroundColor:
-                      user.colorProvider.floatingActionButtonBackground,
+                      user.colorManager.floatingActionButtonBackground,
                   foregroundColor:
-                      user.colorProvider.floatingActionButtonForeground,
+                      user.colorManager.floatingActionButtonForeground,
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -196,9 +196,9 @@ class _NotesPageState extends State<NotesPage> {
               FloatingActionButton(
                 heroTag: 1,
                 backgroundColor:
-                    user.colorProvider.floatingActionButtonBackground,
+                    user.colorManager.floatingActionButtonBackground,
                 foregroundColor:
-                    user.colorProvider.floatingActionButtonForeground,
+                    user.colorManager.floatingActionButtonForeground,
                 onPressed: () {
                   showGeneralDialog(
                     context: context,
@@ -264,7 +264,7 @@ class _NotesPageState extends State<NotesPage> {
             ],
           ),
           body: SafeArea(
-            child: Consumer<NotesProvider>(
+            child: Consumer<NotesViewModel>(
               builder: (context, notes, child) {
                 return notes.notes.isEmpty
                     ? Center(

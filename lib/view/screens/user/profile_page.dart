@@ -4,14 +4,14 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/provider/user_provider.dart';
-import 'package:todo/view/widgets/edit_name_dialog.dart';
+import 'package:todo/view_model/user_view_model.dart';
+import 'package:todo/view/screens/user/edit_name_dialog.dart';
 import 'package:todo/view/widgets/settings_button.dart';
-import '../../services/icon_provider.dart';
-import '../widgets/avatars_list_dialog.dart';
-import '../widgets/button.dart';
-import '../widgets/indicator.dart';
-import '../widgets/reset_plot_dialog.dart';
+import '../../../services/avatar_manager.dart';
+import 'avatars_list_dialog.dart';
+import '../../widgets/button.dart';
+import '../../widgets/indicator.dart';
+import 'reset_plot_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
@@ -30,20 +30,20 @@ class ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
+    return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return Scaffold(
             appBar: AppBar(
-              surfaceTintColor: user.colorProvider.pageBackground,
+              surfaceTintColor: user.colorManager.pageBackground,
               toolbarHeight: 40,
-              backgroundColor: user.colorProvider.pageBackground,
+              backgroundColor: user.colorManager.pageBackground,
               leading: IconButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
                   icon: Icon(
                     Icons.arrow_back,
-                    color: user.colorProvider.appTitle,
+                    color: user.colorManager.appTitle,
                     size: 32,
                   )),
               actions: [
@@ -59,11 +59,11 @@ class ProfilePageState extends State<ProfilePage> {
                     },
                     icon: Icon(
                       Icons.question_mark,
-                      color: user.colorProvider.appTitle,
+                      color: user.colorManager.appTitle,
                     ))
               ],
             ),
-            backgroundColor: user.colorProvider.pageBackground,
+            backgroundColor: user.colorManager.pageBackground,
             body: MediaQuery.of(context).orientation == Orientation.portrait ||
                     MediaQuery.sizeOf(context).aspectRatio < 1.5
                 ? SafeArea(
@@ -81,7 +81,7 @@ class ProfilePageState extends State<ProfilePage> {
                                     CircleAvatar(
                                       backgroundImage: user.user.pic
                                               .startsWith("0")
-                                          ? AssetImage(IconProvider.getAvatar(
+                                          ? AssetImage(AvatarManager.getAvatar(
                                               user.user.pic))
                                           : FileImage(File(user.user.pic))
                                               as ImageProvider,
@@ -102,7 +102,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             MediaQuery.sizeOf(context).width /
                                                 10,
                                         child: FloatingActionButton(
-                                          backgroundColor: user.colorProvider
+                                          backgroundColor: user.colorManager
                                               .editPicButtonBackground,
                                           elevation: 3,
                                           shape: const CircleBorder(),
@@ -111,7 +111,7 @@ class ProfilePageState extends State<ProfilePage> {
                                               context: context,
                                               builder: (context) => AlertDialog(
                                                 backgroundColor: user
-                                                    .colorProvider
+                                                    .colorManager
                                                     .addTaskAlertBackground,
                                                 content: Row(
                                                   mainAxisSize:
@@ -127,7 +127,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                         child: CircleAvatar(
                                                           backgroundImage:
                                                               AssetImage(
-                                                                  IconProvider
+                                                                  AvatarManager
                                                                       .getAvatar(
                                                                           "000")),
                                                           radius:
@@ -217,7 +217,7 @@ class ProfilePageState extends State<ProfilePage> {
                                         fontWeight: FontWeight.bold,
                                         fontSize: 40,
                                         color:
-                                            user.colorProvider.profilePageName),
+                                            user.colorManager.profilePageName),
                                   ),
                                 ),
                               ),
@@ -313,13 +313,13 @@ class ProfilePageState extends State<ProfilePage> {
                                         color: Colors.blue,
                                         text: 'Finished',
                                         isSquare: true,
-                                        textColor: user.colorProvider.appTitle,
+                                        textColor: user.colorManager.appTitle,
                                       ),
                                       Indicator(
                                         color: Colors.grey,
                                         text: 'UnFinished',
                                         isSquare: true,
-                                        textColor: user.colorProvider.appTitle,
+                                        textColor: user.colorManager.appTitle,
                                       ),
                                     ],
                                   ),
@@ -362,7 +362,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeTheme();
@@ -377,7 +377,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeCount();
@@ -392,7 +392,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeAutoSave();
@@ -428,7 +428,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeFont();
@@ -444,7 +444,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeVerse();
@@ -459,7 +459,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeLock();
@@ -489,7 +489,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             overflow: TextOverflow.ellipsis,
                                             fontSize: 28,
                                             color: user
-                                                .colorProvider.homePageText),
+                                                .colorManager.homePageText),
                                       ),
                                       Row(
                                         mainAxisAlignment:
@@ -515,7 +515,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                     .toStringAsPrecision(2),
                                                 style: TextStyle(
                                                     fontSize: 22,
-                                                    color: user.colorProvider
+                                                    color: user.colorManager
                                                         .homePageText),
                                               ))
                                         ],
@@ -569,7 +569,7 @@ class ProfilePageState extends State<ProfilePage> {
                                         CircleAvatar(
                                           backgroundImage: user.user.pic
                                                   .startsWith("0")
-                                              ? AssetImage(IconProvider.getAvatar(
+                                              ? AssetImage(AvatarManager.getAvatar(
                                                   user.user.pic))
                                               : FileImage(File(user.user.pic))
                                                   as ImageProvider,
@@ -595,7 +595,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             child: FloatingActionButton(
                                               shape:
                                                   const CircleBorder(), // Ensures circular shape
-                                              backgroundColor: user.colorProvider
+                                              backgroundColor: user.colorManager
                                                   .editPicButtonBackground,
                                               elevation: 3,
                                               onPressed: () {
@@ -604,7 +604,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                   builder: (context) =>
                                                       AlertDialog(
                                                     backgroundColor: user
-                                                        .colorProvider
+                                                        .colorManager
                                                         .addTaskAlertBackground,
                                                     content: Row(
                                                       mainAxisSize:
@@ -620,7 +620,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                           child: GestureDetector(
                                                             child: CircleAvatar(
                                                               backgroundImage:
-                                                                  AssetImage(IconProvider
+                                                                  AssetImage(AvatarManager
                                                                       .getAvatar(
                                                                           "000")),
                                                               radius: MediaQuery
@@ -710,7 +710,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                   fontWeight: FontWeight.bold,
                                                   fontSize:
                                                       35, // Adjusted for landscape
-                                                  color: user.colorProvider
+                                                  color: user.colorManager
                                                       .profilePageName,
                                                 ),
                                               ),
@@ -834,7 +834,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeTheme();
@@ -849,7 +849,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeCount();
@@ -864,7 +864,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeAutoSave();
@@ -891,7 +891,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeFont();
@@ -907,7 +907,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeVerse();
@@ -922,7 +922,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 Expanded(
                                                   child: SettingsButton(
                                                       onPressed: () {
-                                                        Provider.of<UserProvider>(
+                                                        Provider.of<UserViewModel>(
                                                                 context,
                                                                 listen: false)
                                                             .changeLock();
@@ -950,7 +950,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 overflow: TextOverflow.ellipsis,
                                                 fontSize: 28,
                                                 color: user
-                                                    .colorProvider.homePageText),
+                                                    .colorManager.homePageText),
                                           ),
                                           Row(
                                             mainAxisAlignment:
@@ -976,7 +976,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                         .toStringAsPrecision(2),
                                                     style: TextStyle(
                                                         fontSize: 22,
-                                                        color: user.colorProvider
+                                                        color: user.colorManager
                                                             .homePageText),
                                                   ))
                                             ],

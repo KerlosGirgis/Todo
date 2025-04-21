@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:todo/main.dart';
 import 'package:todo/services/authentication_service.dart';
 
-import '../../provider/notes_provider.dart';
-import '../../provider/tasks_provider.dart';
-import '../../provider/theme_provider.dart';
-import '../../provider/user_provider.dart';
+import '../../view_model/notes_view_model.dart';
+import '../../view_model/tasks_view_model.dart';
+import '../../view_model/user_view_model.dart';
 import '../../services/database_service.dart';
 import '../../services/verse_manager.dart';
 
@@ -45,10 +44,9 @@ class LockPageState extends State<LockPage> {
                   await dbService.openDb();
                   await VerseManager.loadVerses();
                   runApp(MultiProvider(providers: [
-                  ChangeNotifierProvider(create: (_) => UserProvider()),
-                  ChangeNotifierProvider(create: (_) => ThemeProvider()),
-                  ChangeNotifierProvider(create: (_) => TasksProvider()),
-                  ChangeNotifierProvider(create: (_) => NotesProvider()),
+                  ChangeNotifierProvider(create: (_) => UserViewModel()),
+                  ChangeNotifierProvider(create: (_) => TasksViewModel()),
+                  ChangeNotifierProvider(create: (_) => NotesViewModel()),
                   ], child: const MyApp()));  }
                   }, icon: const Icon(Icons.refresh_sharp,size: 70,color: Color(0xff3D5AFE),)),
             ),
