@@ -6,7 +6,7 @@ import '../core/utils/date_time_utils.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
 import '../services/lock_manager.dart';
-import '../services/notification.dart';
+import '../services/notification_service.dart';
 
 class TasksViewModel with ChangeNotifier {
   List<TodoItem> items = [];

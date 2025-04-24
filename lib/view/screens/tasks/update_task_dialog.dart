@@ -7,7 +7,7 @@ import 'package:todo/view_model/user_view_model.dart';
 
 import '../../../core/utils/date_time_utils.dart';
 import '../../../models/todo_item.dart';
-import '../../../services/notification.dart';
+import '../../../services/notification_service.dart';
 import '../../widgets/button.dart';
 
 class UpdateTaskDialog extends StatelessWidget {
