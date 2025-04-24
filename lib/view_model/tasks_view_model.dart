@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:intl/intl.dart';
 import 'package:todo/services/tasks_repository.dart';
+import '../core/utils/date_time_utils.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
 import '../services/lock_manager.dart';
@@ -229,20 +229,12 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  DateTime stringToDateTime(String date, String time12Hour) {
-    DateFormat format12Hour = DateFormat('h:mm a');
-    DateTime dateTime = format12Hour.parse(time12Hour);
-    DateFormat format24Hour = DateFormat('HH:mm:ss');
-    String time24Hour = format24Hour.format(dateTime);
-    return DateTime.parse("$date $time24Hour");
-  }
-
   Future<void> changeNotification(int index) async {
     if (items[index].notification == 0) {
       try {
         if (items[index].time.isNotEmpty&&items[index].date.isNotEmpty) {
           DateTime scheduledTime =
-              stringToDateTime(items[index].date, items[index].time);
+          DateTimeUtils.stringToDateTime(items[index].date, items[index].time);
           if (scheduledTime.isAfter(DateTime.now()) &&
               items[index].status == 0) {
             NotificationService.scheduleNotification(

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
+import '../../../core/utils/date_time_utils.dart';
 import '../../../models/todo_item.dart';
 import '../../../services/notification.dart';
 import '../../widgets/button.dart';
@@ -226,12 +227,12 @@ class UpdateTaskDialog extends StatelessWidget {
                         }
                         if(tasks.items[index].notification==1){
                           FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
-                          if(time.isNotEmpty&&TasksViewModel().stringToDateTime(date, time).isAfter(DateTime.now())){
+                          if(time.isNotEmpty&&DateTimeUtils.stringToDateTime(date, time).isAfter(DateTime.now())){
                             NotificationService.scheduleNotification(
                               tasks.items[index].uuid.hashCode,
                               "Don't Forget Your Task!",
                               tasks.items[index].title,
-                              TasksViewModel().stringToDateTime(date, time),
+                              DateTimeUtils.stringToDateTime(date, time),
                             );
                           }
                           else{

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/view/widgets/expandable_menu.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import '../../../models/note.dart';
@@ -15,7 +16,6 @@ class NoteEditorPage extends StatefulWidget {
 }
 
 class _NoteEditorPageState extends State<NoteEditorPage> {
-
   final AuthenticationService authService = AuthenticationService();
   TextEditingController bodyController = TextEditingController();
   @override
@@ -57,107 +57,138 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       color: user.colorManager.noteEditorBackButton,
                     )),
                 actions: [
-                  user.user.count==1?
-                  Text("${bodyController.text.replaceAll("\n", "").replaceAll(" ", "").length}",style: TextStyle(
-                      fontSize: 22,
-                      color: user.colorManager.appTitle
-                  ),):const SizedBox.shrink(),
-                  Padding(padding: EdgeInsets.only(right: MediaQuery.sizeOf(context).width/50)),
-                  IconButton(
-                      onPressed: () {
-                        try {
-                          Provider.of<NotesViewModel>(context, listen: false)
-                              .updateNote(Note(
-                                  id: widget.note.id,
-                                  title: widget.note.title,
-                                  body: bodyController.text,
-                                  titleColor: widget.note.titleColor,
-                                  coverColor: widget.note.coverColor,
-                                  protected: widget.note.protected))
-                              .then((onValue) {
-                            widget.note.body = bodyController.text;
-                            Fluttertoast.showToast(
-                                msg: "Saved Successfully",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: const Color(0xff1E1E1E),
-                                textColor: Colors.white,
-                                fontSize: 19.0);
-                          });
-                        } catch (e) {
-                          Fluttertoast.showToast(
-                              msg: "Sorry, Something went wrong,note not saved",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              backgroundColor: Colors.red,
-                              textColor: Colors.white,
-                              fontSize: 19.0);
-                        }
-                      },
-                      icon: Icon(
-                        Icons.save_sharp,
-                        color:
-                            widget.note.body.compareTo(bodyController.text) == 0
-                                ? user.colorManager.noteEditorButtons
-                                : Colors.lightBlue,
-                      )),
-                  IconButton(
-                      onPressed: () {
-                        if (widget.note.body.isNotEmpty) {
-                          try {
-                            notes.updateAndroidWidget(widget.note.body);
-                          } catch (e) {
-                            Fluttertoast.showToast(
-                                msg: "Sorry, Something went wrong",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                                fontSize: 19.0);
-                            return;
-                          }
-                          Fluttertoast.showToast(
-                              msg: "Note has been added to the widget",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              backgroundColor: const Color(0xff1E1E1E),
-                              textColor: Colors.white,
-                              fontSize: 19.0);
-                        }
-                      },
-                      icon: Icon(
-                        Icons.sticky_note_2_sharp,
-                        color: user.colorManager.noteEditorButtons,
-                      )),
-                  IconButton(
-                      onPressed: () async {
-                        if (widget.note.protected == 1) {
-                          bool isAuthenticated =
-                              await authService.authenticate();
-                          if (isAuthenticated) {
-                            notes.deleteNote(widget.note.id!);
-                            if(context.mounted){
-                              Navigator.pop(context);
-                            }
-                          } else {
-                            Fluttertoast.showToast(
-                                msg: "Authentication Failed",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                                fontSize: 19.0);
-                          }
-                        } else {
-                          Provider.of<NotesViewModel>(context, listen: false)
-                              .deleteNote(widget.note.id!);
-                          Navigator.pop(context);
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.delete_sharp,
-                        color: Colors.red,
-                      )),
+                  user.user.count == 1
+                      ? Text(
+                          "${bodyController.text.replaceAll("\n", "").replaceAll(" ", "").length}",
+                          style: TextStyle(
+                              fontSize: 20, color: user.colorManager.appTitle),
+                        )
+                      : const SizedBox.shrink(),
+                  ExpandableMenu(
+                      iconColor: user.colorManager.appBarIcons,
+                      animationSpeed: 500,
+                      width: MediaQuery.orientationOf(context) ==
+                              Orientation.portrait
+                          ? MediaQuery.sizeOf(context).width / 14
+                          : MediaQuery.sizeOf(context).width / 22,
+                      height: 45,
+                      items: [
+                        IconButton(
+                            onPressed: () {
+
+                            },
+                            icon: Icon(
+                              Icons.undo,
+                              color: user.colorManager.noteEditorButtons,
+                            )),
+                        IconButton(
+                            onPressed: () {
+
+                            },
+                            icon: Icon(
+                              Icons.redo,
+                              color: user.colorManager.noteEditorButtons,
+                            )),
+                        IconButton(
+                            onPressed: () {
+                              try {
+                                Provider.of<NotesViewModel>(context,
+                                        listen: false)
+                                    .updateNote(Note(
+                                        id: widget.note.id,
+                                        title: widget.note.title,
+                                        body: bodyController.text,
+                                        titleColor: widget.note.titleColor,
+                                        coverColor: widget.note.coverColor,
+                                        protected: widget.note.protected))
+                                    .then((onValue) {
+                                  widget.note.body = bodyController.text;
+                                  Fluttertoast.showToast(
+                                      msg: "Saved Successfully",
+                                      toastLength: Toast.LENGTH_SHORT,
+                                      gravity: ToastGravity.BOTTOM,
+                                      backgroundColor: const Color(0xff1E1E1E),
+                                      textColor: Colors.white,
+                                      fontSize: 19.0);
+                                });
+                              } catch (e) {
+                                Fluttertoast.showToast(
+                                    msg:
+                                        "Sorry, Something went wrong,note not saved",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                    backgroundColor: Colors.red,
+                                    textColor: Colors.white,
+                                    fontSize: 19.0);
+                              }
+                            },
+                            icon: Icon(
+                              Icons.save_sharp,
+                              color: widget.note.body
+                                          .compareTo(bodyController.text) ==
+                                      0
+                                  ? user.colorManager.noteEditorButtons
+                                  : Colors.lightBlue,
+                            )),
+                        IconButton(
+                            onPressed: () {
+                              if (widget.note.body.isNotEmpty) {
+                                try {
+                                  notes.updateAndroidWidget(widget.note.body);
+                                } catch (e) {
+                                  Fluttertoast.showToast(
+                                      msg: "Sorry, Something went wrong",
+                                      toastLength: Toast.LENGTH_SHORT,
+                                      gravity: ToastGravity.BOTTOM,
+                                      backgroundColor: Colors.red,
+                                      textColor: Colors.white,
+                                      fontSize: 19.0);
+                                  return;
+                                }
+                                Fluttertoast.showToast(
+                                    msg: "Note has been added to the widget",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                    backgroundColor: const Color(0xff1E1E1E),
+                                    textColor: Colors.white,
+                                    fontSize: 19.0);
+                              }
+                            },
+                            icon: Icon(
+                              Icons.sticky_note_2_sharp,
+                              color: user.colorManager.noteEditorButtons,
+                            )),
+                        IconButton(
+                            onPressed: () async {
+                              if (widget.note.protected == 1) {
+                                bool isAuthenticated =
+                                    await authService.authenticate();
+                                if (isAuthenticated) {
+                                  notes.deleteNote(widget.note.id!);
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                  }
+                                } else {
+                                  Fluttertoast.showToast(
+                                      msg: "Authentication Failed",
+                                      toastLength: Toast.LENGTH_SHORT,
+                                      gravity: ToastGravity.BOTTOM,
+                                      backgroundColor: Colors.red,
+                                      textColor: Colors.white,
+                                      fontSize: 19.0);
+                                }
+                              } else {
+                                Provider.of<NotesViewModel>(context,
+                                        listen: false)
+                                    .deleteNote(widget.note.id!);
+                                Navigator.pop(context);
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.delete_sharp,
+                              color: Colors.red,
+                            )),
+                      ])
                 ],
               ),
               body: SafeArea(
@@ -201,13 +232,14 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               controller: bodyController,
                               maxLines: null,
                               style: TextStyle(
-                                  fontFamily:
-                                      user.user.casual == 1 ? 'casual' : 'arial',
+                                  fontFamily: user.user.casual == 1
+                                      ? 'casual'
+                                      : 'arial',
                                   fontWeight: user.user.casual == 1
                                       ? FontWeight.w600
                                       : FontWeight.w400,
                                   color: user.colorManager.noteEditorText,
-                                  fontSize: (26*user.user.notesTextSize),
+                                  fontSize: (26 * user.user.notesTextSize),
                                   decoration: TextDecoration.none,
                                   decorationColor:
                                       user.colorManager.noteEditorText),
