@@ -5,10 +5,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import '../core/utils/date_time_utils.dart';
 import '../models/todo_item.dart';
 import '../view_model/tasks_view_model.dart';
 import 'database_service.dart';
-import 'notification.dart';
+import 'notification_service.dart';
 
 class TasksRepository{
 
@@ -89,7 +90,7 @@ class TasksRepository{
         if(item.notification==1){
           if (item.time.isNotEmpty&&item.date.isNotEmpty) {
             DateTime scheduledTime =
-            TasksViewModel().stringToDateTime(item.date, item.time);
+            DateTimeUtils.stringToDateTime(item.date, item.time);
             if (scheduledTime.isAfter(DateTime.now()) && item.status == 0) {
               try{
                 NotificationService.scheduleNotification(

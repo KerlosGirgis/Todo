@@ -16,7 +16,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/services/authentication_service.dart';
-import 'package:todo/services/notification.dart';
+import 'package:todo/services/notification_service.dart';
 import 'package:todo/services/verse_manager.dart';
 import 'package:todo/view/screens/lock_page.dart';
 import 'package:todo/view/screens/tasks/todo_page.dart';
