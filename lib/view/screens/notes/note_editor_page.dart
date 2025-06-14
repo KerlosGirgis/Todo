@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:provider/provider.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
 import 'package:todo/view_model/notes_view_model.dart';
@@ -17,6 +18,7 @@ class NoteEditorPage extends StatefulWidget {
 
 class _NoteEditorPageState extends State<NoteEditorPage> {
   final AuthenticationService authService = AuthenticationService();
+  final UndoHistoryController _undoHistoryController = UndoHistoryController();
   TextEditingController bodyController = TextEditingController();
   @override
   void initState() {
@@ -75,7 +77,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       items: [
                         IconButton(
                             onPressed: () {
-
+                              _undoHistoryController.undo();
                             },
                             icon: Icon(
                               Icons.undo,
@@ -83,7 +85,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             )),
                         IconButton(
                             onPressed: () {
-
+                              _undoHistoryController.redo();
                             },
                             icon: Icon(
                               Icons.redo,
@@ -202,6 +204,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                           SizedBox(
                             width: MediaQuery.of(context).size.width / 1.1,
                             child: TextField(
+                              undoController: _undoHistoryController,
                               onChanged: (value) {
                                 if (user.user.autoSave == 1) {
                                   try {
@@ -231,6 +234,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               },
                               controller: bodyController,
                               maxLines: null,
+                              textDirection: intl.Bidi.detectRtlDirectionality(
+                                      bodyController.text)
+                                  ? TextDirection.rtl
+                                  : TextDirection.ltr,
                               style: TextStyle(
                                   fontFamily: user.user.casual == 1
                                       ? 'casual'
