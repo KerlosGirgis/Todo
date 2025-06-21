@@ -1,0 +1,3 @@
+UI improvements
+Added undo and redo to notes
+(due to a bug in encryption please backup and do a fresh install)
