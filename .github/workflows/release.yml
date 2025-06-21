@@ -35,7 +35,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.2'
+          flutter-version: '3.32.4'
 
       - name: Install dependencies
         run: flutter pub get
@@ -70,4 +70,5 @@ jobs:
           body: |
             ## Release Notes
             - UI improvements
-            - Tasks Daily notifications (Long press on the notification icon)
+            - Added undo and redo to notes
+            - (due to a bug in encryption please backup and do a fresh install)
