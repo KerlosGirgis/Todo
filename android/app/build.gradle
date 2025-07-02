@@ -28,6 +28,9 @@ def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+ext {
+    abiCodes = ['x86_64': 1, 'armeabi-v7a': 2, 'arm64-v8a': 3]
+}
 
 android {
     namespace = "com.k.todo"
@@ -37,8 +40,18 @@ android {
 
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    splits {
+        abi {
+            universalApk true
+            enable true
+            reset()
+            //noinspection ChromeOsAbiSupport
+            include project.ext.abiCodes.keySet() as String[]
+        }
     }
 
     defaultConfig {
@@ -53,7 +66,7 @@ android {
         multiDexEnabled true
     }
     kotlinOptions {
-        jvmTarget = "1.8" // Ensure this matches the Java version
+        jvmTarget = JavaVersion.VERSION_11.toString()  // Ensure this matches the Java version
     }
     signingConfigs {
 
@@ -92,8 +105,8 @@ android {
 
     dependencies {
         coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
-        implementation 'com.google.crypto.tink:tink-android:1.15.0'
-        implementation 'com.google.errorprone:error_prone_annotations:2.30.0'
+        implementation 'com.google.crypto.tink:tink-android:1.18.0'
+        implementation 'com.google.errorprone:error_prone_annotations:2.39.0'
         implementation 'androidx.window:window:1.4.0'
         implementation 'androidx.window:window-java:1.4.0'
     }
@@ -104,13 +117,23 @@ flutter {
     source = "../.."
 }
 
-ext.abiCodes = ["x86_64": 1, "armeabi-v7a": 2, "arm64-v8a": 3]
-import com.android.build.OutputFile
-android.applicationVariants.all { variant ->
+//ext.abiCodes = ["x86_64": 1, "armeabi-v7a": 2, "arm64-v8a": 3]
+//import com.android.build.OutputFile
+//android.applicationVariants.all { variant ->
+//    variant.outputs.each { output ->
+//        def abiVersionCode = project.ext.abiCodes.get(output.getFilter(OutputFile.ABI))
+//        if (abiVersionCode != null) {
+//            output.versionCodeOverride = variant.versionCode * 1000 + abiVersionCode
+//        }
+//    }
+//}
+android.applicationVariants.configureEach { variant ->
     variant.outputs.each { output ->
-        def abiVersionCode = project.ext.abiCodes.get(output.getFilter(OutputFile.ABI))
-        if (abiVersionCode != null) {
-            output.versionCodeOverride = variant.versionCode * 1000 + abiVersionCode
+        def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter(com.android.build.OutputFile.ABI))
+        if (baseAbiVersionCode != null) {
+            output.versionCodeOverride = (1000 * project.android.defaultConfig.versionCode) + baseAbiVersionCode
+        } else {
+            output.versionCodeOverride = 1000 * project.android.defaultConfig.versionCode
         }
     }
 }

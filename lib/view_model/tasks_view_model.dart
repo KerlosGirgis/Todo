@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:todo/services/tasks_repository.dart';
+import 'package:todo/view_model/user_view_model.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
@@ -36,7 +37,7 @@ class TasksViewModel with ChangeNotifier {
     items.insert(newIndex, oldTodo);
     await tasksRepository.deleteAllItems();
     for (var item in items) {
-      await tasksRepository.insertItem(item); // Reinsert items in new order
+      await tasksRepository.insertItem(item);
     }
     get();
   }
@@ -54,7 +55,7 @@ class TasksViewModel with ChangeNotifier {
     get();
   }
 
-  Future<void> markAsDone(index,user) async {
+  Future<void> markAsDone(int index, UserViewModel user) async {
     if (items[index].status == 0) {
       if (items[index].notification == 1 || items[index].notification == 2) {
         cancelNotification(index);
@@ -174,14 +175,6 @@ class TasksViewModel with ChangeNotifier {
                 backgroundColor: Colors.green,
                 textColor: Colors.white,
                 fontSize: 18.0);
-          } else {
-            Fluttertoast.showToast(
-                msg: "Backup Failed",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: Colors.red,
-                textColor: Colors.white,
-                fontSize: 18.0);
           }
         });
       } catch (e) {
@@ -207,14 +200,6 @@ class TasksViewModel with ChangeNotifier {
               backgroundColor: Colors.green,
               textColor: Colors.white,
               fontSize: 18.0);
-        } else {
-          Fluttertoast.showToast(
-              msg: "Failed To Restore",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 18.0);
         }
       });
       get();
@@ -232,9 +217,9 @@ class TasksViewModel with ChangeNotifier {
   Future<void> changeNotification(int index) async {
     if (items[index].notification == 0) {
       try {
-        if (items[index].time.isNotEmpty&&items[index].date.isNotEmpty) {
-          DateTime scheduledTime =
-          DateTimeUtils.stringToDateTime(items[index].date, items[index].time);
+        if (items[index].time.isNotEmpty && items[index].date.isNotEmpty) {
+          DateTime scheduledTime = DateTimeUtils.stringToDateTime(
+              items[index].date, items[index].time);
           if (scheduledTime.isAfter(DateTime.now()) &&
               items[index].status == 0) {
             NotificationService.scheduleNotification(
@@ -256,10 +241,11 @@ class TasksViewModel with ChangeNotifier {
                 ),
               ).then((value) {
                 Fluttertoast.showToast(
-                  msg: "Notification Enabled",
+                  msg:
+                      "Time remaining:\n ${DateTimeUtils.durationToString(scheduledTime.difference(DateTime.now()))}",
                   toastLength: Toast.LENGTH_SHORT,
                   gravity: ToastGravity.BOTTOM,
-                  backgroundColor: Colors.green,
+                  backgroundColor: const Color(0xff1E1E1E),
                   textColor: Colors.white,
                   fontSize: 19.0,
                 );

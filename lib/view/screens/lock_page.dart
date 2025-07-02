@@ -33,10 +33,10 @@ class LockPageState extends State<LockPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
+            Flexible(
               child: Image.asset("assets/locked.png"),
             ),
-            Expanded(
+            Flexible(
               child: IconButton(onPressed: () async {
                   final bool initialized = await AuthenticationService().initializeApp();
                   if (initialized) {
