@@ -248,7 +248,7 @@ class UpdateTaskDialog extends StatelessWidget {
                                 tasks.items[index].uuid.hashCode,
                                 "Don't Forget Your Task!",
                                 tasks.items[index].title,
-                                tasks.parseTime(time),
+                                DateTimeUtils.parseTime(time),
                               ).then((onValue){
                                 not = 2;
                               });

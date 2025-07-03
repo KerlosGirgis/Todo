@@ -189,9 +189,9 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  Future<void> restore() async {
+  Future<void> restore(bool overflow) async {
     try {
-      await tasksRepository.importToDoFromJson().then((s) {
+      await tasksRepository.importToDoFromJson(overflow).then((s) {
         if (s) {
           Fluttertoast.showToast(
               msg: "Data Restored",
@@ -310,30 +310,6 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  TimeOfDay parseTime(String timeStr) {
-    // This RegExp matches time in the format "hh:mm AM" or "hh:mm PM"
-    final regex =
-        RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false);
-    final match = regex.firstMatch(timeStr.trim());
-
-    if (match != null) {
-      int hour = int.parse(match.group(1)!);
-      int minute = int.parse(match.group(2)!);
-      final period = match.group(3)!.toUpperCase();
-
-      // Convert to 24-hour format
-      if (period == 'PM' && hour != 12) {
-        hour += 12;
-      } else if (period == 'AM' && hour == 12) {
-        hour = 0;
-      }
-
-      return TimeOfDay(hour: hour, minute: minute);
-    } else {
-      throw FormatException(
-          "Invalid time format. Expected format is 'hh:mm AM/PM'.");
-    }
-  }
 
   Future<void> changeDailyNotification(int index) async {
     if (items[index].notification == 1) {
@@ -373,7 +349,7 @@ class TasksViewModel with ChangeNotifier {
           items[index].uuid.hashCode,
           "Don't Forget Your Task!",
           items[index].title,
-          parseTime(items[index].time),
+          DateTimeUtils.parseTime(items[index].time),
         ).then((onValue) {
           updateTask(
             TodoItem(

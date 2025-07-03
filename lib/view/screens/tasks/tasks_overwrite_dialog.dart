@@ -1,0 +1,150 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:todo/view_model/tasks_view_model.dart';
+
+import '../../../view_model/user_view_model.dart';
+import '../../widgets/button.dart';
+
+class TasksOverwriteDialog extends StatefulWidget {
+  const TasksOverwriteDialog({super.key});
+
+  @override
+  State<TasksOverwriteDialog> createState() => _TasksOverwriteDialogState();
+}
+
+class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
+  bool overwrite = true;
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<UserViewModel>(builder: (context, user, child) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 2,
+        scrollable: true,
+        backgroundColor: user.colorManager.pageBackground,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: user.colorManager.dialogIconContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.settings_backup_restore_rounded,
+                  color: user.colorManager.dialogIcon,
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 5,
+              child: Text(
+                "Restore",
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                    color: user.colorManager.homePageText),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Expanded(
+              child: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Icon(
+                  Icons.close,
+                  color: user.colorManager.dialogExitIcon,
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: user.colorManager.dialogExitContainer,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          RadioListTile(
+            title: Text(
+              "Overwrite existing Tasks",
+              style: TextStyle(color: user.colorManager.homePageText),
+            ),
+            value: true,
+            groupValue: overwrite,
+            onChanged: (v) {
+              setState(() {
+                overwrite = v ?? true;
+              });
+            },
+            activeColor: Colors.blueAccent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
+          ),
+          RadioListTile(
+            title: Text(
+              "Keep existing Tasks",
+              style: TextStyle(color: user.colorManager.homePageText),
+            ),
+            value: false,
+            groupValue: overwrite,
+            onChanged: (v) {
+              setState(() {
+                overwrite = v ?? false;
+              });
+            },
+            activeColor: Colors.blueAccent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
+          ),
+        ]),
+        actions: [
+          Row(
+            spacing: MediaQuery.of(context).size.width / 25,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Button(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  label: 'Cancel',
+                  status: false,
+                  fontSize: 18,
+                  size: 1,
+                ),
+              ),
+              Expanded(
+                child: Button(
+                  onPressed: () {
+                    Provider.of<TasksViewModel>(context, listen: false)
+                        .restore(overwrite).then((v){
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                    });
+                  },
+                  label: 'Import',
+                  status: true,
+                  fontSize: 18,
+                  size: 1,
+                ),
+              ),
+            ],
+          )
+        ],
+      );
+    });
+  }
+}

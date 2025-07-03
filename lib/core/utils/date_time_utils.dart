@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class DateTimeUtils {
@@ -20,4 +21,28 @@ class DateTimeUtils {
       return "${twoDigits(duration.inHours)} ${isHoursSingular ? 'hour' : 'hours'} , $twoDigitMinutes ${isMinutesSingular ? 'minute' : 'minutes'}";
     }
   }
+
+  static TimeOfDay parseTime(String timeStr) {
+    final regex =
+    RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', caseSensitive: false);
+    final match = regex.firstMatch(timeStr.trim());
+
+    if (match != null) {
+      int hour = int.parse(match.group(1)!);
+      int minute = int.parse(match.group(2)!);
+      final period = match.group(3)!.toUpperCase();
+
+      if (period == 'PM' && hour != 12) {
+        hour += 12;
+      } else if (period == 'AM' && hour == 12) {
+        hour = 0;
+      }
+
+      return TimeOfDay(hour: hour, minute: minute);
+    } else {
+      throw FormatException(
+          "Invalid time format. Expected format is 'hh:mm AM/PM'.");
+    }
+  }
+
 }
