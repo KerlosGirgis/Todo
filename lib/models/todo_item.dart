@@ -28,7 +28,7 @@ class TodoItem {
         uuid: map['uuid'],
         notification: map['notification']);
   }
-  toMap() {
+  Map<String, Object> toMap() {
     return {
       'title': title,
       'desc': desc,

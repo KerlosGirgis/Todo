@@ -24,6 +24,10 @@ class ColorManager{
   Color? noteEditorButtons;
   Color? appBarIcons;
   Color? moreLess;
+  Color? dialogIconContainer;
+  Color? dialogIcon;
+  Color? dialogExitIcon;
+  Color? dialogExitContainer;
   bool isDark;
 
   ColorManager({required this.isDark}){
@@ -54,6 +58,10 @@ class ColorManager{
     noteEditorButtons=Colors.white;
     appBarIcons=Colors.grey;
     moreLess = const Color(0xff90CAF9);
+    dialogIcon = Colors.white;
+    dialogIconContainer = Color.fromARGB(255, 64, 64, 64);
+    dialogExitIcon = Colors.white;
+    dialogExitContainer = Color.fromARGB(255, 64, 64, 64);
   }
   void _setLightTheme(){
       floatingActionButtonBackground = Color(0xff3D5AFE);
@@ -80,5 +88,11 @@ class ColorManager{
       noteEditorButtons=Colors.black;
       appBarIcons=const Color(0xff616161);
       moreLess = const Color(0xff3D5AFE);
+      dialogIcon = Color(0xff3D5AFE);
+      dialogIconContainer = const Color(0xffd8defb);
+      dialogExitIcon = Colors.grey.shade800;
+      dialogExitContainer = Colors.grey.shade300;
+
+
   }
 }

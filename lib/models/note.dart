@@ -22,7 +22,7 @@ class Note {
         coverColor: map['coverColor']?? "#1E1E1E",
         protected: map['protected']?? 0);
   }
-  toMap() {
+  Map<String, Object> toMap() {
     return {
       'title': title,
       'body': body,

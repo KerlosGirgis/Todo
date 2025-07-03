@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view/screens/notes/note_editor_page.dart';
+import 'package:todo/view/screens/notes/notes_overwrite_dialog.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/view/screens/user/profile_page.dart';
@@ -129,9 +130,34 @@ class _NotesPageState extends State<NotesPage> {
                           color: user.colorManager.appBarIcons,
                         )),
                     IconButton(
-                        onPressed: () async {
-                          Provider.of<NotesViewModel>(context, listen: false)
-                              .restore();
+                        onPressed: () {
+                          showGeneralDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                            pageBuilder: (BuildContext
+                            context,
+                                Animation<double>
+                                animation,
+                                Animation<double>
+                                secondaryAnimation) {
+                              return NotesOverwriteDialog();
+                            },
+                            transitionBuilder:
+                                (context, animation, secondaryAnimation, child) {
+                              var fadeAnimation = CurvedAnimation(
+                                  parent: animation, curve: Curves.easeInOutSine);
+                              var scaleAnimation =
+                              Tween<double>(begin: 0.8, end: 1).animate(fadeAnimation);
+                              return FadeTransition(
+                                opacity: fadeAnimation,
+                                child: ScaleTransition(
+                                  scale: scaleAnimation,
+                                  child: child,
+                                ),
+                              );
+                            },
+                          );
                         },
                         icon: Icon(
                           Icons.settings_backup_restore,

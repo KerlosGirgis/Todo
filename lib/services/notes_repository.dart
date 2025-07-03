@@ -67,7 +67,8 @@ class NotesRepository{
     }
   }
 
-  Future<bool> importNotesFromJson() async {
+  Future<bool> importNotesFromJson(bool overwrite) async {
+    List<Note> notes = await getNotes();
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
@@ -77,10 +78,21 @@ class NotesRepository{
       File file = File(result.files.single.path!);
       String jsonString = await file.readAsString();
       List<dynamic> data = jsonDecode(jsonString);
-
-      for (var noteMap in data) {
-        Note note = Note.fromMap(noteMap);
-        await insertNote(note);
+      try{
+        if(overwrite){
+          await deleteAllNotes();
+        }
+        for (var noteMap in data) {
+          Note note = Note.fromMap(noteMap);
+          await insertNote(note);
+        }
+      }
+      catch(e){
+        deleteAllNotes();
+        for(var note in notes){
+          await insertNote(note);
+        }
+        return false;
       }
       return true;
     } else {

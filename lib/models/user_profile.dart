@@ -38,7 +38,7 @@ class UserProfile {
         finished: map['finished'],
         unFinished: map['unFinished'], notesTextSize: map['notesTextSize']);
   }
-  toMap() {
+  Map<String, Object> toMap() {
     return {
       'name': name,
       'pic': pic,

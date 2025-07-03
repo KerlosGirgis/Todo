@@ -101,9 +101,9 @@ class NotesViewModel with ChangeNotifier {
     }
   }
 
-  Future<void> restore() async {
+  Future<void> restore(bool overwrite) async {
     try {
-      await notesRepository.importNotesFromJson().then((s) {
+      await notesRepository.importNotesFromJson(overwrite).then((s) {
         if (s) {
           Fluttertoast.showToast(
               msg: "Data Restored",

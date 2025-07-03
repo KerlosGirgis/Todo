@@ -30,12 +30,12 @@ class ReorderNotesDialog extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 64, 64, 64),
+                        color: user.colorManager.dialogIconContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.reorder,
-                        color: Colors.white,
+                        color: user.colorManager.dialogIcon,
                       ),
                     ),
                   ),
@@ -57,12 +57,12 @@ class ReorderNotesDialog extends StatelessWidget {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.close,
-                        color: Colors.white,
+                        color: user.colorManager.dialogExitIcon,
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 64, 64, 64),
+                        backgroundColor: user.colorManager.dialogExitContainer,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
@@ -77,7 +77,7 @@ class ReorderNotesDialog extends StatelessWidget {
                       ? Center(
                           child: Text(
                             "Empty",
-                            style: TextStyle(color: Colors.white, fontSize: 22),
+                            style: TextStyle(color: user.colorManager.homePageText, fontSize: 22),
                           ),
                         )
                       : Theme(
