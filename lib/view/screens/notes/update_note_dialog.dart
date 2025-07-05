@@ -150,6 +150,7 @@ class UpdateNoteDialog extends StatelessWidget {
                                     ),
                                   ])),
                         ),
+                        Spacer(flex: 1,),
                         Flexible(
                           flex: 1,
                           child: IconButton(
@@ -215,6 +216,7 @@ class UpdateNoteDialog extends StatelessWidget {
                                     ),
                                   ])),
                         ),
+                        Spacer(flex: 1,),
                         Flexible(
                           flex: 1,
                           child: IconButton(
