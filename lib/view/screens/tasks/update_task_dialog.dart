@@ -28,7 +28,12 @@ class UpdateTaskDialog extends StatelessWidget {
         descController.text = tasks.items[index].desc;
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
+            backgroundColor: user.colorManager.pageBackground,
             scrollable: true,
+            elevation: 2,
             title: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -36,22 +41,25 @@ class UpdateTaskDialog extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xffd8defb),
+                      color: user.colorManager.dialogIconContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.edit,
-                      color: Color(0xff3D5AFE),
+                      color: user.colorManager.dialogIcon,
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 5,
-                  child: const Text(
+                  child: Text(
                     "Edit Task",
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
+                        color: user.colorManager.homePageText),
                   ),
                 ),
                 Expanded(
@@ -59,9 +67,12 @@ class UpdateTaskDialog extends StatelessWidget {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    icon: const Icon(Icons.close),
+                    icon: Icon(
+                      Icons.close,
+                      color: user.colorManager.dialogExitIcon,
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade300,
+                      backgroundColor: user.colorManager.dialogExitContainer,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
@@ -70,7 +81,6 @@ class UpdateTaskDialog extends StatelessWidget {
                 )
               ],
             ),
-            backgroundColor: user.colorManager.addTaskAlertBackground,
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -78,50 +88,65 @@ class UpdateTaskDialog extends StatelessWidget {
                 TextField(
                   controller: titleController,
                   maxLines: 1,
+                  style: TextStyle(
+                      fontSize: 22, color: user.colorManager.homePageText),
                   decoration: InputDecoration(
-                      labelText: "Title",
-                      labelStyle: TextStyle(
-                          fontSize: 30,
-                          color: user.colorManager.addTaskAlertText),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15))),
+                    labelText: "Title",
+                    labelStyle: TextStyle(
+                        fontSize: 30, color: user.colorManager.homePageText),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none),
+                    filled: true,
+                    fillColor: user.colorManager.cardBackground,
+                  ),
                 ),
-                Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/50)),
+                Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.sizeOf(context).height / 50)),
                 TextField(
                   controller: descController,
                   keyboardType: TextInputType.multiline,
                   maxLines: 4,
+                  style: TextStyle(
+                      fontSize: 20, color: user.colorManager.homePageText),
                   decoration: InputDecoration(
-                      labelText: "Description",
-                      labelStyle: TextStyle(
-                          fontSize: 30,
-                          color: user.colorManager.addTaskAlertText),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15))),
+                    labelText: "Description",
+                    labelStyle: TextStyle(
+                        fontSize: 30, color: user.colorManager.homePageText),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none),
+                    filled: true,
+                    fillColor: user.colorManager.cardBackground,
+                  ),
                 ),
-                Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height/90)),
-                tasks.items[index].notification!=2?
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: IconButton(
+                Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.sizeOf(context).height / 50)),
+                tasks.items[index].notification != 2
+                    ? SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
                           onPressed: () {
-                            if(tasks.items[index].notification!=2){
+                            if (tasks.items[index].notification != 2) {
                               showDatePicker(
-                                  context: context,
-                                  firstDate: DateTime(DateTime.now().year,
-                                      DateTime.now().month, DateTime.now().day),
-                                  lastDate: DateTime(DateTime.now().year + 5))
+                                      context: context,
+                                      firstDate: DateTime(
+                                          DateTime.now().year,
+                                          DateTime.now().month,
+                                          DateTime.now().day),
+                                      lastDate:
+                                          DateTime(DateTime.now().year + 5))
                                   .then((dateValue) {
                                 if (dateValue != null) {
                                   setState(() {
-                                    date = dateValue.toString().split(" ").first;
+                                    date =
+                                        dateValue.toString().split(" ").first;
                                   });
                                 }
                               });
-                            }
-                            else{
+                            } else {
                               Fluttertoast.showToast(
                                   msg: "Daily Tasks Don't Need A Date",
                                   toastLength: Toast.LENGTH_SHORT,
@@ -131,67 +156,130 @@ class UpdateTaskDialog extends StatelessWidget {
                                   fontSize: 19.0);
                             }
                           },
-                          icon: const Icon(Icons.calendar_month)),
-                    ),
-                    Flexible(
-                      flex: 4,
-                      fit: FlexFit.loose,
-                        child: Text(date,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.ellipsis,)),
-                    if (date.isNotEmpty)
-                      Flexible(
-                        child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                date = "";
-                                time = "";
-                              });
-                            },
-                            icon: const Icon(Icons.clear)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: user.colorManager.cardBackground,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(50)),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: ClipRect(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Icon(
+                                  Icons.calendar_month,
+                                  color: user.colorManager.homePageText,
+                                ),
+                                Spacer(
+                                  flex: 1,
+                                ),
+                                Flexible(
+                                    flex: 4,
+                                    fit: FlexFit.tight,
+                                    child: Text(
+                                      date,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: user.colorManager.homePageText,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    )),
+                                if (date.isNotEmpty)
+                                  Flexible(
+                                    flex: 1,
+                                    fit: FlexFit.tight,
+                                    child: IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            date = "";
+                                            time = "";
+                                          });
+                                        },
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color: Colors.red.shade500,
+                                        )),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    : SizedBox.shrink(),
+                Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.sizeOf(context).height / 80)),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay(
+                                  hour: DateTime.now().hour,
+                                  minute: DateTime.now().minute))
+                          .then((timeValue) {
+                        if (timeValue != null) {
+                          setState(() {
+                            time = timeValue.format(context);
+                            if (date.isEmpty &&
+                                tasks.items[index].notification != 2) {
+                              date = DateTime.now().toString().split(" ").first;
+                            }
+                          });
+                        }
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: user.colorManager.cardBackground,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(50)),
                       ),
-                  ],
-                ):SizedBox.shrink(),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: IconButton(
-                          onPressed: () {
-                            showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay(
-                                    hour: DateTime.now().hour,
-                                    minute: DateTime.now().minute))
-                                .then((timeValue) {
-                              if (timeValue != null) {
-                                setState(() {
-                                  time = timeValue.format(context);
-                                  if (date.isEmpty&&tasks.items[index].notification!=2) {
-                                    date = DateTime.now()
-                                        .toString()
-                                        .split(" ")
-                                        .first;
-                                  }
-                                });
-                              }
-                            });
-                          },
-                          icon: const Icon(Icons.access_time_filled_sharp)),
+                      elevation: 0,
                     ),
-                    Flexible(
-                        flex: 4,
-                        fit: FlexFit.loose,
-                        child: Text(time,style: TextStyle(fontSize: 18),maxLines: 1,overflow: TextOverflow.ellipsis,)),
-                    if (time.isNotEmpty)
-                      Flexible(
-                        child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                time = "";
-                              });
-                            },
-                            icon: const Icon(Icons.clear)),
+                    child: ClipRect(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Icon(
+                            Icons.access_time_filled_sharp,
+                            color: user.colorManager.homePageText,
+                          ),
+                          Spacer(
+                            flex: 1,
+                          ),
+                          Flexible(
+                              flex: 4,
+                              fit: FlexFit.tight,
+                              child: Text(
+                                time,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: user.colorManager.homePageText,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )),
+                          if (time.isNotEmpty)
+                            Flexible(
+                              child: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      time = "";
+                                    });
+                                  },
+                                  icon: Icon(
+                                    Icons.clear,
+                                    color: Colors.red.shade500,
+                                  )),
+                            ),
+                        ],
                       ),
-                  ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -225,53 +313,53 @@ class UpdateTaskDialog extends StatelessWidget {
                               fontSize: 19.0);
                           return;
                         }
-                        if(tasks.items[index].notification==1){
-                          FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
-                          if(time.isNotEmpty&&DateTimeUtils.stringToDateTime(date, time).isAfter(DateTime.now())){
+                        if (tasks.items[index].notification == 1) {
+                          FlutterLocalNotificationsPlugin()
+                              .cancel(tasks.items[index].uuid.hashCode);
+                          if (time.isNotEmpty &&
+                              DateTimeUtils.stringToDateTime(date, time)
+                                  .isAfter(DateTime.now())) {
                             NotificationService.scheduleNotification(
                               tasks.items[index].uuid.hashCode,
                               "Don't Forget Your Task!",
                               tasks.items[index].title,
                               DateTimeUtils.stringToDateTime(date, time),
                             );
+                          } else {
+                            not = 0;
                           }
-                          else{
-                            not=0;
-                          }
-                        }
-                        else if(tasks.items[index].notification==2){
-                          FlutterLocalNotificationsPlugin().cancel(tasks.items[index].uuid.hashCode);
-                          if(time.isNotEmpty){
+                        } else if (tasks.items[index].notification == 2) {
+                          FlutterLocalNotificationsPlugin()
+                              .cancel(tasks.items[index].uuid.hashCode);
+                          if (time.isNotEmpty) {
                             date = "";
-                            try{
+                            try {
                               NotificationService.scheduleDailyNotification(
                                 tasks.items[index].uuid.hashCode,
                                 "Don't Forget Your Task!",
                                 tasks.items[index].title,
                                 DateTimeUtils.parseTime(time),
-                              ).then((onValue){
+                              ).then((onValue) {
                                 not = 2;
                               });
-                            }
-                            catch(e){
+                            } catch (e) {
                               not = 0;
                             }
-                          }
-                          else{
+                          } else {
                             not = 0;
                           }
                         }
 
                         Provider.of<TasksViewModel>(context, listen: false)
                             .updateTask(TodoItem(
-                            title: titleController.text,
-                            desc: descController.text,
-                            id: tasks.items[index].id,
-                            status: tasks.items[index].status,
-                            date: date,
-                            time: time,
-                            uuid: tasks.items[index].uuid,
-                            notification: not))
+                                title: titleController.text,
+                                desc: descController.text,
+                                id: tasks.items[index].id,
+                                status: tasks.items[index].status,
+                                date: date,
+                                time: time,
+                                uuid: tasks.items[index].uuid,
+                                notification: not))
                             .then((value) {
                           Fluttertoast.showToast(
                               msg: "Task Updated",

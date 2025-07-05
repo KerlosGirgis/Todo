@@ -40,19 +40,19 @@ class UserViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  editName(String name) async {
+  Future<void> editName(String name) async {
     user.name = name;
     await userRepository.updateUser(user);
     notifyListeners();
   }
 
-  editPic(String pic) async {
+  Future<void> editPic(String pic) async {
     user.pic = pic;
     await userRepository.updateUser(user);
     notifyListeners();
   }
 
-  changeTheme() async {
+  Future<void> changeTheme() async {
     if(user.theme==1){
       user.theme=0;
       colorManager =ColorManager(isDark: false);
@@ -66,7 +66,7 @@ class UserViewModel with ChangeNotifier {
       notifyListeners();
     }
   }
-  changeAutoSave() async {
+  Future<void> changeAutoSave() async {
     if(user.autoSave==1){
       user.autoSave=0;
       await userRepository.updateUser(user);
@@ -85,7 +85,7 @@ class UserViewModel with ChangeNotifier {
     await HomeWidget.saveWidgetData('useCasualFont', useCasual);
     await HomeWidget.updateWidget(name: 'Note');
   }
-  changeFont() async {
+  Future<void> changeFont() async {
     if(user.casual==1){
       user.casual=0;
       await userRepository.updateUser(user);
@@ -100,7 +100,7 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  changeCount() async {
+  Future<void> changeCount() async {
     if(user.count==1){
       user.count=0;
       await userRepository.updateUser(user);
@@ -113,7 +113,7 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  changeVerse() async {
+  Future<void> changeVerse() async {
     if(user.verse==1){
       user.verse=0;
       await userRepository.updateUser(user);
@@ -126,7 +126,7 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  increaseFinished() async {
+  Future<void> increaseFinished() async {
     user.finished++;
     if(user.unFinished>0){
       user.unFinished--;
@@ -135,13 +135,13 @@ class UserViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  increaseUnFinished() async {
+  Future<void> increaseUnFinished() async {
     user.unFinished++;
     await userRepository.updateUser(user);
     notifyListeners();
   }
 
-  decreaseFinished() async {
+  Future<void> decreaseFinished() async {
     user.unFinished++;
     if(user.finished>0){
       user.finished--;
@@ -150,14 +150,14 @@ class UserViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  resetPlot() async {
+  Future<void> resetPlot() async {
     user.unFinished=0;
     user.finished=0;
     await userRepository.updateUser(user);
     notifyListeners();
   }
 
-  changeLock() async {
+  Future<void> changeLock() async {
     final bool auth=await AuthenticationService().authenticate();
     if(auth){
       if(isEnabled){
@@ -183,7 +183,7 @@ class UserViewModel with ChangeNotifier {
           fontSize: 19.0);
     }
   }
-  setNotesTextSize()async{
+  Future<void> setNotesTextSize()async{
     if(tempNotesTextSize>=0.25&&tempNotesTextSize<=2){
       user.notesTextSize=double.parse(tempNotesTextSize.toStringAsPrecision(2));
       final prefs = await SharedPreferences.getInstance();
@@ -204,14 +204,14 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  setTempNotesSize(double size){
+  void setTempNotesSize(double size){
     if(size>=0.25&&size<=2){
       tempNotesTextSize=size;
       notifyListeners();
     }
   }
 
-  _pickImage() async {
+  Future<File?>? _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -223,7 +223,7 @@ class UserViewModel with ChangeNotifier {
     return null;
   }
 
-  _saveImageToAppStorage(File image) async {
+  Future<File> _saveImageToAppStorage(File image) async {
     final appDir = await getApplicationDocumentsDirectory();
 
     final fileName = image.path.split('/').last;
@@ -233,11 +233,11 @@ class UserViewModel with ChangeNotifier {
     return savedImage;
   }
 
-  pickAndSaveImage() async {
+  Future<void> pickAndSaveImage() async {
     final image = await _pickImage();
     if (image != null) {
       final savedImage = await _saveImageToAppStorage(image);
-      editPic(savedImage!.path);
+      editPic(savedImage.path);
     }
   }
 

@@ -110,9 +110,15 @@ class ProfilePageState extends State<ProfilePage> {
                                             showDialog(
                                               context: context,
                                               builder: (context) => AlertDialog(
+                                                elevation: 2,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          25),
+                                                ),
                                                 backgroundColor: user
                                                     .colorManager
-                                                    .addTaskAlertBackground,
+                                                    .pageBackground,
                                                 content: Row(
                                                   mainAxisSize:
                                                       MainAxisSize.min,
@@ -603,9 +609,15 @@ class ProfilePageState extends State<ProfilePage> {
                                                   context: context,
                                                   builder: (context) =>
                                                       AlertDialog(
+                                                        elevation: 2,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              25),
+                                                    ),
                                                     backgroundColor: user
                                                         .colorManager
-                                                        .addTaskAlertBackground,
+                                                        .pageBackground,
                                                     content: Row(
                                                       mainAxisSize:
                                                           MainAxisSize.min,

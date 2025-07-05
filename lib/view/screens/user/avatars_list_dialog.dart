@@ -15,9 +15,14 @@ class AvatarsListDialog extends StatelessWidget {
       builder: (context, user,child) {
         return StatefulBuilder(builder: (context,setState) {
           return AlertDialog(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius:
+              BorderRadius.circular(50),
+            ),
             backgroundColor: user
                 .colorManager
-                .addTaskAlertBackground,
+                .pageBackground,
             scrollable:
             true,
             content:

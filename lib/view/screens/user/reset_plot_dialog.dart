@@ -15,25 +15,30 @@ class ResetPlotDialog extends StatelessWidget {
     return Consumer<UserViewModel>(builder: (context, user, child) {
       return StatefulBuilder(builder: (context,setState) {
         return AlertDialog(
+          scrollable: true,
+          elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius:
             BorderRadius.circular(25),
           ),
           backgroundColor: user.colorManager
-              .addTaskAlertBackground,
+              .pageBackground,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
                 width: MediaQuery.sizeOf(context).width,
                 height: MediaQuery.sizeOf(context).height/10,
-                child: const AutoSizeText(
+                child: AutoSizeText(
                   minFontSize: 4,
                   "Are you sure you want to reset?",
                   style: TextStyle(
                       fontSize: 26,
                       fontWeight:
-                      FontWeight.w600),
+                      FontWeight.w600,
+                      color: user.colorManager
+                          .homePageText
+                  ),
                   maxLines: 2,
                   overflow:
                   TextOverflow.ellipsis,

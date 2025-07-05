@@ -30,7 +30,11 @@ class UpdateNoteDialog extends StatelessWidget {
           builder: (BuildContext context, setState) {
             return AlertDialog(
               scrollable: true,
-              backgroundColor: user.colorManager.addTaskAlertBackground,
+              backgroundColor: user.colorManager.pageBackground,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+              elevation: 2,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -38,22 +42,25 @@ class UpdateNoteDialog extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xffd8defb),
+                        color: user.colorManager.dialogIconContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.edit_note,
-                        color: Color(0xff3D5AFE),
+                        color: user.colorManager.dialogIcon,
                       ),
                     ),
                   ),
                   Expanded(
                     flex: 5,
-                    child: const Text(
+                    child: Text(
                       "Edit Note",
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 32,
+                          color: user.colorManager.homePageText),
                     ),
                   ),
                   Expanded(
@@ -61,9 +68,10 @@ class UpdateNoteDialog extends StatelessWidget {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close,
+                          color: user.colorManager.dialogExitIcon),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade300,
+                        backgroundColor: user.colorManager.dialogExitContainer,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
@@ -73,135 +81,228 @@ class UpdateNoteDialog extends StatelessWidget {
                 ],
               ),
               content: Column(
-                spacing: MediaQuery.sizeOf(context).height/50,
+                spacing: MediaQuery.sizeOf(context).height / 50,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: titleController,
                     maxLines: 1,
+                    style: TextStyle(
+                        fontSize: 22, color: user.colorManager.homePageText),
                     decoration: InputDecoration(
-                        labelText: "Title",
-                        labelStyle: TextStyle(
-                            fontSize: 30,
-                            color: user.colorManager.addTaskAlertText),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15))),
+                      labelText: "Title",
+                      labelStyle: TextStyle(
+                          fontSize: 30, color: user.colorManager.homePageText),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: BorderSide.none),
+                      filled: true,
+                      fillColor: user.colorManager.cardBackground,
+                    ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: const Text(
-                          overflow: TextOverflow.ellipsis,
-                          "Title : ",
-                          style: TextStyle(fontSize: 24),
-                        ),
+                  ElevatedButton(
+                    onPressed: () {
+                      ColorPicker(
+                        onColorChanged: (Color color) {
+                          setState(() {
+                            titleColor = color.hex;
+                          });
+                        },
+                      ).showPickerDialog(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: user.colorManager.cardBackground,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(50)),
                       ),
-                      Flexible(
-                        child: GestureDetector(
-                          child: CircleAvatar(
-                            backgroundColor: titleColor.toColor,
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Flexible(
+                          flex: 4,
+                          child: Text(
+                            overflow: TextOverflow.ellipsis,
+                            "Title : ",
+                            style: TextStyle(
+                                fontSize: 24,
+                                color: user.colorManager.homePageText),
                           ),
-                          onTap: () {
-                            ColorPicker(
-                              onColorChanged: (Color color) {
+                        ),
+                        Flexible(
+                          flex: 4,
+                          child: Container(
+                              alignment: Alignment.center,
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 14),
+                              decoration: BoxDecoration(
+                                  color: titleColor.toColor,
+                                  borderRadius: BorderRadius.circular(50),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withAlpha(50),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 0),
+                                    ),
+                                  ])),
+                        ),
+                        Flexible(
+                          flex: 1,
+                          child: IconButton(
+                              onPressed: () {
                                 setState(() {
-                                  titleColor = color.hex;
+                                  titleColor = Colors.white.hex;
                                 });
                               },
-                            ).showPickerDialog(context);
-                          },
+                              icon: Icon(
+                                Icons.undo_sharp,
+                                color: user.colorManager.homePageText,
+                              )),
                         ),
-                      ),
-                      Flexible(
-                        child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                titleColor = Colors.white.hex;
-                              });
-                            },
-                            icon: const Icon(Icons.undo_sharp)),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: const Text(
-                          "Cover : ",
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 24),
-                        ),
+                  ElevatedButton(
+                    onPressed: () {
+                      ColorPicker(
+                        onColorChanged: (Color color) {
+                          setState(() {
+                            coverColor = color.hex;
+                          });
+                        },
+                      ).showPickerDialog(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: user.colorManager.cardBackground,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(50)),
                       ),
-                      Flexible(
-                        child: GestureDetector(
-                          child: CircleAvatar(
-                            backgroundColor: coverColor.toColor,
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Flexible(
+                          flex: 4,
+                          child: Text(
+                            "Cover : ",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 24,
+                                color: user.colorManager.homePageText),
                           ),
-                          onTap: () {
-                            ColorPicker(
-                              onColorChanged: (Color color) {
+                        ),
+                        Flexible(
+                          flex: 4,
+                          child: Container(
+                              alignment: Alignment.center,
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 14),
+                              decoration: BoxDecoration(
+                                  color: coverColor.toColor,
+                                  borderRadius: BorderRadius.circular(50),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withAlpha(50),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 0),
+                                    ),
+                                  ])),
+                        ),
+                        Flexible(
+                          flex: 1,
+                          child: IconButton(
+                              onPressed: () {
                                 setState(() {
-                                  coverColor = color.hex;
+                                  coverColor = const Color(0xff1E1E1E).hex;
                                 });
                               },
-                            ).showPickerDialog(context);
-                          },
+                              icon: Icon(
+                                Icons.undo_sharp,
+                                color: user.colorManager.homePageText,
+                              )),
                         ),
-                      ),
-                      Flexible(
-                        child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                coverColor = const Color(0xff1E1E1E).hex;
-                              });
-                            },
-                            icon: const Icon(Icons.undo_sharp)),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          "Fingerprint",
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 24),
-                        ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (isProtected == 0) {
+                        bool isBioAvailable =
+                            await authService.authenticate();
+                        if (isBioAvailable) {
+                          setState(() {
+                            isProtected = 1;
+                          });
+                        } else {
+                          Fluttertoast.showToast(
+                              msg: "Authentication Failed",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              backgroundColor: Colors.red,
+                              textColor: Colors.white,
+                              fontSize: 19.0);
+                        }
+                      } else if (isProtected == 1) {
+                        setState(() {
+                          isProtected = 0;
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: user.colorManager.cardBackground,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(50)),
                       ),
-                      Expanded(
-                        child: Switch(
-                            value: isProtected == 0 ? false : true,
-                            activeColor: Color(0xff3D5AFE),
-                            onChanged: (v) async {
-                              if (isProtected == 0) {
-                                bool isBioAvailable =
-                                    await authService.authenticate();
-                                if (isBioAvailable) {
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            "Fingerprint",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 24, color: user.colorManager.homePageText),
+                          ),
+                        ),
+                        Expanded(
+                          child: Switch(
+                              value: isProtected == 0 ? false : true,
+                              activeColor: Color(0xff3D5AFE),
+                              onChanged: (v) async {
+                                if (isProtected == 0) {
+                                  bool isBioAvailable =
+                                      await authService.authenticate();
+                                  if (isBioAvailable) {
+                                    setState(() {
+                                      isProtected = 1;
+                                    });
+                                  } else {
+                                    Fluttertoast.showToast(
+                                        msg: "Authentication Failed",
+                                        toastLength: Toast.LENGTH_SHORT,
+                                        gravity: ToastGravity.BOTTOM,
+                                        backgroundColor: Colors.red,
+                                        textColor: Colors.white,
+                                        fontSize: 19.0);
+                                  }
+                                } else if (isProtected == 1) {
                                   setState(() {
-                                    isProtected = 1;
+                                    isProtected = 0;
                                   });
-                                } else {
-                                  Fluttertoast.showToast(
-                                      msg: "Authentication Failed",
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.BOTTOM,
-                                      backgroundColor: Colors.red,
-                                      textColor: Colors.white,
-                                      fontSize: 19.0);
                                 }
-                              } else if (isProtected == 1) {
-                                setState(() {
-                                  isProtected = 0;
-                                });
-                              }
-                            }),
-                      )
-                    ],
+                              }),
+                        )
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -237,12 +338,12 @@ class UpdateNoteDialog extends StatelessWidget {
                           Navigator.pop(context);
                           Provider.of<NotesViewModel>(context, listen: false)
                               .updateNote(Note(
-                              id: notes.notes[index].id,
-                              title: titleController.text,
-                              body: notes.notes[index].body,
-                              titleColor: titleColor,
-                              coverColor: coverColor,
-                              protected: isProtected))
+                                  id: notes.notes[index].id,
+                                  title: titleController.text,
+                                  body: notes.notes[index].body,
+                                  titleColor: titleColor,
+                                  coverColor: coverColor,
+                                  protected: isProtected))
                               .then((value) {
                             Fluttertoast.showToast(
                                 msg: "Note Edited",

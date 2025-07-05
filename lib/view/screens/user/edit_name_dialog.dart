@@ -17,6 +17,11 @@ class EditNameDialog extends StatelessWidget {
         nameController.text = user.user.name;
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
+            backgroundColor: user.colorManager.pageBackground,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
+            elevation: 2,
             scrollable: true,
             title: Row(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -25,22 +30,25 @@ class EditNameDialog extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xffd8defb),
+                      color: user.colorManager.dialogIconContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.edit,
-                      color: Color(0xff3D5AFE),
+                      color: user.colorManager.dialogIcon,
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 5,
-                  child: const Text(
+                  child: Text(
                     "Edit Name",
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
+                        color: user.colorManager.homePageText),
                   ),
                 ),
                 Expanded(
@@ -48,9 +56,9 @@ class EditNameDialog extends StatelessWidget {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: user.colorManager.dialogExitIcon),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade300,
+                      backgroundColor: user.colorManager.dialogExitContainer,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
@@ -59,7 +67,6 @@ class EditNameDialog extends StatelessWidget {
                 )
               ],
             ),
-            backgroundColor: user.colorManager.addTaskAlertBackground,
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -67,13 +74,20 @@ class EditNameDialog extends StatelessWidget {
                   controller: nameController,
                   maxLines: 1,
                   maxLength: 20,
+                  style: TextStyle(
+                      fontSize: 22, color: user.colorManager.homePageText),
                   decoration: InputDecoration(
                       labelText: "Name",
                       labelStyle: TextStyle(
                           fontSize: 30,
-                          color: user.colorManager.addTaskAlertText),
+                          color: user.colorManager.homePageText),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15))),
+                          borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: user.colorManager.cardBackground,
+                  ),
                 ),
               ],
             ),
@@ -111,8 +125,7 @@ class EditNameDialog extends StatelessWidget {
                                 fontSize: 19.0);
                           });
                           Navigator.of(context).pop();
-                        }
-                        else{
+                        } else {
                           Fluttertoast.showToast(
                               msg: "Name can't be empty",
                               toastLength: Toast.LENGTH_SHORT,
