@@ -1,44 +1,46 @@
-# Minimal To-Do App
+# Todo
 
-<a href="https://f-droid.org/en/packages/com.k.todo/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height=80/></a>
+<a href="https://f-droid.org/en/packages/com.k.todo/">
+  <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" width="300"/>
+</a>
 
-A simple application for managing your daily tasks.
-This To-Do app works completely offline,
-allowing you to keep track of your tasks without needing an internet connection.
+**A minimal, privacy-first app for managing your tasks and notes**
 
-## Features
+## ✨ Features
 
-- **Offline Support**: Fully functional without an internet connection.
-- **Task Management**: Create, update, delete, and mark tasks as completed.
-- **Notes Management**: Add, update, reorder, and delete notes with a grid-view layout.
-- **Daily Bible Verse**: Start your day with an inspiring Bible verse, randomized daily.
-- **User-Friendly Interface**: Simple and intuitive design for easy task and note management.
-- **Home Screen Widget**: Access tasks and notes directly from your device's home screen.
-- **Notifications**: Stay on top of your tasks with timely reminders.
-- **Encryption**: Securely stores tasks and notes locally using encryption.
-- **Customization**: Reorder tasks and notes to match your workflow.
-- **Secure Access**: Optional fingerprint authentication for app locking.
-- **Import & Export**: Backup or restore tasks and notes without exposing sensitive data.
+- **Works Offline**  
+  No account. No tracking. No internet needed.
+
+- **Tasks & Notes**  
+  Keep your tasks and thoughts organized — side by side.
+
+- **Simple & Fast**  
+  Lightweight and responsive with a clean interface.
+
+- **Bible Verse of the Day**  
+  Start your day with a moment of inspiration.
+
+- **Home Screen Widget**  
+  Keep an inspiring note on your home screen.
+
+- **Reminders**  
+  Never forget important tasks.
+
+- **Encrypted Storage**  
+  All data is stored securely on your device.
+
+- **Fingerprint Lock**  
+  Keep your notes and tasks private with biometric security.
+
+- **Import & Export**  
+  Backup and restore securely.
+
 
 ## Screenshots
 
 <img width="100" alt="1.png" src="Screenshots%2F1.png"/><img width="100" alt="2.png" src="Screenshots%2F2.png"/><img width="100" alt="3.png" src="Screenshots%2F3.png"/><img width="100" alt="4.png" src="Screenshots%2F4.png"/><img width="100" alt="5.png" src="Screenshots%2F5.png"/>
 
 <img width="100" alt="6.png" src="Screenshots%2F6.png"/><img width="100" alt="7.png" src="Screenshots%2F7.png"/><img width="100" alt="8.png" src="Screenshots%2F8.png"/>
-
-## Getting Started
-
-### Prerequisites
-
-- [Flutter](https://flutter.dev/docs/get-started/install) installed on your local machine.
-- A text editor or IDE of your choice (e.g., VS Code, Android Studio).
-
-### Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/KerlosGirgis/Todo.git
 
 ## License
 
