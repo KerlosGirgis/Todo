@@ -1,24 +1,49 @@
-# Minimal To-Do App
+<p align="center">
+  <img src="assets/icon.png" alt="Todo App Logo" width="100"/>
+</p>
 
-<a href="https://f-droid.org/en/packages/com.k.todo/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height=80/></a>
+# Todo
 
-A simple application for managing your daily tasks.
-This To-Do app works completely offline,
-allowing you to keep track of your tasks without needing an internet connection.
+<p align="center">
+  <a href="https://f-droid.org/en/packages/com.k.todo/">
+    <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height="80"/>
+  </a>
+  <a href="https://www.openapk.net/todo/com.k.todo/">
+    <img src="https://www.openapk.net/static/media/download-badge.92b59cc4687f36b1b6f2.svg" alt="Get it on OpenAPK" height="80"/>
+  </a>
+</p>
 
-## Features
+**A minimal, privacy-first app for managing your tasks and notes**
 
-- **Offline Support**: Fully functional without an internet connection.
-- **Task Management**: Create, update, delete, and mark tasks as completed.
-- **Notes Management**: Add, update, reorder, and delete notes with a grid-view layout.
-- **Daily Bible Verse**: Start your day with an inspiring Bible verse, randomized daily.
-- **User-Friendly Interface**: Simple and intuitive design for easy task and note management.
-- **Home Screen Widget**: Access tasks and notes directly from your device's home screen.
-- **Notifications**: Stay on top of your tasks with timely reminders.
-- **Encryption**: Securely stores tasks and notes locally using encryption.
-- **Customization**: Reorder tasks and notes to match your workflow.
-- **Secure Access**: Optional fingerprint authentication for app locking.
-- **Import & Export**: Backup or restore tasks and notes without exposing sensitive data.
+## ✨ Features
+
+- **Works Offline**  
+  No account. No tracking. No internet needed.
+
+- **Tasks & Notes**  
+  Keep your tasks and thoughts organized — side by side.
+
+- **Simple & Fast**  
+  Lightweight and responsive with a clean interface.
+
+- **Bible Verse of the Day**  
+  Start your day with a moment of inspiration.
+
+- **Home Screen Widget**  
+  Keep an inspiring note on your home screen.
+
+- **Reminders**  
+  Never forget important tasks.
+
+- **Encrypted Storage**  
+  All data is stored securely on your device.
+
+- **Fingerprint Lock**  
+  Keep your notes and tasks private with biometric security.
+
+- **Import & Export**  
+  Backup and restore securely.
+
 
 ## Screenshots
 
