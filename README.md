@@ -1,8 +1,7 @@
 <p align="center">
-  <img src="assets/icon.png" alt="Todo App Logo" width="100"/>
+  <img src="assets/icon.png" alt="Todo App Logo" width="64" style="vertical-align: middle;"/>
+  <span style="font-size: 48px; vertical-align: middle;"><strong>Todo</strong></span>
 </p>
-
-# Todo
 
 <p align="center">
   <a href="https://f-droid.org/en/packages/com.k.todo/">
