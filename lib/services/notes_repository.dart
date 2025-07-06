@@ -8,7 +8,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../models/note.dart';
 import 'database_service.dart';
 
-class NotesRepository{
+class NotesRepository {
   final Database db = DatabaseService.db;
 
   Future<void> insertNote(Note note) {
@@ -78,18 +78,30 @@ class NotesRepository{
       File file = File(result.files.single.path!);
       String jsonString = await file.readAsString();
       List<dynamic> data = jsonDecode(jsonString);
-      try{
-        if(overwrite){
+      try {
+        if (overwrite) {
           await deleteAllNotes();
+          for (var noteMap in data) {
+            Note note = Note.fromMap(noteMap);
+            await insertNote(note);
+          }
+        } else {
+          for (var noteMap in data) {
+            Note note = Note.fromMap(noteMap);
+            if (notes.any((element) =>
+                element.title == note.title &&
+                element.body == note.body &&
+                element.titleColor == note.titleColor &&
+                element.coverColor == note.coverColor &&
+                element.protected == note.protected)) {
+              continue;
+            }
+            await insertNote(note);
+          }
         }
-        for (var noteMap in data) {
-          Note note = Note.fromMap(noteMap);
-          await insertNote(note);
-        }
-      }
-      catch(e){
+      } catch (e) {
         deleteAllNotes();
-        for(var note in notes){
+        for (var note in notes) {
           await insertNote(note);
         }
         return false;
@@ -99,5 +111,4 @@ class NotesRepository{
       return false;
     }
   }
-
 }
