@@ -42,20 +42,6 @@
 
 <img width="100" alt="6.png" src="Screenshots%2F6.png"/><img width="100" alt="7.png" src="Screenshots%2F7.png"/><img width="100" alt="8.png" src="Screenshots%2F8.png"/>
 
-## Getting Started
-
-### Prerequisites
-
-- [Flutter](https://flutter.dev/docs/get-started/install) installed on your local machine.
-- A text editor or IDE of your choice (e.g., VS Code, Android Studio).
-
-### Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/KerlosGirgis/Todo.git
-
 ## License
 
 This project is licensed under the GNU General Public License v3.0
