@@ -3,15 +3,7 @@
   <span style="font-size: 48px; vertical-align: middle;"><strong>Todo</strong></span>
 </p>
 
-<p align="center">
-  <a href="https://f-droid.org/en/packages/com.k.todo/">
-    <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height="50"/>
-  </a>
-    <a href="https://www.openapk.net/todo/com.k.todo/">
-    <img src="https://www.openapk.net/images/openapk.svg" alt="Get it on OpenApk" height="50"/>
-  </a>
-<!-- [<img alt='Get it on OpenAPK' src='https://www.openapk.net/images/openapk.svg' height="82"/>](https://www.openapk.net/todo/com.k.todo/) -->
-</p>
+<a href="https://f-droid.org/en/packages/com.k.todo/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height=80/></a>
 
 **A minimal, privacy-first app for managing your tasks and notes**
 
