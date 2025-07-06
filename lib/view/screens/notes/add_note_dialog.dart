@@ -94,7 +94,7 @@ class AddNoteDialog extends StatelessWidget {
                         color: user.colorManager.homePageText,
                       ),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(13),
                           borderSide: BorderSide.none),
                       filled: true,
                       fillColor: user.colorManager.cardBackground,
@@ -114,17 +114,21 @@ class AddNoteDialog extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
                       ),
-                      elevation: 0,
+                      elevation: 1,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.max,
                       children: [
+                        Icon(Icons.format_color_text_rounded,
+                            color: user.colorManager.homePageText,
+                            size: 24),
+                        Spacer(flex: 1,),
                         Flexible(
                           flex: 4,
                           child: Text(
-                            "Title : ",
+                            "Title ",
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -182,17 +186,23 @@ class AddNoteDialog extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
                       ),
-                      elevation: 0,
+                      elevation: 1,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.max,
                       children: [
+                        Icon(Icons.color_lens_rounded,
+                            color: user.colorManager.homePageText,
+                            size: 24),
+                        Spacer(
+                          flex: 1,
+                        ),
                         Flexible(
                           flex: 4,
                           child: Text(
-                            "Cover : ",
+                            "Cover ",
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -267,15 +277,20 @@ class AddNoteDialog extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
                       ),
-                      elevation: 0,
+                      elevation: 1,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          flex: 3,
+                        Icon(Icons.fingerprint_rounded,
+                            color: user.colorManager.homePageText,
+                            size: 24),
+                        Spacer(flex: 1,),
+                        Flexible(
+                          flex: 7,
+                          fit: FlexFit.tight,
                           child: Text(
                             "Fingerprint",
                             maxLines: 1,
@@ -285,7 +300,8 @@ class AddNoteDialog extends StatelessWidget {
                                 color: user.colorManager.homePageText),
                           ),
                         ),
-                        Expanded(
+                        Spacer(flex: 1,),
+                        Flexible(
                           child: Switch(
                               value: isProtected == 0 ? false : true,
                               activeColor: Color(0xff3D5AFE),
