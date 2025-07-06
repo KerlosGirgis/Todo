@@ -5,10 +5,10 @@
 
 <p align="center">
   <a href="https://f-droid.org/en/packages/com.k.todo/">
-    <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height="80"/>
+    <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height="50"/>
   </a>
   <a href="https://www.openapk.net/todo/com.k.todo/">
-    <img src="https://www.openapk.net/static/media/download-badge.92b59cc4687f36b1b6f2.svg" alt="Get it on OpenAPK" height="80"/>
+    <img src="https://www.openapk.net/static/media/download-badge.92b59cc4687f36b1b6f2.svg" alt="Get it on OpenAPK" height="50"/>
   </a>
 </p>
 
