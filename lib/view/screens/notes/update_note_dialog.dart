@@ -111,20 +111,35 @@ class UpdateNoteDialog extends StatelessWidget {
                         },
                       ).showPickerDialog(context);
                     },
+                    onLongPress: () {
+                      setState(() {
+                        titleColor = Colors.white.hex;
+                      });
+                      Fluttertoast.showToast(
+                          msg: "Title Color Cleared",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: const Color(0xff1E1E1E),
+                          textColor: Colors.white,
+                          fontSize: 19.0);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10)),
                       ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       elevation: 1,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         Icon(Icons.format_color_text_rounded,
-                            color: user.colorManager.homePageText,
-                            size: 24),
-                        Spacer(flex: 1,),
+                            color: user.colorManager.homePageText, size: 24),
+                        Spacer(
+                          flex: 1,
+                        ),
                         Flexible(
                           flex: 4,
                           child: Text(
@@ -136,7 +151,7 @@ class UpdateNoteDialog extends StatelessWidget {
                           ),
                         ),
                         Flexible(
-                          flex: 4,
+                          flex: 8,
                           child: Container(
                               alignment: Alignment.center,
                               margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -154,20 +169,6 @@ class UpdateNoteDialog extends StatelessWidget {
                                     ),
                                   ])),
                         ),
-                        Spacer(flex: 1,),
-                        Flexible(
-                          flex: 1,
-                          child: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  titleColor = Colors.white.hex;
-                                });
-                              },
-                              icon: Icon(
-                                Icons.undo_sharp,
-                                color: user.colorManager.homePageText,
-                              )),
-                        ),
                       ],
                     ),
                   ),
@@ -181,20 +182,35 @@ class UpdateNoteDialog extends StatelessWidget {
                         },
                       ).showPickerDialog(context);
                     },
+                    onLongPress: () {
+                      setState(() {
+                        coverColor = const Color(0xff1E1E1E).hex;
+                      });
+                      Fluttertoast.showToast(msg: "Cover Color Cleared",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: const Color(0xff1E1E1E),
+                          textColor: Colors.white,
+                          fontSize: 19.0
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10)),
                       ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       elevation: 1,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         Icon(Icons.color_lens_rounded,
-                            color: user.colorManager.homePageText,
-                            size: 24),
-                        Spacer(flex: 1,),
+                            color: user.colorManager.homePageText, size: 24),
+                        Spacer(
+                          flex: 1,
+                        ),
                         Flexible(
                           flex: 4,
                           child: Text(
@@ -206,7 +222,7 @@ class UpdateNoteDialog extends StatelessWidget {
                           ),
                         ),
                         Flexible(
-                          flex: 4,
+                          flex: 8,
                           child: Container(
                               alignment: Alignment.center,
                               margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -224,100 +240,93 @@ class UpdateNoteDialog extends StatelessWidget {
                                     ),
                                   ])),
                         ),
-                        Spacer(flex: 1,),
-                        Flexible(
-                          flex: 1,
-                          child: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  coverColor = const Color(0xff1E1E1E).hex;
-                                });
-                              },
-                              icon: Icon(
-                                Icons.undo_sharp,
-                                color: user.colorManager.homePageText,
-                              )),
-                        ),
                       ],
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (isProtected == 0) {
-                        bool isBioAvailable =
-                            await authService.authenticate();
-                        if (isBioAvailable) {
+                  SizedBox(
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (isProtected == 0) {
+                          bool isBioAvailable = await authService.authenticate();
+                          if (isBioAvailable) {
+                            setState(() {
+                              isProtected = 1;
+                            });
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: "Authentication Failed",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 19.0);
+                          }
+                        } else if (isProtected == 1) {
                           setState(() {
-                            isProtected = 1;
+                            isProtected = 0;
                           });
-                        } else {
-                          Fluttertoast.showToast(
-                              msg: "Authentication Failed",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              backgroundColor: Colors.red,
-                              textColor: Colors.white,
-                              fontSize: 19.0);
                         }
-                      } else if (isProtected == 1) {
-                        setState(() {
-                          isProtected = 0;
-                        });
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: user.colorManager.cardBackground,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      elevation: 1,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Icon(Icons.fingerprint_rounded,
-                            color: user.colorManager.homePageText,
-                            size: 24),
-                        Spacer(flex: 1,),
-                        Flexible(
-                          flex: 7,
-                          fit: FlexFit.tight,
-                          child: Text(
-                            "Fingerprint",
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 24, color: user.colorManager.homePageText),
-                          ),
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: user.colorManager.cardBackground,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
                         ),
-                        Spacer(flex: 1,),
-                        Flexible(
-                          child: Switch(
-                              value: isProtected == 0 ? false : true,
-                              activeColor: Color(0xff3D5AFE),
-                              onChanged: (v) async {
-                                if (isProtected == 0) {
-                                  bool isBioAvailable =
-                                      await authService.authenticate();
-                                  if (isBioAvailable) {
+                        elevation: 1,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Icon(Icons.fingerprint_rounded,
+                              color: user.colorManager.homePageText, size: 24),
+                          Spacer(
+                            flex: 1,
+                          ),
+                          Flexible(
+                            flex: 7,
+                            fit: FlexFit.tight,
+                            child: Text(
+                              "Fingerprint",
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  color: user.colorManager.homePageText),
+                            ),
+                          ),
+                          Spacer(
+                            flex: 1,
+                          ),
+                          Flexible(
+                            child: Switch(
+                                value: isProtected == 0 ? false : true,
+                                activeColor: Color(0xff3D5AFE),
+                                onChanged: (v) async {
+                                  if (isProtected == 0) {
+                                    bool isBioAvailable =
+                                        await authService.authenticate();
+                                    if (isBioAvailable) {
+                                      setState(() {
+                                        isProtected = 1;
+                                      });
+                                    } else {
+                                      Fluttertoast.showToast(
+                                          msg: "Authentication Failed",
+                                          toastLength: Toast.LENGTH_SHORT,
+                                          gravity: ToastGravity.BOTTOM,
+                                          backgroundColor: Colors.red,
+                                          textColor: Colors.white,
+                                          fontSize: 19.0);
+                                    }
+                                  } else if (isProtected == 1) {
                                     setState(() {
-                                      isProtected = 1;
+                                      isProtected = 0;
                                     });
-                                  } else {
-                                    Fluttertoast.showToast(
-                                        msg: "Authentication Failed",
-                                        toastLength: Toast.LENGTH_SHORT,
-                                        gravity: ToastGravity.BOTTOM,
-                                        backgroundColor: Colors.red,
-                                        textColor: Colors.white,
-                                        fontSize: 19.0);
                                   }
-                                } else if (isProtected == 1) {
-                                  setState(() {
-                                    isProtected = 0;
-                                  });
-                                }
-                              }),
-                        )
-                      ],
+                                }),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ],

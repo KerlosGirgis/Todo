@@ -89,8 +89,7 @@ class AddTaskDialog extends StatelessWidget {
                           fontSize: 30, color: user.colorManager.homePageText),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide.none
-                      ),
+                          borderSide: BorderSide.none),
                       filled: true,
                       fillColor: user.colorManager.cardBackground,
                     ),
@@ -112,8 +111,7 @@ class AddTaskDialog extends StatelessWidget {
                           fontSize: 30, color: user.colorManager.homePageText),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide.none
-                      ),
+                          borderSide: BorderSide.none),
                       filled: true,
                       fillColor: user.colorManager.cardBackground,
                     ),
@@ -142,6 +140,19 @@ class AddTaskDialog extends StatelessWidget {
                           }
                         });
                       },
+                      onLongPress: () {
+                        setState(() {
+                          date = "";
+                          time = "";
+                        });
+                        Fluttertoast.showToast(
+                            msg: "Date Cleared",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: const Color(0xff1E1E1E),
+                            textColor: Colors.white,
+                            fontSize: 19.0);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: user.colorManager.cardBackground,
                         shape: const RoundedRectangleBorder(
@@ -150,18 +161,18 @@ class AddTaskDialog extends StatelessWidget {
                         elevation: 0,
                       ),
                       child: ClipRect(
-
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           children: [
-                            Icon(Icons.calendar_month,
+                            Icon(
+                              Icons.calendar_month,
                               color: user.colorManager.homePageText,
                             ),
                             Spacer(
                               flex: 1,
                             ),
                             Flexible(
-                              flex: 5,
+                              flex: 8,
                               fit: FlexFit.tight,
                               child: Text(
                                 date,
@@ -172,22 +183,6 @@ class AddTaskDialog extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (date.isNotEmpty)
-                              Flexible(
-                                flex: 1,
-                                fit: FlexFit.tight,
-                                child: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        date = "";
-                                        time = "";
-                                      });
-                                    },
-                                    icon: Icon(
-                                      Icons.clear,
-                                      color: Colors.red.shade500,
-                                    )),
-                              ),
                           ],
                         ),
                       ),
@@ -201,23 +196,34 @@ class AddTaskDialog extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay(
-                                hour: DateTime.now().hour,
-                                minute: DateTime.now().minute))
+                                context: context,
+                                initialTime: TimeOfDay(
+                                    hour: DateTime.now().hour,
+                                    minute: DateTime.now().minute))
                             .then((timeValue) {
                           if (timeValue != null) {
                             setState(() {
                               time = timeValue.format(context);
                               if (date.isEmpty) {
-                                date = DateTime.now()
-                                    .toString()
-                                    .split(" ")
-                                    .first;
+                                date =
+                                    DateTime.now().toString().split(" ").first;
                               }
                             });
                           }
                         });
+                      },
+                      onLongPress: () {
+                        setState(() {
+                          time = "";
+                        });
+                        Fluttertoast.showToast(
+                            msg: "Time Cleared",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            backgroundColor: const Color(0xff1E1E1E),
+                            textColor: Colors.white,
+                            fontSize: 19.0
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: user.colorManager.cardBackground,
@@ -230,33 +236,26 @@ class AddTaskDialog extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           children: [
-                            Icon(Icons.access_time_filled_sharp,
-                              color: user.colorManager.homePageText,),
-                            Spacer(flex: 1,),
+                            Icon(
+                              Icons.access_time_filled_sharp,
+                              color: user.colorManager.homePageText,
+                            ),
+                            Spacer(
+                              flex: 1,
+                            ),
                             Flexible(
-                              flex: 5,
+                              flex: 8,
                               fit: FlexFit.tight,
                               child: Text(
                                 time,
-                                style: TextStyle(fontSize: 18,
+                                style: TextStyle(
+                                  fontSize: 18,
                                   color: user.colorManager.homePageText,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (time.isNotEmpty)
-                              Flexible(
-                                flex: 1,
-                                fit: FlexFit.tight,
-                                child: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        time = "";
-                                      });
-                                    },
-                                    icon: Icon(Icons.clear,color: Colors.red.shade500,)),
-                              ),
                           ],
                         ),
                       ),

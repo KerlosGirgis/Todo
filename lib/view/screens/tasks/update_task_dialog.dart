@@ -156,6 +156,20 @@ class UpdateTaskDialog extends StatelessWidget {
                                   fontSize: 19.0);
                             }
                           },
+                          onLongPress: () {
+                            setState(() {
+                              date = "";
+                              time = "";
+                            });
+                            Fluttertoast.showToast(
+                                msg: "Date Cleared",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor: const Color(0xff1E1E1E),
+                                textColor: Colors.white,
+                                fontSize: 19.0
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: user.colorManager.cardBackground,
                             shape: const RoundedRectangleBorder(
@@ -176,7 +190,7 @@ class UpdateTaskDialog extends StatelessWidget {
                                   flex: 1,
                                 ),
                                 Flexible(
-                                    flex: 4,
+                                    flex: 8,
                                     fit: FlexFit.tight,
                                     child: Text(
                                       date,
@@ -187,22 +201,6 @@ class UpdateTaskDialog extends StatelessWidget {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     )),
-                                if (date.isNotEmpty)
-                                  Flexible(
-                                    flex: 1,
-                                    fit: FlexFit.tight,
-                                    child: IconButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            date = "";
-                                            time = "";
-                                          });
-                                        },
-                                        icon: Icon(
-                                          Icons.clear,
-                                          color: Colors.red.shade500,
-                                        )),
-                                  ),
                               ],
                             ),
                           ),
@@ -233,6 +231,19 @@ class UpdateTaskDialog extends StatelessWidget {
                         }
                       });
                     },
+                    onLongPress: () {
+                      setState(() {
+                        time = "";
+                      });
+                      Fluttertoast.showToast(
+                          msg: "Time Cleared",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: const Color(0xff1E1E1E),
+                          textColor: Colors.white,
+                          fontSize: 19.0
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
                       shape: const RoundedRectangleBorder(
@@ -252,7 +263,7 @@ class UpdateTaskDialog extends StatelessWidget {
                             flex: 1,
                           ),
                           Flexible(
-                              flex: 4,
+                              flex: 8,
                               fit: FlexFit.tight,
                               child: Text(
                                 time,
@@ -263,19 +274,6 @@ class UpdateTaskDialog extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               )),
-                          if (time.isNotEmpty)
-                            Flexible(
-                              child: IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      time = "";
-                                    });
-                                  },
-                                  icon: Icon(
-                                    Icons.clear,
-                                    color: Colors.red.shade500,
-                                  )),
-                            ),
                         ],
                       ),
                     ),
