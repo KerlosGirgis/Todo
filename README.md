@@ -1,6 +1,6 @@
 # Todo
 
-<a href="https://f-droid.org/en/packages/com.k.todo/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height=50/></a>
+<a href="https://f-droid.org/en/packages/com.k.todo/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height=30/></a>
 
 **A minimal, privacy-first app for managing your tasks and notes**
 
