@@ -70,5 +70,5 @@ jobs:
           body: |
             ## Release Notes
             - UI improvements
-            - Added undo and redo to notes
-            - (due to a bug in encryption please backup and do a fresh install)
+            - Enhanced import functionality
+            - Note : long press to clear colors in notes and date/time in tasks
