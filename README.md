@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/icon.png" alt="Todo App Logo" width="64" style="vertical-align: middle; margin-right: 12px;"/>
-</p>
-
 # Todo
 
 <a href="https://f-droid.org/en/packages/com.k.todo/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height=80/></a>
