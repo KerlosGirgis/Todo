@@ -13,7 +13,7 @@ import 'package:todo/services/user_repository.dart';
 import '../services/color_manager.dart';
 
 class UserViewModel with ChangeNotifier {
-  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1);
+  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1,startPage: 0);
 
   ColorManager colorManager =ColorManager(isDark: true);
 
@@ -77,6 +77,11 @@ class UserViewModel with ChangeNotifier {
       await userRepository.updateUser(user);
       notifyListeners();
     }
+  }
+  Future<void> changeStartPage(int startPage) async {
+      user.startPage=startPage;
+      await userRepository.updateUser(user);
+      notifyListeners();
   }
   Future<void> setFontPreference(bool useCasual) async {
     final prefs = await SharedPreferences.getInstance();

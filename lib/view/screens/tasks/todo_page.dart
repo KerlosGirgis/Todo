@@ -47,7 +47,7 @@ class _TodoPageState extends State<TodoPage> {
                   foregroundColor:
                       user.colorManager.floatingActionButtonForeground,
                   onPressed: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       PageRouteBuilder(
                         pageBuilder: (context, animation, secondaryAnimation) =>

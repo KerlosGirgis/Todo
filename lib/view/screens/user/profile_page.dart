@@ -485,6 +485,78 @@ class ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                   Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Flexible(
+                                            child: Text("StartPage",style: TextStyle(
+                                              fontSize: 26,
+                                              color: user.colorManager.appTitle
+                                            ),),
+                                          ),
+                                          Flexible(
+                                              child: RadioGroup(
+                                                groupValue: user.user.startPage,
+                                                  onChanged: (v){
+                                                    user.changeStartPage(v??0);
+                                              }, child: Row(
+                                            children: [
+                                              Flexible(
+                                                child:Theme(
+                                                  data: Theme.of(context).copyWith(
+                                                    splashColor: Colors.transparent,
+                                                    highlightColor: Colors.transparent,
+                                                    hoverColor: Colors.transparent,
+                                                    focusColor: Colors.transparent,
+                                                    // This removes the pressed/focus stroke
+                                                    radioTheme: RadioThemeData(
+                                                      overlayColor: WidgetStateProperty.all(Colors.transparent),
+                                                    ),
+                                                  ),
+                                                  child: RadioListTile(
+                                                    title: Text(
+                                                      "Todo",
+                                                      style: TextStyle(color: user.colorManager.homePageText,fontSize: 16),
+                                                    ),
+                                                    value: 0,
+                                                    activeColor: Colors.blueAccent,
+                                                    contentPadding: EdgeInsets.zero,
+                                                    dense: true,
+                                                  ),
+                                                ),
+                                              ),
+                                              Flexible(
+                                                child:Theme(
+                                                  data: Theme.of(context).copyWith(
+                                                    splashColor: Colors.transparent,
+                                                    highlightColor: Colors.transparent,
+                                                    hoverColor: Colors.transparent,
+                                                    focusColor: Colors.transparent,
+                                                    // This removes the pressed/focus stroke
+                                                    radioTheme: RadioThemeData(
+                                                      overlayColor: WidgetStateProperty.all(Colors.transparent),
+                                                    ),
+                                                  ),
+                                                  child: RadioListTile(
+                                                    title: Text(
+                                                      "Notes",
+                                                      style: TextStyle(color: user.colorManager.homePageText,fontSize: 16),
+                                                    ),
+                                                    value: 1,
+                                                    activeColor: Colors.blueAccent,
+                                                    contentPadding: EdgeInsets.zero,
+                                                    dense: true,
+                                                  ),
+                                                ),
+                                              )
+                                            ],
+                                          )))
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                  Column(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceEvenly,
                                     children: [
@@ -948,6 +1020,78 @@ class ProfilePageState extends State<ProfilePage> {
                                                 ),
                                               ],
                                             ),
+                                          )
+                                        ],
+                                      ),
+                                      Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Flexible(
+                                                child: Text("StartPage",style: TextStyle(
+                                                    fontSize: 26,
+                                                    color: user.colorManager.appTitle
+                                                ),),
+                                              ),
+                                              Flexible(
+                                                  child: RadioGroup(
+                                                      groupValue: user.user.startPage,
+                                                      onChanged: (v){
+                                                        user.changeStartPage(v??0);
+                                                      }, child: Row(
+                                                    children: [
+                                                      Flexible(
+                                                        child:Theme(
+                                                          data: Theme.of(context).copyWith(
+                                                            splashColor: Colors.transparent,
+                                                            highlightColor: Colors.transparent,
+                                                            hoverColor: Colors.transparent,
+                                                            focusColor: Colors.transparent,
+                                                            // This removes the pressed/focus stroke
+                                                            radioTheme: RadioThemeData(
+                                                              overlayColor: WidgetStateProperty.all(Colors.transparent),
+                                                            ),
+                                                          ),
+                                                          child: RadioListTile(
+                                                            title: Text(
+                                                              "Todo",
+                                                              style: TextStyle(color: user.colorManager.homePageText,fontSize: 16),
+                                                            ),
+                                                            value: 0,
+                                                            activeColor: Colors.blueAccent,
+                                                            contentPadding: EdgeInsets.zero,
+                                                            dense: true,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Flexible(
+                                                        child:Theme(
+                                                          data: Theme.of(context).copyWith(
+                                                            splashColor: Colors.transparent,
+                                                            highlightColor: Colors.transparent,
+                                                            hoverColor: Colors.transparent,
+                                                            focusColor: Colors.transparent,
+                                                            // This removes the pressed/focus stroke
+                                                            radioTheme: RadioThemeData(
+                                                              overlayColor: WidgetStateProperty.all(Colors.transparent),
+                                                            ),
+                                                          ),
+                                                          child: RadioListTile(
+                                                            title: Text(
+                                                              "Notes",
+                                                              style: TextStyle(color: user.colorManager.homePageText,fontSize: 16),
+                                                            ),
+                                                            value: 1,
+                                                            activeColor: Colors.blueAccent,
+                                                            contentPadding: EdgeInsets.zero,
+                                                            dense: true,
+                                                          ),
+                                                        ),
+                                                      )
+                                                    ],
+                                                  )))
+                                            ],
                                           )
                                         ],
                                       ),

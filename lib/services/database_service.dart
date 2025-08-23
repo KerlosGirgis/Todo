@@ -10,7 +10,7 @@ class DatabaseService {
   static Database? _db;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3;
 
   Future<Database> openDb() async {
     var databasesPath = await getDatabasesPath();
@@ -46,7 +46,8 @@ class DatabaseService {
       count INTEGER,
       finished INTEGER,
       unFinished INTEGER,
-      notesTextSize REAL
+      notesTextSize REAL,
+      startPage INTEGER
     )
     ''');
     await db.execute('''
@@ -63,6 +64,9 @@ class DatabaseService {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE User ADD COLUMN notesTextSize REAL DEFAULT 1');
+    }
+    if(oldVersion < 3){
+      await db.execute('ALTER TABLE User ADD COLUMN startPage INTEGER DEFAULT 0');
     }
   }
 

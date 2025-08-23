@@ -19,6 +19,7 @@ import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/notification_service.dart';
 import 'package:todo/services/verse_manager.dart';
 import 'package:todo/view/screens/lock_page.dart';
+import 'package:todo/view/screens/notes/notes_page.dart';
 import 'package:todo/view/screens/tasks/todo_page.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
@@ -76,7 +77,7 @@ class MyApp extends StatelessWidget {
         builder: (context, asyncSnapshot) {
           return Consumer<UserViewModel>(
             builder: (context,user,child) {
-              return const TodoPage();
+              return user.user.startPage==0?TodoPage():NotesPage();
             }
           );
         }

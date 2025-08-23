@@ -5,6 +5,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view/screens/notes/note_editor_page.dart';
 import 'package:todo/view/screens/notes/notes_overwrite_dialog.dart';
+import 'package:todo/view/screens/tasks/todo_page.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/view/screens/user/profile_page.dart';
@@ -215,7 +216,24 @@ class _NotesPageState extends State<NotesPage> {
                   foregroundColor:
                       user.colorManager.floatingActionButtonForeground,
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                        const TodoPage(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0);
+                          const end = Offset.zero;
+                          const curve = Curves.ease;
+                          var tween = Tween(begin: begin, end: end)
+                              .chain(CurveTween(curve: curve));
+                          var offsetAnimation = animation.drive(tween);
+                          return SlideTransition(
+                              position: offsetAnimation, child: child);
+                        },
+                      ),
+                    );
                   },
                   child: const Icon(Icons.checklist_sharp)),
               const Padding(padding: EdgeInsets.only(bottom: 20)),
