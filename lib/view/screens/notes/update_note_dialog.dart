@@ -300,7 +300,7 @@ class UpdateNoteDialog extends StatelessWidget {
                           Flexible(
                             child: Switch(
                                 value: isProtected == 0 ? false : true,
-                                activeColor: Color(0xff3D5AFE),
+                                activeThumbColor: Color(0xff3D5AFE),
                                 onChanged: (v) async {
                                   if (isProtected == 0) {
                                     bool isBioAvailable =

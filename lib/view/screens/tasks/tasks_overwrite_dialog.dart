@@ -74,40 +74,39 @@ class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
           ],
         ),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          RadioListTile(
-            title: Text(
-              "Overwrite existing Tasks",
-              style: TextStyle(color: user.colorManager.homePageText),
-            ),
-            value: true,
-            groupValue: overwrite,
-            onChanged: (v) {
-              setState(() {
-                overwrite = v ?? true;
-              });
-            },
-            activeColor: Colors.blueAccent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
-            ),
-          ),
-          RadioListTile(
-            title: Text(
-              "Keep existing Tasks",
-              style: TextStyle(color: user.colorManager.homePageText),
-            ),
-            value: false,
-            groupValue: overwrite,
-            onChanged: (v) {
-              setState(() {
-                overwrite = v ?? false;
-              });
-            },
-            activeColor: Colors.blueAccent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
-            ),
-          ),
+          RadioGroup(
+              onChanged: (v) {
+                setState(() {
+                  overwrite = v ?? false;
+                });
+              },
+              groupValue: overwrite,
+              child: Column(
+                children: [
+                  RadioListTile(
+                    title: Text(
+                      "Overwrite existing Tasks",
+                      style: TextStyle(color: user.colorManager.homePageText),
+                    ),
+                    value: true,
+                    activeColor: Colors.blueAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                  ),
+                  RadioListTile(
+                    title: Text(
+                      "Keep existing Tasks",
+                      style: TextStyle(color: user.colorManager.homePageText),
+                    ),
+                    value: false,
+                    activeColor: Colors.blueAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                  ),
+                ],
+              ))
         ]),
         actions: [
           Row(
@@ -129,10 +128,11 @@ class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
                 child: Button(
                   onPressed: () {
                     Provider.of<TasksViewModel>(context, listen: false)
-                        .restore(overwrite).then((v){
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                          }
+                        .restore(overwrite)
+                        .then((v) {
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
                     });
                   },
                   label: 'Import',

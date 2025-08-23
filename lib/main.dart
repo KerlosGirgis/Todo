@@ -73,9 +73,13 @@ class MyApp extends StatelessWidget {
       ),
       home: FutureBuilder(
         future: Provider.of<UserViewModel>(context, listen: false).get(),
-        builder: (context, snapshot) {
-            return const TodoPage();
-        },
+        builder: (context, asyncSnapshot) {
+          return Consumer<UserViewModel>(
+            builder: (context,user,child) {
+              return const TodoPage();
+            }
+          );
+        }
       ),
     );
   }
