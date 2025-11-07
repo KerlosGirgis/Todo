@@ -15,9 +15,7 @@ class AuthenticationService {
 
       return await _auth.authenticate(
         localizedReason: 'Please authenticate',
-        options: const AuthenticationOptions(
           biometricOnly: true,
-        ),
       );
     } catch (e) {
       return false;
@@ -30,11 +28,7 @@ class AuthenticationService {
 
     bool authenticated = await _auth.authenticate(
       localizedReason: 'Authenticate to access your To-Do app',
-      options: const AuthenticationOptions(
-        biometricOnly: true,
-        useErrorDialogs: true,
-        stickyAuth: true,
-      ),
+      biometricOnly: true,
     );
 
     if (authenticated) {

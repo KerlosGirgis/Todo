@@ -485,75 +485,62 @@ class ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                   Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          Flexible(
-                                            child: Text("StartPage",style: TextStyle(
-                                              fontSize: 26,
-                                              color: user.colorManager.appTitle
-                                            ),),
+                                      Text(
+                                        "Start Page",
+                                        style: TextStyle(
+                                          fontSize: 26,
+                                          color: user.colorManager.appTitle,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Padding(padding: EdgeInsets.only(bottom: 10)),
+                                      SegmentedButton<int>(
+                                        segments: const [
+                                          ButtonSegment(
+                                            value: 0,
+                                            label: Text("Todo"),
+                                            icon: Icon(Icons.checklist_sharp),
                                           ),
-                                          Flexible(
-                                              child: RadioGroup(
-                                                groupValue: user.user.startPage,
-                                                  onChanged: (v){
-                                                    user.changeStartPage(v??0);
-                                              }, child: Row(
-                                            children: [
-                                              Flexible(
-                                                child:Theme(
-                                                  data: Theme.of(context).copyWith(
-                                                    splashColor: Colors.transparent,
-                                                    highlightColor: Colors.transparent,
-                                                    hoverColor: Colors.transparent,
-                                                    focusColor: Colors.transparent,
-                                                    // This removes the pressed/focus stroke
-                                                    radioTheme: RadioThemeData(
-                                                      overlayColor: WidgetStateProperty.all(Colors.transparent),
-                                                    ),
-                                                  ),
-                                                  child: RadioListTile(
-                                                    title: Text(
-                                                      "Todo",
-                                                      style: TextStyle(color: user.colorManager.homePageText,fontSize: 16),
-                                                    ),
-                                                    value: 0,
-                                                    activeColor: Colors.blueAccent,
-                                                    contentPadding: EdgeInsets.zero,
-                                                    dense: true,
-                                                  ),
-                                                ),
-                                              ),
-                                              Flexible(
-                                                child:Theme(
-                                                  data: Theme.of(context).copyWith(
-                                                    splashColor: Colors.transparent,
-                                                    highlightColor: Colors.transparent,
-                                                    hoverColor: Colors.transparent,
-                                                    focusColor: Colors.transparent,
-                                                    // This removes the pressed/focus stroke
-                                                    radioTheme: RadioThemeData(
-                                                      overlayColor: WidgetStateProperty.all(Colors.transparent),
-                                                    ),
-                                                  ),
-                                                  child: RadioListTile(
-                                                    title: Text(
-                                                      "Notes",
-                                                      style: TextStyle(color: user.colorManager.homePageText,fontSize: 16),
-                                                    ),
-                                                    value: 1,
-                                                    activeColor: Colors.blueAccent,
-                                                    contentPadding: EdgeInsets.zero,
-                                                    dense: true,
-                                                  ),
-                                                ),
-                                              )
-                                            ],
-                                          )))
+                                          ButtonSegment(
+                                            value: 1,
+                                            label: Text("Notes"),
+                                            icon: Icon(Icons.edit_note_sharp),
+                                          )
                                         ],
-                                      )
+                                        selected: {user.user.startPage},
+                                        emptySelectionAllowed: false,
+                                        onSelectionChanged: (v) => user.changeStartPage(v.first),
+
+                                        style: ButtonStyle(
+                                          shape: WidgetStateProperty.all(
+                                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          ),
+
+                                          padding: WidgetStateProperty.all(
+                                            EdgeInsets.symmetric(horizontal: MediaQuery.widthOf(context)/7, vertical: 15),
+                                          ),
+
+                                          side: WidgetStateProperty.resolveWith((states) {
+                                            return BorderSide(
+                                              color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                            );
+                                          }),
+
+                                          backgroundColor: WidgetStateProperty.resolveWith((states) {
+                                            return states.contains(WidgetState.selected)
+                                                ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                : Colors.transparent;
+                                          }),
+
+                                          foregroundColor: WidgetStateProperty.resolveWith((states) {
+                                            return states.contains(WidgetState.selected)
+                                                ? user.colorManager.homePageText
+                                                : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                          }),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   Column(
@@ -1024,75 +1011,62 @@ class ProfilePageState extends State<ProfilePage> {
                                         ],
                                       ),
                                       Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              Flexible(
-                                                child: Text("StartPage",style: TextStyle(
-                                                    fontSize: 26,
-                                                    color: user.colorManager.appTitle
-                                                ),),
+                                          Text(
+                                            "Start Page",
+                                            style: TextStyle(
+                                              fontSize: 26,
+                                              color: user.colorManager.appTitle,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Padding(padding: EdgeInsets.only(bottom: 10)),
+                                          SegmentedButton<int>(
+                                            segments: const [
+                                              ButtonSegment(
+                                                value: 0,
+                                                label: Text("Todo"),
+                                                icon: Icon(Icons.checklist_sharp),
                                               ),
-                                              Flexible(
-                                                  child: RadioGroup(
-                                                      groupValue: user.user.startPage,
-                                                      onChanged: (v){
-                                                        user.changeStartPage(v??0);
-                                                      }, child: Row(
-                                                    children: [
-                                                      Flexible(
-                                                        child:Theme(
-                                                          data: Theme.of(context).copyWith(
-                                                            splashColor: Colors.transparent,
-                                                            highlightColor: Colors.transparent,
-                                                            hoverColor: Colors.transparent,
-                                                            focusColor: Colors.transparent,
-                                                            // This removes the pressed/focus stroke
-                                                            radioTheme: RadioThemeData(
-                                                              overlayColor: WidgetStateProperty.all(Colors.transparent),
-                                                            ),
-                                                          ),
-                                                          child: RadioListTile(
-                                                            title: Text(
-                                                              "Todo",
-                                                              style: TextStyle(color: user.colorManager.homePageText,fontSize: 16),
-                                                            ),
-                                                            value: 0,
-                                                            activeColor: Colors.blueAccent,
-                                                            contentPadding: EdgeInsets.zero,
-                                                            dense: true,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Flexible(
-                                                        child:Theme(
-                                                          data: Theme.of(context).copyWith(
-                                                            splashColor: Colors.transparent,
-                                                            highlightColor: Colors.transparent,
-                                                            hoverColor: Colors.transparent,
-                                                            focusColor: Colors.transparent,
-                                                            // This removes the pressed/focus stroke
-                                                            radioTheme: RadioThemeData(
-                                                              overlayColor: WidgetStateProperty.all(Colors.transparent),
-                                                            ),
-                                                          ),
-                                                          child: RadioListTile(
-                                                            title: Text(
-                                                              "Notes",
-                                                              style: TextStyle(color: user.colorManager.homePageText,fontSize: 16),
-                                                            ),
-                                                            value: 1,
-                                                            activeColor: Colors.blueAccent,
-                                                            contentPadding: EdgeInsets.zero,
-                                                            dense: true,
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  )))
+                                              ButtonSegment(
+                                                value: 1,
+                                                label: Text("Notes"),
+                                                icon: Icon(Icons.edit_note_sharp),
+                                              )
                                             ],
-                                          )
+                                            selected: {user.user.startPage},
+                                            emptySelectionAllowed: false,
+                                            onSelectionChanged: (v) => user.changeStartPage(v.first),
+
+                                            style: ButtonStyle(
+                                              shape: WidgetStateProperty.all(
+                                                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              ),
+
+                                              padding: WidgetStateProperty.all(
+                                                EdgeInsets.symmetric(horizontal: MediaQuery.widthOf(context)/15, vertical: 10),
+                                              ),
+
+                                              side: WidgetStateProperty.resolveWith((states) {
+                                                return BorderSide(
+                                                  color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                                );
+                                              }),
+
+                                              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                                                return states.contains(WidgetState.selected)
+                                                    ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                    : Colors.transparent;
+                                              }),
+
+                                              foregroundColor: WidgetStateProperty.resolveWith((states) {
+                                                return states.contains(WidgetState.selected)
+                                                    ? user.colorManager.homePageText
+                                                    : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                              }),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                       Column(

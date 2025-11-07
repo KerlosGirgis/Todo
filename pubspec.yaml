@@ -36,27 +36,27 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   path: ^1.9.1
-  image_picker: ^1.1.2
+  image_picker: ^1.2.0
   path_provider: ^2.1.5
-  permission_handler: ^12.0.0+1
+  permission_handler: ^12.0.1
   intl: ^0.20.2
   flutter_launcher_icons: ^0.14.4
   auto_size_text: ^3.0.0
-  flex_color_picker: ^3.7.1
-  local_auth: ^2.3.0
-  home_widget: ^0.8.0
+  flex_color_picker: ^3.7.2
+  local_auth: ^3.0.0
+  home_widget: ^0.8.1
   provider: ^6.1.5
-  sqflite_sqlcipher: ^3.2.0
+  sqflite_sqlcipher: ^3.4.0
   flutter_secure_storage: ^9.2.4
-  crypto: ^3.0.6
-  fluttertoast: ^8.2.12
+  crypto: ^3.0.7
+  fluttertoast: ^9.0.0
   shared_preferences: ^2.5.3
-  file_picker: ^10.2.0
+  file_picker: ^10.3.3
   flutter_staggered_animations: ^1.1.1
-  flutter_local_notifications: ^19.3.0
+  flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
-  uuid: ^4.5.1
-  fl_chart: ^1.0.0
+  uuid: ^4.5.2
+  fl_chart: ^1.1.1
   readmore: ^3.0.0
 
 dev_dependencies:
