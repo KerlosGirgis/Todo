@@ -13,7 +13,7 @@ import 'package:todo/services/user_repository.dart';
 import '../services/color_manager.dart';
 
 class UserViewModel with ChangeNotifier {
-  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1,startPage: 0);
+  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1,startPage: 0, descLines: 2);
 
   ColorManager colorManager =ColorManager(isDark: true);
 
@@ -243,6 +243,14 @@ class UserViewModel with ChangeNotifier {
     if (image != null) {
       final savedImage = await _saveImageToAppStorage(image);
       editPic(savedImage.path);
+    }
+  }
+
+  Future<void> setDescLines(int numOfLines) async {
+    if(numOfLines>=0&&numOfLines<10){
+      user.descLines=numOfLines;
+      await userRepository.updateUser(user);
+      notifyListeners();
     }
   }
 

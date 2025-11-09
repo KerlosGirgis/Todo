@@ -487,58 +487,133 @@ class ProfilePageState extends State<ProfilePage> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(
-                                        "Start Page",
-                                        style: TextStyle(
-                                          fontSize: 26,
-                                          color: user.colorManager.appTitle,
-                                          fontWeight: FontWeight.w600,
+                                      Flexible(
+                                        child: Text(
+                                          "Start Page",
+                                          style: TextStyle(
+                                            fontSize: 26,
+                                            color: user.colorManager.appTitle,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ),
-                                      Padding(padding: EdgeInsets.only(bottom: 10)),
-                                      SegmentedButton<int>(
-                                        segments: const [
-                                          ButtonSegment(
-                                            value: 0,
-                                            label: Text("Todo"),
-                                            icon: Icon(Icons.checklist_sharp),
+                                      Flexible(
+                                        child: SegmentedButton<int>(
+                                          segments: const [
+                                            ButtonSegment(
+                                              value: 0,
+                                              label: Text("Todo"),
+                                              icon: Icon(Icons.checklist_sharp),
+                                            ),
+                                            ButtonSegment(
+                                              value: 1,
+                                              label: Text("Notes"),
+                                              icon: Icon(Icons.edit_note_sharp),
+                                            )
+                                          ],
+                                          selected: {user.user.startPage},
+                                          emptySelectionAllowed: false,
+                                          onSelectionChanged: (v) => user.changeStartPage(v.first),
+
+                                          style: ButtonStyle(
+                                            shape: WidgetStateProperty.all(
+                                              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+
+                                            padding: WidgetStateProperty.all(
+                                              EdgeInsets.symmetric(horizontal: MediaQuery.widthOf(context)/7, vertical: 15),
+                                            ),
+
+                                            side: WidgetStateProperty.resolveWith((states) {
+                                              return BorderSide(
+                                                color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                              );
+                                            }),
+
+                                            backgroundColor: WidgetStateProperty.resolveWith((states) {
+                                              return states.contains(WidgetState.selected)
+                                                  ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                  : Colors.transparent;
+                                            }),
+
+                                            foregroundColor: WidgetStateProperty.resolveWith((states) {
+                                              return states.contains(WidgetState.selected)
+                                                  ? user.colorManager.homePageText
+                                                  : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                            }),
                                           ),
-                                          ButtonSegment(
-                                            value: 1,
-                                            label: Text("Notes"),
-                                            icon: Icon(Icons.edit_note_sharp),
-                                          )
-                                        ],
-                                        selected: {user.user.startPage},
-                                        emptySelectionAllowed: false,
-                                        onSelectionChanged: (v) => user.changeStartPage(v.first),
-
-                                        style: ButtonStyle(
-                                          shape: WidgetStateProperty.all(
-                                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: Text(
+                                          "Task description lines",
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 26,
+                                            color: user.colorManager.appTitle,
+                                            fontWeight: FontWeight.w600,
                                           ),
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: SegmentedButton<int>(
+                                          segments: const [
+                                            ButtonSegment(
+                                              value: 0,
+                                              label: Text("off"),
+                                            ),
+                                            ButtonSegment(
+                                              value: 1,
+                                              label: Text("1"),
+                                            ),
+                                            ButtonSegment(
+                                              value: 2,
+                                              label: Text("2"),
+                                            ),
+                                            ButtonSegment(
+                                              value: 3,
+                                              label: Text("3"),
+                                            ),
+                                            ButtonSegment(
+                                              value: 4,
+                                              label: Text("4"),
+                                            ),
+                                            ButtonSegment(
+                                              value: 5,
+                                              label: Text("5"),
+                                            ),
+                                          ],
+                                          selected: {user.user.descLines},
+                                          emptySelectionAllowed: false,
+                                          onSelectionChanged: (v) => user.setDescLines(v.first),
 
-                                          padding: WidgetStateProperty.all(
-                                            EdgeInsets.symmetric(horizontal: MediaQuery.widthOf(context)/7, vertical: 15),
+                                          style: ButtonStyle(
+                                            shape: WidgetStateProperty.all(
+                                              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+
+                                            padding: WidgetStateProperty.all(
+                                              EdgeInsets.symmetric(vertical: 15),
+                                            ),
+
+                                            side: WidgetStateProperty.resolveWith((states) {
+                                              return BorderSide(
+                                                color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                              );
+                                            }),
+
+                                            backgroundColor: WidgetStateProperty.resolveWith((states) {
+                                              return states.contains(WidgetState.selected)
+                                                  ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                  : Colors.transparent;
+                                            }),
+
+                                            foregroundColor: WidgetStateProperty.resolveWith((states) {
+                                              return states.contains(WidgetState.selected)
+                                                  ? user.colorManager.homePageText
+                                                  : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                            }),
                                           ),
-
-                                          side: WidgetStateProperty.resolveWith((states) {
-                                            return BorderSide(
-                                              color: user.colorManager.homePageText!.withValues(alpha: 0.35),
-                                            );
-                                          }),
-
-                                          backgroundColor: WidgetStateProperty.resolveWith((states) {
-                                            return states.contains(WidgetState.selected)
-                                                ? user.colorManager.homePageText!.withValues(alpha: 0.18)
-                                                : Colors.transparent;
-                                          }),
-
-                                          foregroundColor: WidgetStateProperty.resolveWith((states) {
-                                            return states.contains(WidgetState.selected)
-                                                ? user.colorManager.homePageText
-                                                : user.colorManager.homePageText!.withValues(alpha: 0.6);
-                                          }),
                                         ),
                                       ),
                                     ],
@@ -1013,58 +1088,136 @@ class ProfilePageState extends State<ProfilePage> {
                                       Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text(
-                                            "Start Page",
-                                            style: TextStyle(
-                                              fontSize: 26,
-                                              color: user.colorManager.appTitle,
-                                              fontWeight: FontWeight.w600,
+                                          Flexible(
+                                            child: Text(
+                                              "Start Page",
+                                              style: TextStyle(
+                                                fontSize: 26,
+                                                color: user.colorManager.appTitle,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                             ),
                                           ),
                                           Padding(padding: EdgeInsets.only(bottom: 10)),
-                                          SegmentedButton<int>(
-                                            segments: const [
-                                              ButtonSegment(
-                                                value: 0,
-                                                label: Text("Todo"),
-                                                icon: Icon(Icons.checklist_sharp),
+                                          Flexible(
+                                            child: SegmentedButton<int>(
+                                              segments: const [
+                                                ButtonSegment(
+                                                  value: 0,
+                                                  label: Text("Todo"),
+                                                  icon: Icon(Icons.checklist_sharp),
+                                                ),
+                                                ButtonSegment(
+                                                  value: 1,
+                                                  label: Text("Notes"),
+                                                  icon: Icon(Icons.edit_note_sharp),
+                                                )
+                                              ],
+                                              selected: {user.user.startPage},
+                                              emptySelectionAllowed: false,
+                                              onSelectionChanged: (v) => user.changeStartPage(v.first),
+
+                                              style: ButtonStyle(
+                                                shape: WidgetStateProperty.all(
+                                                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                ),
+
+                                                padding: WidgetStateProperty.all(
+                                                  EdgeInsets.symmetric(horizontal: MediaQuery.widthOf(context)/15, vertical: 10),
+                                                ),
+
+                                                side: WidgetStateProperty.resolveWith((states) {
+                                                  return BorderSide(
+                                                    color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                                  );
+                                                }),
+
+                                                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                                                  return states.contains(WidgetState.selected)
+                                                      ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                      : Colors.transparent;
+                                                }),
+
+                                                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                                                  return states.contains(WidgetState.selected)
+                                                      ? user.colorManager.homePageText
+                                                      : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                                }),
                                               ),
-                                              ButtonSegment(
-                                                value: 1,
-                                                label: Text("Notes"),
-                                                icon: Icon(Icons.edit_note_sharp),
-                                              )
-                                            ],
-                                            selected: {user.user.startPage},
-                                            emptySelectionAllowed: false,
-                                            onSelectionChanged: (v) => user.changeStartPage(v.first),
-
-                                            style: ButtonStyle(
-                                              shape: WidgetStateProperty.all(
-                                                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+                                          ),
+                                          Padding(padding: EdgeInsets.only(bottom: 10)),
+                                          Flexible(
+                                            child: Text(
+                                              "Task description lines",
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 26,
+                                                color: user.colorManager.appTitle,
+                                                fontWeight: FontWeight.w600,
                                               ),
+                                            ),
+                                          ),
+                                          Padding(padding: EdgeInsets.only(bottom: 10)),
+                                          Flexible(
+                                            child: SegmentedButton<int>(
+                                              segments: const [
+                                                ButtonSegment(
+                                                  value: 0,
+                                                  label: Text("off"),
+                                                ),
+                                                ButtonSegment(
+                                                  value: 1,
+                                                  label: Text("1"),
+                                                ),
+                                                ButtonSegment(
+                                                  value: 2,
+                                                  label: Text("2"),
+                                                ),
+                                                ButtonSegment(
+                                                  value: 3,
+                                                  label: Text("3"),
+                                                ),
+                                                ButtonSegment(
+                                                  value: 4,
+                                                  label: Text("4"),
+                                                ),
+                                                ButtonSegment(
+                                                  value: 5,
+                                                  label: Text("5"),
+                                                ),
+                                              ],
+                                              selected: {user.user.descLines},
+                                              emptySelectionAllowed: false,
+                                              onSelectionChanged: (v) => user.setDescLines(v.first),
 
-                                              padding: WidgetStateProperty.all(
-                                                EdgeInsets.symmetric(horizontal: MediaQuery.widthOf(context)/15, vertical: 10),
+                                              style: ButtonStyle(
+                                                shape: WidgetStateProperty.all(
+                                                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                ),
+
+                                                padding: WidgetStateProperty.all(
+                                                  EdgeInsets.symmetric(vertical: 15),
+                                                ),
+
+                                                side: WidgetStateProperty.resolveWith((states) {
+                                                  return BorderSide(
+                                                    color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                                  );
+                                                }),
+
+                                                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                                                  return states.contains(WidgetState.selected)
+                                                      ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                      : Colors.transparent;
+                                                }),
+
+                                                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                                                  return states.contains(WidgetState.selected)
+                                                      ? user.colorManager.homePageText
+                                                      : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                                }),
                                               ),
-
-                                              side: WidgetStateProperty.resolveWith((states) {
-                                                return BorderSide(
-                                                  color: user.colorManager.homePageText!.withValues(alpha: 0.35),
-                                                );
-                                              }),
-
-                                              backgroundColor: WidgetStateProperty.resolveWith((states) {
-                                                return states.contains(WidgetState.selected)
-                                                    ? user.colorManager.homePageText!.withValues(alpha: 0.18)
-                                                    : Colors.transparent;
-                                              }),
-
-                                              foregroundColor: WidgetStateProperty.resolveWith((states) {
-                                                return states.contains(WidgetState.selected)
-                                                    ? user.colorManager.homePageText
-                                                    : user.colorManager.homePageText!.withValues(alpha: 0.6);
-                                              }),
                                             ),
                                           ),
                                         ],

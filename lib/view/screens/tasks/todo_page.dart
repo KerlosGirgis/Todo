@@ -329,7 +329,7 @@ class _TodoPageState extends State<TodoPage> {
                                                       padding:
                                                           const EdgeInsets.only(
                                                               top: 2.0),
-                                                      child: ReadMoreText(
+                                                      child: user.user.descLines!=0?ReadMoreText(
                                                         moreStyle: TextStyle(
                                                             color: user
                                                                 .colorManager
@@ -342,7 +342,7 @@ class _TodoPageState extends State<TodoPage> {
                                                             color: user
                                                                 .colorManager
                                                                 .moreLess),
-                                                        trimLines: 2,
+                                                        trimLines: user.user.descLines,
                                                         trimMode: TrimMode.Line,
                                                         tasks.items[index].desc,
                                                         style: TextStyle(
@@ -355,6 +355,20 @@ class _TodoPageState extends State<TodoPage> {
                                                               ? user
                                                                   .colorManager
                                                                   .subtitle
+                                                              : Colors.grey,
+                                                        ),
+                                                      ):Text(
+                                                        tasks.items[index].desc,
+                                                        style: TextStyle(
+                                                          fontSize: 20,
+                                                          color: tasks
+                                                              .items[
+                                                          index]
+                                                              .status ==
+                                                              0
+                                                              ? user
+                                                              .colorManager
+                                                              .subtitle
                                                               : Colors.grey,
                                                         ),
                                                       ),
