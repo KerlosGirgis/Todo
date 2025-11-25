@@ -56,7 +56,7 @@ class AddNoteDialog extends StatelessWidget {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
-                          color: user.colorManager.homePageText),
+                          color: user.colorManager.wB),
                     ),
                   ),
                   Expanded(
@@ -86,12 +86,12 @@ class AddNoteDialog extends StatelessWidget {
                     maxLines: 1,
                     style: TextStyle(
                         fontSize: 22,
-                        color: user.colorManager.homePageText),
+                        color: user.colorManager.wB),
                     decoration: InputDecoration(
                       labelText: "Title",
                       labelStyle: TextStyle(
                         fontSize: 30,
-                        color: user.colorManager.homePageText,
+                        color: user.colorManager.wB,
                       ),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(13),
@@ -137,7 +137,7 @@ class AddNoteDialog extends StatelessWidget {
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         Icon(Icons.format_color_text_rounded,
-                            color: user.colorManager.homePageText,
+                            color: user.colorManager.wB,
                             size: 24),
                         Spacer(flex: 1,),
                         Flexible(
@@ -148,7 +148,7 @@ class AddNoteDialog extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 fontSize: 24,
-                                color: user.colorManager.homePageText),
+                                color: user.colorManager.wB),
                           ),
                         ),
                         Flexible(
@@ -209,7 +209,7 @@ class AddNoteDialog extends StatelessWidget {
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         Icon(Icons.color_lens_rounded,
-                            color: user.colorManager.homePageText,
+                            color: user.colorManager.wB,
                             size: 24),
                         Spacer(
                           flex: 1,
@@ -222,7 +222,7 @@ class AddNoteDialog extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 fontSize: 24,
-                                color: user.colorManager.homePageText),
+                                color: user.colorManager.wB),
                           ),
                         ),
                         Flexible(
@@ -284,7 +284,7 @@ class AddNoteDialog extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.fingerprint_rounded,
-                              color: user.colorManager.homePageText,
+                              color: user.colorManager.wB,
                               size: 24),
                           Spacer(flex: 1,),
                           Flexible(
@@ -296,7 +296,7 @@ class AddNoteDialog extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   fontSize: 24,
-                                  color: user.colorManager.homePageText),
+                                  color: user.colorManager.wB),
                             ),
                           ),
                           Spacer(flex: 1,),

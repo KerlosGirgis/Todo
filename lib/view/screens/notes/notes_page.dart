@@ -51,7 +51,7 @@ class _NotesPageState extends State<NotesPage> {
               style: TextStyle(
                 fontSize: 30,
                 overflow: TextOverflow.ellipsis,
-                color: user.colorManager.appTitle,
+                color: user.colorManager.wB,
                 fontWeight: FontWeight.bold,
               ),
             ),

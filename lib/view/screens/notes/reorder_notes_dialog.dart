@@ -48,7 +48,7 @@ class ReorderNotesDialog extends StatelessWidget {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
-                          color: user.colorManager.homePageText),
+                          color: user.colorManager.wB),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -77,7 +77,7 @@ class ReorderNotesDialog extends StatelessWidget {
                       ? Center(
                           child: Text(
                             "Empty",
-                            style: TextStyle(color: user.colorManager.homePageText, fontSize: 22),
+                            style: TextStyle(color: user.colorManager.wB, fontSize: 22),
                           ),
                         )
                       : Theme(
@@ -132,7 +132,7 @@ class ReorderNotesDialog extends StatelessWidget {
                                                             fontSize: 26,
                                                             color: user
                                                                 .colorManager
-                                                                .taskTitle,
+                                                                .wB,
                                                           )),
                                                     ),
                                                     Icon(

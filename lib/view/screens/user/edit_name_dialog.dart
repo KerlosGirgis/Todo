@@ -48,7 +48,7 @@ class EditNameDialog extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 32,
-                        color: user.colorManager.homePageText),
+                        color: user.colorManager.wB),
                   ),
                 ),
                 Expanded(
@@ -75,12 +75,12 @@ class EditNameDialog extends StatelessWidget {
                   maxLines: 1,
                   maxLength: 20,
                   style: TextStyle(
-                      fontSize: 22, color: user.colorManager.homePageText),
+                      fontSize: 22, color: user.colorManager.wB),
                   decoration: InputDecoration(
                       labelText: "Name",
                       labelStyle: TextStyle(
                           fontSize: 30,
-                          color: user.colorManager.homePageText),
+                          color: user.colorManager.wB),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none,

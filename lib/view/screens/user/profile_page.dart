@@ -43,7 +43,7 @@ class ProfilePageState extends State<ProfilePage> {
                   },
                   icon: Icon(
                     Icons.arrow_back,
-                    color: user.colorManager.appTitle,
+                    color: user.colorManager.wB,
                     size: 32,
                   )),
               actions: [
@@ -59,7 +59,7 @@ class ProfilePageState extends State<ProfilePage> {
                     },
                     icon: Icon(
                       Icons.question_mark,
-                      color: user.colorManager.appTitle,
+                      color: user.colorManager.wB,
                     ))
               ],
             ),
@@ -102,8 +102,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             MediaQuery.sizeOf(context).width /
                                                 10,
                                         child: FloatingActionButton(
-                                          backgroundColor: user.colorManager
-                                              .editPicButtonBackground,
+                                          backgroundColor: Colors.white,
                                           elevation: 3,
                                           shape: const CircleBorder(),
                                           onPressed: () {
@@ -203,27 +202,29 @@ class ProfilePageState extends State<ProfilePage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              GestureDetector(
-                                onLongPress: () {
-                                  showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return const EditNameDialog();
-                                      });
-                                },
-                                child: SizedBox(
-                                  width: MediaQuery.sizeOf(context).width / 1.1,
-                                  child: AutoSizeText(
-                                    user.user.name,
-                                    minFontSize: 30,
-                                    maxLines: 1,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        overflow: TextOverflow.clip,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 40,
-                                        color:
-                                            user.colorManager.profilePageName),
+                              Flexible(
+                                child: GestureDetector(
+                                  onLongPress: () {
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return const EditNameDialog();
+                                        });
+                                  },
+                                  child: SizedBox(
+                                    width: MediaQuery.sizeOf(context).width / 1.1,
+                                    child: AutoSizeText(
+                                      user.user.name,
+                                      minFontSize: 30,
+                                      maxLines: 1,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          overflow: TextOverflow.clip,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 40,
+                                          color:
+                                              user.colorManager.profilePageName),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -308,26 +309,28 @@ class ProfilePageState extends State<ProfilePage> {
                                     },
                                   ),
                                 ),
-                                SizedBox(
-                                  width: MediaQuery.sizeOf(context).width / 3,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Indicator(
-                                        color: Colors.blue,
-                                        text: 'Finished',
-                                        isSquare: true,
-                                        textColor: user.colorManager.appTitle,
-                                      ),
-                                      Indicator(
-                                        color: Colors.grey,
-                                        text: 'UnFinished',
-                                        isSquare: true,
-                                        textColor: user.colorManager.appTitle,
-                                      ),
-                                    ],
+                                Flexible(
+                                  child: SizedBox(
+                                    width: MediaQuery.sizeOf(context).width / 3,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Indicator(
+                                          color: Colors.blue,
+                                          text: 'Finished',
+                                          isSquare: true,
+                                          textColor: user.colorManager.wB,
+                                        ),
+                                        Indicator(
+                                          color: Colors.grey,
+                                          text: 'UnFinished',
+                                          isSquare: true,
+                                          textColor: user.colorManager.wB,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
@@ -492,7 +495,7 @@ class ProfilePageState extends State<ProfilePage> {
                                           "Start Page",
                                           style: TextStyle(
                                             fontSize: 26,
-                                            color: user.colorManager.appTitle,
+                                            color: user.colorManager.wB,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -526,31 +529,31 @@ class ProfilePageState extends State<ProfilePage> {
 
                                             side: WidgetStateProperty.resolveWith((states) {
                                               return BorderSide(
-                                                color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                                color: user.colorManager.wB!.withValues(alpha: 0.35),
                                               );
                                             }),
 
                                             backgroundColor: WidgetStateProperty.resolveWith((states) {
                                               return states.contains(WidgetState.selected)
-                                                  ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                  ? user.colorManager.wB!.withValues(alpha: 0.18)
                                                   : Colors.transparent;
                                             }),
 
                                             foregroundColor: WidgetStateProperty.resolveWith((states) {
                                               return states.contains(WidgetState.selected)
-                                                  ? user.colorManager.homePageText
-                                                  : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                                  ? user.colorManager.wB
+                                                  : user.colorManager.wB!.withValues(alpha: 0.6);
                                             }),
                                           ),
                                         ),
                                       ),
                                       Flexible(
                                         child: Text(
-                                          "Task description lines",
+                                          "Task description lines limit",
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             fontSize: 26,
-                                            color: user.colorManager.appTitle,
+                                            color: user.colorManager.wB,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -598,20 +601,20 @@ class ProfilePageState extends State<ProfilePage> {
 
                                             side: WidgetStateProperty.resolveWith((states) {
                                               return BorderSide(
-                                                color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                                color: user.colorManager.wB!.withValues(alpha: 0.35),
                                               );
                                             }),
 
                                             backgroundColor: WidgetStateProperty.resolveWith((states) {
                                               return states.contains(WidgetState.selected)
-                                                  ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                  ? user.colorManager.wB!.withValues(alpha: 0.18)
                                                   : Colors.transparent;
                                             }),
 
                                             foregroundColor: WidgetStateProperty.resolveWith((states) {
                                               return states.contains(WidgetState.selected)
-                                                  ? user.colorManager.homePageText
-                                                  : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                                  ? user.colorManager.wB
+                                                  : user.colorManager.wB!.withValues(alpha: 0.6);
                                             }),
                                           ),
                                         ),
@@ -629,7 +632,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             overflow: TextOverflow.ellipsis,
                                             fontSize: 28,
                                             color: user
-                                                .colorManager.homePageText),
+                                                .colorManager.wB),
                                       ),
                                       Row(
                                         mainAxisAlignment:
@@ -656,7 +659,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 style: TextStyle(
                                                     fontSize: 22,
                                                     color: user.colorManager
-                                                        .homePageText),
+                                                        .wB),
                                               ))
                                         ],
                                       ),
@@ -735,8 +738,7 @@ class ProfilePageState extends State<ProfilePage> {
                                             child: FloatingActionButton(
                                               shape:
                                                   const CircleBorder(), // Ensures circular shape
-                                              backgroundColor: user.colorManager
-                                                  .editPicButtonBackground,
+                                              backgroundColor: Colors.white,
                                               elevation: 3,
                                               onPressed: () {
                                                 showDialog(
@@ -1093,7 +1095,7 @@ class ProfilePageState extends State<ProfilePage> {
                                               "Start Page",
                                               style: TextStyle(
                                                 fontSize: 26,
-                                                color: user.colorManager.appTitle,
+                                                color: user.colorManager.wB,
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -1128,20 +1130,20 @@ class ProfilePageState extends State<ProfilePage> {
 
                                                 side: WidgetStateProperty.resolveWith((states) {
                                                   return BorderSide(
-                                                    color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                                    color: user.colorManager.wB!.withValues(alpha: 0.35),
                                                   );
                                                 }),
 
                                                 backgroundColor: WidgetStateProperty.resolveWith((states) {
                                                   return states.contains(WidgetState.selected)
-                                                      ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                      ? user.colorManager.wB!.withValues(alpha: 0.18)
                                                       : Colors.transparent;
                                                 }),
 
                                                 foregroundColor: WidgetStateProperty.resolveWith((states) {
                                                   return states.contains(WidgetState.selected)
-                                                      ? user.colorManager.homePageText
-                                                      : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                                      ? user.colorManager.wB
+                                                      : user.colorManager.wB!.withValues(alpha: 0.6);
                                                 }),
                                               ),
                                             ),
@@ -1149,11 +1151,11 @@ class ProfilePageState extends State<ProfilePage> {
                                           Padding(padding: EdgeInsets.only(bottom: 10)),
                                           Flexible(
                                             child: Text(
-                                              "Task description lines",
+                                              "Task description lines limit",
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
                                                 fontSize: 26,
-                                                color: user.colorManager.appTitle,
+                                                color: user.colorManager.wB,
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -1202,20 +1204,20 @@ class ProfilePageState extends State<ProfilePage> {
 
                                                 side: WidgetStateProperty.resolveWith((states) {
                                                   return BorderSide(
-                                                    color: user.colorManager.homePageText!.withValues(alpha: 0.35),
+                                                    color: user.colorManager.wB!.withValues(alpha: 0.35),
                                                   );
                                                 }),
 
                                                 backgroundColor: WidgetStateProperty.resolveWith((states) {
                                                   return states.contains(WidgetState.selected)
-                                                      ? user.colorManager.homePageText!.withValues(alpha: 0.18)
+                                                      ? user.colorManager.wB!.withValues(alpha: 0.18)
                                                       : Colors.transparent;
                                                 }),
 
                                                 foregroundColor: WidgetStateProperty.resolveWith((states) {
                                                   return states.contains(WidgetState.selected)
-                                                      ? user.colorManager.homePageText
-                                                      : user.colorManager.homePageText!.withValues(alpha: 0.6);
+                                                      ? user.colorManager.wB
+                                                      : user.colorManager.wB!.withValues(alpha: 0.6);
                                                 }),
                                               ),
                                             ),
@@ -1233,7 +1235,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                 overflow: TextOverflow.ellipsis,
                                                 fontSize: 28,
                                                 color: user
-                                                    .colorManager.homePageText),
+                                                    .colorManager.wB),
                                           ),
                                           Row(
                                             mainAxisAlignment:
@@ -1260,7 +1262,7 @@ class ProfilePageState extends State<ProfilePage> {
                                                     style: TextStyle(
                                                         fontSize: 22,
                                                         color: user.colorManager
-                                                            .homePageText),
+                                                            .wB),
                                                   ))
                                             ],
                                           ),

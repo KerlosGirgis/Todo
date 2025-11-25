@@ -60,7 +60,7 @@ class UpdateNoteDialog extends StatelessWidget {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
-                          color: user.colorManager.homePageText),
+                          color: user.colorManager.wB),
                     ),
                   ),
                   Expanded(
@@ -89,11 +89,11 @@ class UpdateNoteDialog extends StatelessWidget {
                     controller: titleController,
                     maxLines: 1,
                     style: TextStyle(
-                        fontSize: 22, color: user.colorManager.homePageText),
+                        fontSize: 22, color: user.colorManager.wB),
                     decoration: InputDecoration(
                       labelText: "Title",
                       labelStyle: TextStyle(
-                          fontSize: 30, color: user.colorManager.homePageText),
+                          fontSize: 30, color: user.colorManager.wB),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(13),
                           borderSide: BorderSide.none),
@@ -136,7 +136,7 @@ class UpdateNoteDialog extends StatelessWidget {
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         Icon(Icons.format_color_text_rounded,
-                            color: user.colorManager.homePageText, size: 24),
+                            color: user.colorManager.wB, size: 24),
                         Spacer(
                           flex: 1,
                         ),
@@ -147,7 +147,7 @@ class UpdateNoteDialog extends StatelessWidget {
                             "Title ",
                             style: TextStyle(
                                 fontSize: 24,
-                                color: user.colorManager.homePageText),
+                                color: user.colorManager.wB),
                           ),
                         ),
                         Flexible(
@@ -207,7 +207,7 @@ class UpdateNoteDialog extends StatelessWidget {
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         Icon(Icons.color_lens_rounded,
-                            color: user.colorManager.homePageText, size: 24),
+                            color: user.colorManager.wB, size: 24),
                         Spacer(
                           flex: 1,
                         ),
@@ -218,7 +218,7 @@ class UpdateNoteDialog extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 fontSize: 24,
-                                color: user.colorManager.homePageText),
+                                color: user.colorManager.wB),
                           ),
                         ),
                         Flexible(
@@ -279,7 +279,7 @@ class UpdateNoteDialog extends StatelessWidget {
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           Icon(Icons.fingerprint_rounded,
-                              color: user.colorManager.homePageText, size: 24),
+                              color: user.colorManager.wB, size: 24),
                           Spacer(
                             flex: 1,
                           ),
@@ -291,7 +291,7 @@ class UpdateNoteDialog extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   fontSize: 24,
-                                  color: user.colorManager.homePageText),
+                                  color: user.colorManager.wB),
                             ),
                           ),
                           Spacer(

@@ -45,7 +45,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                   widget.note.title,
                   style: TextStyle(
                     fontSize: 30,
-                    color: user.colorManager.appTitle,
+                    color: user.colorManager.wB,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -56,14 +56,14 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     },
                     icon: Icon(
                       Icons.arrow_back_ios,
-                      color: user.colorManager.noteEditorBackButton,
+                      color: user.colorManager.wB,
                     )),
                 actions: [
                   user.user.count == 1
                       ? Text(
                           "${bodyController.text.replaceAll("\n", "").replaceAll(" ", "").length}",
                           style: TextStyle(
-                              fontSize: 20, color: user.colorManager.appTitle),
+                              fontSize: 20, color: user.colorManager.wB),
                         )
                       : const SizedBox.shrink(),
                   ExpandableMenu(
@@ -81,7 +81,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             },
                             icon: Icon(
                               Icons.undo,
-                              color: user.colorManager.noteEditorButtons,
+                              color: user.colorManager.wB,
                             )),
                         IconButton(
                             onPressed: () {
@@ -89,7 +89,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             },
                             icon: Icon(
                               Icons.redo,
-                              color: user.colorManager.noteEditorButtons,
+                              color: user.colorManager.wB,
                             )),
                         IconButton(
                             onPressed: () {
@@ -129,7 +129,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               color: widget.note.body
                                           .compareTo(bodyController.text) ==
                                       0
-                                  ? user.colorManager.noteEditorButtons
+                                  ? user.colorManager.wB
                                   : Colors.lightBlue,
                             )),
                         IconButton(
@@ -158,7 +158,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             },
                             icon: Icon(
                               Icons.sticky_note_2_sharp,
-                              color: user.colorManager.noteEditorButtons,
+                              color: user.colorManager.wB,
                             )),
                         IconButton(
                             onPressed: () async {
@@ -245,11 +245,11 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                   fontWeight: user.user.casual == 1
                                       ? FontWeight.w600
                                       : FontWeight.w400,
-                                  color: user.colorManager.noteEditorText,
+                                  color: user.colorManager.wB,
                                   fontSize: (26 * user.user.notesTextSize),
                                   decoration: TextDecoration.none,
                                   decorationColor:
-                                      user.colorManager.noteEditorText),
+                                      user.colorManager.wB),
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 focusedBorder: InputBorder.none,

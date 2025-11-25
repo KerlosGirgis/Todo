@@ -68,8 +68,6 @@ class DatabaseService {
     }
     if(oldVersion < 3){
       await db.execute('ALTER TABLE User ADD COLUMN startPage INTEGER DEFAULT 0');
-    }
-    if(oldVersion < 4){
       await db.execute('ALTER TABLE User ADD COLUMN descLines INTEGER DEFAULT 2');
     }
   }

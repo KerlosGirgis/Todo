@@ -195,7 +195,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                 fontSize: 26,
                                                                 color: user
                                                                     .colorManager
-                                                                    .taskTitle,
+                                                                    .wB,
                                                               )
                                                             : const TextStyle(
                                                                 color:
@@ -398,7 +398,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                           0
                                                                       ? user
                                                                           .colorManager
-                                                                          .appTitle
+                                                                          .wB
                                                                       : Colors
                                                                           .grey,
                                                                 )
@@ -419,7 +419,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                       color: tasks.items[index].status == 0
                                                                           ? user
                                                                               .colorManager
-                                                                              .date
+                                                                              .wB
                                                                           : Colors
                                                                               .grey,
                                                                       fontWeight:
@@ -446,7 +446,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                           0
                                                                       ? user
                                                                           .colorManager
-                                                                          .appTitle
+                                                                          .wB
                                                                       : Colors
                                                                           .grey,
                                                                 )
@@ -466,7 +466,7 @@ class _TodoPageState extends State<TodoPage> {
                                                                         0
                                                                     ? user
                                                                         .colorManager
-                                                                        .date
+                                                                        .wB
                                                                     : Colors
                                                                         .grey,
                                                                 fontWeight:
@@ -569,7 +569,7 @@ class _TodoPageState extends State<TodoPage> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 30,
-                color: user.colorManager.appTitle,
+                color: user.colorManager.wB,
                 fontWeight: FontWeight.bold,
               ),
             ),

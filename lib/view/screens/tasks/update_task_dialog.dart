@@ -59,7 +59,7 @@ class UpdateTaskDialog extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 32,
-                        color: user.colorManager.homePageText),
+                        color: user.colorManager.wB),
                   ),
                 ),
                 Expanded(
@@ -89,11 +89,11 @@ class UpdateTaskDialog extends StatelessWidget {
                   controller: titleController,
                   maxLines: 1,
                   style: TextStyle(
-                      fontSize: 22, color: user.colorManager.homePageText),
+                      fontSize: 22, color: user.colorManager.wB),
                   decoration: InputDecoration(
                     labelText: "Title",
                     labelStyle: TextStyle(
-                        fontSize: 30, color: user.colorManager.homePageText),
+                        fontSize: 30, color: user.colorManager.wB),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none),
@@ -109,11 +109,11 @@ class UpdateTaskDialog extends StatelessWidget {
                   keyboardType: TextInputType.multiline,
                   maxLines: 4,
                   style: TextStyle(
-                      fontSize: 20, color: user.colorManager.homePageText),
+                      fontSize: 20, color: user.colorManager.wB),
                   decoration: InputDecoration(
                     labelText: "Description",
                     labelStyle: TextStyle(
-                        fontSize: 30, color: user.colorManager.homePageText),
+                        fontSize: 30, color: user.colorManager.wB),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none),
@@ -184,7 +184,7 @@ class UpdateTaskDialog extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.calendar_month,
-                                  color: user.colorManager.homePageText,
+                                  color: user.colorManager.wB,
                                 ),
                                 Spacer(
                                   flex: 1,
@@ -196,7 +196,7 @@ class UpdateTaskDialog extends StatelessWidget {
                                       date,
                                       style: TextStyle(
                                         fontSize: 18,
-                                        color: user.colorManager.homePageText,
+                                        color: user.colorManager.wB,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -257,7 +257,7 @@ class UpdateTaskDialog extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.access_time_filled_sharp,
-                            color: user.colorManager.homePageText,
+                            color: user.colorManager.wB,
                           ),
                           Spacer(
                             flex: 1,
@@ -269,7 +269,7 @@ class UpdateTaskDialog extends StatelessWidget {
                                 time,
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: user.colorManager.homePageText,
+                                  color: user.colorManager.wB,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

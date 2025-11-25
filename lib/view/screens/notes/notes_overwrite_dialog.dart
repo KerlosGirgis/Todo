@@ -50,7 +50,7 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
-                    color: user.colorManager.homePageText),
+                    color: user.colorManager.wB),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -86,7 +86,7 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
                   RadioListTile(
                     title: Text(
                       "Overwrite existing notes",
-                      style: TextStyle(color: user.colorManager.homePageText),
+                      style: TextStyle(color: user.colorManager.wB),
                     ),
                     value: true,
                     activeColor: Colors.blueAccent,
@@ -97,7 +97,7 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
                   RadioListTile(
                     title: Text(
                       "Keep existing notes",
-                      style: TextStyle(color: user.colorManager.homePageText),
+                      style: TextStyle(color: user.colorManager.wB),
                     ),
                     value: false,
                     activeColor: Colors.blueAccent,

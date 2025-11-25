@@ -37,7 +37,7 @@ class ResetPlotDialog extends StatelessWidget {
                       fontWeight:
                       FontWeight.w600,
                       color: user.colorManager
-                          .homePageText
+                          .wB
                   ),
                   maxLines: 2,
                   overflow:
