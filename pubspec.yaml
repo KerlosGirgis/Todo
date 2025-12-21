@@ -47,7 +47,7 @@ dependencies:
   home_widget: ^0.8.1
   provider: ^6.1.5
   sqflite_sqlcipher: ^3.4.0
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^10.0.0
   crypto: ^3.0.7
   fluttertoast: ^9.0.0
   shared_preferences: ^2.5.3

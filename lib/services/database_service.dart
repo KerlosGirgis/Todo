@@ -10,7 +10,7 @@ class DatabaseService {
   static Database? _db;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 4;
+  static const int _databaseVersion = 3;
 
   Future<Database> openDb() async {
     var databasesPath = await getDatabasesPath();
