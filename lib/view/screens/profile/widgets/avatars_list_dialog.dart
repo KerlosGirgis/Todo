@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
-import '../../widgets/avatar.dart';
+import 'avatar.dart';
 
 class AvatarsListDialog extends StatelessWidget {
   const AvatarsListDialog({

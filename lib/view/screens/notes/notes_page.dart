@@ -8,7 +8,7 @@ import 'package:todo/view/screens/notes/notes_overwrite_dialog.dart';
 import 'package:todo/view/screens/tasks/todo_page.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
-import 'package:todo/view/screens/user/profile_page.dart';
+import 'package:todo/view/screens/profile/screen/profile_page.dart';
 import 'package:todo/view/screens/notes/add_note_dialog.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
