@@ -16,64 +16,82 @@ class Chart extends StatelessWidget {
       Consumer<UserViewModel>(
           builder: (context, user, child) {
             return GestureDetector(
-              child: PieChart(
-                user.user.unFinished == 0 &&
-                    user.user.finished == 0
-                    ? PieChartData(
-                  startDegreeOffset: 15,
-                  sectionsSpace: 0,
-                  centerSpaceRadius: 40,
-                  sections: [
-                    PieChartSectionData(
-                        color: Colors.grey,
-                        value: 1,
-                        title: " ",
-                        radius: 60,
-                        titleStyle: const TextStyle(
-                            fontSize: 22,
-                            fontWeight:
-                            FontWeight.bold,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+              final size = constraints.biggest.width;
+              final centerRadius = size * 0.20;
+              final finishedRadius = size * 0.30;
+              final unFinishedRadius = size * 0.25;
+              final fontSize = size * 0.10;
+
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  PieChart(
+                    user.user.unFinished == 0 &&
+                        user.user.finished == 0
+                        ? PieChartData(
+                      startDegreeOffset: 15,
+                      sectionsSpace: 0,
+                      centerSpaceRadius: centerRadius,
+                      centerSpaceColor: Colors.transparent,
+                      sections: [
+                        PieChartSectionData(
+                          color: user.colorManager.wB
+                              ?.withValues(alpha: 0.4),
+                          value: 1,
+                          title: "",
+                          radius: finishedRadius,
+                        ),
+                      ],
+                    )
+                        : PieChartData(
+                      startDegreeOffset: 15,
+                      sectionsSpace: 0,
+                      centerSpaceRadius: centerRadius,
+                      centerSpaceColor: Colors.transparent,
+                      sections: [
+                        PieChartSectionData(
+                          color: const Color(0xff3D5AFE),
+                          value: user.user.finished.toDouble(),
+                          title:
+                          "${((user.user.finished / (user.user.finished + user.user.unFinished)) * 100).ceil()}%",
+                          radius: finishedRadius,
+                          titleStyle: TextStyle(
+                            fontSize: size * 0.08,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            overflow: TextOverflow
-                                .ellipsis)),
-                  ],
-                )
-                    : PieChartData(
-                  startDegreeOffset: 15,
-                  sectionsSpace: 0,
-                  centerSpaceRadius: 40,
-                  sections: [
-                    PieChartSectionData(
-                        color: Color(0xff3D5AFE),
-                        value: user.user.finished
-                            .toDouble(),
-                        title:
-                        "${((user.user.finished / (user.user.finished + user.user.unFinished)) * 100).ceil()}%",
-                        radius: 60,
-                        titleStyle: const TextStyle(
-                            fontSize: 22,
-                            fontWeight:
-                            FontWeight.bold,
+                          ),
+                        ),
+                        PieChartSectionData(
+                          color: user.colorManager.wB
+                              ?.withValues(alpha: 0.4),
+                          value: user.user.unFinished.toDouble(),
+                          title:
+                          "${((user.user.unFinished / (user.user.finished + user.user.unFinished)) * 100).floor()}%",
+                          radius: unFinishedRadius,
+                          titleStyle: TextStyle(
+                            fontSize: size * 0.08,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            overflow: TextOverflow
-                                .ellipsis)),
-                    PieChartSectionData(
-                        color: user.colorManager.wB?.withValues(alpha: 0.4),
-                        value: user.user.unFinished
-                            .toDouble(),
-                        title:
-                        "${((user.user.unFinished / (user.user.finished + user.user.unFinished)) * 100).floor()}%",
-                        radius: 50,
-                        titleStyle: const TextStyle(
-                            fontSize: 22,
-                            fontWeight:
-                            FontWeight.bold,
-                            color: Colors.white,
-                            overflow: TextOverflow
-                                .ellipsis))
-                  ],
-                ),
-              ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    "Tasks\n${user.user.finished + user.user.unFinished}",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: user.colorManager.wB,
+                    ),
+                  ),
+                ],
+              );
+            },
+            ),
               onLongPress: () {
                 showDialog(
                     context: context,

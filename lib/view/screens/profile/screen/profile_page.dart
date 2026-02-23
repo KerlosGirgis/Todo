@@ -86,7 +86,7 @@ class ProfilePageState extends State<ProfilePage> {
                           AspectRatio(
                             aspectRatio: 2,
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 Flexible(
                                   child: Chart(),
