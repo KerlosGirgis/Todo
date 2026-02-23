@@ -29,9 +29,9 @@ class ProfilePageState extends State<ProfilePage> {
       builder: (context, user, child) {
         return Scaffold(
             appBar: AppBar(
-              surfaceTintColor: user.colorManager.pageBackground,
+              surfaceTintColor: Colors.transparent,
               toolbarHeight: 40,
-              backgroundColor: user.colorManager.pageBackground,
+              backgroundColor: Colors.transparent,
               leading: IconButton(
                   onPressed: () {
                     Navigator.pop(context);
@@ -53,7 +53,7 @@ class ProfilePageState extends State<ProfilePage> {
                           fontSize: 18.0);
                     },
                     icon: Icon(
-                      Icons.question_mark,
+                      Icons.info_outline_rounded,
                       color: user.colorManager.wB,
                     ))
               ],
@@ -100,16 +100,19 @@ class ProfilePageState extends State<ProfilePage> {
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Indicator(
-                                          color: Colors.blue,
+                                          color: Color(0xff3D5AFE),
                                           text: 'Finished',
-                                          isSquare: true,
+                                          isSquare: false,
                                           textColor: user.colorManager.wB,
+                                          size: 25,
                                         ),
+                                        Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height / 90)),
                                         Indicator(
-                                          color: Colors.grey,
+                                          color: user.colorManager.wB!.withValues(alpha: 0.4),
                                           text: 'UnFinished',
-                                          isSquare: true,
+                                          isSquare: false,
                                           textColor: user.colorManager.wB,
+                                          size: 25,
                                         ),
                                       ],
                                     ),
@@ -120,7 +123,7 @@ class ProfilePageState extends State<ProfilePage> {
                           ),
                           Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height / 33)),
                           AspectRatio(
-                            aspectRatio: 1.7,
+                            aspectRatio: 1.6,
                             child: SettingsPageView(),
                           ),
                         ],

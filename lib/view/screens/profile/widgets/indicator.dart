@@ -32,9 +32,13 @@ class Indicator extends StatelessWidget {
           decoration: BoxDecoration(
             shape: isSquare ? BoxShape.rectangle : BoxShape.circle,
             color: color,
+            border: Border.all(
+              color: textColor ?? Colors.black,
+              width: 2,
+            ),
           ),
         ),
-        const SizedBox(width: 6), // Increased spacing for better readability
+        const SizedBox(width: 6),
         Expanded(
           child: AutoSizeText(
             text,

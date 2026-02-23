@@ -33,7 +33,7 @@ class UserName extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 fontSize: 40,
                 color:
-                user.colorManager.profilePageName),
+                Color(0xff3D5AFE).withValues(alpha: 0.9)),
           ),
         ),
       );});

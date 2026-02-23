@@ -17,17 +17,51 @@ class UserAvatar extends StatelessWidget {
     return Consumer<UserViewModel>(builder: (context, user, child) {
       return Stack(
         children: [
-          CircleAvatar(
-            backgroundImage: user.user.pic.startsWith("0")
-                ? AssetImage(AvatarManager.getAvatar(user.user.pic))
-                : FileImage(File(user.user.pic)) as ImageProvider,
-            radius: MediaQuery.of(context).orientation == Orientation.portrait
-                ? MediaQuery.sizeOf(context).width / 4
-                : MediaQuery.sizeOf(context).height / 4,
-            backgroundColor: Colors.transparent,
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const RadialGradient(
+                colors: [
+                  Color(0xff3D5AFE),
+                  Colors.transparent,
+                ],
+                stops: [0.6, 1.0],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xff3D5AFE).withValues(alpha: 0.4),
+                  blurRadius: 40,
+                  spreadRadius: 8,
+                ),
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(6), // thickness of ring
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
+              ),
+              child: CircleAvatar(
+                backgroundImage: user.user.pic.startsWith("0")
+                    ? AssetImage(AvatarManager.getAvatar(user.user.pic))
+                    : FileImage(File(user.user.pic)) as ImageProvider,
+                radius: MediaQuery.of(context).orientation == Orientation.portrait
+                    ? MediaQuery.sizeOf(context).width / 4
+                    : MediaQuery.sizeOf(context).height / 4,
+                backgroundColor: Colors.transparent,
+              ),
+            ),
           ),
           Positioned(
-            right: MediaQuery.sizeOf(context).width / 50,
+            right: MediaQuery.sizeOf(context).width / 25,
             bottom: MediaQuery.sizeOf(context).height / 50,
             child: SizedBox(
               width: MediaQuery.of(context).orientation == Orientation.portrait

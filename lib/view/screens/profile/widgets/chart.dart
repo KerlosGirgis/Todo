@@ -44,7 +44,7 @@ class Chart extends StatelessWidget {
                   centerSpaceRadius: 40,
                   sections: [
                     PieChartSectionData(
-                        color: Colors.blue,
+                        color: Color(0xff3D5AFE),
                         value: user.user.finished
                             .toDouble(),
                         title:
@@ -58,7 +58,7 @@ class Chart extends StatelessWidget {
                             overflow: TextOverflow
                                 .ellipsis)),
                     PieChartSectionData(
-                        color: Colors.grey,
+                        color: user.colorManager.wB?.withValues(alpha: 0.4),
                         value: user.user.unFinished
                             .toDouble(),
                         title:
