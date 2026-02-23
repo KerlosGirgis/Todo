@@ -40,7 +40,7 @@ class UserAvatar extends StatelessWidget {
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(6), // thickness of ring
+            padding: const EdgeInsets.all(6),
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,

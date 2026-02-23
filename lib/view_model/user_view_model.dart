@@ -232,7 +232,10 @@ class UserViewModel with ChangeNotifier {
     final appDir = await getApplicationDocumentsDirectory();
 
     final fileName = image.path.split('/').last;
-
+    final oldFile = File(user.pic);
+    if (await oldFile.exists()) {
+      await oldFile.delete();
+    }
     final savedImage = await image.copy('${appDir.path}/$fileName');
 
     return savedImage;
