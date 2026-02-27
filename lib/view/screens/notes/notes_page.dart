@@ -378,7 +378,7 @@ class _NotesPageState extends State<NotesPage> {
                                                                 .notes[index]
                                                                 .titleColor
                                                                 .toColor,
-                                                            fontSize: 24,
+                                                            fontSize: 24*user.user.notesTitleSize,
                                                             fontWeight:
                                                                 FontWeight.bold),
                                                       ),

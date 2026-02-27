@@ -192,15 +192,15 @@ class _TodoPageState extends State<TodoPage> {
                                                                     .status ==
                                                                 0
                                                             ? TextStyle(
-                                                                fontSize: 26,
+                                                                fontSize: 26*user.user.tasksTitleSize,
                                                                 color: user
                                                                     .colorManager
                                                                     .wB,
                                                               )
-                                                            : const TextStyle(
+                                                            : TextStyle(
                                                                 color:
                                                                     Colors.grey,
-                                                                fontSize: 26,
+                                                                fontSize: 26*user.user.tasksTitleSize,
                                                                 decoration:
                                                                     TextDecoration
                                                                         .lineThrough,
@@ -346,7 +346,7 @@ class _TodoPageState extends State<TodoPage> {
                                                         trimMode: TrimMode.Line,
                                                         tasks.items[index].desc,
                                                         style: TextStyle(
-                                                          fontSize: 20,
+                                                          fontSize: 20*user.user.tasksDescSize,
                                                           color: tasks
                                                                       .items[
                                                                           index]
@@ -360,7 +360,7 @@ class _TodoPageState extends State<TodoPage> {
                                                       ):Text(
                                                         tasks.items[index].desc,
                                                         style: TextStyle(
-                                                          fontSize: 20,
+                                                          fontSize: 20*user.user.tasksDescSize,
                                                           color: tasks
                                                               .items[
                                                           index]

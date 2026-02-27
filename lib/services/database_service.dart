@@ -10,7 +10,7 @@ class DatabaseService {
   static Database? _db;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 3;
+  static const int _databaseVersion = 4;
 
   Future<Database> openDb() async {
     var databasesPath = await getDatabasesPath();
@@ -48,7 +48,10 @@ class DatabaseService {
       unFinished INTEGER,
       notesTextSize REAL,
       startPage INTEGER,
-      descLines INTEGER
+      descLines INTEGER,
+      notesTitleSize REAL,
+      tasksTitleSize REAL,
+      tasksDescSize REAL
     )
     ''');
     await db.execute('''
@@ -69,6 +72,11 @@ class DatabaseService {
     if(oldVersion < 3){
       await db.execute('ALTER TABLE User ADD COLUMN startPage INTEGER DEFAULT 0');
       await db.execute('ALTER TABLE User ADD COLUMN descLines INTEGER DEFAULT 2');
+    }
+    if(oldVersion < 4){
+      await db.execute('ALTER TABLE User ADD COLUMN notesTitleSize REAL DEFAULT 1');
+      await db.execute('ALTER TABLE User ADD COLUMN tasksTitleSize REAL DEFAULT 1');
+      await db.execute('ALTER TABLE User ADD COLUMN tasksDescSize REAL DEFAULT 1');
     }
   }
 

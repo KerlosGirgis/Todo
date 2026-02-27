@@ -12,6 +12,10 @@ class UserProfile {
   double notesTextSize;
   int startPage;
   int descLines;
+  double tasksTitleSize;
+  double tasksDescSize;
+  double notesTitleSize;
+
 
   UserProfile(
       {required this.name,
@@ -26,7 +30,10 @@ class UserProfile {
       required this.unFinished,
       required this.notesTextSize,
       required this.startPage,
-      required this.descLines});
+      required this.descLines,
+      required this.tasksTitleSize,
+      required this.tasksDescSize,
+      required this.notesTitleSize});
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
@@ -42,7 +49,10 @@ class UserProfile {
         unFinished: map['unFinished'],
         notesTextSize: map['notesTextSize'],
         startPage: map['startPage'],
-        descLines: map['descLines']);
+        descLines: map['descLines'],
+        tasksTitleSize: map['tasksTitleSize'],
+        tasksDescSize: map['tasksDescSize'],
+        notesTitleSize: map['notesTitleSize']);
   }
   Map<String, Object> toMap() {
     return {
@@ -57,7 +67,10 @@ class UserProfile {
       'unFinished': unFinished,
       'notesTextSize': notesTextSize,
       'startPage': startPage,
-      'descLines': descLines
+      'descLines': descLines,
+      'tasksTitleSize': tasksTitleSize,
+      'tasksDescSize': tasksDescSize,
+      'notesTitleSize': notesTitleSize
     };
   }
 }

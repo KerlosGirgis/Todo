@@ -13,12 +13,16 @@ import 'package:todo/services/user_repository.dart';
 import '../services/color_manager.dart';
 
 class UserViewModel with ChangeNotifier {
-  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1,startPage: 0, descLines: 2);
+  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1,startPage: 0, descLines: 2, tasksTitleSize: 1, tasksDescSize: 1, notesTitleSize: 1);
 
   ColorManager colorManager =ColorManager(isDark: true);
 
   late bool isEnabled;
   late double tempNotesTextSize;
+  late double tempTasksTitleSize;
+  late double tempTasksDescSize;
+  late double tempNotesTitleSize;
+
 
   UserRepository userRepository = UserRepository();
 
@@ -37,6 +41,9 @@ class UserViewModel with ChangeNotifier {
     }
     isEnabled=await LockManager().isLockEnabled();
     tempNotesTextSize=user.notesTextSize;
+    tempTasksTitleSize=user.tasksTitleSize;
+    tempTasksDescSize=user.tasksDescSize;
+    tempNotesTitleSize=user.notesTitleSize;
     notifyListeners();
   }
 
@@ -190,11 +197,62 @@ class UserViewModel with ChangeNotifier {
   }
   Future<void> setNotesTextSize()async{
     if(tempNotesTextSize>=0.25&&tempNotesTextSize<=2){
-      user.notesTextSize=double.parse(tempNotesTextSize.toStringAsPrecision(2));
+      user.notesTextSize=tempNotesTextSize;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
       await HomeWidget.saveWidgetData('widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
       await HomeWidget.updateWidget(name: 'Note');
+      await userRepository.updateUser(user);
+      notifyListeners();
+    }
+    else{
+      Fluttertoast.showToast(
+          msg: "Enter Valid Value",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 19.0);
+    }
+  }
+
+  Future<void> setNotesTitleSize()async{
+    if(tempNotesTitleSize>=0.25&&tempNotesTitleSize<=2){
+      user.notesTitleSize=tempNotesTitleSize;
+      await userRepository.updateUser(user);
+      notifyListeners();
+    }
+    else{
+      Fluttertoast.showToast(
+          msg: "Enter Valid Value",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 19.0);
+    }
+  }
+
+  Future<void> setTasksTitleSize()async{
+    if(tempTasksTitleSize>=0.25&&tempTasksTitleSize<=2){
+      user.tasksTitleSize=tempTasksTitleSize;
+      await userRepository.updateUser(user);
+      notifyListeners();
+    }
+    else{
+      Fluttertoast.showToast(
+          msg: "Enter Valid Value",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 19.0);
+    }
+  }
+
+  Future<void> setTasksDescSize()async{
+    if(tempTasksDescSize>=0.25&&tempTasksDescSize<=2){
+      user.tasksDescSize=tempTasksDescSize;
       await userRepository.updateUser(user);
       notifyListeners();
     }
@@ -215,6 +273,28 @@ class UserViewModel with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void setTempNotesTitleSize(double size){
+    if(size>=0.25&&size<=2){
+      tempNotesTitleSize=size;
+      notifyListeners();
+    }
+  }
+
+  void setTempTasksTitleSize(double size){
+    if(size>=0.25&&size<=2){
+      tempTasksTitleSize=size;
+      notifyListeners();
+    }
+  }
+
+  void setTempTasksDescSize(double size){
+    if(size>=0.25&&size<=2){
+      tempTasksDescSize=size;
+      notifyListeners();
+    }
+  }
+
 
   Future<File?>? _pickImage() async {
     final picker = ImagePicker();

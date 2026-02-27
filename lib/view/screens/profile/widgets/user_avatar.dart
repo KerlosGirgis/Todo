@@ -53,9 +53,10 @@ class UserAvatar extends StatelessWidget {
                 backgroundImage: user.user.pic.startsWith("0")
                     ? AssetImage(AvatarManager.getAvatar(user.user.pic))
                     : FileImage(File(user.user.pic)) as ImageProvider,
-                radius: MediaQuery.of(context).orientation == Orientation.portrait
-                    ? MediaQuery.sizeOf(context).width / 4
-                    : MediaQuery.sizeOf(context).height / 4,
+                radius:
+                    MediaQuery.of(context).orientation == Orientation.portrait
+                        ? MediaQuery.sizeOf(context).width / 4
+                        : MediaQuery.sizeOf(context).height / 4,
                 backgroundColor: Colors.transparent,
               ),
             ),
@@ -87,46 +88,86 @@ class UserAvatar extends StatelessWidget {
                               backgroundColor: user.colorManager.pageBackground,
                               content: Row(
                                 mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
                                 crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      child: CircleAvatar(
-                                        backgroundImage: AssetImage(
-                                            AvatarManager.getAvatar("000")),
-                                        radius:
-                                            MediaQuery.sizeOf(context).width /
-                                                7,
-                                        backgroundColor: Colors.transparent,
-                                      ),
-                                      onTap: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) =>
-                                              AvatarsListDialog(),
-                                        ).then((_) {
-                                          if (context.mounted) {
-                                            Navigator.pop(context);
-                                          }
-                                        });
-                                      },
+                                  Flexible(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: GestureDetector(
+                                            child: CircleAvatar(
+                                              radius: MediaQuery.sizeOf(context)
+                                                      .width /
+                                                  9,
+                                              backgroundColor: Colors.transparent,
+                                              child: Image.asset(
+                                                  AvatarManager.getAvatar("000")
+                                              ),
+                                            ),
+                                            onTap: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) =>
+                                                    AvatarsListDialog(),
+                                              ).then((_) {
+                                                if (context.mounted) {
+                                                  Navigator.pop(context);
+                                                }
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                        Flexible(
+                                          child: Text(
+                                            "Avatar",
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                color: user.colorManager.wB,
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        )
+                                      ],
                                     ),
                                   ),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      child: CircleAvatar(
-                                        backgroundImage:
-                                            AssetImage("assets/person.png"),
-                                        radius:
-                                            MediaQuery.sizeOf(context).width /
-                                                7,
-                                      ),
-                                      onTap: () async {
-                                        user.pickAndSaveImage();
-                                        Navigator.pop(context);
-                                      },
+                                  Flexible(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: GestureDetector(
+                                            child: CircleAvatar(
+                                              radius:
+                                                  MediaQuery.sizeOf(context).width /
+                                                      9,
+                                              backgroundColor: Colors.transparent,
+                                              child: Image.asset("assets/add_pic.png",fit: BoxFit.contain,),
+                                            ),
+                                            onTap: () async {
+                                              user.pickAndSaveImage();
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        ),
+                                        Flexible(
+                                          child: Text(
+                                            "Gallery",
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: user.colorManager.wB,
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        )
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -135,7 +176,7 @@ class UserAvatar extends StatelessWidget {
                           }));
                 },
                 child: Icon(
-                  Icons.edit,
+                  Icons.photo_camera_rounded,
                   color: Colors.blue,
                   size:
                       MediaQuery.of(context).orientation == Orientation.portrait

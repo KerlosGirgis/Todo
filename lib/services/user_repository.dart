@@ -23,7 +23,10 @@ class UserRepository{
       'unFinished',
       'notesTextSize',
       'startPage',
-      'descLines'
+      'descLines',
+      'notesTitleSize',
+      'tasksTitleSize',
+      'tasksDescSize'
     ]);
     List<UserProfile> items = [];
     if (maps.isNotEmpty) {
