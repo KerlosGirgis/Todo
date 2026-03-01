@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/user_view_model.dart';
-import '../../../widgets/button.dart';
+import '../../../../widgets/button.dart';
 
 class EditNameDialog extends StatelessWidget {
   const EditNameDialog({

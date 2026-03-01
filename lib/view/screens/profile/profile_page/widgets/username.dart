@@ -2,7 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../view_model/user_view_model.dart';
+import '../../../../../view_model/user_view_model.dart';
 import 'edit_name_dialog.dart';
 
 class UserName extends StatelessWidget {

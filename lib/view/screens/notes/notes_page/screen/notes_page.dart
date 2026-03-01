@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/view/screens/notes/note_editor_page.dart';
-import 'package:todo/view/screens/notes/notes_overwrite_dialog.dart';
-import 'package:todo/view/screens/tasks/todo_page.dart';
+import 'package:todo/view/screens/notes/note_editor_page/screen/note_editor_page.dart';
+import 'package:todo/view/screens/notes/notes_page/widgets/notes_overwrite_dialog.dart';
+import 'package:todo/view/screens/tasks/todo_page/screen/todo_page.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
-import 'package:todo/view/screens/profile/screen/profile_page.dart';
-import 'package:todo/view/screens/notes/add_note_dialog.dart';
+import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
+import 'package:todo/view/screens/notes/notes_page/widgets/add_note_dialog.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
-import 'package:todo/view/screens/notes/reorder_notes_dialog.dart';
-import '../../widgets/appbar_avatar.dart';
-import 'update_note_dialog.dart';
+import 'package:todo/view/screens/notes/notes_page/widgets/reorder_notes_dialog.dart';
+import '../../../../widgets/appbar_avatar.dart';
+import '../widgets/update_note_dialog.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});

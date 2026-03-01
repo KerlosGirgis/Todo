@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../view_model/notes_view_model.dart';
-import '../../../view_model/user_view_model.dart';
-import '../../widgets/button.dart';
+import '../../../../../view_model/notes_view_model.dart';
+import '../../../../../view_model/user_view_model.dart';
+import '../../../../widgets/button.dart';
 
 class NotesOverwriteDialog extends StatefulWidget {
   const NotesOverwriteDialog({super.key});

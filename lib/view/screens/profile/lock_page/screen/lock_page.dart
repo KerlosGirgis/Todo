@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:todo/main.dart';
 import 'package:todo/services/authentication_service.dart';
 
-import '../../view_model/notes_view_model.dart';
-import '../../view_model/tasks_view_model.dart';
-import '../../view_model/user_view_model.dart';
-import '../../services/database_service.dart';
-import '../../services/verse_manager.dart';
+import '../../../../../view_model/notes_view_model.dart';
+import '../../../../../view_model/tasks_view_model.dart';
+import '../../../../../view_model/user_view_model.dart';
+import '../../../../../services/database_service.dart';
+import '../../../../../services/verse_manager.dart';
 
 class LockPage extends StatefulWidget {
   const LockPage({

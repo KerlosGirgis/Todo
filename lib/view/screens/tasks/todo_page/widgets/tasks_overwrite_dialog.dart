@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 
-import '../../../view_model/user_view_model.dart';
-import '../../widgets/button.dart';
+import '../../../../../view_model/user_view_model.dart';
+import '../../../../widgets/button.dart';
 
 class TasksOverwriteDialog extends StatefulWidget {
   const TasksOverwriteDialog({super.key});

@@ -3,9 +3,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:uuid/v4.dart';
-import '../../../models/todo_item.dart';
-import '../../../view_model/tasks_view_model.dart';
-import '../../widgets/button.dart';
+import '../../../../../models/todo_item.dart';
+import '../../../../../view_model/tasks_view_model.dart';
+import '../../../../widgets/button.dart';
 
 class AddTaskDialog extends StatelessWidget {
   const AddTaskDialog({

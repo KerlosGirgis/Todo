@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
-import '../../../models/note.dart';
-import '../../../services/authentication_service.dart';
-import '../../widgets/button.dart';
+import '../../../../../models/note.dart';
+import '../../../../../services/authentication_service.dart';
+import '../../../../widgets/button.dart';
 
 class UpdateNoteDialog extends StatelessWidget {
   const UpdateNoteDialog({

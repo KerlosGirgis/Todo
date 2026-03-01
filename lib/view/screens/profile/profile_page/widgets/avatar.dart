@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../view_model/user_view_model.dart';
-import '../../../../services/avatar_manager.dart';
+import '../../../../../view_model/user_view_model.dart';
+import '../../../../../services/avatar_manager.dart';
 
 class Avatar extends StatelessWidget {
   const Avatar({super.key, required this.number});

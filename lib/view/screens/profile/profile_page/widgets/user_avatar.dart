@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../services/avatar_manager.dart';
-import '../../../../view_model/user_view_model.dart';
+import '../../../../../services/avatar_manager.dart';
+import '../../../../../view_model/user_view_model.dart';
 import 'avatars_list_dialog.dart';
 
 class UserAvatar extends StatelessWidget {

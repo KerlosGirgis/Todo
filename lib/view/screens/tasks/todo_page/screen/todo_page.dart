@@ -4,15 +4,15 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
-import 'package:todo/view/screens/notes/notes_page.dart';
-import 'package:todo/view/screens/tasks/tasks_overwrite_dialog.dart';
+import 'package:todo/view/screens/notes/notes_page/screen/notes_page.dart';
+import 'package:todo/view/screens/tasks/todo_page/widgets/tasks_overwrite_dialog.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
-import 'package:todo/view/screens/profile/screen/profile_page.dart';
-import 'package:todo/view/screens/tasks/add_task_dialog.dart';
-import '../../widgets/appbar_avatar.dart';
-import '../../widgets/expandable_menu.dart';
-import 'update_task_dialog.dart';
+import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
+import 'package:todo/view/screens/tasks/todo_page/widgets/add_task_dialog.dart';
+import '../../../../widgets/appbar_avatar.dart';
+import '../../../../widgets/expandable_menu.dart';
+import '../widgets/update_task_dialog.dart';
 
 class TodoPage extends StatefulWidget {
   const TodoPage({
