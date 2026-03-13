@@ -1,0 +1,3 @@
+• Added the ability to customize task and note font sizes.
+• Improved UI.
+• Updated dependencies and various bug fixes.
