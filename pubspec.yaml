@@ -59,6 +59,7 @@ dependencies:
   fl_chart: ^1.1.1
   readmore: ^3.0.0
   smooth_page_indicator: ^2.0.1
+  image_cropper: ^11.0.0
 
 dev_dependencies:
   flutter_test:

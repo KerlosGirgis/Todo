@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -308,6 +309,29 @@ class UserViewModel with ChangeNotifier {
     return null;
   }
 
+  Future<File?> cropImage(File imageFile) async {
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: imageFile.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarColor: Colors.black,
+          statusBarLight: false,
+          backgroundColor: Colors.black,
+          toolbarWidgetColor: Colors.white,
+          activeControlsWidgetColor: Color(0xff3D5AFE),
+          initAspectRatio: CropAspectRatioPreset.original,
+          cropStyle: CropStyle.circle,
+          lockAspectRatio: false,
+        ),
+      ],
+    );
+
+    if (croppedFile != null) {
+      return File(croppedFile.path);
+    }
+    return null;
+  }
+
   Future<File> _saveImageToAppStorage(File image) async {
     final appDir = await getApplicationDocumentsDirectory();
 
@@ -324,8 +348,11 @@ class UserViewModel with ChangeNotifier {
   Future<void> pickAndSaveImage() async {
     final image = await _pickImage();
     if (image != null) {
-      final savedImage = await _saveImageToAppStorage(image);
-      editPic(savedImage.path);
+      final croppedImage = await cropImage(image);
+      if (croppedImage != null) {
+        final savedImage = await _saveImageToAppStorage(croppedImage);
+        editPic(savedImage.path);
+      }
     }
   }
 
