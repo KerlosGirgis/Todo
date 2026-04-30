@@ -56,7 +56,7 @@ class TasksRepository{
     String jsonString = jsonEncode(items.map((item) => item.toMap()).toList());
     Uint8List bytes = utf8.encode(jsonString);
 
-    String? outputPath = await FilePicker.platform.saveFile(
+    String? outputPath = await FilePicker.saveFile(
         dialogTitle: 'Select location to save ToDo JSON file',
         fileName: 'todo.json',
         bytes: bytes);
@@ -74,7 +74,7 @@ class TasksRepository{
 
   Future<bool> importToDoFromJson(bool overwrite) async {
     List<TodoItem> tasks = await getItems();
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );

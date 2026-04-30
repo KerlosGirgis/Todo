@@ -51,7 +51,7 @@ class NotesRepository {
     String jsonString = jsonEncode(notes.map((note) => note.toMap()).toList());
     Uint8List bytes = utf8.encode(jsonString);
 
-    String? outputPath = await FilePicker.platform.saveFile(
+    String? outputPath = await FilePicker.saveFile(
         dialogTitle: 'Select location to save Notes JSON file',
         fileName: 'notes.json',
         bytes: bytes);
@@ -69,7 +69,7 @@ class NotesRepository {
 
   Future<bool> importNotesFromJson(bool overwrite) async {
     List<Note> notes = await getNotes();
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );

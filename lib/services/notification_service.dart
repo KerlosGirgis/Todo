@@ -21,7 +21,7 @@ class NotificationService {
       iOS: iOSInitializationSettings,
     );
     await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: onDidReceiveNotification,
       onDidReceiveBackgroundNotificationResponse: onDidReceiveNotification,
     );
@@ -43,10 +43,10 @@ class NotificationService {
         iOS: DarwinNotificationDetails());
 
     await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      platformChannelSpecifics,
+      id: 0,
+      title: title,
+      body: body,
+      notificationDetails: platformChannelSpecifics,
       payload: 'instant_notification',
     );
   }
@@ -54,11 +54,11 @@ class NotificationService {
   static Future<void> scheduleNotification(
       int id, String title, String body, DateTime scheduledTime) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      const NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledTime, tz.local),
+      notificationDetails: const NotificationDetails(
         iOS: DarwinNotificationDetails(),
         android: AndroidNotificationDetails(
           'reminder_channel',
@@ -75,11 +75,11 @@ class NotificationService {
   static Future<void> scheduleDailyNotification(
       int id, String title, String body, TimeOfDay scheduledTime) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      _nextInstanceOfTime(scheduledTime),
-      const NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: _nextInstanceOfTime(scheduledTime),
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_channel',
           'Daily Notifications',

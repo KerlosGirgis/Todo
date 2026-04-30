@@ -283,7 +283,7 @@ class TasksViewModel with ChangeNotifier {
       }
     } else {
       FlutterLocalNotificationsPlugin()
-          .cancel(items[index].uuid.hashCode)
+          .cancel(id:items[index].uuid.hashCode)
           .then((onValue) {
         updateTask(
           TodoItem(
@@ -317,7 +317,7 @@ class TasksViewModel with ChangeNotifier {
     }
     if (items[index].notification == 2) {
       FlutterLocalNotificationsPlugin()
-          .cancel(items[index].uuid.hashCode)
+          .cancel(id:items[index].uuid.hashCode)
           .then((onValue) {
         updateTask(
           TodoItem(
@@ -397,7 +397,7 @@ class TasksViewModel with ChangeNotifier {
 
   void cancelNotification(int index) {
     if (items[index].notification == 1 || items[index].notification == 2) {
-      FlutterLocalNotificationsPlugin().cancel(items[index].uuid.hashCode);
+      FlutterLocalNotificationsPlugin().cancel(id:items[index].uuid.hashCode);
     }
   }
 }

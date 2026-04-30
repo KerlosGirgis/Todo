@@ -313,7 +313,7 @@ class UpdateTaskDialog extends StatelessWidget {
                         }
                         if (tasks.items[index].notification == 1) {
                           FlutterLocalNotificationsPlugin()
-                              .cancel(tasks.items[index].uuid.hashCode);
+                              .cancel(id:tasks.items[index].uuid.hashCode);
                           if (time.isNotEmpty &&
                               DateTimeUtils.stringToDateTime(date, time)
                                   .isAfter(DateTime.now())) {
@@ -328,7 +328,7 @@ class UpdateTaskDialog extends StatelessWidget {
                           }
                         } else if (tasks.items[index].notification == 2) {
                           FlutterLocalNotificationsPlugin()
-                              .cancel(tasks.items[index].uuid.hashCode);
+                              .cancel(id:tasks.items[index].uuid.hashCode);
                           if (time.isNotEmpty) {
                             date = "";
                             try {
