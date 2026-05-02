@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:provider/provider.dart';
+import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
@@ -105,23 +105,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                         protected: widget.note.protected))
                                     .then((onValue) {
                                   widget.note.body = bodyController.text;
-                                  Fluttertoast.showToast(
-                                      msg: "Saved Successfully",
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.BOTTOM,
-                                      backgroundColor: const Color(0xff1E1E1E),
-                                      textColor: Colors.white,
-                                      fontSize: 19.0);
+                                  FeedbackToast.info("Saved Successfully");
                                 });
                               } catch (e) {
-                                Fluttertoast.showToast(
-                                    msg:
-                                        "Sorry, Something went wrong,note not saved",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.BOTTOM,
-                                    backgroundColor: Colors.red,
-                                    textColor: Colors.white,
-                                    fontSize: 19.0);
+                                FeedbackToast.error("Sorry, Something went wrong,note not saved");
                               }
                             },
                             icon: Icon(
@@ -138,22 +125,10 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                 try {
                                   notes.updateAndroidWidget(widget.note.body);
                                 } catch (e) {
-                                  Fluttertoast.showToast(
-                                      msg: "Sorry, Something went wrong",
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.BOTTOM,
-                                      backgroundColor: Colors.red,
-                                      textColor: Colors.white,
-                                      fontSize: 19.0);
+                                  FeedbackToast.error("Sorry, Something went wrong");
                                   return;
                                 }
-                                Fluttertoast.showToast(
-                                    msg: "Note has been added to the widget",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.BOTTOM,
-                                    backgroundColor: const Color(0xff1E1E1E),
-                                    textColor: Colors.white,
-                                    fontSize: 19.0);
+                                FeedbackToast.info("Note has been added to the widget");
                               }
                             },
                             icon: Icon(
@@ -171,13 +146,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                     Navigator.pop(context);
                                   }
                                 } else {
-                                  Fluttertoast.showToast(
-                                      msg: "Authentication Failed",
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.BOTTOM,
-                                      backgroundColor: Colors.red,
-                                      textColor: Colors.white,
-                                      fontSize: 19.0);
+                                  FeedbackToast.error("Authentication Failed");
                                 }
                               } else {
                                 Provider.of<NotesViewModel>(context,
@@ -221,14 +190,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                                       widget.note.body = bodyController.text;
                                     });
                                   } catch (e) {
-                                    Fluttertoast.showToast(
-                                        msg:
-                                            "Sorry, Something went wrong,note not saved",
-                                        toastLength: Toast.LENGTH_SHORT,
-                                        gravity: ToastGravity.BOTTOM,
-                                        backgroundColor: Colors.red,
-                                        textColor: Colors.white,
-                                        fontSize: 19.0);
+                                    FeedbackToast.error("Sorry, Something went wrong,note not saved");
                                   }
                                 }
                               },

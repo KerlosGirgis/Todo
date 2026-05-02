@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/services/verse_manager.dart';
 
@@ -128,14 +128,7 @@ class AppbarAvatar extends StatelessWidget {
                                     Clipboard.setData(ClipboardData(
                                             text: VerseManager.getDailyVerse()))
                                         .then((_) {
-                                      Fluttertoast.showToast(
-                                          msg: "Verse copied to clipboard",
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.BOTTOM,
-                                          backgroundColor:
-                                              const Color(0xff1E1E1E),
-                                          textColor: Colors.white,
-                                          fontSize: 19.0);
+                                      FeedbackToast.info("Verse copied to clipboard");
                                     });
                                   },
                                   child: Card(

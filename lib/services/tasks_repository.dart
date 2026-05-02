@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:todo/core/ui/feedback_toast.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/todo_item.dart';
 import 'database_service.dart';
@@ -105,13 +105,7 @@ class TasksRepository{
                       scheduledTime,
                     );
                   }catch(e){
-                    Fluttertoast.showToast(
-                        msg: "Couldn't enable notification for ${item.title}",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.red,
-                        textColor: Colors.white,
-                        fontSize: 19.0);
+                    FeedbackToast.error("Couldn't enable notification for ${item.title}");
                   }
                 }
               }
@@ -127,15 +121,8 @@ class TasksRepository{
                       time);
                 }
                 catch(e){
-                  Fluttertoast.showToast(
-                      msg: "Couldn't enable notification for ${item.title}",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      fontSize: 19.0);
+                  FeedbackToast.error("Couldn't enable notification for ${item.title}");
                 }
-
               }
             }
           }
@@ -160,13 +147,7 @@ class TasksRepository{
                       scheduledTime,
                     );
                   }catch(e){
-                    Fluttertoast.showToast(
-                        msg: "Couldn't enable notification for ${item.title}",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.red,
-                        textColor: Colors.white,
-                        fontSize: 19.0);
+                    FeedbackToast.error("Couldn't enable notification for ${item.title}");
                   }
                 }
               }
@@ -182,15 +163,8 @@ class TasksRepository{
                       time);
                 }
                 catch(e){
-                  Fluttertoast.showToast(
-                      msg: "Couldn't enable notification for ${item.title}",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      fontSize: 19.0);
+                  FeedbackToast.error("Couldn't enable notification for ${item.title}");
                 }
-
               }
             }
           }
@@ -214,13 +188,7 @@ class TasksRepository{
                     scheduledTime,
                   );
                 }catch(e){
-                  Fluttertoast.showToast(
-                      msg: "Couldn't enable notification for ${item.title}",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      fontSize: 19.0);
+                  FeedbackToast.error("Couldn't enable notification for ${item.title}");
                 }
               }
             }
@@ -236,15 +204,8 @@ class TasksRepository{
                     time);
               }
               catch(e){
-                Fluttertoast.showToast(
-                    msg: "Couldn't enable notification for ${item.title}",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                    fontSize: 19.0);
+                FeedbackToast.error("Couldn't enable notification for ${item.title}");
               }
-
             }
           }
         }

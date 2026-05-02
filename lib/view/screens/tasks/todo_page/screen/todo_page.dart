@@ -1,7 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
 import 'package:todo/view/screens/notes/notes_page/screen/notes_page.dart';
@@ -10,6 +9,7 @@ import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/add_task_dialog.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/expandable_menu.dart';
 import '../widgets/update_task_dialog.dart';
@@ -148,14 +148,7 @@ class _TodoPageState extends State<TodoPage> {
                                             .dismissTask(
                                                 index, tasks.items[index].id!)
                                             .then((value) {
-                                          Fluttertoast.showToast(
-                                              msg: "Task Deleted",
-                                              toastLength: Toast.LENGTH_SHORT,
-                                              gravity: ToastGravity.BOTTOM,
-                                              backgroundColor:
-                                                  const Color(0xff1E1E1E),
-                                              textColor: Colors.white,
-                                              fontSize: 19.0);
+                                          FeedbackToast.info("Task Deleted");
                                         });
                                       },
                                       key: Key(taskKey),

@@ -1,5 +1,5 @@
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/services/notes_repository.dart';
 import '../models/note.dart';
 import '../services/authentication_service.dart';
@@ -57,46 +57,22 @@ class NotesViewModel with ChangeNotifier {
         try {
           await notesRepository.exportNotesToJson().then((s) {
             if (s) {
-              Fluttertoast.showToast(
-                  msg: "Backup Created",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  backgroundColor: Colors.green,
-                  textColor: Colors.white,
-                  fontSize: 18.0);
+              FeedbackToast.success("Backup Created");
             }
           });
         } catch (e) {
-          Fluttertoast.showToast(
-              msg: "Backup Failed",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 18.0);
+          FeedbackToast.error("Backup Failed");
         }
       }
     } else {
       try {
         await notesRepository.exportNotesToJson().then((s) {
           if (s) {
-            Fluttertoast.showToast(
-                msg: "Backup Created",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: Colors.green,
-                textColor: Colors.white,
-                fontSize: 18.0);
+            FeedbackToast.success("Backup Created");
           }
         });
       } catch (e) {
-        Fluttertoast.showToast(
-            msg: "Backup Failed",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 18.0);
+        FeedbackToast.error("Backup Failed");
       }
     }
   }
@@ -105,24 +81,12 @@ class NotesViewModel with ChangeNotifier {
     try {
       await notesRepository.importNotesFromJson(overwrite).then((s) {
         if (s) {
-          Fluttertoast.showToast(
-              msg: "Data Restored",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              backgroundColor: Colors.green,
-              textColor: Colors.white,
-              fontSize: 18.0);
+          FeedbackToast.success("Data Restored");
         }
       });
       get();
     } catch (e) {
-      Fluttertoast.showToast(
-          msg: "Failed To Restore",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 18.0);
+      FeedbackToast.error("Failed To Restore");
     }
   }
 }

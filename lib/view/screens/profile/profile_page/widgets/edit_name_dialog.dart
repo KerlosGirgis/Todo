@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import '../../../../widgets/button.dart';
 
@@ -116,23 +116,11 @@ class EditNameDialog extends StatelessWidget {
                           Provider.of<UserViewModel>(context, listen: false)
                               .editName(nameController.text)
                               .then((value) {
-                            Fluttertoast.showToast(
-                                msg: "Name Updated",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: const Color(0xff1E1E1E),
-                                textColor: Colors.white,
-                                fontSize: 19.0);
+                            FeedbackToast.info("Name Updated");
                           });
                           Navigator.of(context).pop();
                         } else {
-                          Fluttertoast.showToast(
-                              msg: "Name can't be empty",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              backgroundColor: Colors.red,
-                              textColor: Colors.white,
-                              fontSize: 19.0);
+                          FeedbackToast.error("Name can't be empty");
                         }
                       },
                       label: 'Update',

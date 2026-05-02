@@ -1,8 +1,8 @@
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/user_view_model.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../services/authentication_service.dart';
@@ -115,14 +115,7 @@ class AddNoteDialog extends StatelessWidget {
                       setState(() {
                         titleColor = Colors.white.hex;
                       });
-                      Fluttertoast.showToast(
-                          msg: "Title Color Cleared",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          backgroundColor: const Color(0xff1E1E1E),
-                          textColor: Colors.white,
-                          fontSize: 19.0
-                      );
+                      FeedbackToast.info("Title Color Cleared");
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
@@ -188,13 +181,7 @@ class AddNoteDialog extends StatelessWidget {
                       setState(() {
                         coverColor = const Color(0xff1E1E1E).hex;
                       });
-                      Fluttertoast.showToast(msg: "Cover Color Cleared",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          backgroundColor: const Color(0xff1E1E1E),
-                          textColor: Colors.white,
-                          fontSize: 19.0
-                      );
+                      FeedbackToast.info("Cover Color Cleared");
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
@@ -259,13 +246,7 @@ class AddNoteDialog extends StatelessWidget {
                               isProtected = 1;
                             });
                           } else {
-                            Fluttertoast.showToast(
-                                msg: "Authentication Failed",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                                fontSize: 19.0);
+                            FeedbackToast.error("Authentication Failed");
                           }
                         } else if (isProtected == 1) {
                           setState(() {
@@ -313,13 +294,7 @@ class AddNoteDialog extends StatelessWidget {
                                         isProtected = 1;
                                       });
                                     } else {
-                                      Fluttertoast.showToast(
-                                          msg: "Authentication Failed",
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.BOTTOM,
-                                          backgroundColor: Colors.red,
-                                          textColor: Colors.white,
-                                          fontSize: 19.0);
+                                      FeedbackToast.error("Authentication Failed");
                                     }
                                   } else if (isProtected == 1) {
                                     setState(() {
@@ -353,13 +328,7 @@ class AddNoteDialog extends StatelessWidget {
                       child: Button(
                         onPressed: () {
                           if (titleController.text.isEmpty) {
-                            Fluttertoast.showToast(
-                                msg: "Title can't be empty",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                                fontSize: 19.0);
+                            FeedbackToast.error("Title can't be empty");
                             return;
                           }
                           Navigator.pop(context);
@@ -372,13 +341,7 @@ class AddNoteDialog extends StatelessWidget {
                             protected: isProtected,
                           ))
                               .then((value) {
-                            Fluttertoast.showToast(
-                                msg: "Note Added",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: const Color(0xff1E1E1E),
-                                textColor: Colors.white,
-                                fontSize: 19.0);
+                            FeedbackToast.info("Note Added");
                           });
                         },
                         label: 'Save',

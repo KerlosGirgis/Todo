@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../services/notification_service.dart';
@@ -147,13 +147,7 @@ class UpdateTaskDialog extends StatelessWidget {
                                 }
                               });
                             } else {
-                              Fluttertoast.showToast(
-                                  msg: "Daily Tasks Don't Need A Date",
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.BOTTOM,
-                                  backgroundColor: const Color(0xff1E1E1E),
-                                  textColor: Colors.white,
-                                  fontSize: 19.0);
+                              FeedbackToast.info("Daily Tasks Don't Need A Date");
                             }
                           },
                           onLongPress: () {
@@ -161,14 +155,7 @@ class UpdateTaskDialog extends StatelessWidget {
                               date = "";
                               time = "";
                             });
-                            Fluttertoast.showToast(
-                                msg: "Date Cleared",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: const Color(0xff1E1E1E),
-                                textColor: Colors.white,
-                                fontSize: 19.0
-                            );
+                            FeedbackToast.info("Date Cleared");
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: user.colorManager.cardBackground,
@@ -235,14 +222,7 @@ class UpdateTaskDialog extends StatelessWidget {
                       setState(() {
                         time = "";
                       });
-                      Fluttertoast.showToast(
-                          msg: "Time Cleared",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          backgroundColor: const Color(0xff1E1E1E),
-                          textColor: Colors.white,
-                          fontSize: 19.0
-                      );
+                      FeedbackToast.info("Time Cleared");
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: user.colorManager.cardBackground,
@@ -302,13 +282,7 @@ class UpdateTaskDialog extends StatelessWidget {
                       onPressed: () {
                         int not = tasks.items[index].notification;
                         if (titleController.text.isEmpty) {
-                          Fluttertoast.showToast(
-                              msg: "Task title can't be empty",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              backgroundColor: Colors.red,
-                              textColor: Colors.white,
-                              fontSize: 19.0);
+                          FeedbackToast.error("Task title can't be empty");
                           return;
                         }
                         if (tasks.items[index].notification == 1) {
@@ -359,13 +333,7 @@ class UpdateTaskDialog extends StatelessWidget {
                                 uuid: tasks.items[index].uuid,
                                 notification: not))
                             .then((value) {
-                          Fluttertoast.showToast(
-                              msg: "Task Updated",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                              backgroundColor: const Color(0xff1E1E1E),
-                              textColor: Colors.white,
-                              fontSize: 19.0);
+                          FeedbackToast.info("Task Updated");
                         });
                         Navigator.of(context).pop();
                       },

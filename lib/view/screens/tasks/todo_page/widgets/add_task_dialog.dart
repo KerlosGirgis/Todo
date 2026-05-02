@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:uuid/v4.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../widgets/button.dart';
@@ -85,8 +85,8 @@ class AddTaskDialog extends StatelessWidget {
                     maxLines: 1,
                     decoration: InputDecoration(
                       labelText: "Title",
-                      labelStyle: TextStyle(
-                          fontSize: 30, color: user.colorManager.wB),
+                      labelStyle:
+                          TextStyle(fontSize: 30, color: user.colorManager.wB),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
                           borderSide: BorderSide.none),
@@ -107,8 +107,8 @@ class AddTaskDialog extends StatelessWidget {
                     maxLines: 4,
                     decoration: InputDecoration(
                       labelText: "Description",
-                      labelStyle: TextStyle(
-                          fontSize: 30, color: user.colorManager.wB),
+                      labelStyle:
+                          TextStyle(fontSize: 30, color: user.colorManager.wB),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
                           borderSide: BorderSide.none),
@@ -145,13 +145,7 @@ class AddTaskDialog extends StatelessWidget {
                           date = "";
                           time = "";
                         });
-                        Fluttertoast.showToast(
-                            msg: "Date Cleared",
-                            toastLength: Toast.LENGTH_SHORT,
-                            gravity: ToastGravity.BOTTOM,
-                            backgroundColor: const Color(0xff1E1E1E),
-                            textColor: Colors.white,
-                            fontSize: 19.0);
+                        FeedbackToast.info("Date Cleared");
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: user.colorManager.cardBackground,
@@ -177,8 +171,7 @@ class AddTaskDialog extends StatelessWidget {
                               child: Text(
                                 date,
                                 style: TextStyle(
-                                    fontSize: 18,
-                                    color: user.colorManager.wB),
+                                    fontSize: 18, color: user.colorManager.wB),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -216,14 +209,7 @@ class AddTaskDialog extends StatelessWidget {
                         setState(() {
                           time = "";
                         });
-                        Fluttertoast.showToast(
-                            msg: "Time Cleared",
-                            toastLength: Toast.LENGTH_SHORT,
-                            gravity: ToastGravity.BOTTOM,
-                            backgroundColor: const Color(0xff1E1E1E),
-                            textColor: Colors.white,
-                            fontSize: 19.0
-                        );
+                        FeedbackToast.info("Time Cleared");
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: user.colorManager.cardBackground,
@@ -285,13 +271,7 @@ class AddTaskDialog extends StatelessWidget {
                       child: Button(
                         onPressed: () {
                           if (titleController.text.isEmpty) {
-                            Fluttertoast.showToast(
-                                msg: "Task title can't be empty",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                                fontSize: 19.0);
+                            FeedbackToast.error("Task title can't be empty");
                             return;
                           }
                           Navigator.pop(context);
@@ -307,13 +287,7 @@ class AddTaskDialog extends StatelessWidget {
                           ))
                               .then((value) async {
                             user.increaseUnFinished();
-                            Fluttertoast.showToast(
-                                msg: "Task Added",
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                backgroundColor: const Color(0xff1E1E1E),
-                                textColor: Colors.white,
-                                fontSize: 19.0);
+                            FeedbackToast.info("Task Added");
                           });
                         },
                         label: 'Save',

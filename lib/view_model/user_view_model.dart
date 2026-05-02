@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/lock_manager.dart';
@@ -187,13 +187,7 @@ class UserViewModel with ChangeNotifier {
       }
     }
     else{
-      Fluttertoast.showToast(
-          msg: "Authentication Failed",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 19.0);
+      FeedbackToast.error("Authentication Failed");
     }
   }
   Future<void> setNotesTextSize()async{
@@ -207,13 +201,7 @@ class UserViewModel with ChangeNotifier {
       notifyListeners();
     }
     else{
-      Fluttertoast.showToast(
-          msg: "Enter Valid Value",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 19.0);
+      FeedbackToast.error("Enter Valid Value");
     }
   }
 
@@ -224,13 +212,7 @@ class UserViewModel with ChangeNotifier {
       notifyListeners();
     }
     else{
-      Fluttertoast.showToast(
-          msg: "Enter Valid Value",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 19.0);
+      FeedbackToast.error("Enter Valid Value");
     }
   }
 
@@ -241,13 +223,7 @@ class UserViewModel with ChangeNotifier {
       notifyListeners();
     }
     else{
-      Fluttertoast.showToast(
-          msg: "Enter Valid Value",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 19.0);
+      FeedbackToast.error("Enter Valid Value");
     }
   }
 
@@ -258,13 +234,7 @@ class UserViewModel with ChangeNotifier {
       notifyListeners();
     }
     else{
-      Fluttertoast.showToast(
-          msg: "Enter Valid Value",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 19.0);
+      FeedbackToast.error("Enter Valid Value");
     }
   }
 
