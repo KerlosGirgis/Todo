@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 
+import '../../../../../core/result.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/button.dart';
 
@@ -129,9 +131,16 @@ class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
                   onPressed: () {
                     Provider.of<TasksViewModel>(context, listen: false)
                         .restore(overwrite)
-                        .then((v) {
+                        .then((result) {
                       if (context.mounted) {
                         Navigator.pop(context);
+                      }
+                      if (result is Success) {
+                        FeedbackToast.success(result.message);
+                      } else if (result is Failure) {
+                        FeedbackToast.error(result.message);
+                      } else if (result is Info) {
+                        FeedbackToast.info(result.message);
                       }
                     });
                   },

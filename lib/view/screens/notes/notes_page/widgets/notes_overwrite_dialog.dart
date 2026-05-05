@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/core/result.dart';
 
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/button.dart';
@@ -75,7 +77,7 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
         ),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           RadioGroup(
-            groupValue: overwrite,
+              groupValue: overwrite,
               onChanged: (v) {
                 setState(() {
                   overwrite = v ?? false;
@@ -129,9 +131,17 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
                   onPressed: () {
                     Provider.of<NotesViewModel>(context, listen: false)
                         .restore(overwrite)
-                        .then((v) {
+                        .then((result) {
                       if (context.mounted) {
                         Navigator.pop(context);
+                      }
+                      if (result is Success) {
+                        FeedbackToast.success(result.message);
+                      } else if (result is Failure) {
+                        FeedbackToast.error(result.message);
+                      }
+                      else if (result is Info){
+                        FeedbackToast.info(result.message);
                       }
                     });
                   },

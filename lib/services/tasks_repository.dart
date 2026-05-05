@@ -1,14 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:todo/core/ui/feedback_toast.dart';
-import '../core/utils/date_time_utils.dart';
 import '../models/todo_item.dart';
 import 'database_service.dart';
-import 'notification_service.dart';
 
 class TasksRepository{
 
@@ -51,171 +45,11 @@ class TasksRepository{
         .update('ToDo', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
-  Future<bool> exportToDoToJson() async {
+  Future<Uint8List> exportToDoToJson() async {
     List<TodoItem> items = await getItems();
-    String jsonString = jsonEncode(items.map((item) => item.toMap()).toList());
-    Uint8List bytes = utf8.encode(jsonString);
-
-    String? outputPath = await FilePicker.saveFile(
-        dialogTitle: 'Select location to save ToDo JSON file',
-        fileName: 'todo.json',
-        bytes: bytes);
-
-    if (outputPath != null) {
-      if (outputPath.isEmpty) {
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  Future<bool> importToDoFromJson(bool overwrite) async {
-    List<TodoItem> tasks = await getItems();
-    FilePickerResult? result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
-
-
-    if (result != null) {
-      File file = File(result.files.single.path!);
-      String jsonString = await file.readAsString();
-      List<dynamic> data = jsonDecode(jsonString);
-
-      try{
-        if(overwrite){
-          await deleteAllItems();
-          NotificationService.cancelAllNotifications();
-          for (var itemMap in data) {
-            TodoItem item = TodoItem.fromMap(itemMap);
-            await insertItem(item);
-            if(item.notification==1){
-              if (item.time.isNotEmpty&&item.date.isNotEmpty) {
-                DateTime scheduledTime =
-                DateTimeUtils.stringToDateTime(item.date, item.time);
-                if (scheduledTime.isAfter(DateTime.now()) && item.status == 0) {
-                  try{
-                    NotificationService.scheduleNotification(
-                      item.uuid.hashCode,
-                      "Don't Forget Your Task!",
-                      item.title,
-                      scheduledTime,
-                    );
-                  }catch(e){
-                    FeedbackToast.error("Couldn't enable notification for ${item.title}");
-                  }
-                }
-              }
-            }
-            else if(item.notification==2){
-              if (item.time.isNotEmpty&&item.date.isNotEmpty&&item.status==0) {
-                TimeOfDay time = DateTimeUtils.parseTime(item.time);
-                try{
-                  NotificationService.scheduleDailyNotification(
-                      item.uuid.hashCode,
-                      "Don't Forget Your Task!",
-                      item.title,
-                      time);
-                }
-                catch(e){
-                  FeedbackToast.error("Couldn't enable notification for ${item.title}");
-                }
-              }
-            }
-          }
-        }
-        else{
-          for (var itemMap in data) {
-            if(tasks.any((task) => task.uuid==itemMap['uuid'])){
-              continue;
-            }
-            TodoItem item = TodoItem.fromMap(itemMap);
-            await insertItem(item);
-            if(item.notification==1){
-              if (item.time.isNotEmpty&&item.date.isNotEmpty) {
-                DateTime scheduledTime =
-                DateTimeUtils.stringToDateTime(item.date, item.time);
-                if (scheduledTime.isAfter(DateTime.now()) && item.status == 0) {
-                  try{
-                    NotificationService.scheduleNotification(
-                      item.uuid.hashCode,
-                      "Don't Forget Your Task!",
-                      item.title,
-                      scheduledTime,
-                    );
-                  }catch(e){
-                    FeedbackToast.error("Couldn't enable notification for ${item.title}");
-                  }
-                }
-              }
-            }
-            else if(item.notification==2){
-              if (item.time.isNotEmpty&&item.date.isNotEmpty&&item.status==0) {
-                TimeOfDay time = DateTimeUtils.parseTime(item.time);
-                try{
-                  NotificationService.scheduleDailyNotification(
-                      item.uuid.hashCode,
-                      "Don't Forget Your Task!",
-                      item.title,
-                      time);
-                }
-                catch(e){
-                  FeedbackToast.error("Couldn't enable notification for ${item.title}");
-                }
-              }
-            }
-          }
-        }
-      }
-      catch(e){
-        await deleteAllItems();
-        NotificationService.cancelAllNotifications();
-        for (var item in tasks) {
-          await insertItem(item);
-          if(item.notification==1){
-            if (item.time.isNotEmpty&&item.date.isNotEmpty) {
-              DateTime scheduledTime =
-              DateTimeUtils.stringToDateTime(item.date, item.time);
-              if (scheduledTime.isAfter(DateTime.now()) && item.status == 0) {
-                try{
-                  NotificationService.scheduleNotification(
-                    item.uuid.hashCode,
-                    "Don't Forget Your Task!",
-                    item.title,
-                    scheduledTime,
-                  );
-                }catch(e){
-                  FeedbackToast.error("Couldn't enable notification for ${item.title}");
-                }
-              }
-            }
-          }
-          else if(item.notification==2){
-            if (item.time.isNotEmpty&&item.date.isNotEmpty&&item.status==0) {
-              TimeOfDay time = DateTimeUtils.parseTime(item.time);
-              try{
-                NotificationService.scheduleDailyNotification(
-                    item.uuid.hashCode,
-                    "Don't Forget Your Task!",
-                    item.title,
-                    time);
-              }
-              catch(e){
-                FeedbackToast.error("Couldn't enable notification for ${item.title}");
-              }
-            }
-          }
-        }
-        return false;
-      }
-
-      return true;
-    } else {
-      return false;
-    }
+    String jsonString =
+    jsonEncode(items.map((item) => item.toMap()).toList());
+    return utf8.encode(jsonString);
   }
 
 }

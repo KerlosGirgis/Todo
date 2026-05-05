@@ -1,9 +1,10 @@
 import 'package:home_widget/home_widget.dart';
-import 'package:todo/core/ui/feedback_toast.dart';
+import 'package:todo/core/result.dart';
 import 'package:todo/services/notes_repository.dart';
 import '../models/note.dart';
 import '../services/authentication_service.dart';
 import 'package:flutter/material.dart';
+import '../services/file_service.dart';
 import '../services/lock_manager.dart';
 
 class NotesViewModel with ChangeNotifier {
@@ -46,47 +47,69 @@ class NotesViewModel with ChangeNotifier {
     notes.insert(newIndex, oldNote);
     await notesRepository.deleteAllNotes();
     for (var note in notes) {
-      await notesRepository.insertNote(note); // Reinsert items in new order
+      await notesRepository.insertNote(note);
     }
     get();
   }
 
-  Future<void> backup() async {
+  Future<Result> backup() async {
     if (await LockManager().isLockEnabled()) {
-      if (await AuthenticationService().authenticate()) {
-        try {
-          await notesRepository.exportNotesToJson().then((s) {
-            if (s) {
-              FeedbackToast.success("Backup Created");
-            }
-          });
-        } catch (e) {
-          FeedbackToast.error("Backup Failed");
-        }
+      final isAuth = await AuthenticationService().authenticate();
+      if (!isAuth) {
+        return Failure("Authentication Failed");
       }
-    } else {
-      try {
-        await notesRepository.exportNotesToJson().then((s) {
-          if (s) {
-            FeedbackToast.success("Backup Created");
-          }
-        });
-      } catch (e) {
-        FeedbackToast.error("Backup Failed");
+    }
+    try {
+      final bytes = await notesRepository.exportNotesToJson();
+      final outputPath = await FileService().saveFile(bytes, 'notes.json');
+      if (outputPath == null || outputPath.isEmpty) {
+        return Info("You didn't choose a directory");
       }
+      return Success("Backup Created");
+    } catch (e) {
+      return Failure("Backup Failed");
     }
   }
 
-  Future<void> restore(bool overwrite) async {
+  Future<Result> restore(bool overwrite) async {
     try {
-      await notesRepository.importNotesFromJson(overwrite).then((s) {
-        if (s) {
-          FeedbackToast.success("Data Restored");
+      final fileService = FileService();
+      final importedNotes = await fileService.pickAndReadNotes();
+      if (importedNotes == null) {
+        return Info("You didn't choose a file");
+      }
+      final oldNotes = await notesRepository.getNotes();
+      try {
+        if (overwrite) {
+          await notesRepository.deleteAllNotes();
         }
-      });
-      get();
+        final existingNotes = overwrite ? [] : oldNotes;
+        for (final note in importedNotes) {
+          final exists = existingNotes.any((e) =>
+          e.title == note.title &&
+              e.body == note.body &&
+              e.titleColor == note.titleColor &&
+              e.coverColor == note.coverColor &&
+              e.protected == note.protected);
+          if (exists) continue;
+          await notesRepository.insertNote(note);
+        }
+        get();
+        return Success("Data Restored");
+      } catch (e) {
+        await _rollback(oldNotes);
+        return Failure("Restore failed. Data rolled back.");
+      }
     } catch (e) {
-      FeedbackToast.error("Failed To Restore");
+      return Failure("Failed To Restore");
+    }
+  }
+
+  Future<void> _rollback(List<Note> oldNotes) async {
+    await notesRepository.deleteAllNotes();
+
+    for (final note in oldNotes) {
+      await notesRepository.insertNote(note);
     }
   }
 }

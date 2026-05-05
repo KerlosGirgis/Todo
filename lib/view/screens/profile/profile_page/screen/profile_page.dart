@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import '../widgets/chart.dart';
 import '../widgets/settings_page_view.dart';
@@ -43,14 +43,19 @@ class ProfilePageState extends State<ProfilePage> {
                   )),
               actions: [
                 IconButton(
-                    onPressed: () async {
-                      Fluttertoast.showToast(
-                          msg: "Developed with ❤️ by Kerlos Girgis",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          backgroundColor: Colors.blue,
-                          textColor: Colors.white,
-                          fontSize: 18.0);
+                    onPressed: () {
+                      toastification.show(
+                        title: Text(
+                          "Developed with ❤️ by Kerlos Girgis",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        type: ToastificationType.info,
+                        autoCloseDuration: const Duration(seconds: 5),
+                        dragToClose: true,
+                        alignment: AlignmentGeometry.directional(0, 1),
+                        style: ToastificationStyle.flat
+                      );
                     },
                     icon: Icon(
                       Icons.info_outline_rounded,
@@ -75,14 +80,20 @@ class ProfilePageState extends State<ProfilePage> {
                               ],
                             ),
                           ),
-                          Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height / 90)),
+                          Padding(
+                              padding: EdgeInsets.only(
+                                  bottom:
+                                      MediaQuery.sizeOf(context).height / 90)),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               UserName(),
                             ],
                           ),
-                          Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height / 33)),
+                          Padding(
+                              padding: EdgeInsets.only(
+                                  bottom:
+                                      MediaQuery.sizeOf(context).height / 33)),
                           AspectRatio(
                             aspectRatio: 2,
                             child: Row(
@@ -97,7 +108,8 @@ class ProfilePageState extends State<ProfilePage> {
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Indicator(
                                           color: Color(0xff3D5AFE),
@@ -106,9 +118,15 @@ class ProfilePageState extends State<ProfilePage> {
                                           textColor: user.colorManager.wB,
                                           size: 25,
                                         ),
-                                        Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height / 90)),
+                                        Padding(
+                                            padding: EdgeInsets.only(
+                                                bottom:
+                                                    MediaQuery.sizeOf(context)
+                                                            .height /
+                                                        90)),
                                         Indicator(
-                                          color: user.colorManager.wB!.withValues(alpha: 0.4),
+                                          color: user.colorManager.wB!
+                                              .withValues(alpha: 0.4),
                                           text: 'UnFinished',
                                           isSquare: false,
                                           textColor: user.colorManager.wB,
@@ -121,7 +139,10 @@ class ProfilePageState extends State<ProfilePage> {
                               ],
                             ),
                           ),
-                          Padding(padding: EdgeInsets.only(bottom: MediaQuery.sizeOf(context).height / 33)),
+                          Padding(
+                              padding: EdgeInsets.only(
+                                  bottom:
+                                      MediaQuery.sizeOf(context).height / 33)),
                           AspectRatio(
                             aspectRatio: 1.6,
                             child: SettingsPageView(),
@@ -131,35 +152,34 @@ class ProfilePageState extends State<ProfilePage> {
                     ),
                   )
                 : SafeArea(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            UserAvatar(),
-                            UserName(),
-                          ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              UserAvatar(),
+                              UserName(),
+                            ],
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: Chart(),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: SizedBox(
-                          width: MediaQuery.sizeOf(context).width / 2,
-                          height:
-                              MediaQuery.sizeOf(context).height / 1.50,
-                          child: SettingsPageView(),
+                        Expanded(
+                          child: Chart(),
                         ),
-                      ),
-                    ],
-                  ),
-                ));
+                        Expanded(
+                          flex: 2,
+                          child: SizedBox(
+                            width: MediaQuery.sizeOf(context).width / 2,
+                            height: MediaQuery.sizeOf(context).height / 1.50,
+                            child: SettingsPageView(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ));
       },
     );
   }

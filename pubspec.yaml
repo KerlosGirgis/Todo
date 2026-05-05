@@ -49,7 +49,6 @@ dependencies:
   sqflite_sqlcipher: ^3.4.0
   flutter_secure_storage: ^10.0.0
   crypto: ^3.0.7
-  fluttertoast: ^9.0.0
   shared_preferences: ^2.5.5
   file_picker: ^11.0.2
   flutter_staggered_animations: ^1.1.1
@@ -60,6 +59,7 @@ dependencies:
   smooth_page_indicator: ^2.0.1
   image_cropper: ^12.2.1
   flutter_local_notifications: ^21.0.0
+  toastification: ^3.2.0
 
 dev_dependencies:
   flutter_test:

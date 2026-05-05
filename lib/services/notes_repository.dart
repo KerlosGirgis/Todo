@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../models/note.dart';
@@ -46,69 +44,11 @@ class NotesRepository {
         .update('Notes', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
-  Future<bool> exportNotesToJson() async {
-    List<Note> notes = await getNotes();
-    String jsonString = jsonEncode(notes.map((note) => note.toMap()).toList());
-    Uint8List bytes = utf8.encode(jsonString);
+  Future<Uint8List> exportNotesToJson() async {
+    final notes = await getNotes();
+    final jsonString =
+    jsonEncode(notes.map((note) => note.toMap()).toList());
 
-    String? outputPath = await FilePicker.saveFile(
-        dialogTitle: 'Select location to save Notes JSON file',
-        fileName: 'notes.json',
-        bytes: bytes);
-
-    if (outputPath != null) {
-      if (outputPath.isEmpty) {
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  Future<bool> importNotesFromJson(bool overwrite) async {
-    List<Note> notes = await getNotes();
-    FilePickerResult? result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
-
-    if (result != null) {
-      File file = File(result.files.single.path!);
-      String jsonString = await file.readAsString();
-      List<dynamic> data = jsonDecode(jsonString);
-      try {
-        if (overwrite) {
-          await deleteAllNotes();
-          for (var noteMap in data) {
-            Note note = Note.fromMap(noteMap);
-            await insertNote(note);
-          }
-        } else {
-          for (var noteMap in data) {
-            Note note = Note.fromMap(noteMap);
-            if (notes.any((element) =>
-                element.title == note.title &&
-                element.body == note.body &&
-                element.titleColor == note.titleColor &&
-                element.coverColor == note.coverColor &&
-                element.protected == note.protected)) {
-              continue;
-            }
-            await insertNote(note);
-          }
-        }
-      } catch (e) {
-        deleteAllNotes();
-        for (var note in notes) {
-          await insertNote(note);
-        }
-        return false;
-      }
-      return true;
-    } else {
-      return false;
-    }
+    return utf8.encode(jsonString);
   }
 }

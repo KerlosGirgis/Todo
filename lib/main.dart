@@ -15,6 +15,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/notification_service.dart';
 import 'package:todo/services/verse_manager.dart';
@@ -65,22 +66,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: 'arial',
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300),
-        useMaterial3: true,
-      ),
-      home: FutureBuilder(
-        future: Provider.of<UserViewModel>(context, listen: false).get(),
-        builder: (context, asyncSnapshot) {
-          return Consumer<UserViewModel>(
-            builder: (context,user,child) {
-              return user.user.startPage==0?TodoPage():NotesPage();
-            }
-          );
-        }
+    return ToastificationWrapper(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          fontFamily: 'arial',
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300),
+          useMaterial3: true,
+        ),
+        home: FutureBuilder(
+          future: Provider.of<UserViewModel>(context, listen: false).get(),
+          builder: (context, asyncSnapshot) {
+            return Consumer<UserViewModel>(
+              builder: (context,user,child) {
+                return user.user.startPage==0?TodoPage():NotesPage();
+              }
+            );
+          }
+        ),
       ),
     );
   }

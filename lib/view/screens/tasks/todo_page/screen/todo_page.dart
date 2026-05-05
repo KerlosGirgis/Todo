@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
+import 'package:todo/core/result.dart';
 import 'package:todo/view/screens/notes/notes_page/screen/notes_page.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/tasks_overwrite_dialog.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
@@ -39,6 +40,7 @@ class _TodoPageState extends State<TodoPage> {
           backgroundColor: user.colorManager.pageBackground,
           floatingActionButton: Column(
             mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
               FloatingActionButton(
                   heroTag: 0,
@@ -160,8 +162,7 @@ class _TodoPageState extends State<TodoPage> {
                                           borderRadius:
                                               BorderRadius.circular(25),
                                         ),
-                                        color:
-                                            user.colorManager.cardBackground,
+                                        color: user.colorManager.cardBackground,
                                         child: Padding(
                                           padding: const EdgeInsets.all(16.0),
                                           child: Column(
@@ -185,7 +186,9 @@ class _TodoPageState extends State<TodoPage> {
                                                                     .status ==
                                                                 0
                                                             ? TextStyle(
-                                                                fontSize: 26*user.user.tasksTitleSize,
+                                                                fontSize: 26 *
+                                                                    user.user
+                                                                        .tasksTitleSize,
                                                                 color: user
                                                                     .colorManager
                                                                     .wB,
@@ -193,7 +196,9 @@ class _TodoPageState extends State<TodoPage> {
                                                             : TextStyle(
                                                                 color:
                                                                     Colors.grey,
-                                                                fontSize: 26*user.user.tasksTitleSize,
+                                                                fontSize: 26 *
+                                                                    user.user
+                                                                        .tasksTitleSize,
                                                                 decoration:
                                                                     TextDecoration
                                                                         .lineThrough,
@@ -251,8 +256,25 @@ class _TodoPageState extends State<TodoPage> {
                                                         );
                                                       },
                                                       onTap: () {
-                                                        tasks.markAsDone(
-                                                            index, user);
+                                                        tasks
+                                                            .markAsDone(
+                                                                index, user)
+                                                            .then((result) {
+                                                          if (result
+                                                              is Success) {
+                                                            FeedbackToast
+                                                                .success(result
+                                                                    .message);
+                                                          } else if (result
+                                                              is Failure) {
+                                                            FeedbackToast.error(
+                                                                result.message);
+                                                          } else if (result
+                                                              is Info) {
+                                                            FeedbackToast.info(
+                                                                result.message);
+                                                          }
+                                                        });
                                                       },
                                                     ),
                                                   ),
@@ -275,13 +297,27 @@ class _TodoPageState extends State<TodoPage> {
                                                               ),
                                                               onPressed: () {
                                                                 tasks
-                                                                    .changeNotification(
-                                                                        index);
-                                                              },
-                                                              onLongPress: () {
-                                                                tasks
-                                                                    .changeDailyNotification(
-                                                                        index);
+                                                                    .cancelNotification(
+                                                                        index)
+                                                                    .then(
+                                                                        (result) {
+                                                                  if (result
+                                                                      is Success) {
+                                                                    FeedbackToast
+                                                                        .success(
+                                                                            result.message);
+                                                                  } else if (result
+                                                                      is Failure) {
+                                                                    FeedbackToast
+                                                                        .error(result
+                                                                            .message);
+                                                                  } else if (result
+                                                                      is Info) {
+                                                                    FeedbackToast
+                                                                        .info(result
+                                                                            .message);
+                                                                  }
+                                                                });
                                                               },
                                                             )
                                                           : IconButton(
@@ -293,13 +329,51 @@ class _TodoPageState extends State<TodoPage> {
                                                               ),
                                                               onPressed: () {
                                                                 tasks
-                                                                    .changeNotification(
-                                                                        index);
+                                                                    .enableOneTimeNotification(
+                                                                        index)
+                                                                    .then(
+                                                                        (result) {
+                                                                  if (result
+                                                                      is Success) {
+                                                                    FeedbackToast
+                                                                        .success(
+                                                                            result.message);
+                                                                  } else if (result
+                                                                      is Failure) {
+                                                                    FeedbackToast
+                                                                        .error(result
+                                                                            .message);
+                                                                  } else if (result
+                                                                      is Info) {
+                                                                    FeedbackToast
+                                                                        .info(result
+                                                                            .message);
+                                                                  }
+                                                                });
                                                               },
                                                               onLongPress: () {
                                                                 tasks
-                                                                    .changeDailyNotification(
-                                                                        index);
+                                                                    .enableDailyNotification(
+                                                                        index)
+                                                                    .then(
+                                                                        (result) {
+                                                                  if (result
+                                                                      is Success) {
+                                                                    FeedbackToast
+                                                                        .success(
+                                                                            result.message);
+                                                                  } else if (result
+                                                                      is Failure) {
+                                                                    FeedbackToast
+                                                                        .error(result
+                                                                            .message);
+                                                                  } else if (result
+                                                                      is Info) {
+                                                                    FeedbackToast
+                                                                        .info(result
+                                                                            .message);
+                                                                  }
+                                                                });
                                                               },
                                                             )
                                                       : const SizedBox.shrink(),
@@ -322,49 +396,63 @@ class _TodoPageState extends State<TodoPage> {
                                                       padding:
                                                           const EdgeInsets.only(
                                                               top: 2.0),
-                                                      child: user.user.descLines!=0?ReadMoreText(
-                                                        moreStyle: TextStyle(
-                                                            color: user
-                                                                .colorManager
-                                                                .moreLess),
-                                                        trimExpandedText:
-                                                            " Show Less",
-                                                        trimCollapsedText:
-                                                            "Show More",
-                                                        lessStyle: TextStyle(
-                                                            color: user
-                                                                .colorManager
-                                                                .moreLess),
-                                                        trimLines: user.user.descLines,
-                                                        trimMode: TrimMode.Line,
-                                                        tasks.items[index].desc,
-                                                        style: TextStyle(
-                                                          fontSize: 20*user.user.tasksDescSize,
-                                                          color: tasks
+                                                      child:
+                                                          user.user.descLines !=
+                                                                  0
+                                                              ? ReadMoreText(
+                                                                  moreStyle: TextStyle(
+                                                                      color: user
+                                                                          .colorManager
+                                                                          .moreLess),
+                                                                  trimExpandedText:
+                                                                      " Show Less",
+                                                                  trimCollapsedText:
+                                                                      "Show More",
+                                                                  lessStyle: TextStyle(
+                                                                      color: user
+                                                                          .colorManager
+                                                                          .moreLess),
+                                                                  trimLines: user
+                                                                      .user
+                                                                      .descLines,
+                                                                  trimMode:
+                                                                      TrimMode
+                                                                          .Line,
+                                                                  tasks
                                                                       .items[
                                                                           index]
-                                                                      .status ==
-                                                                  0
-                                                              ? user
-                                                                  .colorManager
-                                                                  .subtitle
-                                                              : Colors.grey,
-                                                        ),
-                                                      ):Text(
-                                                        tasks.items[index].desc,
-                                                        style: TextStyle(
-                                                          fontSize: 20*user.user.tasksDescSize,
-                                                          color: tasks
-                                                              .items[
-                                                          index]
-                                                              .status ==
-                                                              0
-                                                              ? user
-                                                              .colorManager
-                                                              .subtitle
-                                                              : Colors.grey,
-                                                        ),
-                                                      ),
+                                                                      .desc,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize: 20 *
+                                                                        user.user
+                                                                            .tasksDescSize,
+                                                                    color: tasks.items[index].status == 0
+                                                                        ? user
+                                                                            .colorManager
+                                                                            .subtitle
+                                                                        : Colors
+                                                                            .grey,
+                                                                  ),
+                                                                )
+                                                              : Text(
+                                                                  tasks
+                                                                      .items[
+                                                                          index]
+                                                                      .desc,
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontSize: 20 *
+                                                                        user.user
+                                                                            .tasksDescSize,
+                                                                    color: tasks.items[index].status == 0
+                                                                        ? user
+                                                                            .colorManager
+                                                                            .subtitle
+                                                                        : Colors
+                                                                            .grey,
+                                                                  ),
+                                                                ),
                                                     )
                                                   : const SizedBox.shrink(),
                                               tasks.items[index].date
@@ -580,13 +668,11 @@ class _TodoPageState extends State<TodoPage> {
                         showGeneralDialog(
                           context: context,
                           barrierDismissible: true,
-                          barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-                          pageBuilder: (BuildContext
-                          context,
-                              Animation<double>
-                              animation,
-                              Animation<double>
-                              secondaryAnimation) {
+                          barrierLabel: MaterialLocalizations.of(context)
+                              .modalBarrierDismissLabel,
+                          pageBuilder: (BuildContext context,
+                              Animation<double> animation,
+                              Animation<double> secondaryAnimation) {
                             return TasksOverwriteDialog();
                           },
                           transitionBuilder:
@@ -594,7 +680,8 @@ class _TodoPageState extends State<TodoPage> {
                             var fadeAnimation = CurvedAnimation(
                                 parent: animation, curve: Curves.easeInOutSine);
                             var scaleAnimation =
-                            Tween<double>(begin: 0.8, end: 1).animate(fadeAnimation);
+                                Tween<double>(begin: 0.8, end: 1)
+                                    .animate(fadeAnimation);
                             return FadeTransition(
                               opacity: fadeAnimation,
                               child: ScaleTransition(
@@ -604,8 +691,6 @@ class _TodoPageState extends State<TodoPage> {
                             );
                           },
                         );
-                        // Provider.of<TasksViewModel>(context, listen: false)
-                        //     .restore();
                       },
                       icon: Icon(
                         Icons.settings_backup_restore,
@@ -614,7 +699,16 @@ class _TodoPageState extends State<TodoPage> {
                   IconButton(
                       onPressed: () async {
                         Provider.of<TasksViewModel>(context, listen: false)
-                            .backup();
+                            .backup()
+                            .then((result) {
+                          if (result is Success) {
+                            FeedbackToast.success(result.message);
+                          } else if (result is Failure) {
+                            FeedbackToast.error(result.message);
+                          } else if (result is Info) {
+                            FeedbackToast.info(result.message);
+                          }
+                        });
                       },
                       icon: Icon(
                         Icons.backup,

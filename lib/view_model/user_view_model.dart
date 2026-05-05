@@ -6,11 +6,11 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/lock_manager.dart';
 import 'package:todo/services/user_repository.dart';
+import '../core/result.dart';
 import '../services/color_manager.dart';
 
 class UserViewModel with ChangeNotifier {
@@ -170,27 +170,27 @@ class UserViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> changeLock() async {
+  Future<Result> changeLock() async {
     final bool auth=await AuthenticationService().authenticate();
     if(auth){
       if(isEnabled){
-        await LockManager().disableLock().then((e){
-          isEnabled=false;
-        });
+        await LockManager().disableLock();
+        isEnabled=false;
         notifyListeners();
+        return Info("Lock Disabled");
       }
       else{
-        await LockManager().enableLock().then((e){
-          isEnabled=true;
-        });
+        await LockManager().enableLock();
+        isEnabled=true;
         notifyListeners();
+        return Success("Lock Enabled");
       }
     }
     else{
-      FeedbackToast.error("Authentication Failed");
+      return Failure("Authentication Failed");
     }
   }
-  Future<void> setNotesTextSize()async{
+  Future<Result> setNotesTextSize()async{
     if(tempNotesTextSize>=0.25&&tempNotesTextSize<=2){
       user.notesTextSize=tempNotesTextSize;
       final prefs = await SharedPreferences.getInstance();
@@ -199,42 +199,46 @@ class UserViewModel with ChangeNotifier {
       await HomeWidget.updateWidget(name: 'Note');
       await userRepository.updateUser(user);
       notifyListeners();
+      return Success("Font Changed");
     }
     else{
-      FeedbackToast.error("Enter Valid Value");
+      return Failure("Enter Valid Value");
     }
   }
 
-  Future<void> setNotesTitleSize()async{
+  Future<Result> setNotesTitleSize()async{
     if(tempNotesTitleSize>=0.25&&tempNotesTitleSize<=2){
       user.notesTitleSize=tempNotesTitleSize;
       await userRepository.updateUser(user);
       notifyListeners();
+      return Success("Font Changed");
     }
     else{
-      FeedbackToast.error("Enter Valid Value");
+      return Failure("Enter Valid Value");
     }
   }
 
-  Future<void> setTasksTitleSize()async{
+  Future<Result> setTasksTitleSize()async{
     if(tempTasksTitleSize>=0.25&&tempTasksTitleSize<=2){
       user.tasksTitleSize=tempTasksTitleSize;
       await userRepository.updateUser(user);
       notifyListeners();
+      return Success("Font Changed");
     }
     else{
-      FeedbackToast.error("Enter Valid Value");
+      return Failure("Enter Valid Value");
     }
   }
 
-  Future<void> setTasksDescSize()async{
+  Future<Result> setTasksDescSize()async{
     if(tempTasksDescSize>=0.25&&tempTasksDescSize<=2){
       user.tasksDescSize=tempTasksDescSize;
       await userRepository.updateUser(user);
       notifyListeners();
+      return Success("Font Changed");
     }
     else{
-      FeedbackToast.error("Enter Valid Value");
+      return Failure("Enter Valid Value");
     }
   }
 

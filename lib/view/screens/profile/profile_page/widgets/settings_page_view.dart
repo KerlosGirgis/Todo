@@ -5,6 +5,8 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/font_button.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/settings_button.dart';
 
+import '../../../../../core/result.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/button.dart';
 
@@ -131,7 +133,15 @@ class SettingsPageView extends StatelessWidget {
                                   onPressed: () {
                                     Provider.of<UserViewModel>(context,
                                             listen: false)
-                                        .changeLock();
+                                        .changeLock().then((result){
+                                      if (result is Success) {
+                                        FeedbackToast.success(result.message);
+                                      } else if (result is Failure) {
+                                        FeedbackToast.error(result.message);
+                                      } else if (result is Info) {
+                                        FeedbackToast.info(result.message);
+                                      }
+                                    });
                                   },
                                   label: "App\nLock",
                                   status: user.isEnabled ? true : false,
@@ -428,7 +438,15 @@ class SettingsPageView extends StatelessWidget {
                                                         Flexible(
                                                           child: Button(
                                                             onPressed: () {
-                                                              user.setTasksTitleSize();
+                                                              user.setTasksTitleSize().then((result){
+                                                                if (result is Success) {
+                                                                  FeedbackToast.success(result.message);
+                                                                } else if (result is Failure) {
+                                                                  FeedbackToast.error(result.message);
+                                                                } else if (result is Info) {
+                                                                  FeedbackToast.info(result.message);
+                                                                }
+                                                              });
                                                             },
                                                             label: 'Apply',
                                                             status: user
@@ -539,7 +557,15 @@ class SettingsPageView extends StatelessWidget {
                                                         Flexible(
                                                           child: Button(
                                                             onPressed: () {
-                                                              user.setTasksDescSize();
+                                                              user.setTasksDescSize().then((result){
+                                                                if (result is Success) {
+                                                                  FeedbackToast.success(result.message);
+                                                                } else if (result is Failure) {
+                                                                  FeedbackToast.error(result.message);
+                                                                } else if (result is Info) {
+                                                                  FeedbackToast.info(result.message);
+                                                                }
+                                                              });
                                                             },
                                                             label: 'Apply',
                                                             status: user
@@ -658,7 +684,15 @@ class SettingsPageView extends StatelessWidget {
                                                         Flexible(
                                                           child: Button(
                                                             onPressed: () {
-                                                              user.setNotesTitleSize();
+                                                              user.setNotesTitleSize().then((result){
+                                                                if (result is Success) {
+                                                                  FeedbackToast.success(result.message);
+                                                                } else if (result is Failure) {
+                                                                  FeedbackToast.error(result.message);
+                                                                } else if (result is Info) {
+                                                                  FeedbackToast.info(result.message);
+                                                                }
+                                                              });
                                                             },
                                                             label: 'Apply',
                                                             status: user
@@ -769,7 +803,15 @@ class SettingsPageView extends StatelessWidget {
                                                         Flexible(
                                                           child: Button(
                                                             onPressed: () {
-                                                              user.setNotesTextSize();
+                                                              user.setNotesTextSize().then((result){
+                                                                if (result is Success) {
+                                                                  FeedbackToast.success(result.message);
+                                                                } else if (result is Failure) {
+                                                                  FeedbackToast.error(result.message);
+                                                                } else if (result is Info) {
+                                                                  FeedbackToast.info(result.message);
+                                                                }
+                                                              });
                                                             },
                                                             label: 'Apply',
                                                             status: user

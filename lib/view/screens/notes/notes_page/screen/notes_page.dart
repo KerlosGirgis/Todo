@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/core/result.dart';
 import 'package:todo/view/screens/notes/note_editor_page/screen/note_editor_page.dart';
 import 'package:todo/view/screens/notes/notes_page/widgets/notes_overwrite_dialog.dart';
 import 'package:todo/view/screens/tasks/todo_page/screen/todo_page.dart';
@@ -13,6 +14,7 @@ import 'package:todo/view/screens/notes/notes_page/widgets/add_note_dialog.dart'
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
 import 'package:todo/view/screens/notes/notes_page/widgets/reorder_notes_dialog.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../widgets/update_note_dialog.dart';
 
@@ -167,7 +169,17 @@ class _NotesPageState extends State<NotesPage> {
                     IconButton(
                         onPressed: () async {
                           Provider.of<NotesViewModel>(context, listen: false)
-                              .backup();
+                              .backup().then((result){
+                                if(result is Success){
+                                  FeedbackToast.success(result.message);
+                                }
+                                else if(result is Failure){
+                                  FeedbackToast.error(result.message);
+                                }
+                                else if (result is Info){
+                                  FeedbackToast.info(result.message);
+                                }
+                          });
                         },
                         icon: Icon(
                           Icons.backup,
