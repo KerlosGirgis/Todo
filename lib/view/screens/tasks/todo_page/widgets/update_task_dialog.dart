@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/core/result.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
 import '../../../../../core/ui/feedback_toast.dart';
-import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../models/todo_item.dart';
-import '../../../../../services/notification_service.dart';
 import '../../../../widgets/button.dart';
 
 class UpdateTaskDialog extends StatelessWidget {
@@ -88,12 +86,11 @@ class UpdateTaskDialog extends StatelessWidget {
                 TextField(
                   controller: titleController,
                   maxLines: 1,
-                  style: TextStyle(
-                      fontSize: 22, color: user.colorManager.wB),
+                  style: TextStyle(fontSize: 22, color: user.colorManager.wB),
                   decoration: InputDecoration(
                     labelText: "Title",
-                    labelStyle: TextStyle(
-                        fontSize: 30, color: user.colorManager.wB),
+                    labelStyle:
+                        TextStyle(fontSize: 30, color: user.colorManager.wB),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none),
@@ -108,12 +105,11 @@ class UpdateTaskDialog extends StatelessWidget {
                   controller: descController,
                   keyboardType: TextInputType.multiline,
                   maxLines: 4,
-                  style: TextStyle(
-                      fontSize: 20, color: user.colorManager.wB),
+                  style: TextStyle(fontSize: 20, color: user.colorManager.wB),
                   decoration: InputDecoration(
                     labelText: "Description",
-                    labelStyle: TextStyle(
-                        fontSize: 30, color: user.colorManager.wB),
+                    labelStyle:
+                        TextStyle(fontSize: 30, color: user.colorManager.wB),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none),
@@ -147,7 +143,8 @@ class UpdateTaskDialog extends StatelessWidget {
                                 }
                               });
                             } else {
-                              FeedbackToast.info("Daily Tasks Don't Need A Date");
+                              FeedbackToast.info(
+                                  "Daily Tasks Don't Need A Date");
                             }
                           },
                           onLongPress: () {
@@ -279,63 +276,35 @@ class UpdateTaskDialog extends StatelessWidget {
                   ),
                   Expanded(
                     child: Button(
-                      onPressed: () {
-                        int not = tasks.items[index].notification;
+                      onPressed: () async {
                         if (titleController.text.isEmpty) {
                           FeedbackToast.error("Task title can't be empty");
                           return;
                         }
-                        if (tasks.items[index].notification == 1) {
-                          FlutterLocalNotificationsPlugin()
-                              .cancel(id:tasks.items[index].uuid.hashCode);
-                          if (time.isNotEmpty &&
-                              DateTimeUtils.stringToDateTime(date, time)
-                                  .isAfter(DateTime.now())) {
-                            NotificationService.scheduleNotification(
-                              tasks.items[index].uuid.hashCode,
-                              "Don't Forget Your Task!",
-                              tasks.items[index].title,
-                              DateTimeUtils.stringToDateTime(date, time),
-                            );
-                          } else {
-                            not = 0;
-                          }
-                        } else if (tasks.items[index].notification == 2) {
-                          FlutterLocalNotificationsPlugin()
-                              .cancel(id:tasks.items[index].uuid.hashCode);
-                          if (time.isNotEmpty) {
-                            date = "";
-                            try {
-                              NotificationService.scheduleDailyNotification(
-                                tasks.items[index].uuid.hashCode,
-                                "Don't Forget Your Task!",
-                                tasks.items[index].title,
-                                DateTimeUtils.parseTime(time),
-                              ).then((onValue) {
-                                not = 2;
-                              });
-                            } catch (e) {
-                              not = 0;
-                            }
-                          } else {
-                            not = 0;
-                          }
+                        if(context.mounted){
+                          Navigator.of(context).pop();
                         }
-
-                        Provider.of<TasksViewModel>(context, listen: false)
+                        await tasks
                             .updateTask(TodoItem(
-                                title: titleController.text,
-                                desc: descController.text,
-                                id: tasks.items[index].id,
-                                status: tasks.items[index].status,
-                                date: date,
-                                time: time,
-                                uuid: tasks.items[index].uuid,
-                                notification: not))
-                            .then((value) {
-                          FeedbackToast.info("Task Updated");
+                            title: titleController.text,
+                            desc: descController.text,
+                            id: tasks.items[index].id,
+                            status: tasks.items[index].status,
+                            date: date,
+                            time: time,
+                            uuid: tasks.items[index].uuid,
+                            notification: tasks.items[index].notification))
+                            .then((result) {
+                              if(result is Success){
+                                FeedbackToast.success(result.message);
+                              }
+                              else if(result is Failure){
+                                FeedbackToast.error(result.message);
+                              }
+                              else if(result is Info){
+                                FeedbackToast.info(result.message);
+                              }
                         });
-                        Navigator.of(context).pop();
                       },
                       label: 'Update',
                       status: true,

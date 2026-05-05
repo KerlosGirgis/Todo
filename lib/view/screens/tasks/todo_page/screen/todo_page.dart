@@ -298,7 +298,7 @@ class _TodoPageState extends State<TodoPage> {
                                                               onPressed: () {
                                                                 tasks
                                                                     .cancelNotification(
-                                                                        index)
+                                                                        tasks.items[index])
                                                                     .then(
                                                                         (result) {
                                                                   if (result
@@ -330,7 +330,7 @@ class _TodoPageState extends State<TodoPage> {
                                                               onPressed: () {
                                                                 tasks
                                                                     .enableOneTimeNotification(
-                                                                        index)
+                                                                    tasks.items[index])
                                                                     .then(
                                                                         (result) {
                                                                   if (result
@@ -354,7 +354,7 @@ class _TodoPageState extends State<TodoPage> {
                                                               onLongPress: () {
                                                                 tasks
                                                                     .enableDailyNotification(
-                                                                        index)
+                                                                    tasks.items[index])
                                                                     .then(
                                                                         (result) {
                                                                   if (result

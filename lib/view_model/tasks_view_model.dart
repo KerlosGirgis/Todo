@@ -21,14 +21,19 @@ class TasksViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateTask(TodoItem todo) async {
-    await tasksRepository.updateItem(todo);
-    get();
-  }
-
-  Future<void> deleteTask(int id) async {
-    await tasksRepository.deleteItem(id);
-    notifyListeners();
+  Future<Result> updateTask(TodoItem task) async {
+    await tasksRepository.updateItem(task);
+    await get();
+    if (task.notification == 1) {
+      await cancelNotification(task);
+      return await enableOneTimeNotification(task);
+    } else if (task.notification == 2) {
+      await cancelNotification(task);
+      return  await enableDailyNotification(task);
+    }
+    else{
+      return Info("Task Updated");
+    }
   }
 
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
@@ -65,7 +70,7 @@ class TasksViewModel with ChangeNotifier {
       if (items[index].notification == 1 || items[index].notification == 2) {
         await FlutterLocalNotificationsPlugin()
             .cancel(id: items[index].uuid.hashCode);
-        await updateTask(
+        await tasksRepository.updateItem(
           TodoItem(
             title: items[index].title,
             desc: items[index].desc,
@@ -77,10 +82,11 @@ class TasksViewModel with ChangeNotifier {
             notification: 0,
           ),
         );
+        get();
         user.increaseFinished();
         return Success("Task done");
       } else {
-        updateTask(
+        tasksRepository.updateItem(
           TodoItem(
             title: items[index].title,
             desc: items[index].desc,
@@ -92,11 +98,12 @@ class TasksViewModel with ChangeNotifier {
             notification: items[index].notification,
           ),
         );
+        get();
         user.increaseFinished();
         return Success("Task done");
       }
     } else {
-      updateTask(
+      tasksRepository.updateItem(
         TodoItem(
           title: items[index].title,
           desc: items[index].desc,
@@ -108,6 +115,7 @@ class TasksViewModel with ChangeNotifier {
           notification: items[index].notification,
         ),
       );
+      get();
       user.decreaseFinished();
       return Info("Task undone");
     }
@@ -244,30 +252,31 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> enableOneTimeNotification(int index) async {
+  Future<Result> enableOneTimeNotification(TodoItem task) async {
     try {
-      if (items[index].time.isNotEmpty && items[index].date.isNotEmpty) {
+      if (task.time.isNotEmpty && task.date.isNotEmpty) {
         DateTime scheduledTime = DateTimeUtils.stringToDateTime(
-            items[index].date, items[index].time);
-        if (scheduledTime.isAfter(DateTime.now()) && items[index].status == 0) {
+            task.date, task.time);
+        if (scheduledTime.isAfter(DateTime.now()) && task.status == 0) {
           await NotificationService.scheduleNotification(
-            items[index].uuid.hashCode,
+            task.uuid.hashCode,
             "Don't Forget Your Task!",
-            items[index].title,
+            task.title,
             scheduledTime,
           );
-          await updateTask(
+          await tasksRepository.updateItem(
             TodoItem(
-              title: items[index].title,
-              desc: items[index].desc,
-              id: items[index].id,
-              status: items[index].status,
-              date: items[index].date,
-              time: items[index].time,
-              uuid: items[index].uuid,
+              title: task.title,
+              desc: task.desc,
+              id: task.id,
+              status: task.status,
+              date: task.date,
+              time: task.time,
+              uuid: task.uuid,
               notification: 1,
             ),
           );
+          get();
           return Info(
               "Time remaining:\n ${DateTimeUtils.durationToString(scheduledTime.difference(DateTime.now()))}");
         } else {
@@ -281,27 +290,28 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> enableDailyNotification(int index) async {
-    if (items[index].time.isNotEmpty) {
+  Future<Result> enableDailyNotification(TodoItem task) async {
+    if (task.time.isNotEmpty) {
       try {
         await NotificationService.scheduleDailyNotification(
-          items[index].uuid.hashCode,
+          task.uuid.hashCode,
           "Don't Forget Your Task!",
-          items[index].title,
-          DateTimeUtils.parseTime(items[index].time),
+          task.title,
+          DateTimeUtils.parseTime(task.time),
         );
-        await updateTask(
+        await tasksRepository.updateItem(
           TodoItem(
-            title: items[index].title,
-            desc: items[index].desc,
-            id: items[index].id,
-            status: items[index].status,
+            title: task.title,
+            desc: task.desc,
+            id: task.id,
+            status: task.status,
             date: "",
-            time: items[index].time,
-            uuid: items[index].uuid,
+            time: task.time,
+            uuid: task.uuid,
             notification: 2,
           ),
         );
+        get();
         return Success("Notification Enabled");
       } catch (e) {
         return Failure("Failed to Enable Notification");
@@ -311,22 +321,23 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> cancelNotification(int index) async {
+  Future<Result> cancelNotification(TodoItem task) async {
     try {
       await FlutterLocalNotificationsPlugin()
-          .cancel(id: items[index].uuid.hashCode);
-      await updateTask(
+          .cancel(id: task.uuid.hashCode);
+      await tasksRepository.updateItem(
         TodoItem(
-          title: items[index].title,
-          desc: items[index].desc,
-          id: items[index].id,
-          status: items[index].status,
-          date: items[index].date,
-          time: items[index].time,
-          uuid: items[index].uuid,
+          title: task.title,
+          desc: task.desc,
+          id: task.id,
+          status: task.status,
+          date: task.date,
+          time: task.time,
+          uuid: task.uuid,
           notification: 0,
         ),
       );
+      get();
       return Info("Notification Disabled");
     } catch (e) {
       return Failure("Failed to disable notification");

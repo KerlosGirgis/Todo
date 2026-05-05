@@ -1,7 +1,6 @@
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/view/screens/notes/note_editor_page/screen/note_editor_page.dart';
@@ -11,7 +10,6 @@ import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
 import 'package:todo/view/screens/notes/notes_page/widgets/add_note_dialog.dart';
-import 'package:todo/services/authentication_service.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
 import 'package:todo/view/screens/notes/notes_page/widgets/reorder_notes_dialog.dart';
 import '../../../../../core/ui/feedback_toast.dart';
@@ -26,9 +24,6 @@ class NotesPage extends StatefulWidget {
 }
 
 class _NotesPageState extends State<NotesPage> {
-  final AuthenticationService authService = AuthenticationService();
-  final LocalAuthentication localAuthentication = LocalAuthentication();
-
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -61,10 +56,10 @@ class _NotesPageState extends State<NotesPage> {
               ExpandableMenu(
                   iconColor: user.colorManager.appBarIcons,
                   animationSpeed: 500,
-                  width: MediaQuery.orientationOf(context) ==
-                          Orientation.portrait
-                      ? MediaQuery.sizeOf(context).width / 14
-                      : MediaQuery.sizeOf(context).width / 22,
+                  width:
+                      MediaQuery.orientationOf(context) == Orientation.portrait
+                          ? MediaQuery.sizeOf(context).width / 14
+                          : MediaQuery.sizeOf(context).width / 22,
                   height: 45,
                   items: [
                     IconButton(
@@ -72,55 +67,31 @@ class _NotesPageState extends State<NotesPage> {
                           showGeneralDialog(
                             context: context,
                             barrierDismissible: true,
-                            barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-                            pageBuilder: (BuildContext
-                            context,
-                                Animation<double>
-                                animation,
-                                Animation<double>
-                                secondaryAnimation) {
+                            barrierLabel: MaterialLocalizations.of(context)
+                                .modalBarrierDismissLabel,
+                            pageBuilder: (BuildContext context,
+                                Animation<double> animation,
+                                Animation<double> secondaryAnimation) {
                               return ReorderNotesDialog();
                             },
-                            transitionBuilder:
-                                (context,
-                                animation,
-                                secondaryAnimation,
-                                child) {
-                              var fadeAnimation =
-                              CurvedAnimation(
-                                  parent:
-                                  animation,
-                                  curve: Curves
-                                      .easeInOutSine);
+                            transitionBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              var fadeAnimation = CurvedAnimation(
+                                  parent: animation,
+                                  curve: Curves.easeInOutSine);
                               var scaleAnimation =
-                              Tween<double>(
-                                  begin:
-                                  0.95,
-                                  end:
-                                  1.0)
-                                  .animate(
-                                  fadeAnimation); // Subtle grow
-                              var slideAnimation = Tween<
-                                  Offset>(
-                                  begin: Offset(
-                                      0,
-                                      0.05),
-                                  end: Offset
-                                      .zero)
-                                  .animate(
-                                  fadeAnimation); // Gentle rise
+                                  Tween<double>(begin: 0.95, end: 1.0)
+                                      .animate(fadeAnimation); // Subtle grow
+                              var slideAnimation = Tween<Offset>(
+                                      begin: Offset(0, 0.05), end: Offset.zero)
+                                  .animate(fadeAnimation); // Gentle rise
 
                               return FadeTransition(
-                                opacity:
-                                fadeAnimation,
-                                child:
-                                ScaleTransition(
-                                  scale:
-                                  scaleAnimation,
-                                  child:
-                                  SlideTransition(
-                                    position:
-                                    slideAnimation,
+                                opacity: fadeAnimation,
+                                child: ScaleTransition(
+                                  scale: scaleAnimation,
+                                  child: SlideTransition(
+                                    position: slideAnimation,
                                     child: child,
                                   ),
                                 ),
@@ -137,21 +108,21 @@ class _NotesPageState extends State<NotesPage> {
                           showGeneralDialog(
                             context: context,
                             barrierDismissible: true,
-                            barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-                            pageBuilder: (BuildContext
-                            context,
-                                Animation<double>
-                                animation,
-                                Animation<double>
-                                secondaryAnimation) {
+                            barrierLabel: MaterialLocalizations.of(context)
+                                .modalBarrierDismissLabel,
+                            pageBuilder: (BuildContext context,
+                                Animation<double> animation,
+                                Animation<double> secondaryAnimation) {
                               return NotesOverwriteDialog();
                             },
-                            transitionBuilder:
-                                (context, animation, secondaryAnimation, child) {
+                            transitionBuilder: (context, animation,
+                                secondaryAnimation, child) {
                               var fadeAnimation = CurvedAnimation(
-                                  parent: animation, curve: Curves.easeInOutSine);
+                                  parent: animation,
+                                  curve: Curves.easeInOutSine);
                               var scaleAnimation =
-                              Tween<double>(begin: 0.8, end: 1).animate(fadeAnimation);
+                                  Tween<double>(begin: 0.8, end: 1)
+                                      .animate(fadeAnimation);
                               return FadeTransition(
                                 opacity: fadeAnimation,
                                 child: ScaleTransition(
@@ -169,16 +140,15 @@ class _NotesPageState extends State<NotesPage> {
                     IconButton(
                         onPressed: () async {
                           Provider.of<NotesViewModel>(context, listen: false)
-                              .backup().then((result){
-                                if(result is Success){
-                                  FeedbackToast.success(result.message);
-                                }
-                                else if(result is Failure){
-                                  FeedbackToast.error(result.message);
-                                }
-                                else if (result is Info){
-                                  FeedbackToast.info(result.message);
-                                }
+                              .backup()
+                              .then((result) {
+                            if (result is Success) {
+                              FeedbackToast.success(result.message);
+                            } else if (result is Failure) {
+                              FeedbackToast.error(result.message);
+                            } else if (result is Info) {
+                              FeedbackToast.info(result.message);
+                            }
                           });
                         },
                         icon: Icon(
@@ -190,9 +160,9 @@ class _NotesPageState extends State<NotesPage> {
                           Navigator.push(
                             context,
                             PageRouteBuilder(
-                              pageBuilder: (context, animation,
-                                      secondaryAnimation) =>
-                                  const ProfilePage(),
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) =>
+                                      const ProfilePage(),
                               transitionsBuilder: (context, animation,
                                   secondaryAnimation, child) {
                                 const begin = Offset(0.0, 1.0);
@@ -200,11 +170,9 @@ class _NotesPageState extends State<NotesPage> {
                                 const curve = Curves.ease;
                                 var tween = Tween(begin: begin, end: end)
                                     .chain(CurveTween(curve: curve));
-                                var offsetAnimation =
-                                    animation.drive(tween);
+                                var offsetAnimation = animation.drive(tween);
                                 return SlideTransition(
-                                    position: offsetAnimation,
-                                    child: child);
+                                    position: offsetAnimation, child: child);
                               },
                             ),
                           );
@@ -232,7 +200,7 @@ class _NotesPageState extends State<NotesPage> {
                       context,
                       PageRouteBuilder(
                         pageBuilder: (context, animation, secondaryAnimation) =>
-                        const TodoPage(),
+                            const TodoPage(),
                         transitionsBuilder:
                             (context, animation, secondaryAnimation, child) {
                           const begin = Offset(1.0, 0.0);
@@ -259,55 +227,29 @@ class _NotesPageState extends State<NotesPage> {
                   showGeneralDialog(
                     context: context,
                     barrierDismissible: true,
-                    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-                    pageBuilder: (BuildContext
-                    context,
-                        Animation<double>
-                        animation,
-                        Animation<double>
-                        secondaryAnimation) {
+                    barrierLabel: MaterialLocalizations.of(context)
+                        .modalBarrierDismissLabel,
+                    pageBuilder: (BuildContext context,
+                        Animation<double> animation,
+                        Animation<double> secondaryAnimation) {
                       return AddNoteDialog();
                     },
                     transitionBuilder:
-                        (context,
-                        animation,
-                        secondaryAnimation,
-                        child) {
-                      var fadeAnimation =
-                      CurvedAnimation(
-                          parent:
-                          animation,
-                          curve: Curves
-                              .easeInOutSine);
-                      var scaleAnimation =
-                      Tween<double>(
-                          begin:
-                          0.95,
-                          end:
-                          1.0)
-                          .animate(
-                          fadeAnimation); // Subtle grow
-                      var slideAnimation = Tween<
-                          Offset>(
-                          begin: Offset(
-                              0,
-                              0.05),
-                          end: Offset
-                              .zero)
-                          .animate(
-                          fadeAnimation); // Gentle rise
+                        (context, animation, secondaryAnimation, child) {
+                      var fadeAnimation = CurvedAnimation(
+                          parent: animation, curve: Curves.easeInOutSine);
+                      var scaleAnimation = Tween<double>(begin: 0.95, end: 1.0)
+                          .animate(fadeAnimation); // Subtle grow
+                      var slideAnimation = Tween<Offset>(
+                              begin: Offset(0, 0.05), end: Offset.zero)
+                          .animate(fadeAnimation); // Gentle rise
 
                       return FadeTransition(
-                        opacity:
-                        fadeAnimation,
-                        child:
-                        ScaleTransition(
-                          scale:
-                          scaleAnimation,
-                          child:
-                          SlideTransition(
-                            position:
-                            slideAnimation,
+                        opacity: fadeAnimation,
+                        child: ScaleTransition(
+                          scale: scaleAnimation,
+                          child: SlideTransition(
+                            position: slideAnimation,
                             child: child,
                           ),
                         ),
@@ -332,10 +274,11 @@ class _NotesPageState extends State<NotesPage> {
                     : GridView.builder(
                         itemCount: notes.notes.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: MediaQuery.of(context).orientation ==
-                                    Orientation.portrait
-                                ? 2
-                                : 4,
+                            crossAxisCount:
+                                MediaQuery.of(context).orientation ==
+                                        Orientation.portrait
+                                    ? 2
+                                    : 4,
                             childAspectRatio: 0.7),
                         itemBuilder: (context, index) {
                           return AnimationLimiter(
@@ -365,13 +308,16 @@ class _NotesPageState extends State<NotesPage> {
                                                   color: notes.notes[index]
                                                       .coverColor.toColor,
                                                   borderRadius:
-                                                      BorderRadius.circular(12.0),
+                                                      BorderRadius.circular(
+                                                          12.0),
                                                   boxShadow: [
                                                     BoxShadow(
                                                       color: Colors.black
-                                                          .withValues(alpha: 0.8),
+                                                          .withValues(
+                                                              alpha: 0.8),
                                                       blurRadius: 8,
-                                                      offset: const Offset(0, 4),
+                                                      offset:
+                                                          const Offset(0, 4),
                                                     ),
                                                   ],
                                                 ),
@@ -382,17 +328,21 @@ class _NotesPageState extends State<NotesPage> {
                                                         maxLines: 4,
                                                         textAlign:
                                                             TextAlign.center,
-                                                        overflow:
-                                                            TextOverflow.ellipsis,
-                                                        notes.notes[index].title,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        notes
+                                                            .notes[index].title,
                                                         style: TextStyle(
                                                             color: notes
                                                                 .notes[index]
                                                                 .titleColor
                                                                 .toColor,
-                                                            fontSize: 24*user.user.notesTitleSize,
+                                                            fontSize: 24 *
+                                                                user.user
+                                                                    .notesTitleSize,
                                                             fontWeight:
-                                                                FontWeight.bold),
+                                                                FontWeight
+                                                                    .bold),
                                                       ),
                                                     ),
                                                     notes.notes[index]
@@ -409,7 +359,8 @@ class _NotesPageState extends State<NotesPage> {
                                                                         .end,
                                                                 children: [
                                                                   Flexible(
-                                                                    child: Padding(
+                                                                    child:
+                                                                        Padding(
                                                                       padding:
                                                                           const EdgeInsets
                                                                               .all(
@@ -417,7 +368,8 @@ class _NotesPageState extends State<NotesPage> {
                                                                       child: Image
                                                                           .asset(
                                                                         "assets/lock.png",
-                                                                        scale: 4,
+                                                                        scale:
+                                                                            4,
                                                                       ),
                                                                     ),
                                                                   ),
@@ -425,7 +377,8 @@ class _NotesPageState extends State<NotesPage> {
                                                               ),
                                                             ],
                                                           )
-                                                        : const SizedBox.shrink(),
+                                                        : const SizedBox
+                                                            .shrink(),
                                                   ],
                                                 )),
                                           );
@@ -433,133 +386,86 @@ class _NotesPageState extends State<NotesPage> {
                                       ),
                                     ),
                                     onTap: () async {
-                                      if (notes.notes[index].protected == 1) {
-                                        bool isAuthenticated =
-                                            await authService.authenticate();
-                                        if (isAuthenticated) {
-                                          if (context.mounted) {
-                                            Navigator.push(
-                                              context,
-                                              PageRouteBuilder(
-                                                pageBuilder: (context, animation,
-                                                        secondaryAnimation) =>
-                                                    NoteEditorPage(
-                                                  note: notes.notes[index],
-                                                ),
-                                                transitionsBuilder: (context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                    child) {
-                                                  const begin = Offset(1.0, 0.0);
-                                                  const end = Offset.zero;
-                                                  const curve = Curves.ease;
-                                                  var tween = Tween(
-                                                          begin: begin, end: end)
-                                                      .chain(CurveTween(
-                                                          curve: curve));
-                                                  var offsetAnimation =
-                                                      animation.drive(tween);
-                                                  return SlideTransition(
-                                                      position: offsetAnimation,
-                                                      child: child);
-                                                },
+                                      Result status = await notes
+                                          .authenticate(notes.notes[index]);
+                                      if (status is Success) {
+                                        if (context.mounted) {
+                                          Navigator.push(
+                                            context,
+                                            PageRouteBuilder(
+                                              pageBuilder: (context, animation,
+                                                      secondaryAnimation) =>
+                                                  NoteEditorPage(
+                                                note: notes.notes[index],
                                               ),
-                                            );
-                                          }
-                                        }
-                                      } else {
-                                        Navigator.push(
-                                          context,
-                                          PageRouteBuilder(
-                                            pageBuilder: (context, animation,
-                                                    secondaryAnimation) =>
-                                                NoteEditorPage(
-                                              note: notes.notes[index],
+                                              transitionsBuilder: (context,
+                                                  animation,
+                                                  secondaryAnimation,
+                                                  child) {
+                                                const begin = Offset(1.0, 0.0);
+                                                const end = Offset.zero;
+                                                const curve = Curves.ease;
+                                                var tween = Tween(
+                                                        begin: begin, end: end)
+                                                    .chain(CurveTween(
+                                                        curve: curve));
+                                                var offsetAnimation =
+                                                    animation.drive(tween);
+                                                return SlideTransition(
+                                                    position: offsetAnimation,
+                                                    child: child);
+                                              },
                                             ),
-                                            transitionsBuilder: (context,
-                                                animation,
-                                                secondaryAnimation,
-                                                child) {
-                                              const begin = Offset(1.0, 0.0);
-                                              const end = Offset.zero;
-                                              const curve = Curves.ease;
-                                              var tween = Tween(
-                                                      begin: begin, end: end)
-                                                  .chain(
-                                                      CurveTween(curve: curve));
-                                              var offsetAnimation =
-                                                  animation.drive(tween);
-                                              return SlideTransition(
-                                                  position: offsetAnimation,
-                                                  child: child);
-                                            },
-                                          ),
-                                        );
+                                          );
+                                        }
+                                      } else if (status is Failure) {
+                                        FeedbackToast.error(status.message);
                                       }
                                     },
                                     onLongPress: () async {
-                                      if (notes.notes[index].protected == 1) {
-                                        bool isAuthenticated =
-                                            await authService.authenticate();
-                                        if (isAuthenticated) {
-                                          if (context.mounted) {
-                                            showGeneralDialog(
-                                              context: context,
-                                              barrierDismissible: true,
-                                              barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-                                              pageBuilder: (BuildContext
-                                              context,
-                                                  Animation<double>
-                                                  animation,
-                                                  Animation<double>
-                                                  secondaryAnimation) {
-                                                return UpdateNoteDialog(index: index);
-                                              },
-                                              transitionBuilder:
-                                                  (context, animation, secondaryAnimation, child) {
-                                                var fadeAnimation = CurvedAnimation(
-                                                    parent: animation, curve: Curves.easeInOutSine);
-                                                var scaleAnimation =
-                                                Tween<double>(begin: 0.8, end: 1).animate(fadeAnimation);
-                                                return FadeTransition(
-                                                  opacity: fadeAnimation,
-                                                  child: ScaleTransition(
-                                                    scale: scaleAnimation,
-                                                    child: child,
-                                                  ),
-                                                );
-                                              },
-                                            );
-                                          }
+                                      Result status = await notes
+                                          .authenticate(notes.notes[index]);
+                                      if (status is Success) {
+                                        if (context.mounted) {
+                                          showGeneralDialog(
+                                            context: context,
+                                            barrierDismissible: true,
+                                            barrierLabel:
+                                                MaterialLocalizations.of(
+                                                        context)
+                                                    .modalBarrierDismissLabel,
+                                            pageBuilder: (BuildContext context,
+                                                Animation<double> animation,
+                                                Animation<double>
+                                                    secondaryAnimation) {
+                                              return UpdateNoteDialog(
+                                                  index: index);
+                                            },
+                                            transitionBuilder: (context,
+                                                animation,
+                                                secondaryAnimation,
+                                                child) {
+                                              var fadeAnimation =
+                                                  CurvedAnimation(
+                                                      parent: animation,
+                                                      curve:
+                                                          Curves.easeInOutSine);
+                                              var scaleAnimation =
+                                                  Tween<double>(
+                                                          begin: 0.8, end: 1)
+                                                      .animate(fadeAnimation);
+                                              return FadeTransition(
+                                                opacity: fadeAnimation,
+                                                child: ScaleTransition(
+                                                  scale: scaleAnimation,
+                                                  child: child,
+                                                ),
+                                              );
+                                            },
+                                          );
                                         }
-                                      } else {
-                                        showGeneralDialog(
-                                          context: context,
-                                          barrierDismissible: true,
-                                          barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-                                          pageBuilder: (BuildContext
-                                          context,
-                                              Animation<double>
-                                              animation,
-                                              Animation<double>
-                                              secondaryAnimation) {
-                                            return UpdateNoteDialog(index: index);
-                                          },
-                                          transitionBuilder:
-                                              (context, animation, secondaryAnimation, child) {
-                                            var fadeAnimation = CurvedAnimation(
-                                                parent: animation, curve: Curves.easeInOutSine);
-                                            var scaleAnimation =
-                                            Tween<double>(begin: 0.8, end: 1).animate(fadeAnimation);
-                                            return FadeTransition(
-                                              opacity: fadeAnimation,
-                                              child: ScaleTransition(
-                                                scale: scaleAnimation,
-                                                child: child,
-                                              ),
-                                            );
-                                          },
-                                        );
+                                      } else if (status is Failure) {
+                                        FeedbackToast.error(status.message);
                                       }
                                     },
                                   ),

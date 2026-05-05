@@ -9,8 +9,9 @@ import '../services/lock_manager.dart';
 
 class NotesViewModel with ChangeNotifier {
   List<Note> notes = [];
-
+  late Note tempNote;
   final NotesRepository notesRepository = NotesRepository();
+  final AuthenticationService authService = AuthenticationService();
 
   Future<void> get() async {
     notes = await notesRepository.getNotes();
@@ -37,6 +38,45 @@ class NotesViewModel with ChangeNotifier {
   Future<void> deleteNote(int id) async {
     await notesRepository.deleteNote(id);
     get();
+  }
+  void newTempNote(){
+    tempNote = Note(title: "", body: "", titleColor: "FFFFFF", coverColor: "1E1E1E", protected: 0);
+    notifyListeners();
+  }
+
+  void clearTempNote(){
+    tempNote = Note(title: "", body: "", titleColor: "FFFFFF", coverColor: "1E1E1E", protected: 0);
+  }
+
+  void setTempNoteTitle(String title){
+    tempNote.title=title;
+    notifyListeners();
+  }
+  void setTempNoteTitleColor(String titleColor){
+    tempNote.titleColor=titleColor;
+    notifyListeners();
+  }
+  void setTempNoteCoverColor(String coverColor){
+    tempNote.coverColor=coverColor;
+    notifyListeners();
+  }
+
+  Future<Result> toggleTempNoteProtection() async {
+
+    if (tempNote.protected == 0) {
+      bool isBioAvailable = await authService.authenticate();
+      if (isBioAvailable) {
+        tempNote.protected=1;
+        notifyListeners();
+        return Success("Fingerprint Enabled");
+      } else{
+        return Failure("Authentication Failed");
+      }
+    } else{
+      tempNote.protected=0;
+      notifyListeners();
+      return Info("Fingerprint Disabled");
+    }
   }
 
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
@@ -86,7 +126,7 @@ class NotesViewModel with ChangeNotifier {
         final existingNotes = overwrite ? [] : oldNotes;
         for (final note in importedNotes) {
           final exists = existingNotes.any((e) =>
-          e.title == note.title &&
+              e.title == note.title &&
               e.body == note.body &&
               e.titleColor == note.titleColor &&
               e.coverColor == note.coverColor &&
@@ -112,4 +152,18 @@ class NotesViewModel with ChangeNotifier {
       await notesRepository.insertNote(note);
     }
   }
+
+  Future<Result> authenticate(Note note) async {
+    if (note.protected == 1) {
+      bool isAuthenticated = await authService.authenticate();
+      if (isAuthenticated) {
+        return Success("Authenticated");
+      } else {
+        return Failure("Authentication Failed");
+      }
+    } else {
+      return Success("Authenticated");
+    }
+  }
+
 }
