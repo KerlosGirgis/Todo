@@ -3,7 +3,7 @@ import '../models/user_profile.dart';
 import 'database_service.dart';
 
 class UserRepository{
-  final Database db = DatabaseService.db;
+  Database get db => DatabaseService.db;
 
   Future<void> insertUser(UserProfile user) {
     return db.insert('User', user.toMap());

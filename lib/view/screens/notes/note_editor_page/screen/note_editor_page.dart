@@ -5,8 +5,8 @@ import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
+import '../../../../../core/result.dart';
 import '../../../../../models/note.dart';
-import '../../../../../services/authentication_service.dart';
 
 class NoteEditorPage extends StatefulWidget {
   const NoteEditorPage({super.key, required this.note});
@@ -17,7 +17,6 @@ class NoteEditorPage extends StatefulWidget {
 }
 
 class _NoteEditorPageState extends State<NoteEditorPage> {
-  final AuthenticationService authService = AuthenticationService();
   final UndoHistoryController _undoHistoryController = UndoHistoryController();
   TextEditingController bodyController = TextEditingController();
   @override
@@ -137,22 +136,15 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                             )),
                         IconButton(
                             onPressed: () async {
-                              if (widget.note.protected == 1) {
-                                bool isAuthenticated =
-                                    await authService.authenticate();
-                                if (isAuthenticated) {
-                                  notes.deleteNote(widget.note.id!);
-                                  if (context.mounted) {
-                                    Navigator.pop(context);
-                                  }
-                                } else {
-                                  FeedbackToast.error("Authentication Failed");
+                              final Result status = await notes.deleteNote(widget.note);
+                              if(status is Info){
+                                if (context.mounted) {
+                                  Navigator.pop(context);
                                 }
-                              } else {
-                                Provider.of<NotesViewModel>(context,
-                                        listen: false)
-                                    .deleteNote(widget.note.id!);
-                                Navigator.pop(context);
+                                FeedbackToast.info(status.message);
+                              }
+                              else if(status is Failure){
+                                FeedbackToast.error(status.message);
                               }
                             },
                             icon: const Icon(

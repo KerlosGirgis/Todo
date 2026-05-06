@@ -16,16 +16,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
-import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/notification_service.dart';
-import 'package:todo/services/verse_manager.dart';
 import 'package:todo/view/screens/profile/lock_page/screen/lock_page.dart';
 import 'package:todo/view/screens/notes/notes_page/screen/notes_page.dart';
 import 'package:todo/view/screens/tasks/todo_page/screen/todo_page.dart';
+import 'package:todo/view_model/auth_view_model.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
-import 'package:todo/services/database_service.dart';
 import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -37,28 +35,15 @@ void main() async {
     ),
   );
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  final DatabaseService dbService = DatabaseService();
   await NotificationService.init();
   tz.initializeTimeZones();
-  final bool initialized = await AuthenticationService().initializeApp();
-  if (initialized) {
-    await dbService.openDb();
-    await VerseManager.loadVerses();
-    runApp(MultiProvider(providers: [
-      ChangeNotifierProvider(create: (_) => UserViewModel()),
-      ChangeNotifierProvider(create: (_) => TasksViewModel()),
-      ChangeNotifierProvider(create: (_) => NotesViewModel()),
-    ], child: const MyApp()));
-  } else {
-    runApp(MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          fontFamily: 'arial',
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300),
-          useMaterial3: true,
-        ),
-        home: const LockPage()));
-  }
+
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (_) => AuthViewModel()..initializeApp()),
+    ChangeNotifierProvider(create: (_) => UserViewModel()),
+    ChangeNotifierProvider(create: (_) => TasksViewModel()),
+    ChangeNotifierProvider(create: (_) => NotesViewModel()),
+  ], child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -74,15 +59,27 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade300),
           useMaterial3: true,
         ),
-        home: FutureBuilder(
-          future: Provider.of<UserViewModel>(context, listen: false).get(),
-          builder: (context, asyncSnapshot) {
-            return Consumer<UserViewModel>(
-              builder: (context,user,child) {
-                return user.user.startPage==0?TodoPage():NotesPage();
-              }
-            );
-          }
+        home: Consumer<AuthViewModel>(
+          builder: (context, auth, _) {
+            if (auth.status == AuthStatus.initializing) {
+              final brightness = MediaQuery.of(context).platformBrightness;
+              final bool isDarkMode = brightness == Brightness.dark;
+              return Scaffold(
+                  backgroundColor: isDarkMode ? const Color(0xff121212) : const Color(0xffEDEDED),                  body: const Center(child: CircularProgressIndicator()));
+            }
+            if (auth.status == AuthStatus.unauthenticated) {
+              return const LockPage();
+            }
+            return FutureBuilder(
+                future:
+                    Provider.of<UserViewModel>(context, listen: false).get(),
+                builder: (context, asyncSnapshot) {
+                  return Consumer<UserViewModel>(
+                      builder: (context, user, child) {
+                    return user.user.startPage == 0 ? TodoPage() : NotesPage();
+                  });
+                });
+          },
         ),
       ),
     );

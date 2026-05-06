@@ -35,12 +35,37 @@ class NotesViewModel with ChangeNotifier {
     get();
   }
 
-  Future<void> deleteNote(int id) async {
-    await notesRepository.deleteNote(id);
-    get();
+  Future<Result> deleteNote(Note note) async {
+    final isAuthenticated = await authenticate(note);
+    if(isAuthenticated is Success){
+      try{
+        await notesRepository.deleteNote(note.id!);
+        get();
+        return Info("Note Deleted");
+      }
+      catch(e){
+        return Failure("Couldn't delete the note");
+      }
+
+    }
+    else{
+      return Failure("Authentication Failed");
+    }
   }
   void newTempNote(){
     tempNote = Note(title: "", body: "", titleColor: "FFFFFF", coverColor: "1E1E1E", protected: 0);
+    notifyListeners();
+  }
+
+  void setTempNote(Note note){
+    tempNote = Note(
+      id: note.id,
+      title: note.title,
+      body: note.body,
+      titleColor: note.titleColor,
+      coverColor: note.coverColor,
+      protected: note.protected,
+    );
     notifyListeners();
   }
 

@@ -29,6 +29,7 @@ class AuthenticationService {
     bool authenticated = await _auth.authenticate(
       localizedReason: 'Authenticate to access your To-Do app',
       biometricOnly: true,
+      persistAcrossBackgrounding: true,
     );
 
     if (authenticated) {

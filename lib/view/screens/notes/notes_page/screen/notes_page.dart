@@ -439,7 +439,7 @@ class _NotesPageState extends State<NotesPage> {
                                                 Animation<double>
                                                     secondaryAnimation) {
                                               return UpdateNoteDialog(
-                                                  index: index);
+                                                  note: notes.notes[index]);
                                             },
                                             transitionBuilder: (context,
                                                 animation,
