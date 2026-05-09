@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/reset_plot_dialog.dart';
 
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../view_model/user_view_model.dart';
 
 class Chart extends StatelessWidget {
@@ -37,8 +38,8 @@ class Chart extends StatelessWidget {
                       centerSpaceColor: Colors.transparent,
                       sections: [
                         PieChartSectionData(
-                          color: user.colorManager.wB
-                              ?.withValues(alpha: 0.4),
+                          color: context.colors.wB
+                              .withValues(alpha: 0.4),
                           value: 1,
                           title: "",
                           radius: finishedRadius,
@@ -64,8 +65,8 @@ class Chart extends StatelessWidget {
                           ),
                         ),
                         PieChartSectionData(
-                          color: user.colorManager.wB
-                              ?.withValues(alpha: 0.4),
+                          color: context.colors.wB
+                              .withValues(alpha: 0.4),
                           value: user.user.unFinished.toDouble(),
                           title:
                           "${((user.user.unFinished / (user.user.finished + user.user.unFinished)) * 100).floor()}%",
@@ -85,7 +86,7 @@ class Chart extends StatelessWidget {
                     style: TextStyle(
                       fontSize: fontSize,
                       fontWeight: FontWeight.bold,
-                      color: user.colorManager.wB,
+                      color: context.colors.wB,
                     ),
                   ),
                 ],

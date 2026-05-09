@@ -12,6 +12,7 @@ import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart'
 import 'package:todo/view/screens/notes/notes_page/widgets/add_note_dialog.dart';
 import 'package:todo/view/widgets/expandable_menu.dart';
 import 'package:todo/view/screens/notes/notes_page/widgets/reorder_notes_dialog.dart';
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../widgets/update_note_dialog.dart';
@@ -38,23 +39,23 @@ class _NotesPageState extends State<NotesPage> {
     return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return Scaffold(
-          backgroundColor: user.colorManager.pageBackground,
+          backgroundColor: context.colors.pageBackground,
           appBar: AppBar(
             surfaceTintColor: Colors.transparent,
             automaticallyImplyLeading: false,
-            backgroundColor: user.colorManager.pageBackground,
+            backgroundColor: context.colors.pageBackground,
             title: Text(
               "Notes",
               style: TextStyle(
                 fontSize: 30,
                 overflow: TextOverflow.ellipsis,
-                color: user.colorManager.wB,
+                color: context.colors.wB,
                 fontWeight: FontWeight.bold,
               ),
             ),
             actions: [
               ExpandableMenu(
-                  iconColor: user.colorManager.appBarIcons,
+                  iconColor: context.colors.appBarIcons,
                   animationSpeed: 500,
                   width:
                       MediaQuery.orientationOf(context) == Orientation.portrait
@@ -101,7 +102,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.reorder,
-                          color: user.colorManager.appBarIcons,
+                          color: context.colors.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () {
@@ -135,7 +136,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.settings_backup_restore,
-                          color: user.colorManager.appBarIcons,
+                          color: context.colors.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () async {
@@ -153,7 +154,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.backup,
-                          color: user.colorManager.appBarIcons,
+                          color: context.colors.appBarIcons,
                         )),
                     IconButton(
                         onPressed: () {
@@ -179,7 +180,7 @@ class _NotesPageState extends State<NotesPage> {
                         },
                         icon: Icon(
                           Icons.settings,
-                          color: user.colorManager.appBarIcons,
+                          color: context.colors.appBarIcons,
                         )),
                   ]),
               Flexible(child: const AppbarAvatar()),
@@ -192,9 +193,9 @@ class _NotesPageState extends State<NotesPage> {
               FloatingActionButton(
                   heroTag: 0,
                   backgroundColor:
-                      user.colorManager.floatingActionButtonBackground,
+                      context.colors.floatingActionButtonBackground,
                   foregroundColor:
-                      user.colorManager.floatingActionButtonForeground,
+                      context.colors.floatingActionButtonForeground,
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
@@ -220,9 +221,9 @@ class _NotesPageState extends State<NotesPage> {
               FloatingActionButton(
                 heroTag: 1,
                 backgroundColor:
-                    user.colorManager.floatingActionButtonBackground,
+                    context.colors.floatingActionButtonBackground,
                 foregroundColor:
-                    user.colorManager.floatingActionButtonForeground,
+                    context.colors.floatingActionButtonForeground,
                 onPressed: () {
                   showGeneralDialog(
                     context: context,

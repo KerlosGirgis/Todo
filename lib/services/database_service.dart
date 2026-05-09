@@ -1,6 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:todo/services/key_manager.dart';
+import 'package:todo/services/key_service.dart';
 
 
 class DatabaseService {
@@ -15,7 +15,7 @@ class DatabaseService {
   Future<Database> openDb() async {
     var databasesPath = await getDatabasesPath();
     String path = '$databasesPath/Database.db';
-    String? dbKey = await KeyManager().getOrCreateEncryptionKey();
+    String? dbKey = await KeyService().getOrCreateEncryptionKey();
     _db = await openDatabase(path,
         password: dbKey, version: _databaseVersion, onCreate: _onCreate,onUpgrade: _onUpgrade);
     return _db!;

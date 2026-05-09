@@ -5,6 +5,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/font_button.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/settings_button.dart';
 
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/user_view_model.dart';
@@ -133,7 +134,8 @@ class SettingsPageView extends StatelessWidget {
                                   onPressed: () {
                                     Provider.of<UserViewModel>(context,
                                             listen: false)
-                                        .changeLock().then((result){
+                                        .changeLock()
+                                        .then((result) {
                                       if (result is Success) {
                                         FeedbackToast.success(result.message);
                                       } else if (result is Failure) {
@@ -163,7 +165,7 @@ class SettingsPageView extends StatelessWidget {
                         "Start Page",
                         style: TextStyle(
                           fontSize: 26,
-                          color: user.colorManager.wB,
+                          color: context.colors.wB,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -201,21 +203,20 @@ class SettingsPageView extends StatelessWidget {
                           ),
                           side: WidgetStateProperty.resolveWith((states) {
                             return BorderSide(
-                              color:
-                                  user.colorManager.wB!.withValues(alpha: 0.35),
+                              color: context.colors.wB.withValues(alpha: 0.35),
                             );
                           }),
                           backgroundColor:
                               WidgetStateProperty.resolveWith((states) {
                             return states.contains(WidgetState.selected)
-                                ? user.colorManager.wB!.withValues(alpha: 0.18)
+                                ? context.colors.wB.withValues(alpha: 0.18)
                                 : Colors.transparent;
                           }),
                           foregroundColor:
                               WidgetStateProperty.resolveWith((states) {
                             return states.contains(WidgetState.selected)
-                                ? user.colorManager.wB
-                                : user.colorManager.wB!.withValues(alpha: 0.8);
+                                ? context.colors.wB
+                                : context.colors.wB.withValues(alpha: 0.8);
                           }),
                         ),
                       ),
@@ -227,7 +228,7 @@ class SettingsPageView extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 26,
-                          color: user.colorManager.wB,
+                          color: context.colors.wB,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -294,23 +295,21 @@ class SettingsPageView extends StatelessWidget {
                             ),
                             side: WidgetStateProperty.resolveWith((states) {
                               return BorderSide(
-                                color: user.colorManager.wB!
-                                    .withValues(alpha: 0.35),
+                                color:
+                                    context.colors.wB.withValues(alpha: 0.35),
                               );
                             }),
                             backgroundColor:
                                 WidgetStateProperty.resolveWith((states) {
                               return states.contains(WidgetState.selected)
-                                  ? user.colorManager.wB!
-                                      .withValues(alpha: 0.18)
+                                  ? context.colors.wB.withValues(alpha: 0.18)
                                   : Colors.transparent;
                             }),
                             foregroundColor:
                                 WidgetStateProperty.resolveWith((states) {
                               return states.contains(WidgetState.selected)
-                                  ? user.colorManager.wB
-                                  : user.colorManager.wB!
-                                      .withValues(alpha: 0.8);
+                                  ? context.colors.wB
+                                  : context.colors.wB.withValues(alpha: 0.8);
                             }),
                           ),
                         ),
@@ -337,7 +336,7 @@ class SettingsPageView extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.format_size_rounded,
-                                color: user.colorManager.wB, size: 32),
+                                color: context.colors.wB, size: 32),
                             Padding(padding: EdgeInsets.only(right: 10)),
                             AutoSizeText(
                               "Font Sizes",
@@ -345,7 +344,7 @@ class SettingsPageView extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
-                                color: user.colorManager.wB,
+                                color: context.colors.wB,
                               ),
                             ),
                           ],
@@ -362,7 +361,7 @@ class SettingsPageView extends StatelessWidget {
                                   showModalBottomSheet(
                                       context: context,
                                       backgroundColor:
-                                          user.colorManager.cardBackground,
+                                          context.colors.cardBackground,
                                       isScrollControlled: true,
                                       useSafeArea: true,
                                       builder: (BuildContext context) {
@@ -382,8 +381,7 @@ class SettingsPageView extends StatelessWidget {
                                                   Text(
                                                     "A",
                                                     style: TextStyle(
-                                                      color:
-                                                          user.colorManager.wB,
+                                                      color: context.colors.wB,
                                                       fontSize: 26 *
                                                           user.tempTasksTitleSize,
                                                     ),
@@ -424,9 +422,8 @@ class SettingsPageView extends StatelessWidget {
                                                                 .toString(),
                                                             style: TextStyle(
                                                                 fontSize: 24,
-                                                                color: user
-                                                                    .colorManager
-                                                                    .wB),
+                                                                color: context
+                                                                    .colors.wB),
                                                           ))
                                                     ],
                                                   ),
@@ -438,13 +435,26 @@ class SettingsPageView extends StatelessWidget {
                                                         Flexible(
                                                           child: Button(
                                                             onPressed: () {
-                                                              user.setTasksTitleSize().then((result){
-                                                                if (result is Success) {
-                                                                  FeedbackToast.success(result.message);
-                                                                } else if (result is Failure) {
-                                                                  FeedbackToast.error(result.message);
-                                                                } else if (result is Info) {
-                                                                  FeedbackToast.info(result.message);
+                                                              user
+                                                                  .setTasksTitleSize()
+                                                                  .then(
+                                                                      (result) {
+                                                                if (result
+                                                                    is Success) {
+                                                                  FeedbackToast
+                                                                      .success(
+                                                                          result
+                                                                              .message);
+                                                                } else if (result
+                                                                    is Failure) {
+                                                                  FeedbackToast
+                                                                      .error(result
+                                                                          .message);
+                                                                } else if (result
+                                                                    is Info) {
+                                                                  FeedbackToast
+                                                                      .info(result
+                                                                          .message);
                                                                 }
                                                               });
                                                             },
@@ -481,7 +491,7 @@ class SettingsPageView extends StatelessWidget {
                                   showModalBottomSheet(
                                       context: context,
                                       backgroundColor:
-                                          user.colorManager.cardBackground,
+                                          context.colors.cardBackground,
                                       isScrollControlled: true,
                                       useSafeArea: true,
                                       builder: (BuildContext context) {
@@ -501,8 +511,7 @@ class SettingsPageView extends StatelessWidget {
                                                   Text(
                                                     "A",
                                                     style: TextStyle(
-                                                      color:
-                                                          user.colorManager.wB,
+                                                      color: context.colors.wB,
                                                       fontSize: 20 *
                                                           user.tempTasksDescSize,
                                                     ),
@@ -543,9 +552,8 @@ class SettingsPageView extends StatelessWidget {
                                                                 .toString(),
                                                             style: TextStyle(
                                                                 fontSize: 24,
-                                                                color: user
-                                                                    .colorManager
-                                                                    .wB),
+                                                                color: context
+                                                                    .colors.wB),
                                                           ))
                                                     ],
                                                   ),
@@ -557,13 +565,26 @@ class SettingsPageView extends StatelessWidget {
                                                         Flexible(
                                                           child: Button(
                                                             onPressed: () {
-                                                              user.setTasksDescSize().then((result){
-                                                                if (result is Success) {
-                                                                  FeedbackToast.success(result.message);
-                                                                } else if (result is Failure) {
-                                                                  FeedbackToast.error(result.message);
-                                                                } else if (result is Info) {
-                                                                  FeedbackToast.info(result.message);
+                                                              user
+                                                                  .setTasksDescSize()
+                                                                  .then(
+                                                                      (result) {
+                                                                if (result
+                                                                    is Success) {
+                                                                  FeedbackToast
+                                                                      .success(
+                                                                          result
+                                                                              .message);
+                                                                } else if (result
+                                                                    is Failure) {
+                                                                  FeedbackToast
+                                                                      .error(result
+                                                                          .message);
+                                                                } else if (result
+                                                                    is Info) {
+                                                                  FeedbackToast
+                                                                      .info(result
+                                                                          .message);
                                                                 }
                                                               });
                                                             },
@@ -608,7 +629,7 @@ class SettingsPageView extends StatelessWidget {
                                   showModalBottomSheet(
                                       context: context,
                                       backgroundColor:
-                                          user.colorManager.cardBackground,
+                                          context.colors.cardBackground,
                                       isScrollControlled: true,
                                       useSafeArea: true,
                                       builder: (BuildContext context) {
@@ -628,8 +649,7 @@ class SettingsPageView extends StatelessWidget {
                                                   Text(
                                                     "A",
                                                     style: TextStyle(
-                                                      color:
-                                                          user.colorManager.wB,
+                                                      color: context.colors.wB,
                                                       fontSize: 24 *
                                                           user.tempNotesTitleSize,
                                                     ),
@@ -670,9 +690,8 @@ class SettingsPageView extends StatelessWidget {
                                                                 .toString(),
                                                             style: TextStyle(
                                                                 fontSize: 24,
-                                                                color: user
-                                                                    .colorManager
-                                                                    .wB),
+                                                                color: context
+                                                                    .colors.wB),
                                                           ))
                                                     ],
                                                   ),
@@ -684,13 +703,26 @@ class SettingsPageView extends StatelessWidget {
                                                         Flexible(
                                                           child: Button(
                                                             onPressed: () {
-                                                              user.setNotesTitleSize().then((result){
-                                                                if (result is Success) {
-                                                                  FeedbackToast.success(result.message);
-                                                                } else if (result is Failure) {
-                                                                  FeedbackToast.error(result.message);
-                                                                } else if (result is Info) {
-                                                                  FeedbackToast.info(result.message);
+                                                              user
+                                                                  .setNotesTitleSize()
+                                                                  .then(
+                                                                      (result) {
+                                                                if (result
+                                                                    is Success) {
+                                                                  FeedbackToast
+                                                                      .success(
+                                                                          result
+                                                                              .message);
+                                                                } else if (result
+                                                                    is Failure) {
+                                                                  FeedbackToast
+                                                                      .error(result
+                                                                          .message);
+                                                                } else if (result
+                                                                    is Info) {
+                                                                  FeedbackToast
+                                                                      .info(result
+                                                                          .message);
                                                                 }
                                                               });
                                                             },
@@ -727,7 +759,7 @@ class SettingsPageView extends StatelessWidget {
                                   showModalBottomSheet(
                                       context: context,
                                       backgroundColor:
-                                          user.colorManager.cardBackground,
+                                          context.colors.cardBackground,
                                       isScrollControlled: true,
                                       useSafeArea: true,
                                       builder: (BuildContext context) {
@@ -747,8 +779,7 @@ class SettingsPageView extends StatelessWidget {
                                                   Text(
                                                     "A",
                                                     style: TextStyle(
-                                                      color:
-                                                          user.colorManager.wB,
+                                                      color: context.colors.wB,
                                                       fontSize: 26 *
                                                           user.tempNotesTextSize,
                                                     ),
@@ -789,9 +820,8 @@ class SettingsPageView extends StatelessWidget {
                                                                 .toString(),
                                                             style: TextStyle(
                                                                 fontSize: 24,
-                                                                color: user
-                                                                    .colorManager
-                                                                    .wB),
+                                                                color: context
+                                                                    .colors.wB),
                                                           ))
                                                     ],
                                                   ),
@@ -803,13 +833,26 @@ class SettingsPageView extends StatelessWidget {
                                                         Flexible(
                                                           child: Button(
                                                             onPressed: () {
-                                                              user.setNotesTextSize().then((result){
-                                                                if (result is Success) {
-                                                                  FeedbackToast.success(result.message);
-                                                                } else if (result is Failure) {
-                                                                  FeedbackToast.error(result.message);
-                                                                } else if (result is Info) {
-                                                                  FeedbackToast.info(result.message);
+                                                              user
+                                                                  .setNotesTextSize()
+                                                                  .then(
+                                                                      (result) {
+                                                                if (result
+                                                                    is Success) {
+                                                                  FeedbackToast
+                                                                      .success(
+                                                                          result
+                                                                              .message);
+                                                                } else if (result
+                                                                    is Failure) {
+                                                                  FeedbackToast
+                                                                      .error(result
+                                                                          .message);
+                                                                } else if (result
+                                                                    is Info) {
+                                                                  FeedbackToast
+                                                                      .info(result
+                                                                          .message);
                                                                 }
                                                               });
                                                             },
@@ -855,7 +898,7 @@ class SettingsPageView extends StatelessWidget {
             count: 3,
             effect: SlideEffect(
               activeDotColor: Color(0xff3D5AFE),
-              dotColor: user.colorManager.wB!.withValues(alpha: 0.35),
+              dotColor: context.colors.wB.withValues(alpha: 0.35),
             ),
           ),
         ],

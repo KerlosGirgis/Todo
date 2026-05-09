@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class KeyManager {
+class KeyService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<String> getOrCreateEncryptionKey() async {

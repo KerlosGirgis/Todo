@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
-import 'package:todo/view_model/user_view_model.dart';
 
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../widgets/button.dart';
@@ -16,8 +16,8 @@ class UpdateTaskDialog extends StatelessWidget {
   final int index;
   @override
   Widget build(BuildContext context) {
-    return Consumer2<UserViewModel, TasksViewModel>(
-      builder: (context, user, tasks, child) {
+    return Consumer<TasksViewModel>(
+      builder: (context, tasks, child) {
         String date = tasks.items[index].date;
         String time = tasks.items[index].time;
         TextEditingController titleController = TextEditingController();
@@ -29,7 +29,7 @@ class UpdateTaskDialog extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(50),
             ),
-            backgroundColor: user.colorManager.pageBackground,
+            backgroundColor: context.colors.pageBackground,
             scrollable: true,
             elevation: 2,
             title: Row(
@@ -39,12 +39,12 @@ class UpdateTaskDialog extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: user.colorManager.dialogIconContainer,
+                      color: context.colors.dialogIconContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.edit,
-                      color: user.colorManager.dialogIcon,
+                      color: context.colors.dialogIcon,
                     ),
                   ),
                 ),
@@ -57,7 +57,7 @@ class UpdateTaskDialog extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 32,
-                        color: user.colorManager.wB),
+                        color: context.colors.wB),
                   ),
                 ),
                 Expanded(
@@ -67,10 +67,10 @@ class UpdateTaskDialog extends StatelessWidget {
                     },
                     icon: Icon(
                       Icons.close,
-                      color: user.colorManager.dialogExitIcon,
+                      color: context.colors.dialogExitIcon,
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: user.colorManager.dialogExitContainer,
+                      backgroundColor: context.colors.dialogExitContainer,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
@@ -86,16 +86,16 @@ class UpdateTaskDialog extends StatelessWidget {
                 TextField(
                   controller: titleController,
                   maxLines: 1,
-                  style: TextStyle(fontSize: 22, color: user.colorManager.wB),
+                  style: TextStyle(fontSize: 22, color: context.colors.wB),
                   decoration: InputDecoration(
                     labelText: "Title",
                     labelStyle:
-                        TextStyle(fontSize: 30, color: user.colorManager.wB),
+                        TextStyle(fontSize: 30, color: context.colors.wB),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none),
                     filled: true,
-                    fillColor: user.colorManager.cardBackground,
+                    fillColor: context.colors.cardBackground,
                   ),
                 ),
                 Padding(
@@ -105,16 +105,16 @@ class UpdateTaskDialog extends StatelessWidget {
                   controller: descController,
                   keyboardType: TextInputType.multiline,
                   maxLines: 4,
-                  style: TextStyle(fontSize: 20, color: user.colorManager.wB),
+                  style: TextStyle(fontSize: 20, color: context.colors.wB),
                   decoration: InputDecoration(
                     labelText: "Description",
                     labelStyle:
-                        TextStyle(fontSize: 30, color: user.colorManager.wB),
+                        TextStyle(fontSize: 30, color: context.colors.wB),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none),
                     filled: true,
-                    fillColor: user.colorManager.cardBackground,
+                    fillColor: context.colors.cardBackground,
                   ),
                 ),
                 Padding(
@@ -155,7 +155,7 @@ class UpdateTaskDialog extends StatelessWidget {
                             FeedbackToast.info("Date Cleared");
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: user.colorManager.cardBackground,
+                            backgroundColor: context.colors.cardBackground,
                             shape: const RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(50)),
@@ -168,7 +168,7 @@ class UpdateTaskDialog extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.calendar_month,
-                                  color: user.colorManager.wB,
+                                  color: context.colors.wB,
                                 ),
                                 Spacer(
                                   flex: 1,
@@ -180,7 +180,7 @@ class UpdateTaskDialog extends StatelessWidget {
                                       date,
                                       style: TextStyle(
                                         fontSize: 18,
-                                        color: user.colorManager.wB,
+                                        color: context.colors.wB,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -222,7 +222,7 @@ class UpdateTaskDialog extends StatelessWidget {
                       FeedbackToast.info("Time Cleared");
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: user.colorManager.cardBackground,
+                      backgroundColor: context.colors.cardBackground,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(50)),
                       ),
@@ -234,7 +234,7 @@ class UpdateTaskDialog extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.access_time_filled_sharp,
-                            color: user.colorManager.wB,
+                            color: context.colors.wB,
                           ),
                           Spacer(
                             flex: 1,
@@ -246,7 +246,7 @@ class UpdateTaskDialog extends StatelessWidget {
                                 time,
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: user.colorManager.wB,
+                                  color: context.colors.wB,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

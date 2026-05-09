@@ -1,4 +1,4 @@
-class AvatarManager{
+class AvatarUtils{
   static String getAvatar(String num){
     switch(num){
       case "000" :

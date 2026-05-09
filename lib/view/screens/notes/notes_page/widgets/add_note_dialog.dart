@@ -1,7 +1,7 @@
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/view_model/user_view_model.dart';
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/notes_view_model.dart';
@@ -32,15 +32,15 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<UserViewModel, NotesViewModel>(
-        builder: (context, user, note, child) {
+    return Consumer<NotesViewModel>(
+        builder: (context, note, child) {
       return AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50),
         ),
         elevation: 2,
         scrollable: true,
-        backgroundColor: user.colorManager.pageBackground,
+        backgroundColor: context.colors.pageBackground,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
@@ -48,12 +48,12 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: user.colorManager.dialogIconContainer,
+                  color: context.colors.dialogIconContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.note_add,
-                  color: user.colorManager.dialogIcon,
+                  color: context.colors.dialogIcon,
                 ),
               ),
             ),
@@ -66,7 +66,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
-                    color: user.colorManager.wB),
+                    color: context.colors.wB),
               ),
             ),
             Expanded(
@@ -75,9 +75,9 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                   Navigator.pop(context);
                 },
                 icon:
-                    Icon(Icons.close, color: user.colorManager.dialogExitIcon),
+                    Icon(Icons.close, color: context.colors.dialogExitIcon),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: user.colorManager.dialogExitContainer,
+                  backgroundColor: context.colors.dialogExitContainer,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
@@ -93,18 +93,18 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
           children: [
             TextField(
               maxLines: 1,
-              style: TextStyle(fontSize: 22, color: user.colorManager.wB),
+              style: TextStyle(fontSize: 22, color: context.colors.wB),
               decoration: InputDecoration(
                 labelText: "Title",
                 labelStyle: TextStyle(
                   fontSize: 30,
-                  color: user.colorManager.wB,
+                  color: context.colors.wB,
                 ),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(13),
                     borderSide: BorderSide.none),
                 filled: true,
-                fillColor: user.colorManager.cardBackground,
+                fillColor: context.colors.cardBackground,
               ),
               onChanged: (v){
                 note.setTempNoteTitle(v);
@@ -123,7 +123,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                 FeedbackToast.info("Title Color Cleared");
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: user.colorManager.cardBackground,
+                backgroundColor: context.colors.cardBackground,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
@@ -135,7 +135,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   Icon(Icons.format_color_text_rounded,
-                      color: user.colorManager.wB, size: 24),
+                      color: context.colors.wB, size: 24),
                   Spacer(
                     flex: 1,
                   ),
@@ -146,7 +146,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
-                          TextStyle(fontSize: 24, color: user.colorManager.wB),
+                          TextStyle(fontSize: 24, color: context.colors.wB),
                     ),
                   ),
                   Flexible(
@@ -185,7 +185,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                 FeedbackToast.info("Cover Color Cleared");
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: user.colorManager.cardBackground,
+                backgroundColor: context.colors.cardBackground,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
@@ -197,7 +197,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   Icon(Icons.color_lens_rounded,
-                      color: user.colorManager.wB, size: 24),
+                      color: context.colors.wB, size: 24),
                   Spacer(
                     flex: 1,
                   ),
@@ -208,7 +208,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
-                          TextStyle(fontSize: 24, color: user.colorManager.wB),
+                          TextStyle(fontSize: 24, color: context.colors.wB),
                     ),
                   ),
                   Flexible(
@@ -244,7 +244,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: user.colorManager.cardBackground,
+                  backgroundColor: context.colors.cardBackground,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
@@ -254,7 +254,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.fingerprint_rounded,
-                        color: user.colorManager.wB, size: 24),
+                        color: context.colors.wB, size: 24),
                     Spacer(
                       flex: 1,
                     ),
@@ -266,7 +266,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 24, color: user.colorManager.wB),
+                            fontSize: 24, color: context.colors.wB),
                       ),
                     ),
                     Spacer(

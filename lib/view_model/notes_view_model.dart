@@ -1,11 +1,11 @@
 import 'package:home_widget/home_widget.dart';
 import 'package:todo/core/result.dart';
-import 'package:todo/services/notes_repository.dart';
+import 'package:todo/repositories/notes_repository.dart';
 import '../models/note.dart';
 import '../services/authentication_service.dart';
 import 'package:flutter/material.dart';
 import '../services/file_service.dart';
-import '../services/lock_manager.dart';
+import '../services/lock_service.dart';
 
 class NotesViewModel with ChangeNotifier {
   List<Note> notes = [];
@@ -118,7 +118,7 @@ class NotesViewModel with ChangeNotifier {
   }
 
   Future<Result> backup() async {
-    if (await LockManager().isLockEnabled()) {
+    if (await LockService().isLockEnabled()) {
       final isAuth = await AuthenticationService().authenticate();
       if (!isAuth) {
         return Failure("Authentication Failed");

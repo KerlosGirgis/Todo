@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../models/note.dart';
-import 'database_service.dart';
+import '../services/database_service.dart';
 
 class NotesRepository {
   final Database db = DatabaseService.db;

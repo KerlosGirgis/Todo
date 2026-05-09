@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../../services/avatar_manager.dart';
+import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/utils/avatar_utils.dart';
 import '../../../../../view_model/user_view_model.dart';
 import 'avatars_list_dialog.dart';
 
@@ -51,7 +52,7 @@ class UserAvatar extends StatelessWidget {
               ),
               child: CircleAvatar(
                 backgroundImage: user.user.pic.startsWith("0")
-                    ? AssetImage(AvatarManager.getAvatar(user.user.pic))
+                    ? AssetImage(AvatarUtils.getAvatar(user.user.pic))
                     : FileImage(File(user.user.pic)) as ImageProvider,
                 radius:
                     MediaQuery.of(context).orientation == Orientation.portrait
@@ -85,7 +86,7 @@ class UserAvatar extends StatelessWidget {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(25),
                               ),
-                              backgroundColor: user.colorManager.pageBackground,
+                              backgroundColor: context.colors.pageBackground,
                               content: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -104,7 +105,7 @@ class UserAvatar extends StatelessWidget {
                                                   9,
                                               backgroundColor: Colors.transparent,
                                               child: Image.asset(
-                                                  AvatarManager.getAvatar("000")
+                                                  AvatarUtils.getAvatar("000")
                                               ),
                                             ),
                                             onTap: () {
@@ -126,7 +127,7 @@ class UserAvatar extends StatelessWidget {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
-                                                color: user.colorManager.wB,
+                                                color: context.colors.wB,
                                               fontSize: 22,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -161,7 +162,7 @@ class UserAvatar extends StatelessWidget {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
-                                              color: user.colorManager.wB,
+                                              color: context.colors.wB,
                                               fontSize: 22,
                                               fontWeight: FontWeight.bold,
                                             ),

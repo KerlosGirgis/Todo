@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/services/file_service.dart';
-import 'package:todo/services/tasks_repository.dart';
+import 'package:todo/repositories/tasks_repository.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import '../core/errors/exceptions/notification_exception.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
-import '../services/lock_manager.dart';
+import '../services/lock_service.dart';
 import '../services/notification_service.dart';
 
 class TasksViewModel with ChangeNotifier {
@@ -122,7 +122,7 @@ class TasksViewModel with ChangeNotifier {
   }
 
   Future<Result> backup() async {
-    if (await LockManager().isLockEnabled()) {
+    if (await LockService().isLockEnabled()) {
       final isAuth = await AuthenticationService().authenticate();
       if (!isAuth) {
         return Failure("Authentication Failed");

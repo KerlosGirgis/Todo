@@ -2,8 +2,8 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/notes_view_model.dart';
-import 'package:todo/view_model/user_view_model.dart';
 
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
@@ -24,10 +24,9 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<NotesViewModel>().setTempNote(widget.note);
-      titleController.text=widget.note.title;
+      titleController.text = widget.note.title;
       titleController.addListener(() {
-        context.read<NotesViewModel>()
-            .setTempNoteTitle(titleController.text);
+        context.read<NotesViewModel>().setTempNoteTitle(titleController.text);
       });
     });
   }
@@ -41,11 +40,11 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<UserViewModel, NotesViewModel>(
-      builder: (context, user, notes, child) {
+    return Consumer<NotesViewModel>(
+      builder: (context, notes, child) {
         return AlertDialog(
           scrollable: true,
-          backgroundColor: user.colorManager.pageBackground,
+          backgroundColor: context.colors.pageBackground,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),
           ),
@@ -57,12 +56,12 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: user.colorManager.dialogIconContainer,
+                    color: context.colors.dialogIconContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.edit_note,
-                    color: user.colorManager.dialogIcon,
+                    color: context.colors.dialogIcon,
                   ),
                 ),
               ),
@@ -75,7 +74,7 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 32,
-                      color: user.colorManager.wB),
+                      color: context.colors.wB),
                 ),
               ),
               Expanded(
@@ -83,10 +82,9 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.close,
-                      color: user.colorManager.dialogExitIcon),
+                  icon: Icon(Icons.close, color: context.colors.dialogExitIcon),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: user.colorManager.dialogExitContainer,
+                    backgroundColor: context.colors.dialogExitContainer,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
@@ -103,17 +101,15 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
               TextField(
                 controller: titleController,
                 maxLines: 1,
-                style: TextStyle(
-                    fontSize: 22, color: user.colorManager.wB),
+                style: TextStyle(fontSize: 22, color: context.colors.wB),
                 decoration: InputDecoration(
                   labelText: "Title",
-                  labelStyle: TextStyle(
-                      fontSize: 30, color: user.colorManager.wB),
+                  labelStyle: TextStyle(fontSize: 30, color: context.colors.wB),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(13),
                       borderSide: BorderSide.none),
                   filled: true,
-                  fillColor: user.colorManager.cardBackground,
+                  fillColor: context.colors.cardBackground,
                 ),
               ),
               ElevatedButton(
@@ -129,19 +125,19 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                   FeedbackToast.info("Title Color Cleared");
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: user.colorManager.cardBackground,
+                  backgroundColor: context.colors.cardBackground,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   elevation: 1,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Icon(Icons.format_color_text_rounded,
-                        color: user.colorManager.wB, size: 24),
+                        color: context.colors.wB, size: 24),
                     Spacer(
                       flex: 1,
                     ),
@@ -150,9 +146,8 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                       child: Text(
                         overflow: TextOverflow.ellipsis,
                         "Title ",
-                        style: TextStyle(
-                            fontSize: 24,
-                            color: user.colorManager.wB),
+                        style:
+                            TextStyle(fontSize: 24, color: context.colors.wB),
                       ),
                     ),
                     Flexible(
@@ -190,19 +185,19 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                   FeedbackToast.info("Cover Color Cleared");
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: user.colorManager.cardBackground,
+                  backgroundColor: context.colors.cardBackground,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   elevation: 1,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Icon(Icons.color_lens_rounded,
-                        color: user.colorManager.wB, size: 24),
+                        color: context.colors.wB, size: 24),
                     Spacer(
                       flex: 1,
                     ),
@@ -211,9 +206,8 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                       child: Text(
                         "Cover ",
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 24,
-                            color: user.colorManager.wB),
+                        style:
+                            TextStyle(fontSize: 24, color: context.colors.wB),
                       ),
                     ),
                     Flexible(
@@ -248,7 +242,7 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: user.colorManager.cardBackground,
+                    backgroundColor: context.colors.cardBackground,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
@@ -258,7 +252,7 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Icon(Icons.fingerprint_rounded,
-                          color: user.colorManager.wB, size: 24),
+                          color: context.colors.wB, size: 24),
                       Spacer(
                         flex: 1,
                       ),
@@ -268,9 +262,8 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                         child: Text(
                           "Fingerprint",
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: 24,
-                              color: user.colorManager.wB),
+                          style:
+                              TextStyle(fontSize: 24, color: context.colors.wB),
                         ),
                       ),
                       Spacer(
@@ -282,7 +275,7 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                             activeThumbColor: Color(0xff3D5AFE),
                             onChanged: (_) async {
                               Result status =
-                              await notes.toggleTempNoteProtection();
+                                  await notes.toggleTempNoteProtection();
                               if (status is Failure) {
                                 FeedbackToast.error(status.message);
                               }
@@ -317,7 +310,9 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
                         FeedbackToast.error("Title can't be empty");
                         return;
                       }
-                      await context.read<NotesViewModel>().updateNote(notes.tempNote);
+                      await context
+                          .read<NotesViewModel>()
+                          .updateNote(notes.tempNote);
                       FeedbackToast.info("Note Updated");
                       if (context.mounted) {
                         Navigator.pop(context);
@@ -337,4 +332,3 @@ class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
     );
   }
 }
-

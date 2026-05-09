@@ -4,7 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class VerseManager {
+class VerseService {
   static List<String>? _verses;
   static String installId="";
 

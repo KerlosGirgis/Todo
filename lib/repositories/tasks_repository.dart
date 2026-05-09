@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../models/todo_item.dart';
-import 'database_service.dart';
+import '../services/database_service.dart';
 
 class TasksRepository{
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../widgets/button.dart';
 
 class ResetPlotDialog extends StatelessWidget {
@@ -21,7 +22,7 @@ class ResetPlotDialog extends StatelessWidget {
             borderRadius:
             BorderRadius.circular(25),
           ),
-          backgroundColor: user.colorManager
+          backgroundColor: context.colors
               .pageBackground,
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -36,7 +37,7 @@ class ResetPlotDialog extends StatelessWidget {
                       fontSize: 26,
                       fontWeight:
                       FontWeight.w600,
-                      color: user.colorManager
+                      color: context.colors
                           .wB
                   ),
                   maxLines: 2,

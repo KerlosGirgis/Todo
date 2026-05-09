@@ -1,6 +1,6 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../models/user_profile.dart';
-import 'database_service.dart';
+import '../services/database_service.dart';
 
 class UserRepository{
   Database get db => DatabaseService.db;

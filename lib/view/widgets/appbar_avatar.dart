@@ -4,9 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view_model/user_view_model.dart';
-import 'package:todo/services/verse_manager.dart';
+import 'package:todo/services/verse_service.dart';
 
-import '../../services/avatar_manager.dart';
+import '../../core/extensions/theme_extensions.dart';
+import '../../core/utils/avatar_utils.dart';
 
 class AppbarAvatar extends StatelessWidget {
   const AppbarAvatar({
@@ -30,7 +31,7 @@ class AppbarAvatar extends StatelessWidget {
               radius: 18,
               backgroundColor: Colors.black,
               backgroundImage: user.user.pic.startsWith("0")
-                  ? AssetImage(AvatarManager.getAvatar(user.user.pic))
+                  ? AssetImage(AvatarUtils.getAvatar(user.user.pic))
                   : FileImage(File(user.user.pic)) as ImageProvider,
             ),
           ),
@@ -51,7 +52,7 @@ class AppbarAvatar extends StatelessWidget {
                         borderRadius: BorderRadius.circular(25),
                       ),
                       backgroundColor:
-                          user.colorManager.cardBackground,
+                          context.colors.cardBackground,
                       title: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -89,7 +90,7 @@ class AppbarAvatar extends StatelessWidget {
                               ),
                               child: CircleAvatar(
                                 backgroundImage: user.user.pic.startsWith("0")
-                                    ? AssetImage(AvatarManager.getAvatar(user.user.pic))
+                                    ? AssetImage(AvatarUtils.getAvatar(user.user.pic))
                                     : FileImage(File(user.user.pic)) as ImageProvider,
                                 radius: MediaQuery.of(context).orientation == Orientation.portrait
                                     ? MediaQuery.sizeOf(context).width / 4
@@ -126,7 +127,7 @@ class AppbarAvatar extends StatelessWidget {
                               ? GestureDetector(
                                   onLongPress: () {
                                     Clipboard.setData(ClipboardData(
-                                            text: VerseManager.getDailyVerse()))
+                                            text: VerseService.getDailyVerse()))
                                         .then((_) {
                                       FeedbackToast.info("Verse copied to clipboard");
                                     });
@@ -158,7 +159,7 @@ class AppbarAvatar extends StatelessWidget {
                                           ),
                                           const SizedBox(height: 12),
                                           Text(
-                                            VerseManager.getDailyVerse(),
+                                            VerseService.getDailyVerse(),
                                             style: const TextStyle(
                                               fontSize: 18,
                                               fontStyle: FontStyle.italic,

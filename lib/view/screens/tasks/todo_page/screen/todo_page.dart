@@ -10,6 +10,7 @@ import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/add_task_dialog.dart';
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/expandable_menu.dart';
@@ -37,7 +38,7 @@ class _TodoPageState extends State<TodoPage> {
     return Consumer<UserViewModel>(
       builder: (context, user, child) {
         return Scaffold(
-          backgroundColor: user.colorManager.pageBackground,
+          backgroundColor: context.colors.pageBackground,
           floatingActionButton: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
@@ -45,9 +46,9 @@ class _TodoPageState extends State<TodoPage> {
               FloatingActionButton(
                   heroTag: 0,
                   backgroundColor:
-                      user.colorManager.floatingActionButtonBackground,
+                      context.colors.floatingActionButtonBackground,
                   foregroundColor:
-                      user.colorManager.floatingActionButtonForeground,
+                      context.colors.floatingActionButtonForeground,
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
@@ -72,10 +73,8 @@ class _TodoPageState extends State<TodoPage> {
               const Padding(padding: EdgeInsets.only(bottom: 20)),
               FloatingActionButton(
                 heroTag: 1,
-                backgroundColor:
-                    user.colorManager.floatingActionButtonBackground,
-                foregroundColor:
-                    user.colorManager.floatingActionButtonForeground,
+                backgroundColor: context.colors.floatingActionButtonBackground,
+                foregroundColor: context.colors.floatingActionButtonForeground,
                 onPressed: () {
                   showGeneralDialog(
                     context: context,
@@ -125,11 +124,9 @@ class _TodoPageState extends State<TodoPage> {
                         ),
                       )
                     : Theme(
-                        data: ThemeData(
-                            canvasColor: Colors.transparent,
-                            useMaterial3: true,
-                            colorScheme: ColorScheme.fromSeed(
-                                seedColor: Colors.blue.shade300)),
+                        data: Theme.of(context).copyWith(
+                          canvasColor: Colors.transparent,
+                        ),
                         child: ReorderableListView.builder(
                           itemCount: tasks.items.length,
                           itemBuilder: (context, index) {
@@ -162,7 +159,7 @@ class _TodoPageState extends State<TodoPage> {
                                           borderRadius:
                                               BorderRadius.circular(25),
                                         ),
-                                        color: user.colorManager.cardBackground,
+                                        color: context.colors.cardBackground,
                                         child: Padding(
                                           padding: const EdgeInsets.all(16.0),
                                           child: Column(
@@ -189,9 +186,8 @@ class _TodoPageState extends State<TodoPage> {
                                                                 fontSize: 26 *
                                                                     user.user
                                                                         .tasksTitleSize,
-                                                                color: user
-                                                                    .colorManager
-                                                                    .wB,
+                                                                color: context
+                                                                    .colors.wB,
                                                               )
                                                             : TextStyle(
                                                                 color:
@@ -298,7 +294,8 @@ class _TodoPageState extends State<TodoPage> {
                                                               onPressed: () {
                                                                 tasks
                                                                     .cancelNotification(
-                                                                        tasks.items[index])
+                                                                        tasks.items[
+                                                                            index])
                                                                     .then(
                                                                         (result) {
                                                                   if (result
@@ -330,7 +327,8 @@ class _TodoPageState extends State<TodoPage> {
                                                               onPressed: () {
                                                                 tasks
                                                                     .enableOneTimeNotification(
-                                                                    tasks.items[index])
+                                                                        tasks.items[
+                                                                            index])
                                                                     .then(
                                                                         (result) {
                                                                   if (result
@@ -354,7 +352,8 @@ class _TodoPageState extends State<TodoPage> {
                                                               onLongPress: () {
                                                                 tasks
                                                                     .enableDailyNotification(
-                                                                    tasks.items[index])
+                                                                        tasks.items[
+                                                                            index])
                                                                     .then(
                                                                         (result) {
                                                                   if (result
@@ -396,63 +395,64 @@ class _TodoPageState extends State<TodoPage> {
                                                       padding:
                                                           const EdgeInsets.only(
                                                               top: 2.0),
-                                                      child:
-                                                          user.user.descLines !=
-                                                                  0
-                                                              ? ReadMoreText(
-                                                                  moreStyle: TextStyle(
-                                                                      color: user
-                                                                          .colorManager
-                                                                          .moreLess),
-                                                                  trimExpandedText:
-                                                                      " Show Less",
-                                                                  trimCollapsedText:
-                                                                      "Show More",
-                                                                  lessStyle: TextStyle(
-                                                                      color: user
-                                                                          .colorManager
-                                                                          .moreLess),
-                                                                  trimLines: user
-                                                                      .user
-                                                                      .descLines,
-                                                                  trimMode:
-                                                                      TrimMode
-                                                                          .Line,
-                                                                  tasks
-                                                                      .items[
-                                                                          index]
-                                                                      .desc,
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontSize: 20 *
-                                                                        user.user
-                                                                            .tasksDescSize,
-                                                                    color: tasks.items[index].status == 0
-                                                                        ? user
-                                                                            .colorManager
-                                                                            .subtitle
-                                                                        : Colors
-                                                                            .grey,
-                                                                  ),
-                                                                )
-                                                              : Text(
-                                                                  tasks
-                                                                      .items[
-                                                                          index]
-                                                                      .desc,
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontSize: 20 *
-                                                                        user.user
-                                                                            .tasksDescSize,
-                                                                    color: tasks.items[index].status == 0
-                                                                        ? user
-                                                                            .colorManager
-                                                                            .subtitle
-                                                                        : Colors
-                                                                            .grey,
-                                                                  ),
-                                                                ),
+                                                      child: user.user
+                                                                  .descLines !=
+                                                              0
+                                                          ? ReadMoreText(
+                                                              moreStyle: TextStyle(
+                                                                  color: context
+                                                                      .colors
+                                                                      .moreLess),
+                                                              trimExpandedText:
+                                                                  " Show Less",
+                                                              trimCollapsedText:
+                                                                  "Show More",
+                                                              lessStyle: TextStyle(
+                                                                  color: context
+                                                                      .colors
+                                                                      .moreLess),
+                                                              trimLines: user
+                                                                  .user
+                                                                  .descLines,
+                                                              trimMode:
+                                                                  TrimMode.Line,
+                                                              tasks.items[index]
+                                                                  .desc,
+                                                              style: TextStyle(
+                                                                fontSize: 20 *
+                                                                    user.user
+                                                                        .tasksDescSize,
+                                                                color: tasks
+                                                                            .items[
+                                                                                index]
+                                                                            .status ==
+                                                                        0
+                                                                    ? context
+                                                                        .colors
+                                                                        .subtitle
+                                                                    : Colors
+                                                                        .grey,
+                                                              ),
+                                                            )
+                                                          : Text(
+                                                              tasks.items[index]
+                                                                  .desc,
+                                                              style: TextStyle(
+                                                                fontSize: 20 *
+                                                                    user.user
+                                                                        .tasksDescSize,
+                                                                color: tasks
+                                                                            .items[
+                                                                                index]
+                                                                            .status ==
+                                                                        0
+                                                                    ? context
+                                                                        .colors
+                                                                        .subtitle
+                                                                    : Colors
+                                                                        .grey,
+                                                              ),
+                                                            ),
                                                     )
                                                   : const SizedBox.shrink(),
                                               tasks.items[index].date
@@ -472,13 +472,10 @@ class _TodoPageState extends State<TodoPage> {
                                                               ? Icon(
                                                                   Icons
                                                                       .date_range,
-                                                                  color: tasks
-                                                                              .items[
-                                                                                  index]
-                                                                              .status ==
+                                                                  color: tasks.items[index].status ==
                                                                           0
-                                                                      ? user
-                                                                          .colorManager
+                                                                      ? context
+                                                                          .colors
                                                                           .wB
                                                                       : Colors
                                                                           .grey,
@@ -498,8 +495,8 @@ class _TodoPageState extends State<TodoPage> {
                                                                     style:
                                                                         TextStyle(
                                                                       color: tasks.items[index].status == 0
-                                                                          ? user
-                                                                              .colorManager
+                                                                          ? context
+                                                                              .colors
                                                                               .wB
                                                                           : Colors
                                                                               .grey,
@@ -520,13 +517,10 @@ class _TodoPageState extends State<TodoPage> {
                                                               ? Icon(
                                                                   Icons
                                                                       .access_time_filled_sharp,
-                                                                  color: tasks
-                                                                              .items[
-                                                                                  index]
-                                                                              .status ==
+                                                                  color: tasks.items[index].status ==
                                                                           0
-                                                                      ? user
-                                                                          .colorManager
+                                                                      ? context
+                                                                          .colors
                                                                           .wB
                                                                       : Colors
                                                                           .grey,
@@ -545,8 +539,8 @@ class _TodoPageState extends State<TodoPage> {
                                                                                 index]
                                                                             .status ==
                                                                         0
-                                                                    ? user
-                                                                        .colorManager
+                                                                    ? context
+                                                                        .colors
                                                                         .wB
                                                                     : Colors
                                                                         .grey,
@@ -643,20 +637,20 @@ class _TodoPageState extends State<TodoPage> {
           ),
           appBar: AppBar(
             automaticallyImplyLeading: false,
-            backgroundColor: user.colorManager.pageBackground,
+            backgroundColor: context.colors.pageBackground,
             surfaceTintColor: Colors.transparent,
             title: Text(
               "ToDo",
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 30,
-                color: user.colorManager.wB,
+                color: context.colors.wB,
                 fontWeight: FontWeight.bold,
               ),
             ),
             actions: [
               ExpandableMenu(
-                iconColor: user.colorManager.appBarIcons,
+                iconColor: context.colors.appBarIcons,
                 animationSpeed: 500,
                 width: MediaQuery.orientationOf(context) == Orientation.portrait
                     ? MediaQuery.sizeOf(context).width / 14
@@ -694,7 +688,7 @@ class _TodoPageState extends State<TodoPage> {
                       },
                       icon: Icon(
                         Icons.settings_backup_restore,
-                        color: user.colorManager.appBarIcons,
+                        color: context.colors.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () async {
@@ -712,7 +706,7 @@ class _TodoPageState extends State<TodoPage> {
                       },
                       icon: Icon(
                         Icons.backup,
-                        color: user.colorManager.appBarIcons,
+                        color: context.colors.appBarIcons,
                       )),
                   IconButton(
                       onPressed: () {
@@ -738,7 +732,7 @@ class _TodoPageState extends State<TodoPage> {
                       },
                       icon: Icon(
                         Icons.settings,
-                        color: user.colorManager.appBarIcons,
+                        color: context.colors.appBarIcons,
                       )),
                 ],
               ),

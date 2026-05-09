@@ -2,7 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
-class LockManager {
+class LockService {
   final _storage = const FlutterSecureStorage();
 
   Future<void> enableLock() async {

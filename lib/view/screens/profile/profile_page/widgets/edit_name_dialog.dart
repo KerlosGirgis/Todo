@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view_model/user_view_model.dart';
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../widgets/button.dart';
 
 class EditNameDialog extends StatelessWidget {
@@ -17,7 +18,7 @@ class EditNameDialog extends StatelessWidget {
         nameController.text = user.user.name;
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
-            backgroundColor: user.colorManager.pageBackground,
+            backgroundColor: context.colors.pageBackground,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(50),
             ),
@@ -30,12 +31,12 @@ class EditNameDialog extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: user.colorManager.dialogIconContainer,
+                      color: context.colors.dialogIconContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.edit,
-                      color: user.colorManager.dialogIcon,
+                      color: context.colors.dialogIcon,
                     ),
                   ),
                 ),
@@ -48,7 +49,7 @@ class EditNameDialog extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 32,
-                        color: user.colorManager.wB),
+                        color: context.colors.wB),
                   ),
                 ),
                 Expanded(
@@ -56,9 +57,9 @@ class EditNameDialog extends StatelessWidget {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    icon: Icon(Icons.close, color: user.colorManager.dialogExitIcon),
+                    icon: Icon(Icons.close, color: context.colors.dialogExitIcon),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: user.colorManager.dialogExitContainer,
+                      backgroundColor: context.colors.dialogExitContainer,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
@@ -75,18 +76,18 @@ class EditNameDialog extends StatelessWidget {
                   maxLines: 1,
                   maxLength: 20,
                   style: TextStyle(
-                      fontSize: 22, color: user.colorManager.wB),
+                      fontSize: 22, color: context.colors.wB),
                   decoration: InputDecoration(
                       labelText: "Name",
                       labelStyle: TextStyle(
                           fontSize: 30,
-                          color: user.colorManager.wB),
+                          color: context.colors.wB),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: user.colorManager.cardBackground,
+                      fillColor: context.colors.cardBackground,
                   ),
                 ),
               ],

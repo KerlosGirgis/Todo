@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:uuid/v4.dart';
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/tasks_view_model.dart';
@@ -24,7 +25,7 @@ class AddTaskDialog extends StatelessWidget {
           builder: (context, setState) {
             return AlertDialog(
               scrollable: true,
-              backgroundColor: user.colorManager.pageBackground,
+              backgroundColor: context.colors.pageBackground,
               elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(50),
@@ -36,12 +37,12 @@ class AddTaskDialog extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: user.colorManager.dialogIconContainer,
+                        color: context.colors.dialogIconContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.add_task,
-                        color: user.colorManager.dialogIcon,
+                        color: context.colors.dialogIcon,
                       ),
                     ),
                   ),
@@ -54,7 +55,7 @@ class AddTaskDialog extends StatelessWidget {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
-                          color: user.colorManager.wB),
+                          color: context.colors.wB),
                     ),
                   ),
                   Expanded(
@@ -64,10 +65,10 @@ class AddTaskDialog extends StatelessWidget {
                       },
                       icon: Icon(
                         Icons.close,
-                        color: user.colorManager.dialogExitIcon,
+                        color: context.colors.dialogExitIcon,
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: user.colorManager.dialogExitContainer,
+                        backgroundColor: context.colors.dialogExitContainer,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
@@ -86,16 +87,16 @@ class AddTaskDialog extends StatelessWidget {
                     decoration: InputDecoration(
                       labelText: "Title",
                       labelStyle:
-                          TextStyle(fontSize: 30, color: user.colorManager.wB),
+                          TextStyle(fontSize: 30, color: context.colors.wB),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
                           borderSide: BorderSide.none),
                       filled: true,
-                      fillColor: user.colorManager.cardBackground,
+                      fillColor: context.colors.cardBackground,
                     ),
                     style: TextStyle(
                       fontSize: 22,
-                      color: user.colorManager.wB,
+                      color: context.colors.wB,
                     ),
                   ),
                   Padding(
@@ -108,16 +109,16 @@ class AddTaskDialog extends StatelessWidget {
                     decoration: InputDecoration(
                       labelText: "Description",
                       labelStyle:
-                          TextStyle(fontSize: 30, color: user.colorManager.wB),
+                          TextStyle(fontSize: 30, color: context.colors.wB),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
                           borderSide: BorderSide.none),
                       filled: true,
-                      fillColor: user.colorManager.cardBackground,
+                      fillColor: context.colors.cardBackground,
                     ),
                     style: TextStyle(
                       fontSize: 20,
-                      color: user.colorManager.wB,
+                      color: context.colors.wB,
                     ),
                   ),
                   Padding(
@@ -148,7 +149,7 @@ class AddTaskDialog extends StatelessWidget {
                         FeedbackToast.info("Date Cleared");
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: user.colorManager.cardBackground,
+                        backgroundColor: context.colors.cardBackground,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(50)),
                         ),
@@ -160,7 +161,7 @@ class AddTaskDialog extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.calendar_month,
-                              color: user.colorManager.wB,
+                              color: context.colors.wB,
                             ),
                             Spacer(
                               flex: 1,
@@ -171,7 +172,7 @@ class AddTaskDialog extends StatelessWidget {
                               child: Text(
                                 date,
                                 style: TextStyle(
-                                    fontSize: 18, color: user.colorManager.wB),
+                                    fontSize: 18, color: context.colors.wB),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -212,7 +213,7 @@ class AddTaskDialog extends StatelessWidget {
                         FeedbackToast.info("Time Cleared");
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: user.colorManager.cardBackground,
+                        backgroundColor: context.colors.cardBackground,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(50)),
                         ),
@@ -224,7 +225,7 @@ class AddTaskDialog extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.access_time_filled_sharp,
-                              color: user.colorManager.wB,
+                              color: context.colors.wB,
                             ),
                             Spacer(
                               flex: 1,
@@ -236,7 +237,7 @@ class AddTaskDialog extends StatelessWidget {
                                 time,
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: user.colorManager.wB,
+                                  color: context.colors.wB,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

@@ -8,15 +8,32 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
-import 'package:todo/services/lock_manager.dart';
-import 'package:todo/services/user_repository.dart';
+import 'package:todo/services/lock_service.dart';
+import 'package:todo/repositories/user_repository.dart';
 import '../core/result.dart';
-import '../services/color_manager.dart';
+import '../core/theme/app_colors.dart';
 
 class UserViewModel with ChangeNotifier {
-  UserProfile user = UserProfile(name: "user", pic: "000", theme: 1,autoSave: 1, casual: 0, verse: 1, count: 0, finished: 0, unFinished: 0, notesTextSize: 1,startPage: 0, descLines: 2, tasksTitleSize: 1, tasksDescSize: 1, notesTitleSize: 1);
+  UserProfile user = UserProfile(
+      name: "user",
+      pic: "000",
+      theme: PlatformDispatcher.instance.platformBrightness == Brightness.dark
+          ? 1
+          : 0,
+      autoSave: 1,
+      casual: 0,
+      verse: 1,
+      count: 0,
+      finished: 0,
+      unFinished: 0,
+      notesTextSize: 1,
+      startPage: 0,
+      descLines: 2,
+      tasksTitleSize: 1,
+      tasksDescSize: 1,
+      notesTitleSize: 1);
 
-  ColorManager colorManager =ColorManager(isDark: true);
+  AppColors appColors = AppColors.dark;
 
   late bool isEnabled;
   late double tempNotesTextSize;
@@ -24,27 +41,25 @@ class UserViewModel with ChangeNotifier {
   late double tempTasksDescSize;
   late double tempNotesTitleSize;
 
-
   UserRepository userRepository = UserRepository();
 
   Future<void> get() async {
     List users;
     users = await userRepository.getUser();
-    if(users.isEmpty){
+    if (users.isEmpty) {
       userRepository.insertUser(user);
       users = await userRepository.getUser();
       user = users.first;
-      colorManager =ColorManager(isDark: true);
-    }
-    else{
+      appColors = AppColors.dark;
+    } else {
       user = users.first;
-      colorManager =ColorManager(isDark: user.theme==1?true:false);
+      appColors = user.theme == 1 ? AppColors.dark : AppColors.light;
     }
-    isEnabled=await LockManager().isLockEnabled();
-    tempNotesTextSize=user.notesTextSize;
-    tempTasksTitleSize=user.tasksTitleSize;
-    tempTasksDescSize=user.tasksDescSize;
-    tempNotesTitleSize=user.notesTitleSize;
+    isEnabled = await LockService().isLockEnabled();
+    tempNotesTextSize = user.notesTextSize;
+    tempTasksTitleSize = user.tasksTitleSize;
+    tempTasksDescSize = user.tasksDescSize;
+    tempNotesTitleSize = user.notesTitleSize;
     notifyListeners();
   }
 
@@ -61,36 +76,37 @@ class UserViewModel with ChangeNotifier {
   }
 
   Future<void> changeTheme() async {
-    if(user.theme==1){
-      user.theme=0;
-      colorManager =ColorManager(isDark: false);
+    if (user.theme == 1) {
+      user.theme = 0;
+      appColors = AppColors.light;
       await userRepository.updateUser(user);
       notifyListeners();
-    }
-    else{
-      user.theme=1;
-      colorManager =ColorManager(isDark: true);
+    } else {
+      user.theme = 1;
+      appColors = AppColors.dark;
       await userRepository.updateUser(user);
       notifyListeners();
     }
   }
+
   Future<void> changeAutoSave() async {
-    if(user.autoSave==1){
-      user.autoSave=0;
+    if (user.autoSave == 1) {
+      user.autoSave = 0;
       await userRepository.updateUser(user);
       notifyListeners();
-    }
-    else{
-      user.autoSave=1;
+    } else {
+      user.autoSave = 1;
       await userRepository.updateUser(user);
       notifyListeners();
     }
   }
+
   Future<void> changeStartPage(int startPage) async {
-      user.startPage=startPage;
-      await userRepository.updateUser(user);
-      notifyListeners();
+    user.startPage = startPage;
+    await userRepository.updateUser(user);
+    notifyListeners();
   }
+
   Future<void> setFontPreference(bool useCasual) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('useCasualFont', useCasual);
@@ -98,15 +114,15 @@ class UserViewModel with ChangeNotifier {
     await HomeWidget.saveWidgetData('useCasualFont', useCasual);
     await HomeWidget.updateWidget(name: 'Note');
   }
+
   Future<void> changeFont() async {
-    if(user.casual==1){
-      user.casual=0;
+    if (user.casual == 1) {
+      user.casual = 0;
       await userRepository.updateUser(user);
       setFontPreference(false);
       notifyListeners();
-    }
-    else{
-      user.casual=1;
+    } else {
+      user.casual = 1;
       await userRepository.updateUser(user);
       setFontPreference(true);
       notifyListeners();
@@ -114,26 +130,24 @@ class UserViewModel with ChangeNotifier {
   }
 
   Future<void> changeCount() async {
-    if(user.count==1){
-      user.count=0;
+    if (user.count == 1) {
+      user.count = 0;
       await userRepository.updateUser(user);
       notifyListeners();
-    }
-    else{
-      user.count=1;
+    } else {
+      user.count = 1;
       await userRepository.updateUser(user);
       notifyListeners();
     }
   }
 
   Future<void> changeVerse() async {
-    if(user.verse==1){
-      user.verse=0;
+    if (user.verse == 1) {
+      user.verse = 0;
       await userRepository.updateUser(user);
       notifyListeners();
-    }
-    else{
-      user.verse=1;
+    } else {
+      user.verse = 1;
       await userRepository.updateUser(user);
       notifyListeners();
     }
@@ -141,7 +155,7 @@ class UserViewModel with ChangeNotifier {
 
   Future<void> increaseFinished() async {
     user.finished++;
-    if(user.unFinished>0){
+    if (user.unFinished > 0) {
       user.unFinished--;
     }
     await userRepository.updateUser(user);
@@ -156,7 +170,7 @@ class UserViewModel with ChangeNotifier {
 
   Future<void> decreaseFinished() async {
     user.unFinished++;
-    if(user.finished>0){
+    if (user.finished > 0) {
       user.finished--;
     }
     await userRepository.updateUser(user);
@@ -164,112 +178,108 @@ class UserViewModel with ChangeNotifier {
   }
 
   Future<void> resetPlot() async {
-    user.unFinished=0;
-    user.finished=0;
+    user.unFinished = 0;
+    user.finished = 0;
     await userRepository.updateUser(user);
     notifyListeners();
   }
 
   Future<Result> changeLock() async {
-    final bool auth=await AuthenticationService().authenticate();
-    if(auth){
-      if(isEnabled){
-        await LockManager().disableLock();
-        isEnabled=false;
+    final bool auth = await AuthenticationService().authenticate();
+    if (auth) {
+      if (isEnabled) {
+        await LockService().disableLock();
+        isEnabled = false;
         notifyListeners();
         return Info("Lock Disabled");
-      }
-      else{
-        await LockManager().enableLock();
-        isEnabled=true;
+      } else {
+        await LockService().enableLock();
+        isEnabled = true;
         notifyListeners();
         return Success("Lock Enabled");
       }
-    }
-    else{
+    } else {
       return Failure("Authentication Failed");
     }
   }
-  Future<Result> setNotesTextSize()async{
-    if(tempNotesTextSize>=0.25&&tempNotesTextSize<=2){
-      user.notesTextSize=tempNotesTextSize;
+
+  Future<Result> setNotesTextSize() async {
+    if (tempNotesTextSize >= 0.25 && tempNotesTextSize <= 2) {
+      user.notesTextSize = tempNotesTextSize;
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
-      await HomeWidget.saveWidgetData('widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
+      await prefs.setString(
+          'widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
+      await HomeWidget.saveWidgetData(
+          'widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
       await HomeWidget.updateWidget(name: 'Note');
       await userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
-    }
-    else{
+    } else {
       return Failure("Enter Valid Value");
     }
   }
 
-  Future<Result> setNotesTitleSize()async{
-    if(tempNotesTitleSize>=0.25&&tempNotesTitleSize<=2){
-      user.notesTitleSize=tempNotesTitleSize;
+  Future<Result> setNotesTitleSize() async {
+    if (tempNotesTitleSize >= 0.25 && tempNotesTitleSize <= 2) {
+      user.notesTitleSize = tempNotesTitleSize;
       await userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
-    }
-    else{
+    } else {
       return Failure("Enter Valid Value");
     }
   }
 
-  Future<Result> setTasksTitleSize()async{
-    if(tempTasksTitleSize>=0.25&&tempTasksTitleSize<=2){
-      user.tasksTitleSize=tempTasksTitleSize;
+  Future<Result> setTasksTitleSize() async {
+    if (tempTasksTitleSize >= 0.25 && tempTasksTitleSize <= 2) {
+      user.tasksTitleSize = tempTasksTitleSize;
       await userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
-    }
-    else{
+    } else {
       return Failure("Enter Valid Value");
     }
   }
 
-  Future<Result> setTasksDescSize()async{
-    if(tempTasksDescSize>=0.25&&tempTasksDescSize<=2){
-      user.tasksDescSize=tempTasksDescSize;
+  Future<Result> setTasksDescSize() async {
+    if (tempTasksDescSize >= 0.25 && tempTasksDescSize <= 2) {
+      user.tasksDescSize = tempTasksDescSize;
       await userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
-    }
-    else{
+    } else {
       return Failure("Enter Valid Value");
     }
   }
 
-  void setTempNotesSize(double size){
-    if(size>=0.25&&size<=2){
-      tempNotesTextSize=size;
+  void setTempNotesSize(double size) {
+    if (size >= 0.25 && size <= 2) {
+      tempNotesTextSize = size;
       notifyListeners();
     }
   }
 
-  void setTempNotesTitleSize(double size){
-    if(size>=0.25&&size<=2){
-      tempNotesTitleSize=size;
+  void setTempNotesTitleSize(double size) {
+    if (size >= 0.25 && size <= 2) {
+      tempNotesTitleSize = size;
       notifyListeners();
     }
   }
 
-  void setTempTasksTitleSize(double size){
-    if(size>=0.25&&size<=2){
-      tempTasksTitleSize=size;
+  void setTempTasksTitleSize(double size) {
+    if (size >= 0.25 && size <= 2) {
+      tempTasksTitleSize = size;
       notifyListeners();
     }
   }
 
-  void setTempTasksDescSize(double size){
-    if(size>=0.25&&size<=2){
-      tempTasksDescSize=size;
+  void setTempTasksDescSize(double size) {
+    if (size >= 0.25 && size <= 2) {
+      tempTasksDescSize = size;
       notifyListeners();
     }
   }
-
 
   Future<File?>? _pickImage() async {
     final picker = ImagePicker();
@@ -331,11 +341,10 @@ class UserViewModel with ChangeNotifier {
   }
 
   Future<void> setDescLines(int numOfLines) async {
-    if(numOfLines>=0&&numOfLines<10){
-      user.descLines=numOfLines;
+    if (numOfLines >= 0 && numOfLines < 10) {
+      user.descLines = numOfLines;
       await userRepository.updateUser(user);
       notifyListeners();
     }
   }
-
 }

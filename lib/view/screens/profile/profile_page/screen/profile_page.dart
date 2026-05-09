@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:todo/view_model/user_view_model.dart';
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../widgets/chart.dart';
 import '../widgets/settings_page_view.dart';
 import '../widgets/user_avatar.dart';
@@ -38,7 +39,7 @@ class ProfilePageState extends State<ProfilePage> {
                   },
                   icon: Icon(
                     Icons.arrow_back,
-                    color: user.colorManager.wB,
+                    color: context.colors.wB,
                     size: 32,
                   )),
               actions: [
@@ -59,11 +60,11 @@ class ProfilePageState extends State<ProfilePage> {
                     },
                     icon: Icon(
                       Icons.info_outline_rounded,
-                      color: user.colorManager.wB,
+                      color: context.colors.wB,
                     ))
               ],
             ),
-            backgroundColor: user.colorManager.pageBackground,
+            backgroundColor: context.colors.pageBackground,
             body: MediaQuery.of(context).orientation == Orientation.portrait ||
                     MediaQuery.sizeOf(context).aspectRatio < 1.5
                 ? SafeArea(
@@ -115,7 +116,7 @@ class ProfilePageState extends State<ProfilePage> {
                                           color: Color(0xff3D5AFE),
                                           text: 'Finished',
                                           isSquare: false,
-                                          textColor: user.colorManager.wB,
+                                          textColor: context.colors.wB,
                                           size: 25,
                                         ),
                                         Padding(
@@ -125,11 +126,11 @@ class ProfilePageState extends State<ProfilePage> {
                                                             .height /
                                                         90)),
                                         Indicator(
-                                          color: user.colorManager.wB!
+                                          color: context.colors.wB
                                               .withValues(alpha: 0.4),
                                           text: 'UnFinished',
                                           isSquare: false,
-                                          textColor: user.colorManager.wB,
+                                          textColor: context.colors.wB,
                                           size: 25,
                                         ),
                                       ],
