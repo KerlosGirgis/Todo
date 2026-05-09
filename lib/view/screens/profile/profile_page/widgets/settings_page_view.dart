@@ -441,6 +441,11 @@ class SettingsPageView extends StatelessWidget {
                                                                       (result) {
                                                                 if (result
                                                                     is Success) {
+                                                                  if (context
+                                                                      .mounted) {
+                                                                    Navigator.pop(
+                                                                        context);
+                                                                  }
                                                                   FeedbackToast
                                                                       .success(
                                                                           result
@@ -571,6 +576,11 @@ class SettingsPageView extends StatelessWidget {
                                                                       (result) {
                                                                 if (result
                                                                     is Success) {
+                                                                  if (context
+                                                                      .mounted) {
+                                                                    Navigator.pop(
+                                                                        context);
+                                                                  }
                                                                   FeedbackToast
                                                                       .success(
                                                                           result
@@ -709,6 +719,11 @@ class SettingsPageView extends StatelessWidget {
                                                                       (result) {
                                                                 if (result
                                                                     is Success) {
+                                                                  if (context
+                                                                      .mounted) {
+                                                                    Navigator.pop(
+                                                                        context);
+                                                                  }
                                                                   FeedbackToast
                                                                       .success(
                                                                           result
@@ -839,6 +854,11 @@ class SettingsPageView extends StatelessWidget {
                                                                       (result) {
                                                                 if (result
                                                                     is Success) {
+                                                                  if (context
+                                                                      .mounted) {
+                                                                    Navigator.pop(
+                                                                        context);
+                                                                  }
                                                                   FeedbackToast
                                                                       .success(
                                                                           result

@@ -109,9 +109,9 @@ class AppbarAvatar extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: Color(0xff3D5AFE).withValues(alpha: 0.9),
                                       fontSize: 42),
                                 ),
                               ),
@@ -133,6 +133,7 @@ class AppbarAvatar extends StatelessWidget {
                                     });
                                   },
                                   child: Card(
+                                    color: context.colors.dialogIconContainer,
                                     elevation: 2,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
@@ -145,13 +146,13 @@ class AppbarAvatar extends StatelessWidget {
                                           Row(
                                             children: [
                                               Expanded(
-                                                child: const Text(
+                                                child: Text(
                                                   "🕯️Bible Verse🕯️",
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(
                                                     fontSize: 28,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors.blueAccent,
+                                                    color: context.colors.moreLess,
                                                   ),
                                                 ),
                                               ),
@@ -160,10 +161,10 @@ class AppbarAvatar extends StatelessWidget {
                                           const SizedBox(height: 12),
                                           Text(
                                             VerseService.getDailyVerse(),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 18,
                                               fontStyle: FontStyle.italic,
-                                              color: Colors.black87,
+                                              color: context.colors.wB,
                                             ),
                                             textAlign: TextAlign.center,
                                           ),

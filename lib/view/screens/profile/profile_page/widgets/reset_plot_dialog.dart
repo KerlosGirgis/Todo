@@ -13,43 +13,37 @@ class ResetPlotDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserViewModel>(builder: (context, user, child) {
-      return StatefulBuilder(builder: (context,setState) {
+    return StatefulBuilder(
+      builder: (context, setState) {
         return AlertDialog(
           scrollable: true,
           elevation: 2,
           shape: RoundedRectangleBorder(
-            borderRadius:
-            BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(25),
           ),
-          backgroundColor: context.colors
-              .pageBackground,
+          backgroundColor: context.colors.pageBackground,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
                 width: MediaQuery.sizeOf(context).width,
-                height: MediaQuery.sizeOf(context).height/10,
+                height: MediaQuery.sizeOf(context).height / 10,
                 child: AutoSizeText(
                   minFontSize: 4,
                   "Are you sure you want to reset?",
                   style: TextStyle(
                       fontSize: 26,
-                      fontWeight:
-                      FontWeight.w600,
-                      color: context.colors
-                          .wB
-                  ),
+                      fontWeight: FontWeight.w600,
+                      color: context.colors.wB),
                   maxLines: 2,
-                  overflow:
-                  TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
           actions: [
             Row(
-              spacing: MediaQuery.sizeOf(context).width/25,
+              spacing: MediaQuery.sizeOf(context).width / 25,
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -68,7 +62,8 @@ class ResetPlotDialog extends StatelessWidget {
                   child: Button(
                     onPressed: () {
                       Navigator.pop(context);
-                      user.resetPlot();
+                      Provider.of<UserViewModel>(context, listen: false)
+                          .resetPlot();
                     },
                     label: 'Reset',
                     status: true,
@@ -81,9 +76,6 @@ class ResetPlotDialog extends StatelessWidget {
           ],
         );
       },
-      );
-    },
-
     );
   }
 }
