@@ -51,6 +51,12 @@ class _LoadingState extends State<Loading> with SingleTickerProviderStateMixin {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    precacheImage(const AssetImage('assets/icon.png'), context);
+  }
+  
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();

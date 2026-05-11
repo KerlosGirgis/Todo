@@ -1,4 +1,4 @@
-# Todo
+# <img src="metadata/en-US/images/icon.png" width="35" alt="App Icon" /> Todo
 
 <a href="https://f-droid.org/en/packages/com.k.todo/">
   <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" width="300"/>
@@ -6,7 +6,7 @@
 
 **A minimal, privacy-first app for managing your tasks and notes**
 
-## ✨ Features
+## Features
 
 - **Works Offline**  
   No account. No tracking. No internet needed.
@@ -38,9 +38,7 @@
 
 ## Screenshots
 
-<img width="100" alt="1.png" src="Screenshots%2F1.png"/><img width="100" alt="2.png" src="Screenshots%2F2.png"/><img width="100" alt="3.png" src="Screenshots%2F3.png"/><img width="100" alt="4.png" src="Screenshots%2F4.png"/><img width="100" alt="5.png" src="Screenshots%2F5.png"/>
-
-<img width="100" alt="6.png" src="Screenshots%2F6.png"/><img width="100" alt="7.png" src="Screenshots%2F7.png"/><img width="100" alt="8.png" src="Screenshots%2F8.png"/>
+<img width="100" alt="1" src="metadata/en-US/images/phoneScreenshots/1.png"/><img width="100" alt="2" src="metadata/en-US/images/phoneScreenshots/2.png"/><img width="100" alt="3" src="metadata/en-US/images/phoneScreenshots/3.png"/><img width="100" alt="4" src="metadata/en-US/images/phoneScreenshots/4.png"/><img width="100" alt="5" src="metadata/en-US/images/phoneScreenshots/5.png"/>
 
 ## License
 
