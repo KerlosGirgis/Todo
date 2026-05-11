@@ -1,4 +1,4 @@
-# <img src="metadata/en-US/images/icon.png" width="35" alt="App Icon" /> Todo
+# <img src="metadata/en-US/images/icon.png" width="50" alt="App Icon" /> Todo
 
 <a href="https://f-droid.org/en/packages/com.k.todo/">
   <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" width="300"/>
