@@ -1,4 +1,4 @@
-# <img src="metadata/en-US/images/icon.png" width="50" alt="App Icon" /> Todo
+# <img src="metadata/en-US/images/icon.png" width="60" alt="App Icon" align="middle" /> Todo
 
 <a href="https://f-droid.org/en/packages/com.k.todo/">
   <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" width="300"/>
@@ -38,7 +38,7 @@
 
 ## Screenshots
 
-<img width="100" alt="1" src="metadata/en-US/images/phoneScreenshots/1.png"/><img width="100" alt="2" src="metadata/en-US/images/phoneScreenshots/2.png"/><img width="100" alt="3" src="metadata/en-US/images/phoneScreenshots/3.png"/><img width="100" alt="4" src="metadata/en-US/images/phoneScreenshots/4.png"/><img width="100" alt="5" src="metadata/en-US/images/phoneScreenshots/5.png"/>
+<img width="160" alt="1" src="metadata/en-US/images/phoneScreenshots/1.png"/> &nbsp; <img width="160" alt="2" src="metadata/en-US/images/phoneScreenshots/2.png"/> &nbsp; <img width="160" alt="3" src="metadata/en-US/images/phoneScreenshots/3.png"/> &nbsp; <img width="160" alt="4" src="metadata/en-US/images/phoneScreenshots/4.png"/> &nbsp; <img width="160" alt="5" src="metadata/en-US/images/phoneScreenshots/5.png"/>
 
 ## License
 
