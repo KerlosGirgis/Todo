@@ -6,19 +6,77 @@ import 'package:todo/repositories/tasks_repository.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import '../core/errors/exceptions/notification_exception.dart';
 import '../core/utils/date_time_utils.dart';
+import '../models/task_filters.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
 import '../services/lock_service.dart';
 import '../services/notification_service.dart';
 
 class TasksViewModel with ChangeNotifier {
+  List<TodoItem> _allTasks = [];
   List<TodoItem> items = [];
 
+  TaskFilter _currentFilter = const AllTasksFilter();
+  TaskFilter get currentFilter => _currentFilter;
+  int get finishedTasksCount =>
+      _allTasks.where((task) => task.status == 1).length;
+  int get unfinishedTasksCount =>
+      _allTasks.where((task) => task.status == 0).length;
   TasksRepository tasksRepository = TasksRepository();
 
-  Future<void> get() async {
-    items = await tasksRepository.getItems();
+  Future<void> fetchTasks({TaskFilter? filter}) async {
+    if (filter != null) {
+      _currentFilter = filter;
+    }
+    _allTasks = await tasksRepository.getItems();
+    _applyFilter();
+  }
+
+  void _applyFilter() {
+    items = _currentFilter.apply(_allTasks);
     notifyListeners();
+  }
+
+  Future<void> get() async {
+    await fetchTasks();
+  }
+
+
+  Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+
+    final taskToMove = items[oldIndex];
+
+    int effectiveNewIndex = newIndex;
+    if (oldIndex < newIndex) {
+      effectiveNewIndex -= 1;
+    }
+
+    items.removeAt(oldIndex);
+    items.insert(effectiveNewIndex, taskToMove);
+    notifyListeners();
+
+    final oldMasterIndex = _allTasks.indexOf(taskToMove);
+    if (oldMasterIndex != -1) {
+      _allTasks.removeAt(oldMasterIndex);
+      int insertAt;
+      if (effectiveNewIndex + 1 < items.length) {
+        final nextTask = items[effectiveNewIndex + 1];
+        insertAt = _allTasks.indexOf(nextTask);
+      } else if (effectiveNewIndex > 0) {
+        final prevTask = items[effectiveNewIndex - 1];
+        insertAt = _allTasks.indexOf(prevTask) + 1;
+      } else {
+        insertAt = _allTasks.length;
+      }
+      _allTasks.insert(insertAt == -1 ? _allTasks.length : insertAt, taskToMove);
+    }
+
+    try {
+      await tasksRepository.refreshAllItems(_allTasks);
+    } catch (e) {
+      await fetchTasks();
+    }
   }
 
   Future<Result> updateTask(TodoItem task) async {
@@ -34,19 +92,6 @@ class TasksViewModel with ChangeNotifier {
     else{
       return Info("Task Updated");
     }
-  }
-
-  Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
-    final oldTodo = items.removeAt(oldIndex);
-    items.insert(newIndex, oldTodo);
-    await tasksRepository.deleteAllItems();
-    for (var item in items) {
-      await tasksRepository.insertItem(item);
-    }
-    get();
   }
 
   Future<void> addTask(TodoItem todo) async {
@@ -83,7 +128,6 @@ class TasksViewModel with ChangeNotifier {
           ),
         );
         get();
-        user.increaseFinished();
         return Success("Task done");
       } else {
         tasksRepository.updateItem(
@@ -99,7 +143,6 @@ class TasksViewModel with ChangeNotifier {
           ),
         );
         get();
-        user.increaseFinished();
         return Success("Task done");
       }
     } else {
@@ -116,7 +159,6 @@ class TasksViewModel with ChangeNotifier {
         ),
       );
       get();
-      user.decreaseFinished();
       return Info("Task undone");
     }
   }

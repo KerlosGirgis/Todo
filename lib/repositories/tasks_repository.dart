@@ -45,6 +45,15 @@ class TasksRepository{
         .update('ToDo', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
+  Future<void> refreshAllItems(List<TodoItem> items) async {
+    await db.transaction((txn) async {
+      await txn.delete('ToDo');
+      for (var item in items) {
+        await txn.insert('ToDo', item.toMap());
+      }
+    });
+  }
+
   Future<Uint8List> exportToDoToJson() async {
     List<TodoItem> items = await getItems();
     String jsonString =

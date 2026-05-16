@@ -24,7 +24,7 @@ class Indicator extends StatelessWidget {
     final adaptiveSize = size * (screenWidth / 400).clamp(0.8, 1.5);
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Container(
           width: adaptiveSize,
@@ -39,15 +39,14 @@ class Indicator extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        Expanded(
+        Flexible(
+          fit: FlexFit.loose,
           child: AutoSizeText(
             text,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
-            minFontSize: 10,
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontSize: 18 * (screenWidth / 400).clamp(0.8, 1.3),              fontWeight: FontWeight.w600,
               color: textColor ?? Colors.black,
             ),
           ),

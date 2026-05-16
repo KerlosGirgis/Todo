@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/view_model/user_view_model.dart';
 import 'package:uuid/v4.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
@@ -284,7 +283,6 @@ class AddTaskDialog extends StatelessWidget {
                         uuid: const UuidV4().generate(),
                         notification: 0,
                       ));
-                        Provider.of<UserViewModel>(context,listen: false).increaseUnFinished();
                         FeedbackToast.info("Task Added");
                     },
                     label: 'Save',

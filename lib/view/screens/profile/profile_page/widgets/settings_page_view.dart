@@ -24,17 +24,21 @@ class SettingsPageView extends StatelessWidget {
       return Column(
         children: [
           Expanded(
-            child: PageView(
-              controller: _controller,
-              scrollDirection: Axis.horizontal,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: MediaQuery.of(context).orientation ==
-                              Orientation.portrait
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal:
+                      MediaQuery.of(context).orientation == Orientation.portrait
                           ? MediaQuery.sizeOf(context).width / 30
-                          : MediaQuery.sizeOf(context).width / 70),
-                  child: Column(
+                          : MediaQuery.sizeOf(context).width / 70,
+                  vertical:
+                      MediaQuery.of(context).orientation == Orientation.portrait
+                          ? MediaQuery.sizeOf(context).height * 0
+                          : MediaQuery.sizeOf(context).height / 70),
+              child: PageView(
+                controller: _controller,
+                scrollDirection: Axis.horizontal,
+                children: [
+                  Column(
                     spacing: MediaQuery.of(context).orientation ==
                             Orientation.portrait
                         ? MediaQuery.sizeOf(context).height / 70
@@ -156,138 +160,45 @@ class SettingsPageView extends StatelessWidget {
                       )
                     ],
                   ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        "Start Page",
-                        style: TextStyle(
-                          fontSize: 26,
-                          color: context.colors.wB,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Padding(padding: EdgeInsets.only(bottom: 10)),
-                    Flexible(
-                      child: SegmentedButton<int>(
-                        showSelectedIcon: false,
-                        segments: const [
-                          ButtonSegment(
-                            value: 0,
-                            label: Text("Todo",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                )),
-                            icon: Icon(Icons.checklist_sharp),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          "Start Page",
+                          style: TextStyle(
+                            fontSize: 26,
+                            color: context.colors.wB,
+                            fontWeight: FontWeight.w600,
                           ),
-                          ButtonSegment(
-                            value: 1,
-                            label: Text("Notes",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                )),
-                            icon: Icon(Icons.edit_note_sharp),
-                          )
-                        ],
-                        selected: {user.user.startPage},
-                        emptySelectionAllowed: false,
-                        onSelectionChanged: (v) =>
-                            user.changeStartPage(v.first),
-                        style: ButtonStyle(
-                          shape: WidgetStateProperty.all(
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          side: WidgetStateProperty.resolveWith((states) {
-                            return BorderSide(
-                              color: context.colors.wB.withValues(alpha: 0.35),
-                            );
-                          }),
-                          backgroundColor:
-                              WidgetStateProperty.resolveWith((states) {
-                            return states.contains(WidgetState.selected)
-                                ? context.colors.wB.withValues(alpha: 0.18)
-                                : Colors.transparent;
-                          }),
-                          foregroundColor:
-                              WidgetStateProperty.resolveWith((states) {
-                            return states.contains(WidgetState.selected)
-                                ? context.colors.wB
-                                : context.colors.wB.withValues(alpha: 0.8);
-                          }),
                         ),
                       ),
-                    ),
-                    Padding(padding: EdgeInsets.only(bottom: 10)),
-                    Flexible(
-                      child: Text(
-                        "Task description lines limit",
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 26,
-                          color: context.colors.wB,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Padding(padding: EdgeInsets.only(bottom: 10)),
-                    Flexible(
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width / 1.05,
+                      Padding(padding: EdgeInsets.only(bottom: 10)),
+                      Flexible(
                         child: SegmentedButton<int>(
                           showSelectedIcon: false,
-                          segments: [
+                          segments: const [
                             ButtonSegment(
                               value: 0,
-                              label: Text(
-                                "Off",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                ),
-                              ),
+                              label: Text("Todo",
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                  )),
+                              icon: Icon(Icons.checklist_sharp),
                             ),
                             ButtonSegment(
                               value: 1,
-                              label: Text("1",
+                              label: Text("Notes",
                                   style: TextStyle(
                                     fontSize: 20,
                                   )),
-                            ),
-                            ButtonSegment(
-                              value: 2,
-                              label: Text("2",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                  )),
-                            ),
-                            ButtonSegment(
-                              value: 3,
-                              label: Text("3",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                  )),
-                            ),
-                            ButtonSegment(
-                              value: 4,
-                              label: Text("4",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                  )),
-                            ),
-                            ButtonSegment(
-                              value: 5,
-                              label: Text("5",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                  )),
-                            ),
+                              icon: Icon(Icons.edit_note_sharp),
+                            )
                           ],
-                          selected: {user.user.descLines},
+                          selected: {user.user.startPage},
                           emptySelectionAllowed: false,
-                          onSelectionChanged: (v) => user.setDescLines(v.first),
+                          onSelectionChanged: (v) =>
+                              user.changeStartPage(v.first),
                           style: ButtonStyle(
                             shape: WidgetStateProperty.all(
                               RoundedRectangleBorder(
@@ -314,602 +225,705 @@ class SettingsPageView extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: MediaQuery.of(context).orientation ==
-                              Orientation.portrait
-                          ? MediaQuery.sizeOf(context).width / 30
-                          : MediaQuery.sizeOf(context).width / 70),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    spacing: MediaQuery.of(context).orientation ==
-                            Orientation.portrait
-                        ? MediaQuery.sizeOf(context).height / 70
-                        : MediaQuery.sizeOf(context).height / 30,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.format_size_rounded,
-                                color: context.colors.wB, size: 32),
-                            Padding(padding: EdgeInsets.only(right: 10)),
-                            AutoSizeText(
-                              "Font Sizes",
-                              minFontSize: 10,
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: context.colors.wB,
-                              ),
-                            ),
-                          ],
+                      Padding(padding: EdgeInsets.only(bottom: 10)),
+                      Flexible(
+                        child: Text(
+                          "Task description lines limit",
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 26,
+                            color: context.colors.wB,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      Expanded(
-                        flex: 2,
-                        child: Row(
-                          spacing: MediaQuery.widthOf(context) / 30,
-                          children: [
-                            Expanded(
-                              child: FontButton(
-                                onPressed: () {
-                                  showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor:
-                                          context.colors.cardBackground,
-                                      isScrollControlled: true,
-                                      useSafeArea: true,
-                                      builder: (BuildContext context) {
-                                        return Consumer<UserViewModel>(
-                                            builder: (context, user, child) {
-                                          return Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                vertical: 30),
-                                            child: SingleChildScrollView(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    "A",
-                                                    style: TextStyle(
-                                                      color: context.colors.wB,
-                                                      fontSize: 26 *
-                                                          user.tempTasksTitleSize,
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 9,
-                                                        child: Slider(
-                                                          activeColor:
-                                                              const Color(
-                                                                  0xff3D5AFE),
-                                                          value: user
-                                                              .tempTasksTitleSize,
-                                                          min: .25,
-                                                          max: 2,
-                                                          divisions: 14,
-                                                          onChanged: (v) {
-                                                            user.setTempTasksTitleSize(
-                                                                v);
-                                                          },
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  right: 5)),
-                                                      Expanded(
-                                                          flex: 1,
-                                                          child: Text(
-                                                            maxLines: 1,
-                                                            user.tempTasksTitleSize
-                                                                .toString(),
-                                                            style: TextStyle(
-                                                                fontSize: 24,
-                                                                color: context
-                                                                    .colors.wB),
-                                                          ))
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Flexible(
-                                                          child: Button(
-                                                            onPressed: () {
-                                                              user
-                                                                  .setTasksTitleSize()
-                                                                  .then(
-                                                                      (result) {
-                                                                if (result
-                                                                    is Success) {
-                                                                  if (context
-                                                                      .mounted) {
-                                                                    Navigator.pop(
-                                                                        context);
-                                                                  }
-                                                                  FeedbackToast
-                                                                      .success(
-                                                                          result
-                                                                              .message);
-                                                                } else if (result
-                                                                    is Failure) {
-                                                                  FeedbackToast
-                                                                      .error(result
-                                                                          .message);
-                                                                } else if (result
-                                                                    is Info) {
-                                                                  FeedbackToast
-                                                                      .info(result
-                                                                          .message);
-                                                                }
-                                                              });
-                                                            },
-                                                            label: 'Apply',
-                                                            status: user
-                                                                    .tempTasksTitleSize !=
-                                                                user.user
-                                                                    .tasksTitleSize,
-                                                            fontSize: 22,
-                                                            size: 1,
-                                                          ),
-                                                        )
-                                                      ])
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        });
-                                      }).then(
-                                    (value) {
-                                      user.setTempTasksTitleSize(
-                                          user.user.tasksTitleSize);
-                                    },
-                                  );
-                                },
-                                label: "Task Title",
-                                fontSize: 22,
-                                size: 1.5,
+                      Padding(padding: EdgeInsets.only(bottom: 10)),
+                      Flexible(
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width / 1.05,
+                          child: SegmentedButton<int>(
+                            showSelectedIcon: false,
+                            segments: [
+                              ButtonSegment(
+                                value: 0,
+                                label: Text(
+                                  "Off",
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                  ),
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: FontButton(
-                                onPressed: () {
-                                  showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor:
-                                          context.colors.cardBackground,
-                                      isScrollControlled: true,
-                                      useSafeArea: true,
-                                      builder: (BuildContext context) {
-                                        return Consumer<UserViewModel>(
-                                            builder: (context, user, child) {
-                                          return Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                vertical: 30),
-                                            child: SingleChildScrollView(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    "A",
-                                                    style: TextStyle(
-                                                      color: context.colors.wB,
-                                                      fontSize: 20 *
-                                                          user.tempTasksDescSize,
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 9,
-                                                        child: Slider(
-                                                          activeColor:
-                                                              const Color(
-                                                                  0xff3D5AFE),
-                                                          value: user
-                                                              .tempTasksDescSize,
-                                                          min: .25,
-                                                          max: 2,
-                                                          divisions: 14,
-                                                          onChanged: (v) {
-                                                            user.setTempTasksDescSize(
-                                                                v);
-                                                          },
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  right: 5)),
-                                                      Expanded(
-                                                          flex: 1,
-                                                          child: Text(
-                                                            maxLines: 1,
-                                                            user.tempTasksDescSize
-                                                                .toString(),
-                                                            style: TextStyle(
-                                                                fontSize: 24,
-                                                                color: context
-                                                                    .colors.wB),
-                                                          ))
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Flexible(
-                                                          child: Button(
-                                                            onPressed: () {
-                                                              user
-                                                                  .setTasksDescSize()
-                                                                  .then(
-                                                                      (result) {
-                                                                if (result
-                                                                    is Success) {
-                                                                  if (context
-                                                                      .mounted) {
-                                                                    Navigator.pop(
-                                                                        context);
-                                                                  }
-                                                                  FeedbackToast
-                                                                      .success(
-                                                                          result
-                                                                              .message);
-                                                                } else if (result
-                                                                    is Failure) {
-                                                                  FeedbackToast
-                                                                      .error(result
-                                                                          .message);
-                                                                } else if (result
-                                                                    is Info) {
-                                                                  FeedbackToast
-                                                                      .info(result
-                                                                          .message);
-                                                                }
-                                                              });
-                                                            },
-                                                            label: 'Apply',
-                                                            status: user
-                                                                    .tempTasksDescSize !=
-                                                                user.user
-                                                                    .tasksDescSize,
-                                                            fontSize: 22,
-                                                            size: 1,
-                                                          ),
-                                                        )
-                                                      ])
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        });
-                                      }).then(
-                                    (value) {
-                                      user.setTempTasksTitleSize(
-                                          user.user.tasksTitleSize);
-                                    },
-                                  );
-                                },
-                                label: "Task\nDescription",
-                                fontSize: 22,
-                                size: 1.5,
+                              ButtonSegment(
+                                value: 1,
+                                label: Text("1",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    )),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Row(
-                          spacing: MediaQuery.widthOf(context) / 30,
-                          children: [
-                            Expanded(
-                              child: FontButton(
-                                onPressed: () {
-                                  showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor:
-                                          context.colors.cardBackground,
-                                      isScrollControlled: true,
-                                      useSafeArea: true,
-                                      builder: (BuildContext context) {
-                                        return Consumer<UserViewModel>(
-                                            builder: (context, user, child) {
-                                          return Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                vertical: 30),
-                                            child: SingleChildScrollView(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    "A",
-                                                    style: TextStyle(
-                                                      color: context.colors.wB,
-                                                      fontSize: 24 *
-                                                          user.tempNotesTitleSize,
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 9,
-                                                        child: Slider(
-                                                          activeColor:
-                                                              const Color(
-                                                                  0xff3D5AFE),
-                                                          value: user
-                                                              .tempNotesTitleSize,
-                                                          min: .25,
-                                                          max: 2,
-                                                          divisions: 14,
-                                                          onChanged: (v) {
-                                                            user.setTempNotesTitleSize(
-                                                                v);
-                                                          },
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  right: 5)),
-                                                      Expanded(
-                                                          flex: 1,
-                                                          child: Text(
-                                                            maxLines: 1,
-                                                            user.tempNotesTitleSize
-                                                                .toString(),
-                                                            style: TextStyle(
-                                                                fontSize: 24,
-                                                                color: context
-                                                                    .colors.wB),
-                                                          ))
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Flexible(
-                                                          child: Button(
-                                                            onPressed: () {
-                                                              user
-                                                                  .setNotesTitleSize()
-                                                                  .then(
-                                                                      (result) {
-                                                                if (result
-                                                                    is Success) {
-                                                                  if (context
-                                                                      .mounted) {
-                                                                    Navigator.pop(
-                                                                        context);
-                                                                  }
-                                                                  FeedbackToast
-                                                                      .success(
-                                                                          result
-                                                                              .message);
-                                                                } else if (result
-                                                                    is Failure) {
-                                                                  FeedbackToast
-                                                                      .error(result
-                                                                          .message);
-                                                                } else if (result
-                                                                    is Info) {
-                                                                  FeedbackToast
-                                                                      .info(result
-                                                                          .message);
-                                                                }
-                                                              });
-                                                            },
-                                                            label: 'Apply',
-                                                            status: user
-                                                                    .tempNotesTitleSize !=
-                                                                user.user
-                                                                    .notesTitleSize,
-                                                            fontSize: 22,
-                                                            size: 1,
-                                                          ),
-                                                        )
-                                                      ])
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        });
-                                      }).then(
-                                    (value) {
-                                      user.setTempNotesTitleSize(
-                                          user.user.notesTitleSize);
-                                    },
-                                  );
-                                },
-                                label: "Note Title",
-                                fontSize: 22,
-                                size: 1.5,
+                              ButtonSegment(
+                                value: 2,
+                                label: Text("2",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    )),
                               ),
-                            ),
-                            Expanded(
-                              child: FontButton(
-                                onPressed: () {
-                                  showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor:
-                                          context.colors.cardBackground,
-                                      isScrollControlled: true,
-                                      useSafeArea: true,
-                                      builder: (BuildContext context) {
-                                        return Consumer<UserViewModel>(
-                                            builder: (context, user, child) {
-                                          return Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                vertical: 30),
-                                            child: SingleChildScrollView(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    "A",
-                                                    style: TextStyle(
-                                                      color: context.colors.wB,
-                                                      fontSize: 26 *
-                                                          user.tempNotesTextSize,
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 9,
-                                                        child: Slider(
-                                                          activeColor:
-                                                              const Color(
-                                                                  0xff3D5AFE),
-                                                          value: user
-                                                              .tempNotesTextSize,
-                                                          min: .25,
-                                                          max: 2,
-                                                          divisions: 14,
-                                                          onChanged: (v) {
-                                                            user.setTempNotesSize(
-                                                                v);
-                                                          },
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                  right: 5)),
-                                                      Expanded(
-                                                          flex: 1,
-                                                          child: Text(
-                                                            maxLines: 1,
-                                                            user.tempNotesTextSize
-                                                                .toString(),
-                                                            style: TextStyle(
-                                                                fontSize: 24,
-                                                                color: context
-                                                                    .colors.wB),
-                                                          ))
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Flexible(
-                                                          child: Button(
-                                                            onPressed: () {
-                                                              user
-                                                                  .setNotesTextSize()
-                                                                  .then(
-                                                                      (result) {
-                                                                if (result
-                                                                    is Success) {
-                                                                  if (context
-                                                                      .mounted) {
-                                                                    Navigator.pop(
-                                                                        context);
-                                                                  }
-                                                                  FeedbackToast
-                                                                      .success(
-                                                                          result
-                                                                              .message);
-                                                                } else if (result
-                                                                    is Failure) {
-                                                                  FeedbackToast
-                                                                      .error(result
-                                                                          .message);
-                                                                } else if (result
-                                                                    is Info) {
-                                                                  FeedbackToast
-                                                                      .info(result
-                                                                          .message);
-                                                                }
-                                                              });
-                                                            },
-                                                            label: 'Apply',
-                                                            status: user
-                                                                    .tempNotesTextSize !=
-                                                                user.user
-                                                                    .notesTextSize,
-                                                            fontSize: 22,
-                                                            size: 1,
-                                                          ),
-                                                        )
-                                                      ])
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        });
-                                      }).then(
-                                    (value) {
-                                      user.setTempNotesSize(
-                                          user.user.notesTextSize);
-                                    },
-                                  );
-                                },
-                                label: "Note Body",
-                                fontSize: 22,
-                                size: 1.5,
+                              ButtonSegment(
+                                value: 3,
+                                label: Text("3",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    )),
                               ),
+                              ButtonSegment(
+                                value: 4,
+                                label: Text("4",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    )),
+                              ),
+                              ButtonSegment(
+                                value: 5,
+                                label: Text("5",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    )),
+                              ),
+                            ],
+                            selected: {user.user.descLines},
+                            emptySelectionAllowed: false,
+                            onSelectionChanged: (v) =>
+                                user.setDescLines(v.first),
+                            style: ButtonStyle(
+                              shape: WidgetStateProperty.all(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                              side: WidgetStateProperty.resolveWith((states) {
+                                return BorderSide(
+                                  color:
+                                      context.colors.wB.withValues(alpha: 0.35),
+                                );
+                              }),
+                              backgroundColor:
+                                  WidgetStateProperty.resolveWith((states) {
+                                return states.contains(WidgetState.selected)
+                                    ? context.colors.wB.withValues(alpha: 0.18)
+                                    : Colors.transparent;
+                              }),
+                              foregroundColor:
+                                  WidgetStateProperty.resolveWith((states) {
+                                return states.contains(WidgetState.selected)
+                                    ? context.colors.wB
+                                    : context.colors.wB.withValues(alpha: 0.8);
+                              }),
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                )
-              ],
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: MediaQuery.of(context).orientation ==
+                                Orientation.portrait
+                            ? MediaQuery.sizeOf(context).width / 30
+                            : MediaQuery.sizeOf(context).width / 70),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: MediaQuery.of(context).orientation ==
+                              Orientation.portrait
+                          ? MediaQuery.sizeOf(context).height / 70
+                          : MediaQuery.sizeOf(context).height / 30,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.format_size_rounded,
+                                  color: context.colors.wB, size: 32),
+                              Padding(padding: EdgeInsets.only(right: 10)),
+                              AutoSizeText(
+                                "Font Sizes",
+                                minFontSize: 10,
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: context.colors.wB,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Row(
+                            spacing: MediaQuery.widthOf(context) / 30,
+                            children: [
+                              Expanded(
+                                child: FontButton(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                        context: context,
+                                        backgroundColor:
+                                            context.colors.cardBackground,
+                                        isScrollControlled: true,
+                                        useSafeArea: true,
+                                        builder: (BuildContext context) {
+                                          return Consumer<UserViewModel>(
+                                              builder: (context, user, child) {
+                                            return Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 30),
+                                              child: SingleChildScrollView(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      "A",
+                                                      style: TextStyle(
+                                                        color:
+                                                            context.colors.wB,
+                                                        fontSize: 26 *
+                                                            user.tempTasksTitleSize,
+                                                      ),
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Expanded(
+                                                          flex: 9,
+                                                          child: Slider(
+                                                            activeColor:
+                                                                const Color(
+                                                                    0xff3D5AFE),
+                                                            value: user
+                                                                .tempTasksTitleSize,
+                                                            min: .25,
+                                                            max: 2,
+                                                            divisions: 14,
+                                                            onChanged: (v) {
+                                                              user.setTempTasksTitleSize(
+                                                                  v);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        Padding(
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    right: 5)),
+                                                        Expanded(
+                                                            flex: 1,
+                                                            child: Text(
+                                                              maxLines: 1,
+                                                              user.tempTasksTitleSize
+                                                                  .toString(),
+                                                              style: TextStyle(
+                                                                  fontSize: 24,
+                                                                  color: context
+                                                                      .colors
+                                                                      .wB),
+                                                            ))
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Flexible(
+                                                            child: Button(
+                                                              onPressed: () {
+                                                                user
+                                                                    .setTasksTitleSize()
+                                                                    .then(
+                                                                        (result) {
+                                                                  if (result
+                                                                      is Success) {
+                                                                    if (context
+                                                                        .mounted) {
+                                                                      Navigator.pop(
+                                                                          context);
+                                                                    }
+                                                                    FeedbackToast
+                                                                        .success(
+                                                                            result.message);
+                                                                  } else if (result
+                                                                      is Failure) {
+                                                                    FeedbackToast
+                                                                        .error(result
+                                                                            .message);
+                                                                  } else if (result
+                                                                      is Info) {
+                                                                    FeedbackToast
+                                                                        .info(result
+                                                                            .message);
+                                                                  }
+                                                                });
+                                                              },
+                                                              label: 'Apply',
+                                                              status: user
+                                                                      .tempTasksTitleSize !=
+                                                                  user.user
+                                                                      .tasksTitleSize,
+                                                              fontSize: 22,
+                                                              size: 1,
+                                                            ),
+                                                          )
+                                                        ])
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          });
+                                        }).then(
+                                      (value) {
+                                        user.setTempTasksTitleSize(
+                                            user.user.tasksTitleSize);
+                                      },
+                                    );
+                                  },
+                                  label: "Task Title",
+                                  fontSize: 22,
+                                  size: 1.5,
+                                ),
+                              ),
+                              Expanded(
+                                child: FontButton(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                        context: context,
+                                        backgroundColor:
+                                            context.colors.cardBackground,
+                                        isScrollControlled: true,
+                                        useSafeArea: true,
+                                        builder: (BuildContext context) {
+                                          return Consumer<UserViewModel>(
+                                              builder: (context, user, child) {
+                                            return Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 30),
+                                              child: SingleChildScrollView(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      "A",
+                                                      style: TextStyle(
+                                                        color:
+                                                            context.colors.wB,
+                                                        fontSize: 20 *
+                                                            user.tempTasksDescSize,
+                                                      ),
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Expanded(
+                                                          flex: 9,
+                                                          child: Slider(
+                                                            activeColor:
+                                                                const Color(
+                                                                    0xff3D5AFE),
+                                                            value: user
+                                                                .tempTasksDescSize,
+                                                            min: .25,
+                                                            max: 2,
+                                                            divisions: 14,
+                                                            onChanged: (v) {
+                                                              user.setTempTasksDescSize(
+                                                                  v);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        Padding(
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    right: 5)),
+                                                        Expanded(
+                                                            flex: 1,
+                                                            child: Text(
+                                                              maxLines: 1,
+                                                              user.tempTasksDescSize
+                                                                  .toString(),
+                                                              style: TextStyle(
+                                                                  fontSize: 24,
+                                                                  color: context
+                                                                      .colors
+                                                                      .wB),
+                                                            ))
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Flexible(
+                                                            child: Button(
+                                                              onPressed: () {
+                                                                user
+                                                                    .setTasksDescSize()
+                                                                    .then(
+                                                                        (result) {
+                                                                  if (result
+                                                                      is Success) {
+                                                                    if (context
+                                                                        .mounted) {
+                                                                      Navigator.pop(
+                                                                          context);
+                                                                    }
+                                                                    FeedbackToast
+                                                                        .success(
+                                                                            result.message);
+                                                                  } else if (result
+                                                                      is Failure) {
+                                                                    FeedbackToast
+                                                                        .error(result
+                                                                            .message);
+                                                                  } else if (result
+                                                                      is Info) {
+                                                                    FeedbackToast
+                                                                        .info(result
+                                                                            .message);
+                                                                  }
+                                                                });
+                                                              },
+                                                              label: 'Apply',
+                                                              status: user
+                                                                      .tempTasksDescSize !=
+                                                                  user.user
+                                                                      .tasksDescSize,
+                                                              fontSize: 22,
+                                                              size: 1,
+                                                            ),
+                                                          )
+                                                        ])
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          });
+                                        }).then(
+                                      (value) {
+                                        user.setTempTasksTitleSize(
+                                            user.user.tasksTitleSize);
+                                      },
+                                    );
+                                  },
+                                  label: "Task\nDescription",
+                                  fontSize: 22,
+                                  size: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Row(
+                            spacing: MediaQuery.widthOf(context) / 30,
+                            children: [
+                              Expanded(
+                                child: FontButton(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                        context: context,
+                                        backgroundColor:
+                                            context.colors.cardBackground,
+                                        isScrollControlled: true,
+                                        useSafeArea: true,
+                                        builder: (BuildContext context) {
+                                          return Consumer<UserViewModel>(
+                                              builder: (context, user, child) {
+                                            return Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 30),
+                                              child: SingleChildScrollView(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      "A",
+                                                      style: TextStyle(
+                                                        color:
+                                                            context.colors.wB,
+                                                        fontSize: 24 *
+                                                            user.tempNotesTitleSize,
+                                                      ),
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Expanded(
+                                                          flex: 9,
+                                                          child: Slider(
+                                                            activeColor:
+                                                                const Color(
+                                                                    0xff3D5AFE),
+                                                            value: user
+                                                                .tempNotesTitleSize,
+                                                            min: .25,
+                                                            max: 2,
+                                                            divisions: 14,
+                                                            onChanged: (v) {
+                                                              user.setTempNotesTitleSize(
+                                                                  v);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        Padding(
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    right: 5)),
+                                                        Expanded(
+                                                            flex: 1,
+                                                            child: Text(
+                                                              maxLines: 1,
+                                                              user.tempNotesTitleSize
+                                                                  .toString(),
+                                                              style: TextStyle(
+                                                                  fontSize: 24,
+                                                                  color: context
+                                                                      .colors
+                                                                      .wB),
+                                                            ))
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Flexible(
+                                                            child: Button(
+                                                              onPressed: () {
+                                                                user
+                                                                    .setNotesTitleSize()
+                                                                    .then(
+                                                                        (result) {
+                                                                  if (result
+                                                                      is Success) {
+                                                                    if (context
+                                                                        .mounted) {
+                                                                      Navigator.pop(
+                                                                          context);
+                                                                    }
+                                                                    FeedbackToast
+                                                                        .success(
+                                                                            result.message);
+                                                                  } else if (result
+                                                                      is Failure) {
+                                                                    FeedbackToast
+                                                                        .error(result
+                                                                            .message);
+                                                                  } else if (result
+                                                                      is Info) {
+                                                                    FeedbackToast
+                                                                        .info(result
+                                                                            .message);
+                                                                  }
+                                                                });
+                                                              },
+                                                              label: 'Apply',
+                                                              status: user
+                                                                      .tempNotesTitleSize !=
+                                                                  user.user
+                                                                      .notesTitleSize,
+                                                              fontSize: 22,
+                                                              size: 1,
+                                                            ),
+                                                          )
+                                                        ])
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          });
+                                        }).then(
+                                      (value) {
+                                        user.setTempNotesTitleSize(
+                                            user.user.notesTitleSize);
+                                      },
+                                    );
+                                  },
+                                  label: "Note Title",
+                                  fontSize: 22,
+                                  size: 1.5,
+                                ),
+                              ),
+                              Expanded(
+                                child: FontButton(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                        context: context,
+                                        backgroundColor:
+                                            context.colors.cardBackground,
+                                        isScrollControlled: true,
+                                        useSafeArea: true,
+                                        builder: (BuildContext context) {
+                                          return Consumer<UserViewModel>(
+                                              builder: (context, user, child) {
+                                            return Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 30),
+                                              child: SingleChildScrollView(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      "A",
+                                                      style: TextStyle(
+                                                        color:
+                                                            context.colors.wB,
+                                                        fontSize: 26 *
+                                                            user.tempNotesTextSize,
+                                                      ),
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Expanded(
+                                                          flex: 9,
+                                                          child: Slider(
+                                                            activeColor:
+                                                                const Color(
+                                                                    0xff3D5AFE),
+                                                            value: user
+                                                                .tempNotesTextSize,
+                                                            min: .25,
+                                                            max: 2,
+                                                            divisions: 14,
+                                                            onChanged: (v) {
+                                                              user.setTempNotesSize(
+                                                                  v);
+                                                            },
+                                                          ),
+                                                        ),
+                                                        Padding(
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    right: 5)),
+                                                        Expanded(
+                                                            flex: 1,
+                                                            child: Text(
+                                                              maxLines: 1,
+                                                              user.tempNotesTextSize
+                                                                  .toString(),
+                                                              style: TextStyle(
+                                                                  fontSize: 24,
+                                                                  color: context
+                                                                      .colors
+                                                                      .wB),
+                                                            ))
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Flexible(
+                                                            child: Button(
+                                                              onPressed: () {
+                                                                user
+                                                                    .setNotesTextSize()
+                                                                    .then(
+                                                                        (result) {
+                                                                  if (result
+                                                                      is Success) {
+                                                                    if (context
+                                                                        .mounted) {
+                                                                      Navigator.pop(
+                                                                          context);
+                                                                    }
+                                                                    FeedbackToast
+                                                                        .success(
+                                                                            result.message);
+                                                                  } else if (result
+                                                                      is Failure) {
+                                                                    FeedbackToast
+                                                                        .error(result
+                                                                            .message);
+                                                                  } else if (result
+                                                                      is Info) {
+                                                                    FeedbackToast
+                                                                        .info(result
+                                                                            .message);
+                                                                  }
+                                                                });
+                                                              },
+                                                              label: 'Apply',
+                                                              status: user
+                                                                      .tempNotesTextSize !=
+                                                                  user.user
+                                                                      .notesTextSize,
+                                                              fontSize: 22,
+                                                              size: 1,
+                                                            ),
+                                                          )
+                                                        ])
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          });
+                                        }).then(
+                                      (value) {
+                                        user.setTempNotesSize(
+                                            user.user.notesTextSize);
+                                      },
+                                    );
+                                  },
+                                  label: "Note Body",
+                                  fontSize: 22,
+                                  size: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
           Padding(padding: EdgeInsets.only(bottom: 8)),

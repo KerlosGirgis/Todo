@@ -153,30 +153,6 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  Future<void> increaseFinished() async {
-    user.finished++;
-    if (user.unFinished > 0) {
-      user.unFinished--;
-    }
-    await userRepository.updateUser(user);
-    notifyListeners();
-  }
-
-  Future<void> increaseUnFinished() async {
-    user.unFinished++;
-    await userRepository.updateUser(user);
-    notifyListeners();
-  }
-
-  Future<void> decreaseFinished() async {
-    user.unFinished++;
-    if (user.finished > 0) {
-      user.finished--;
-    }
-    await userRepository.updateUser(user);
-    notifyListeners();
-  }
-
   Future<void> resetPlot() async {
     user.unFinished = 0;
     user.finished = 0;
