@@ -55,8 +55,7 @@ class _NotesPageState extends State<NotesPage> {
           ExpandableMenu(
               iconColor: context.colors.appBarIcons,
               animationSpeed: 500,
-              width:
-              MediaQuery.orientationOf(context) == Orientation.portrait
+              width: MediaQuery.orientationOf(context) == Orientation.portrait
                   ? MediaQuery.sizeOf(context).width / 14
                   : MediaQuery.sizeOf(context).width / 22,
               height: 45,
@@ -73,11 +72,10 @@ class _NotesPageState extends State<NotesPage> {
                             Animation<double> secondaryAnimation) {
                           return ReorderNotesDialog();
                         },
-                        transitionBuilder: (context, animation,
-                            secondaryAnimation, child) {
+                        transitionBuilder:
+                            (context, animation, secondaryAnimation, child) {
                           var fadeAnimation = CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeInOutSine);
+                              parent: animation, curve: Curves.easeInOutSine);
                           var scaleAnimation =
                           Tween<double>(begin: 0.95, end: 1.0)
                               .animate(fadeAnimation); // Subtle grow
@@ -114,13 +112,11 @@ class _NotesPageState extends State<NotesPage> {
                             Animation<double> secondaryAnimation) {
                           return NotesOverwriteDialog();
                         },
-                        transitionBuilder: (context, animation,
-                            secondaryAnimation, child) {
+                        transitionBuilder:
+                            (context, animation, secondaryAnimation, child) {
                           var fadeAnimation = CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeInOutSine);
-                          var scaleAnimation =
-                          Tween<double>(begin: 0.8, end: 1)
+                              parent: animation, curve: Curves.easeInOutSine);
+                          var scaleAnimation = Tween<double>(begin: 0.8, end: 1)
                               .animate(fadeAnimation);
                           return FadeTransition(
                             opacity: fadeAnimation,
@@ -162,8 +158,8 @@ class _NotesPageState extends State<NotesPage> {
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
                           const ProfilePage(),
-                          transitionsBuilder: (context, animation,
-                              secondaryAnimation, child) {
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
                             const begin = Offset(0.0, 1.0);
                             const end = Offset.zero;
                             const curve = Curves.ease;
@@ -190,10 +186,8 @@ class _NotesPageState extends State<NotesPage> {
         children: [
           FloatingActionButton(
               heroTag: 0,
-              backgroundColor:
-              context.colors.floatingActionButtonBackground,
-              foregroundColor:
-              context.colors.floatingActionButtonForeground,
+              backgroundColor: context.colors.floatingActionButtonBackground,
+              foregroundColor: context.colors.floatingActionButtonForeground,
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
@@ -218,18 +212,15 @@ class _NotesPageState extends State<NotesPage> {
           const Padding(padding: EdgeInsets.only(bottom: 20)),
           FloatingActionButton(
             heroTag: 1,
-            backgroundColor:
-            context.colors.floatingActionButtonBackground,
-            foregroundColor:
-            context.colors.floatingActionButtonForeground,
+            backgroundColor: context.colors.floatingActionButtonBackground,
+            foregroundColor: context.colors.floatingActionButtonForeground,
             onPressed: () {
               showGeneralDialog(
                 context: context,
                 barrierDismissible: true,
-                barrierLabel: MaterialLocalizations.of(context)
-                    .modalBarrierDismissLabel,
-                pageBuilder: (BuildContext context,
-                    Animation<double> animation,
+                barrierLabel:
+                MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                pageBuilder: (BuildContext context, Animation<double> animation,
                     Animation<double> secondaryAnimation) {
                   return AddNoteDialog();
                 },
@@ -239,8 +230,8 @@ class _NotesPageState extends State<NotesPage> {
                       parent: animation, curve: Curves.easeInOutSine);
                   var scaleAnimation = Tween<double>(begin: 0.95, end: 1.0)
                       .animate(fadeAnimation); // Subtle grow
-                  var slideAnimation = Tween<Offset>(
-                      begin: Offset(0, 0.05), end: Offset.zero)
+                  var slideAnimation =
+                  Tween<Offset>(begin: Offset(0, 0.05), end: Offset.zero)
                       .animate(fadeAnimation); // Gentle rise
 
                   return FadeTransition(
@@ -273,8 +264,7 @@ class _NotesPageState extends State<NotesPage> {
                 : GridView.builder(
                 itemCount: notes.notes.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount:
-                    MediaQuery.of(context).orientation ==
+                    crossAxisCount: MediaQuery.of(context).orientation ==
                         Orientation.portrait
                         ? 2
                         : 4,
@@ -296,8 +286,7 @@ class _NotesPageState extends State<NotesPage> {
                               margin: const EdgeInsets.all(16),
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
-                                  final cardWidth =
-                                      screenSize.width * 0.8;
+                                  final cardWidth = screenSize.width * 0.8;
                                   const aspectRatio = 16 / 9;
                                   return AspectRatio(
                                     aspectRatio: aspectRatio,
@@ -307,24 +296,23 @@ class _NotesPageState extends State<NotesPage> {
                                           color: notes.notes[index]
                                               .coverColor.toColor,
                                           borderRadius:
-                                          BorderRadius.circular(
-                                              12.0),
+                                          BorderRadius.circular(12.0),
                                           boxShadow: [
                                             BoxShadow(
                                               color: Colors.black
-                                                  .withValues(
-                                                  alpha: 0.8),
+                                                  .withValues(alpha: 0.8),
                                               blurRadius: 8,
-                                              offset:
-                                              const Offset(0, 4),
+                                              offset: const Offset(0, 4),
                                             ),
                                           ],
                                         ),
                                         child: Stack(
                                           children: [
                                             Center(
-                                              child: Consumer<UserViewModel>(
-                                                builder: (context, user , child){
+                                              child:
+                                              Consumer<UserViewModel>(
+                                                builder:
+                                                    (context, user, child) {
                                                   return Text(
                                                     maxLines: 4,
                                                     textAlign:
@@ -348,8 +336,7 @@ class _NotesPageState extends State<NotesPage> {
                                                 },
                                               ),
                                             ),
-                                            notes.notes[index]
-                                                .protected ==
+                                            notes.notes[index].protected ==
                                                 1
                                                 ? Column(
                                               mainAxisAlignment:
@@ -362,17 +349,18 @@ class _NotesPageState extends State<NotesPage> {
                                                       .end,
                                                   children: [
                                                     Flexible(
-                                                      child:
-                                                      Padding(
+                                                      child: Padding(
                                                         padding:
                                                         const EdgeInsets
                                                             .all(
                                                             7),
-                                                        child: Image
-                                                            .asset(
-                                                          "assets/lock.png",
-                                                          scale:
-                                                          4,
+                                                        child: Icon(
+                                                          Icons.lock_rounded,
+                                                          color: ThemeData.estimateBrightnessForColor(
+                                                            notes.notes[index].coverColor.toColor,
+                                                          ) == Brightness.dark
+                                                              ? Colors.white.withValues(alpha: 0.8)
+                                                              : Colors.black.withValues(alpha: 0.6),
                                                         ),
                                                       ),
                                                     ),
@@ -380,8 +368,7 @@ class _NotesPageState extends State<NotesPage> {
                                                 ),
                                               ],
                                             )
-                                                : const SizedBox
-                                                .shrink(),
+                                                : const SizedBox.shrink(),
                                           ],
                                         )),
                                   );
@@ -410,8 +397,8 @@ class _NotesPageState extends State<NotesPage> {
                                         const curve = Curves.ease;
                                         var tween = Tween(
                                             begin: begin, end: end)
-                                            .chain(CurveTween(
-                                            curve: curve));
+                                            .chain(
+                                            CurveTween(curve: curve));
                                         var offsetAnimation =
                                         animation.drive(tween);
                                         return SlideTransition(
@@ -434,8 +421,7 @@ class _NotesPageState extends State<NotesPage> {
                                     context: context,
                                     barrierDismissible: true,
                                     barrierLabel:
-                                    MaterialLocalizations.of(
-                                        context)
+                                    MaterialLocalizations.of(context)
                                         .modalBarrierDismissLabel,
                                     pageBuilder: (BuildContext context,
                                         Animation<double> animation,
@@ -444,18 +430,13 @@ class _NotesPageState extends State<NotesPage> {
                                       return UpdateNoteDialog(
                                           note: notes.notes[index]);
                                     },
-                                    transitionBuilder: (context,
-                                        animation,
-                                        secondaryAnimation,
-                                        child) {
-                                      var fadeAnimation =
-                                      CurvedAnimation(
+                                    transitionBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      var fadeAnimation = CurvedAnimation(
                                           parent: animation,
-                                          curve:
-                                          Curves.easeInOutSine);
+                                          curve: Curves.easeInOutSine);
                                       var scaleAnimation =
-                                      Tween<double>(
-                                          begin: 0.8, end: 1)
+                                      Tween<double>(begin: 0.8, end: 1)
                                           .animate(fadeAnimation);
                                       return FadeTransition(
                                         opacity: fadeAnimation,
