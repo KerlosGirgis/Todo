@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/core/result.dart';
 import 'package:uuid/v4.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
@@ -16,6 +17,7 @@ class AddTaskDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     String date = "";
     String time = "";
+    int notification = 0;
     TextEditingController titleController = TextEditingController();
     TextEditingController descController = TextEditingController();
     return StatefulBuilder(
@@ -83,8 +85,7 @@ class AddTaskDialog extends StatelessWidget {
                 maxLines: 1,
                 decoration: InputDecoration(
                   labelText: "Title",
-                  labelStyle:
-                      TextStyle(fontSize: 30, color: context.colors.wB),
+                  labelStyle: TextStyle(fontSize: 30, color: context.colors.wB),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: BorderSide.none),
@@ -105,8 +106,7 @@ class AddTaskDialog extends StatelessWidget {
                 maxLines: 4,
                 decoration: InputDecoration(
                   labelText: "Description",
-                  labelStyle:
-                      TextStyle(fontSize: 30, color: context.colors.wB),
+                  labelStyle: TextStyle(fontSize: 30, color: context.colors.wB),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: BorderSide.none),
@@ -118,67 +118,69 @@ class AddTaskDialog extends StatelessWidget {
                   color: context.colors.wB,
                 ),
               ),
-              Padding(
-                  padding: EdgeInsets.only(
-                      bottom: MediaQuery.sizeOf(context).height / 50)),
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    showDatePicker(
-                            context: context,
-                            firstDate: DateTime(DateTime.now().year,
-                                DateTime.now().month, DateTime.now().day),
-                            lastDate: DateTime(DateTime.now().year + 5))
-                        .then((dateValue) {
-                      if (dateValue != null) {
-                        setState(() {
-                          date = dateValue.toString().split(" ").first;
-                        });
-                      }
-                    });
-                  },
-                  onLongPress: () {
-                    setState(() {
-                      date = "";
-                      time = "";
-                    });
-                    FeedbackToast.info("Date Cleared");
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.colors.cardBackground,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(50)),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: ClipRect(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Icon(
-                          Icons.calendar_month,
-                          color: context.colors.wB,
-                        ),
-                        Spacer(
-                          flex: 1,
-                        ),
-                        Flexible(
-                          flex: 8,
-                          fit: FlexFit.tight,
-                          child: Text(
-                            date,
-                            style: TextStyle(
-                                fontSize: 18, color: context.colors.wB),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+              notification != 2
+                  ? Padding(
+                    padding: EdgeInsets.only(top: MediaQuery.sizeOf(context).height / 50),
+                    child: SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            showDatePicker(
+                                    context: context,
+                                    firstDate: DateTime(DateTime.now().year,
+                                        DateTime.now().month, DateTime.now().day),
+                                    lastDate: DateTime(DateTime.now().year + 5))
+                                .then((dateValue) {
+                              if (dateValue != null) {
+                                setState(() {
+                                  date = dateValue.toString().split(" ").first;
+                                });
+                              }
+                            });
+                          },
+                          onLongPress: () {
+                            setState(() {
+                              date = "";
+                              time = "";
+                            });
+                            FeedbackToast.info("Date Cleared");
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: context.colors.cardBackground,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(50)),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: ClipRect(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Icon(
+                                  Icons.calendar_month,
+                                  color: context.colors.wB,
+                                ),
+                                Spacer(
+                                  flex: 1,
+                                ),
+                                Flexible(
+                                  flex: 8,
+                                  fit: FlexFit.tight,
+                                  child: Text(
+                                    date,
+                                    style: TextStyle(
+                                        fontSize: 18, color: context.colors.wB),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+                      ),
+                  )
+                  : SizedBox.shrink(),
               Padding(
                   padding: EdgeInsets.only(
                       bottom: MediaQuery.sizeOf(context).height / 80)),
@@ -195,9 +197,8 @@ class AddTaskDialog extends StatelessWidget {
                       if (timeValue != null) {
                         setState(() {
                           time = timeValue.format(context);
-                          if (date.isEmpty) {
-                            date =
-                                DateTime.now().toString().split(" ").first;
+                          if (date.isEmpty&&notification!=2) {
+                            date = DateTime.now().toString().split(" ").first;
                           }
                         });
                       }
@@ -245,6 +246,79 @@ class AddTaskDialog extends StatelessWidget {
                   ),
                 ),
               ),
+              Padding(
+                  padding: EdgeInsets.only(
+                      bottom: MediaQuery.sizeOf(context).height / 80)),
+              DropdownMenu<int>(
+                initialSelection: notification,
+                expandedInsets: EdgeInsets.zero,
+                leadingIcon: Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: Icon(
+                    Icons.notifications_active,
+                    color: context.colors.wB,
+                  ),
+                ),
+                textStyle: TextStyle(
+                  fontSize: 18,
+                  color: context.colors.wB,
+                ),
+                menuStyle: MenuStyle(
+                  backgroundColor: WidgetStatePropertyAll(
+                    context.colors.cardBackground,
+                  ),
+                  shape: WidgetStatePropertyAll(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                ),
+                inputDecorationTheme: InputDecorationTheme(
+                  filled: true,
+                  isDense: true,
+                  fillColor: context.colors.cardBackground,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(50),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(50),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(50),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                dropdownMenuEntries: const [
+                  DropdownMenuEntry(
+                    value: 0,
+                    label: "Off",
+                  ),
+                  DropdownMenuEntry(
+                    value: 1,
+                    label: "Once",
+                  ),
+                  DropdownMenuEntry(
+                    value: 2,
+                    label: "Daily",
+                  ),
+                ],
+                onSelected: (value) {
+                  if (value != null) {
+                    setState(() {
+                      notification = value;
+                      if(value==2){
+                        date="";
+                      }
+                    });
+                  }
+                },
+              )
             ],
           ),
           actions: [
@@ -267,23 +341,32 @@ class AddTaskDialog extends StatelessWidget {
                         right: MediaQuery.of(context).size.width / 25)),
                 Expanded(
                   child: Button(
-                    onPressed: () {
+                    onPressed: () async {
                       if (titleController.text.isEmpty) {
                         FeedbackToast.error("Task title can't be empty");
                         return;
                       }
                       Navigator.pop(context);
-                      Provider.of<TasksViewModel>(context, listen: false)
-                          .addTask(TodoItem(
-                        title: titleController.text,
-                        desc: descController.text,
-                        status: 0,
-                        date: date,
-                        time: time,
-                        uuid: const UuidV4().generate(),
-                        notification: 0,
-                      ));
-                        FeedbackToast.info("Task Added");
+                      Result status = await Provider.of<TasksViewModel>(context,
+                              listen: false)
+                          .addTask(
+                              TodoItem(
+                                title: titleController.text,
+                                desc: descController.text,
+                                status: 0,
+                                date: date,
+                                time: time,
+                                uuid: const UuidV4().generate(),
+                                notification: 0,
+                              ),
+                              notification);
+                      if (status is Success) {
+                        FeedbackToast.success(status.message);
+                      } else if (status is Failure) {
+                        FeedbackToast.error(status.message);
+                      } else if (status is Info) {
+                        FeedbackToast.info(status.message);
+                      }
                     },
                     label: 'Save',
                     status: true,

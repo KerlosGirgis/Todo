@@ -117,14 +117,7 @@ class _TodoPageState extends State<TodoPage> {
           body: SafeArea(
             child: Consumer<TasksViewModel>(
               builder: (context, tasks, child) {
-                return tasks.items.isEmpty
-                    ? Center(
-                        child: Image.asset(
-                          "assets/empty_list.png",
-                          scale: 2,
-                        ),
-                      )
-                    : Theme(
+                return Theme(
                         data: Theme.of(context).copyWith(
                           canvasColor: Colors.transparent,
                         ),
@@ -207,7 +200,14 @@ class _TodoPageState extends State<TodoPage> {
                                 ],
                               ),
                             ),
-                            Expanded(
+                            tasks.items.isEmpty
+                                ? Expanded(
+                              child: Image.asset(
+                                "assets/empty_list.png",
+                                scale: 2,
+                              ),
+                            )
+                                : Expanded(
                               child: ReorderableListView.builder(
                                 itemCount: tasks.items.length,
                                 itemBuilder: (context, index) {

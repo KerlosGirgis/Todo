@@ -94,9 +94,18 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  Future<void> addTask(TodoItem todo) async {
-    await tasksRepository.insertItem(todo);
-    get();
+  Future<Result> addTask(TodoItem task, int notification) async {
+    task.id = await tasksRepository.insertItem(task);
+    await get();
+    if(notification == 1){
+      return enableOneTimeNotification(task);
+    }
+    else if(notification == 2){
+      return enableDailyNotification(task);
+    }
+    else{
+      return Info("Task Added");
+    }
   }
 
   Future<void> dismissTask(int index, int id) async {

@@ -8,7 +8,7 @@ class TasksRepository{
 
   final Database db = DatabaseService.db;
 
-  Future<void> insertItem(TodoItem item) {
+  Future<int> insertItem(TodoItem item) {
     return db.insert('ToDo', item.toMap());
   }
 

@@ -20,6 +20,7 @@ class UpdateTaskDialog extends StatelessWidget {
       builder: (context, tasks, child) {
         String date = tasks.items[index].date;
         String time = tasks.items[index].time;
+        int notification = tasks.items[index].notification;
         TextEditingController titleController = TextEditingController();
         titleController.text = tasks.items[index].title;
         TextEditingController descController = TextEditingController();
@@ -120,7 +121,7 @@ class UpdateTaskDialog extends StatelessWidget {
                 Padding(
                     padding: EdgeInsets.only(
                         bottom: MediaQuery.sizeOf(context).height / 50)),
-                tasks.items[index].notification != 2
+                notification != 2
                     ? SizedBox(
                         height: 50,
                         child: ElevatedButton(
@@ -150,7 +151,6 @@ class UpdateTaskDialog extends StatelessWidget {
                           onLongPress: () {
                             setState(() {
                               date = "";
-                              time = "";
                             });
                             FeedbackToast.info("Date Cleared");
                           },
@@ -256,6 +256,79 @@ class UpdateTaskDialog extends StatelessWidget {
                     ),
                   ),
                 ),
+                Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.sizeOf(context).height / 80)),
+                DropdownMenu<int>(
+                  initialSelection: notification,
+                  expandedInsets: EdgeInsets.zero,
+                  leadingIcon: Padding(
+                    padding: const EdgeInsets.only(left: 16.0),
+                    child: Icon(
+                      Icons.notifications_active,
+                      color: context.colors.wB,
+                    ),
+                  ),
+                  textStyle: TextStyle(
+                    fontSize: 18,
+                    color: context.colors.wB,
+                  ),
+                  menuStyle: MenuStyle(
+                    backgroundColor: WidgetStatePropertyAll(
+                      context.colors.cardBackground,
+                    ),
+                    shape: WidgetStatePropertyAll(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+                  inputDecorationTheme: InputDecorationTheme(
+                    filled: true,
+                    isDense: true,
+                    fillColor: context.colors.cardBackground,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(50),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(50),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(50),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  dropdownMenuEntries: const [
+                    DropdownMenuEntry(
+                      value: 0,
+                      label: "Off",
+                    ),
+                    DropdownMenuEntry(
+                      value: 1,
+                      label: "Once",
+                    ),
+                    DropdownMenuEntry(
+                      value: 2,
+                      label: "Daily",
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value != null) {
+                      setState(() {
+                        notification = value;
+                        if(value==2){
+                          date="";
+                        }
+                      });
+                    }
+                  },
+                )
               ],
             ),
             actions: [
@@ -293,7 +366,7 @@ class UpdateTaskDialog extends StatelessWidget {
                             date: date,
                             time: time,
                             uuid: tasks.items[index].uuid,
-                            notification: tasks.items[index].notification))
+                            notification: notification))
                             .then((result) {
                               if(result is Success){
                                 FeedbackToast.success(result.message);
