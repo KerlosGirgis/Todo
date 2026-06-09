@@ -89,36 +89,39 @@ class ProfilePageState extends State<ProfilePage> {
                     ),
                     Expanded(
                       flex: 3,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Chart(),
-                          ),
-                          Expanded(
-                            child: Column(
-                              spacing: MediaQuery.heightOf(context) / 90,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Indicator(
-                                  color: Color(0xff3D5AFE),
-                                  text: 'Finished',
-                                  isSquare: false,
-                                  textColor: context.colors.wB,
-                                  size: 25,
-                                ),
-                                Indicator(
-                                  color: context.colors.wB
-                                      .withValues(alpha: 0.4),
-                                  text: 'UnFinished',
-                                  isSquare: false,
-                                  textColor: context.colors.wB,
-                                  size: 25,
-                                ),
-                              ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Chart(),
                             ),
-                          ),
-                        ],
+                            Expanded(
+                              child: Column(
+                                spacing: MediaQuery.heightOf(context) / 90,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Indicator(
+                                    color: Color(0xff3D5AFE),
+                                    text: 'Finished',
+                                    isSquare: false,
+                                    textColor: context.colors.wB,
+                                    size: 25,
+                                  ),
+                                  Indicator(
+                                    color: context.colors.wB
+                                        .withValues(alpha: 0.4),
+                                    text: 'UnFinished',
+                                    isSquare: false,
+                                    textColor: context.colors.wB,
+                                    size: 25,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     Expanded(

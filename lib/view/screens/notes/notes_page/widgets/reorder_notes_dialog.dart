@@ -150,7 +150,7 @@ class ReorderNotesDialog extends StatelessWidget {
                               ),
                             );
                           },
-                          onReorder: (int oldIndex, int newIndex) async {
+                          onReorderItem: (int oldIndex, int newIndex) async {
                             await Provider.of<NotesViewModel>(context,
                                     listen: false)
                                 .syncAfterReorder(oldIndex, newIndex);

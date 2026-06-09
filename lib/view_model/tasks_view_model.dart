@@ -47,24 +47,19 @@ class TasksViewModel with ChangeNotifier {
 
     final taskToMove = items[oldIndex];
 
-    int effectiveNewIndex = newIndex;
-    if (oldIndex < newIndex) {
-      effectiveNewIndex -= 1;
-    }
-
     items.removeAt(oldIndex);
-    items.insert(effectiveNewIndex, taskToMove);
+    items.insert(newIndex, taskToMove);
     notifyListeners();
 
     final oldMasterIndex = _allTasks.indexOf(taskToMove);
     if (oldMasterIndex != -1) {
       _allTasks.removeAt(oldMasterIndex);
       int insertAt;
-      if (effectiveNewIndex + 1 < items.length) {
-        final nextTask = items[effectiveNewIndex + 1];
+      if (newIndex + 1 < items.length) {
+        final nextTask = items[newIndex + 1];
         insertAt = _allTasks.indexOf(nextTask);
-      } else if (effectiveNewIndex > 0) {
-        final prevTask = items[effectiveNewIndex - 1];
+      } else if (newIndex > 0) {
+        final prevTask = items[newIndex - 1];
         insertAt = _allTasks.indexOf(prevTask) + 1;
       } else {
         insertAt = _allTasks.length;

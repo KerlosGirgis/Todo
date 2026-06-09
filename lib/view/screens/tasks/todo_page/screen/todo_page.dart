@@ -679,7 +679,7 @@ class _TodoPageState extends State<TodoPage> {
                                     ),
                                   );
                                 },
-                                onReorder:
+                                onReorderItem:
                                     (int oldIndex, int newIndex) async {
                                   await Provider.of<TasksViewModel>(context,
                                           listen: false)
