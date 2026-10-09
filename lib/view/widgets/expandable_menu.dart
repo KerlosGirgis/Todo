@@ -7,6 +7,7 @@ class ExpandableMenu extends StatefulWidget {
   final int animationSpeed;
   final List<Widget> items;
   final Color? iconColor;
+  final ValueChanged<bool>? onExpandedChanged;
 
   const ExpandableMenu({
     super.key,
@@ -15,6 +16,7 @@ class ExpandableMenu extends StatefulWidget {
     this.animationSpeed = 800,
     required this.items,
     this.iconColor = Colors.white,
+    this.onExpandedChanged,
   });
 
   @override
@@ -29,14 +31,19 @@ class _ExpandableMenuState extends State<ExpandableMenu> {
     return Row(
       children: [
         ExpandableIcon(
-          onClicked: () => setState(() => _isExpanded = !_isExpanded),
+          onClicked: () {
+            setState(() => _isExpanded = !_isExpanded);
+            widget.onExpandedChanged?.call(_isExpanded);
+          },
           width: widget.width,
           height: widget.height,
           iconColor: widget.iconColor,
           animationSpeed: widget.animationSpeed,
         ),
         AnimatedContainer(
-          width: _isExpanded ? widget.width * 5 : 0,
+          width: _isExpanded
+              ? widget.items.length * kMinInteractiveDimension
+              : 0,
           height: widget.height,
           duration: Duration(milliseconds: widget.animationSpeed),
           curve: Curves.fastLinearToSlowEaseIn,

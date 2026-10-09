@@ -26,6 +26,8 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
+  bool _menuOpen = false;
+
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -697,19 +699,23 @@ class _TodoPageState extends State<TodoPage> {
             automaticallyImplyLeading: false,
             backgroundColor: context.colors.pageBackground,
             surfaceTintColor: Colors.transparent,
-            title: Text(
-              "ToDo",
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 30,
-                color: context.colors.wB,
-                fontWeight: FontWeight.bold,
+            title: AnimatedOpacity(
+              opacity: _menuOpen ? 0 : 1,
+              duration: const Duration(milliseconds: 200),
+              child: Text(
+                "ToDo",
+                style: TextStyle(
+                  fontSize: 30,
+                  color: context.colors.wB,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             actions: [
               ExpandableMenu(
                 iconColor: context.colors.appBarIcons,
                 animationSpeed: 500,
+                onExpandedChanged: (open) => setState(() => _menuOpen = open),
                 width: MediaQuery.orientationOf(context) == Orientation.portrait
                     ? MediaQuery.sizeOf(context).width / 14
                     : MediaQuery.sizeOf(context).width / 30,
@@ -794,7 +800,10 @@ class _TodoPageState extends State<TodoPage> {
                       )),
                 ],
               ),
-              Flexible(child: const AppbarAvatar()),
+              const Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: AppbarAvatar(),
+              ),
               const Padding(padding: EdgeInsets.only(right: 18))
             ],
           ),
