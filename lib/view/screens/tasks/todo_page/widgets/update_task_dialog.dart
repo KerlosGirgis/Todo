@@ -7,6 +7,8 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../widgets/button.dart';
+import '../../../../../view_model/user_view_model.dart';
+import '../../../../widgets/dialog_header.dart';
 
 class UpdateTaskDialog extends StatelessWidget {
   const UpdateTaskDialog({
@@ -18,6 +20,7 @@ class UpdateTaskDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<TasksViewModel>(
       builder: (context, tasks, child) {
+        final user = context.watch<UserViewModel>().user;
         String date = tasks.items[index].date;
         String time = tasks.items[index].time;
         int notification = tasks.items[index].notification;
@@ -33,53 +36,7 @@ class UpdateTaskDialog extends StatelessWidget {
             backgroundColor: context.colors.pageBackground,
             scrollable: true,
             elevation: 2,
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: context.colors.dialogIconContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.edit,
-                      color: context.colors.dialogIcon,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 5,
-                  child: Text(
-                    "Edit Task",
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                        color: context.colors.wB),
-                  ),
-                ),
-                Expanded(
-                  child: IconButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: Icon(
-                      Icons.close,
-                      color: context.colors.dialogExitIcon,
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.colors.dialogExitContainer,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            ),
+            title: const DialogHeader(icon: Icons.edit, title: "Edit Task"),
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -87,11 +44,14 @@ class UpdateTaskDialog extends StatelessWidget {
                 TextField(
                   controller: titleController,
                   maxLines: 1,
-                  style: TextStyle(fontSize: 22, color: context.colors.wB),
+                  style: TextStyle(
+                      fontSize: 22 * user.tasksTitleSize,
+                      color: context.colors.wB),
                   decoration: InputDecoration(
                     labelText: "Title",
-                    labelStyle:
-                        TextStyle(fontSize: 30, color: context.colors.wB),
+                    labelStyle: TextStyle(
+                        fontSize: 22 * user.tasksTitleSize,
+                        color: context.colors.wB),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none),
@@ -106,11 +66,14 @@ class UpdateTaskDialog extends StatelessWidget {
                   controller: descController,
                   keyboardType: TextInputType.multiline,
                   maxLines: 4,
-                  style: TextStyle(fontSize: 20, color: context.colors.wB),
+                  style: TextStyle(
+                      fontSize: 20 * user.tasksDescSize,
+                      color: context.colors.wB),
                   decoration: InputDecoration(
                     labelText: "Description",
-                    labelStyle:
-                        TextStyle(fontSize: 30, color: context.colors.wB),
+                    labelStyle: TextStyle(
+                        fontSize: 20 * user.tasksDescSize,
+                        color: context.colors.wB),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none),

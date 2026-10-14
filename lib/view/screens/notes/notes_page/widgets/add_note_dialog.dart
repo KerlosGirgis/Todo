@@ -5,7 +5,9 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/notes_view_model.dart';
+import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/button.dart';
+import '../../../../widgets/dialog_header.dart';
 
 class AddNoteDialog extends StatefulWidget {
   const AddNoteDialog({super.key});
@@ -34,6 +36,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
   Widget build(BuildContext context) {
     return Consumer<NotesViewModel>(
         builder: (context, note, child) {
+      final user = context.watch<UserViewModel>().user;
       return AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50),
@@ -41,51 +44,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
         elevation: 2,
         scrollable: true,
         backgroundColor: context.colors.pageBackground,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: context.colors.dialogIconContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.note_add,
-                  color: context.colors.dialogIcon,
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: Text(
-                "Add Note",
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 32,
-                    color: context.colors.wB),
-              ),
-            ),
-            Expanded(
-              child: IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon:
-                    Icon(Icons.close, color: context.colors.dialogExitIcon),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colors.dialogExitContainer,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
-                  ),
-                ),
-              ),
-            )
-          ],
-        ),
+        title: const DialogHeader(icon: Icons.note_add, title: "Add Note"),
         content: Column(
           spacing: MediaQuery.of(context).size.height / 50,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,11 +52,13 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
           children: [
             TextField(
               maxLines: 1,
-              style: TextStyle(fontSize: 22, color: context.colors.wB),
+              style: TextStyle(
+                  fontSize: 22 * user.notesTitleSize,
+                  color: context.colors.wB),
               decoration: InputDecoration(
                 labelText: "Title",
                 labelStyle: TextStyle(
-                  fontSize: 30,
+                  fontSize: 22 * user.notesTitleSize,
                   color: context.colors.wB,
                 ),
                 border: OutlineInputBorder(
@@ -145,8 +106,9 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                       "Title ",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(fontSize: 24, color: context.colors.wB),
+                      style: TextStyle(
+                          fontSize: 22 * user.notesTitleSize,
+                          color: context.colors.wB),
                     ),
                   ),
                   Flexible(
@@ -207,8 +169,9 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                       "Cover ",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(fontSize: 24, color: context.colors.wB),
+                      style: TextStyle(
+                          fontSize: 22 * user.notesTitleSize,
+                          color: context.colors.wB),
                     ),
                   ),
                   Flexible(
@@ -234,61 +197,64 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                 ],
               ),
             ),
-            SizedBox(
-              height: 55,
-              child: ElevatedButton(
-                onPressed: () async {
-                  Result status = await note.toggleTempNoteProtection();
-                  if (status is Failure) {
-                    FeedbackToast.error(status.message);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colors.cardBackground,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
-                  elevation: 1,
+            ElevatedButton(
+              onPressed: () async {
+                Result status = await note.toggleTempNoteProtection();
+                if (status is Failure) {
+                  FeedbackToast.error(status.message);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.colors.cardBackground,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.fingerprint_rounded,
-                        color: context.colors.wB, size: 24),
-                    Spacer(
-                      flex: 1,
-                    ),
-                    Flexible(
-                      flex: 7,
-                      fit: FlexFit.tight,
-                      child: Text(
-                        "Fingerprint",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            fontSize: 24, color: context.colors.wB),
-                      ),
-                    ),
-                    Spacer(
-                      flex: 1,
-                    ),
-                    Flexible(
-                      child: Switch(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                elevation: 1,
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.fingerprint_rounded,
+                      color: context.colors.wB, size: 24),
+                  const Spacer(flex: 1),
+                  Expanded(
+                    flex: 12,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Fingerprint",
+                              maxLines: 1,
+                              style: TextStyle(
+                                  fontSize: 22 * user.notesTitleSize,
+                                  color: context.colors.wB),
+                            ),
+                          ),
+                        ),
+                        Switch(
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                           value: note.tempNote.protected == 1,
-                          activeThumbColor: Color(0xff3D5AFE),
+                          activeThumbColor: const Color(0xff3D5AFE),
                           onChanged: (_) async {
                             Result status =
                                 await note.toggleTempNoteProtection();
                             if (status is Failure) {
                               FeedbackToast.error(status.message);
                             }
-                          }),
-                    )
-                  ],
-                ),
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+           ],
         ),
         actions: [
           Row(

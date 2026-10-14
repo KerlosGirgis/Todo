@@ -6,7 +6,9 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/tasks_view_model.dart';
+import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/button.dart';
+import '../../../../widgets/dialog_header.dart';
 
 class AddTaskDialog extends StatelessWidget {
   const AddTaskDialog({
@@ -15,6 +17,7 @@ class AddTaskDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<UserViewModel>().user;
     String date = "";
     String time = "";
     int notification = 0;
@@ -29,53 +32,7 @@ class AddTaskDialog extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),
           ),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: context.colors.dialogIconContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.add_task,
-                    color: context.colors.dialogIcon,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 5,
-                child: Text(
-                  "Add Task",
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 32,
-                      color: context.colors.wB),
-                ),
-              ),
-              Expanded(
-                child: IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(
-                    Icons.close,
-                    color: context.colors.dialogExitIcon,
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.colors.dialogExitContainer,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                    ),
-                  ),
-                ),
-              )
-            ],
-          ),
+          title: const DialogHeader(icon: Icons.add_task, title: "Add Task"),
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -85,7 +42,9 @@ class AddTaskDialog extends StatelessWidget {
                 maxLines: 1,
                 decoration: InputDecoration(
                   labelText: "Title",
-                  labelStyle: TextStyle(fontSize: 30, color: context.colors.wB),
+                  labelStyle: TextStyle(
+                      fontSize: 22 * user.tasksTitleSize,
+                      color: context.colors.wB),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: BorderSide.none),
@@ -93,7 +52,7 @@ class AddTaskDialog extends StatelessWidget {
                   fillColor: context.colors.cardBackground,
                 ),
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 22 * user.tasksTitleSize,
                   color: context.colors.wB,
                 ),
               ),
@@ -106,7 +65,9 @@ class AddTaskDialog extends StatelessWidget {
                 maxLines: 4,
                 decoration: InputDecoration(
                   labelText: "Description",
-                  labelStyle: TextStyle(fontSize: 30, color: context.colors.wB),
+                  labelStyle: TextStyle(
+                      fontSize: 20 * user.tasksDescSize,
+                      color: context.colors.wB),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: BorderSide.none),
@@ -114,7 +75,7 @@ class AddTaskDialog extends StatelessWidget {
                   fillColor: context.colors.cardBackground,
                 ),
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 20 * user.tasksDescSize,
                   color: context.colors.wB,
                 ),
               ),
