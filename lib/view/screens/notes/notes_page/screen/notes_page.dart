@@ -37,7 +37,7 @@ class _NotesPageState extends State<NotesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    final screenSize = MediaQuery.sizeOf(context);
     return Scaffold(
       backgroundColor: context.colors.pageBackground,
       appBar: AppBar(
@@ -274,7 +274,7 @@ class _NotesPageState extends State<NotesPage> {
                 : GridView.builder(
                 itemCount: notes.notes.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.of(context).orientation ==
+                    crossAxisCount: MediaQuery.orientationOf(context) ==
                         Orientation.portrait
                         ? 2
                         : 4,
@@ -284,7 +284,7 @@ class _NotesPageState extends State<NotesPage> {
                     child: AnimationConfiguration.staggeredGrid(
                       duration: const Duration(milliseconds: 600),
                       position: index,
-                      columnCount: MediaQuery.of(context).orientation ==
+                      columnCount: MediaQuery.orientationOf(context) ==
                           Orientation.portrait
                           ? 2
                           : 4,

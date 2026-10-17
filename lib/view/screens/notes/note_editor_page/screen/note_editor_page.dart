@@ -28,6 +28,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
 
   @override
   void dispose() {
+    bodyController.dispose();
+    _undoHistoryController.dispose();
     super.dispose();
   }
 

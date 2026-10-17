@@ -34,15 +34,21 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Consumer2<AuthViewModel, UserViewModel>(
-      builder: (context, auth, user, _) {
+    return Selector<UserViewModel, bool>(
+      selector: (_, userVM) => userVM.user.theme == 1,
+      builder: (context, isDarkMode, _) {
         return ToastificationWrapper(
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.getTheme(isDarkMode: user.user.theme == 1),
-            home: AppGate(auth: auth, user: user),
+            theme: AppTheme.getTheme(isDarkMode: isDarkMode),
+            home: Consumer2<AuthViewModel, UserViewModel>(
+              builder: (context, auth, user, _) {
+                return AppGate(auth: auth, user: user);
+              },
+            ),
           ),
         );
       },

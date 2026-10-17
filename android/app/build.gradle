@@ -29,7 +29,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.k.todo"
-    compileSdk = 36 //flutter.compileSdkVersion
+    compileSdk = 37 //flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 //    ndkVersion "27.2.12479018"
 

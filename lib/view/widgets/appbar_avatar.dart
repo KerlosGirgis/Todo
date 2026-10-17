@@ -92,7 +92,7 @@ class AppbarAvatar extends StatelessWidget {
                                 backgroundImage: user.user.pic.startsWith("0")
                                     ? AssetImage(AvatarUtils.getAvatar(user.user.pic))
                                     : FileImage(File(user.user.pic)) as ImageProvider,
-                                radius: MediaQuery.of(context).orientation == Orientation.portrait
+                                radius: MediaQuery.orientationOf(context) == Orientation.portrait
                                     ? MediaQuery.sizeOf(context).width / 4
                                     : MediaQuery.sizeOf(context).height / 4,
                                 backgroundColor: Colors.transparent,
