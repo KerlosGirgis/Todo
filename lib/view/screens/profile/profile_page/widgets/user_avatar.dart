@@ -1,12 +1,12 @@
-import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../../../core/utils/avatar_utils.dart';
 import '../../../../../view_model/user_view_model.dart';
-import 'avatars_list_dialog.dart';
+import '../../../../widgets/ringed_avatar.dart';
+import 'avatar_picker_sheet.dart';
 
 class UserAvatar extends StatelessWidget {
   const UserAvatar({
@@ -15,179 +15,65 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserViewModel>(builder: (context, user, child) {
-      return Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const RadialGradient(
-                colors: [
-                  Color(0xff3D5AFE),
-                  Colors.transparent,
-                ],
-                stops: [0.6, 1.0],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xff3D5AFE).withValues(alpha: 0.4),
-                  blurRadius: 40,
-                  spreadRadius: 8,
-                ),
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
+    final pic = context.select<UserViewModel, String>((user) => user.user.pic);
+    return LayoutBuilder(builder: (context, constraints) {
+      final screenSize = MediaQuery.sizeOf(context);
+      // About the same footprint as before, but never more than the space
+      // the page gives it, so short screens don't overflow.
+      final size = [
+        (MediaQuery.orientationOf(context) == Orientation.portrait
+                    ? screenSize.width
+                    : screenSize.height) /
+                2 +
+            16,
+        constraints.maxWidth,
+        constraints.maxHeight,
+      ].reduce(math.min);
+      final badgeSize = size * 0.2;
+      // Centres the badge on the ring at the bottom right.
+      final badgeOffset =
+          size * (0.5 + 0.48 * math.cos(math.pi / 4)) - badgeSize / 2;
+      return SizedBox.square(
+        dimension: size,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: AvatarHalo(child: RingedAvatar(pic: pic)),
             ),
-            padding: const EdgeInsets.all(6),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  width: 1.5,
-                ),
-              ),
-              child: CircleAvatar(
-                backgroundImage: user.user.pic.startsWith("0")
-                    ? AssetImage(AvatarUtils.getAvatar(user.user.pic))
-                    : FileImage(File(user.user.pic)) as ImageProvider,
-                radius:
-                    MediaQuery.of(context).orientation == Orientation.portrait
-                        ? MediaQuery.sizeOf(context).width / 4
-                        : MediaQuery.sizeOf(context).height / 4,
-                backgroundColor: Colors.transparent,
-              ),
-            ),
-          ),
-          Positioned(
-            right: MediaQuery.sizeOf(context).width / 25,
-            bottom: MediaQuery.sizeOf(context).height / 50,
-            child: SizedBox(
-              width: MediaQuery.of(context).orientation == Orientation.portrait
-                  ? MediaQuery.sizeOf(context).width / 10
-                  : MediaQuery.sizeOf(context).height / 10,
-              height: MediaQuery.of(context).orientation == Orientation.portrait
-                  ? MediaQuery.sizeOf(context).width / 10
-                  : MediaQuery.sizeOf(context).height / 10,
-              child: FloatingActionButton(
-                backgroundColor: Colors.white,
-                elevation: 3,
-                shape: const CircleBorder(),
-                onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) =>
-                          StatefulBuilder(builder: (context, setState) {
-                            return AlertDialog(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              backgroundColor: context.colors.pageBackground,
-                              content: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Flexible(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Flexible(
-                                          child: GestureDetector(
-                                            child: CircleAvatar(
-                                              radius: MediaQuery.sizeOf(context)
-                                                      .width /
-                                                  9,
-                                              backgroundColor: Colors.transparent,
-                                              child: Image.asset(
-                                                  AvatarUtils.getAvatar("000")
-                                              ),
-                                            ),
-                                            onTap: () {
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) =>
-                                                    AvatarsListDialog(),
-                                              ).then((_) {
-                                                if (context.mounted) {
-                                                  Navigator.pop(context);
-                                                }
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                        Flexible(
-                                          child: Text(
-                                            "Avatar",
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                                color: context.colors.wB,
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                  Flexible(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Flexible(
-                                          child: GestureDetector(
-                                            child: CircleAvatar(
-                                              radius:
-                                                  MediaQuery.sizeOf(context).width /
-                                                      9,
-                                              backgroundColor: Colors.transparent,
-                                              child: Image.asset("assets/add_pic.png",fit: BoxFit.contain,),
-                                            ),
-                                            onTap: () async {
-                                              user.pickAndSaveImage();
-                                              Navigator.pop(context);
-                                            },
-                                          ),
-                                        ),
-                                        Flexible(
-                                          child: Text(
-                                            "Gallery",
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              color: context.colors.wB,
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }));
-                },
-                child: Icon(
-                  Icons.photo_camera_rounded,
-                  color: Colors.blue,
-                  size:
-                      MediaQuery.of(context).orientation == Orientation.portrait
-                          ? MediaQuery.sizeOf(context).width / 15
-                          : MediaQuery.sizeOf(context).height / 20,
+            Positioned(
+              left: badgeOffset,
+              top: badgeOffset,
+              child: Semantics(
+                button: true,
+                label: "Change avatar",
+                child: Material(
+                  color: const Color(0xff3D5AFE),
+                  elevation: 2,
+                  clipBehavior: Clip.antiAlias,
+                  // The page-coloured border cuts the badge out of the ring.
+                  shape: CircleBorder(
+                    side: BorderSide(
+                      color: context.colors.pageBackground,
+                      width: 3,
+                    ),
+                  ),
+                  child: InkWell(
+                    onTap: () => showAvatarPicker(context),
+                    child: SizedBox.square(
+                      dimension: badgeSize,
+                      child: Icon(
+                        Icons.photo_camera_rounded,
+                        color: Colors.white,
+                        size: badgeSize * 0.48,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     });
   }

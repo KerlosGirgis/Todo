@@ -18,22 +18,24 @@ class UpdateNoteDialog extends StatefulWidget {
 
 class _UpdateNoteDialogState extends State<UpdateNoteDialog> {
   TextEditingController titleController = TextEditingController();
+  // Kept for dispose(), where looking up a provider is unsafe.
+  late final NotesViewModel _notesViewModel;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NotesViewModel>().setTempNote(widget.note);
-      titleController.text = widget.note.title;
-      titleController.addListener(() {
-        context.read<NotesViewModel>().setTempNoteTitle(titleController.text);
-      });
+    _notesViewModel = context.read<NotesViewModel>();
+    // Set before the first build, which reads tempNote.
+    _notesViewModel.setTempNote(widget.note);
+    titleController.text = widget.note.title;
+    titleController.addListener(() {
+      _notesViewModel.setTempNoteTitle(titleController.text);
     });
   }
 
   @override
   void dispose() {
-    context.read<NotesViewModel>().clearTempNote();
+    _notesViewModel.clearTempNote();
     titleController.dispose();
     super.dispose();
   }

@@ -15,18 +15,20 @@ class AddNoteDialog extends StatefulWidget {
 }
 
 class _AddNoteDialogState extends State<AddNoteDialog> {
+  // Kept for dispose(), where looking up a provider is unsafe.
+  late final NotesViewModel _notesViewModel;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NotesViewModel>().newTempNote();
-    });
+    _notesViewModel = context.read<NotesViewModel>();
+    // Set before the first build, which reads tempNote.
+    _notesViewModel.newTempNote();
   }
 
   @override
   void dispose() {
-    context.read<NotesViewModel>().clearTempNote();
+    _notesViewModel.clearTempNote();
     super.dispose();
   }
 

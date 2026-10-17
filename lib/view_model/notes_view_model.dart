@@ -52,9 +52,10 @@ class NotesViewModel with ChangeNotifier {
       return Failure("Authentication Failed");
     }
   }
+  // Called from the note dialogs' initState, before their first build, so
+  // there's nothing to notify yet (and notifying during a build throws).
   void newTempNote(){
     tempNote = Note(title: "", body: "", titleColor: "FFFFFF", coverColor: "1E1E1E", protected: 0);
-    notifyListeners();
   }
 
   void setTempNote(Note note){
@@ -66,7 +67,6 @@ class NotesViewModel with ChangeNotifier {
       coverColor: note.coverColor,
       protected: note.protected,
     );
-    notifyListeners();
   }
 
   void clearTempNote(){

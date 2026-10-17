@@ -42,7 +42,7 @@ dependencies:
   intl: ^0.20.3
   flutter_launcher_icons: ^0.14.4
   auto_size_text: ^3.0.0
-  flex_color_picker: ^4.0.0
+  flex_color_picker: ^3.8.0
   local_auth: ^3.0.2
   home_widget: ^0.10.0
   provider: ^6.1.5+1
