@@ -25,6 +25,8 @@ class NotesPage extends StatefulWidget {
 }
 
 class _NotesPageState extends State<NotesPage> {
+  bool _menuOpen = false;
+
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -42,19 +44,24 @@ class _NotesPageState extends State<NotesPage> {
         surfaceTintColor: Colors.transparent,
         automaticallyImplyLeading: false,
         backgroundColor: context.colors.pageBackground,
-        title: Text(
-          "Notes",
-          style: TextStyle(
-            fontSize: 30,
-            overflow: TextOverflow.ellipsis,
-            color: context.colors.wB,
-            fontWeight: FontWeight.bold,
+        title: AnimatedOpacity(
+          opacity: _menuOpen ? 0 : 1,
+          duration: const Duration(milliseconds: 200),
+          child: Text(
+            "Notes",
+            style: TextStyle(
+              fontSize: 30,
+              overflow: TextOverflow.ellipsis,
+              color: context.colors.wB,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         actions: [
           ExpandableMenu(
               iconColor: context.colors.appBarIcons,
               animationSpeed: 500,
+              onExpandedChanged: (open) => setState(() => _menuOpen = open),
               width: MediaQuery.orientationOf(context) == Orientation.portrait
                   ? MediaQuery.sizeOf(context).width / 14
                   : MediaQuery.sizeOf(context).width / 22,
@@ -177,7 +184,10 @@ class _NotesPageState extends State<NotesPage> {
                       color: context.colors.appBarIcons,
                     )),
               ]),
-          Flexible(child: const AppbarAvatar()),
+          const Padding(
+            padding: EdgeInsets.only(left: 12),
+            child: AppbarAvatar(),
+          ),
           const Padding(padding: EdgeInsets.only(right: 18)),
         ],
       ),
