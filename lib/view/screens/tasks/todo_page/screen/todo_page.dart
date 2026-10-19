@@ -1,814 +1,630 @@
-import 'package:auto_size_text/auto_size_text.dart';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:readmore/readmore.dart';
-import 'package:todo/core/result.dart';
-import 'package:todo/view/screens/notes/notes_page/screen/notes_page.dart';
-import 'package:todo/view/screens/tasks/todo_page/widgets/tasks_overwrite_dialog.dart';
-import 'package:todo/view_model/tasks_view_model.dart';
-import 'package:todo/view_model/user_view_model.dart';
-import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
-import 'package:todo/view/screens/tasks/todo_page/widgets/add_task_dialog.dart';
+
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/task_filters.dart';
+import '../../../../../models/todo_item.dart';
+import '../../../../../view_model/tasks_view_model.dart';
+import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
-import '../../../../widgets/expandable_menu.dart';
-import '../widgets/update_task_dialog.dart';
+import '../../../../widgets/glass_menu.dart';
+import '../../../../widgets/large_title.dart';
+import '../../../../widgets/rise_in.dart';
+import '../../../notes/notes_page/screen/notes_page.dart';
+import '../../../profile/profile_page/screen/profile_page.dart';
+import '../../../profile/profile_page/widgets/aurora.dart';
+import '../widgets/empty_tasks.dart';
+import '../widgets/form_dialog.dart';
+import '../widgets/task_card.dart';
+import '../widgets/task_dialog.dart';
+import '../widgets/task_filter_bar.dart';
+import '../widgets/tasks_overwrite_dialog.dart';
+import '../widgets/tasks_summary_card.dart';
+import '../widgets/todo_action_buttons.dart';
+
+const _title = "ToDo";
+
+/// The gap between cards.
+const _cardGap = 12.0;
 
 class TodoPage extends StatefulWidget {
   const TodoPage({
     super.key,
   });
+
   @override
   State<TodoPage> createState() => _TodoPageState();
 }
 
 class _TodoPageState extends State<TodoPage> {
-  bool _menuOpen = false;
+  // One per scroll view, as the two layouts briefly overlap when the screen
+  // turns, and a controller can't follow two scroll views at once.
+  final _scrollController = ScrollController();
+  final _overviewPaneScrollController = ScrollController();
+  final _listPaneScrollController = ScrollController();
+
+  /// Whether the tasks have been read in. Until then there's nothing under
+  /// the title, rather than a "No Tasks" that flashes up first.
+  bool _loaded = false;
+
+  /// How many sections rise in ahead of the list's cards: the summary and
+  /// the filter when the page opens, and none when only the list changes.
+  int _listDelay = 2;
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TasksViewModel>(context, listen: false).get();
-    });
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await Provider.of<TasksViewModel>(context, listen: false).get();
+      } finally {
+        if (mounted) setState(() => _loaded = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _overviewPaneScrollController.dispose();
+    _listPaneScrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserViewModel>(
-      builder: (context, user, child) {
-        return Scaffold(
-          backgroundColor: context.colors.pageBackground,
-          floatingActionButton: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FloatingActionButton(
-                  heroTag: 0,
-                  backgroundColor:
-                      context.colors.floatingActionButtonBackground,
-                  foregroundColor:
-                      context.colors.floatingActionButtonForeground,
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            const NotesPage(),
-                        transitionsBuilder:
-                            (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(-1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.ease;
-                          var tween = Tween(begin: begin, end: end)
-                              .chain(CurveTween(curve: curve));
-                          var offsetAnimation = animation.drive(tween);
-                          return SlideTransition(
-                              position: offsetAnimation, child: child);
-                        },
-                      ),
-                    );
-                  },
-                  child: const Icon(Icons.edit_note_sharp)),
-              const Padding(padding: EdgeInsets.only(bottom: 20)),
-              FloatingActionButton(
-                heroTag: 1,
-                backgroundColor: context.colors.floatingActionButtonBackground,
-                foregroundColor: context.colors.floatingActionButtonForeground,
-                onPressed: () {
-                  showGeneralDialog(
-                    context: context,
-                    barrierDismissible: true,
-                    barrierLabel: MaterialLocalizations.of(context)
-                        .modalBarrierDismissLabel,
-                    pageBuilder: (BuildContext context,
-                        Animation<double> animation,
-                        Animation<double> secondaryAnimation) {
-                      return AddTaskDialog();
-                    },
-                    transitionBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                      var fadeAnimation = CurvedAnimation(
-                          parent: animation, curve: Curves.easeInOutSine);
-                      var scaleAnimation = Tween<double>(begin: 0.95, end: 1.0)
-                          .animate(fadeAnimation); // Subtle grow
-                      var slideAnimation = Tween<Offset>(
-                              begin: Offset(0, 0.05), end: Offset.zero)
-                          .animate(fadeAnimation); // Gentle rise
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    // Side by side when the screen is too short for one long column, as on a
+    // phone turned on its side.
+    final twoPanes =
+        MediaQuery.orientationOf(context) == Orientation.landscape &&
+            MediaQuery.sizeOf(context).aspectRatio >= 1.5;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // There's no app bar to pick the status bar's icons, so they're set here.
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            isDarkTheme ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
+      ),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: context.colors.pageBackground,
+        floatingActionButton:
+            TodoActionButtons(onNotes: _openNotes, onAdd: _addTask),
+        body: twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
+      ),
+    );
+  }
 
-                      return FadeTransition(
-                        opacity: fadeAnimation,
-                        child: ScaleTransition(
-                          scale: scaleAnimation,
-                          child: SlideTransition(
-                            position: slideAnimation,
-                            child: child,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-                child: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: Consumer<TasksViewModel>(
-              builder: (context, tasks, child) {
-                return Theme(
-                        data: Theme.of(context).copyWith(
-                          canvasColor: Colors.transparent,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 4),
-                              child: Row(
-                                spacing: 8,
-                                children: [
-                                  ChoiceChip(
-                                    label: Text("All"),
-                                    selected:
-                                        tasks.currentFilter.runtimeType ==
-                                            AllTasksFilter().runtimeType,
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        tasks.fetchTasks(
-                                            filter: AllTasksFilter());
-                                      }
-                                    },
-                                    selectedColor: context.colors
-                                        .floatingActionButtonBackground,
-                                    labelStyle: TextStyle(
-                                      color: tasks.currentFilter
-                                                  .runtimeType ==
-                                              AllTasksFilter().runtimeType
-                                          ? context.colors
-                                              .floatingActionButtonForeground
-                                          : context.colors.wB,
-                                    ),
-                                  ),
-                                  ChoiceChip(
-                                    label: Text("Done"),
-                                    selected:
-                                        tasks.currentFilter.runtimeType ==
-                                            DoneTasksFilter().runtimeType,
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        tasks.fetchTasks(
-                                            filter: DoneTasksFilter());
-                                      }
-                                    },
-                                    selectedColor: context.colors
-                                        .floatingActionButtonBackground,
-                                    labelStyle: TextStyle(
-                                      color: tasks.currentFilter
-                                                  .runtimeType ==
-                                              DoneTasksFilter().runtimeType
-                                          ? context.colors
-                                              .floatingActionButtonForeground
-                                          : context.colors.wB,
-                                    ),
-                                  ),
-                                  ChoiceChip(
-                                    label: Text("Undone"),
-                                    selected:
-                                        tasks.currentFilter.runtimeType ==
-                                            UndoneTasksFilter().runtimeType,
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        tasks.fetchTasks(
-                                            filter: UndoneTasksFilter());
-                                      }
-                                    },
-                                    selectedColor: context.colors
-                                        .floatingActionButtonBackground,
-                                    labelStyle: TextStyle(
-                                      color: tasks.currentFilter
-                                                  .runtimeType ==
-                                              UndoneTasksFilter().runtimeType
-                                          ? context.colors
-                                              .floatingActionButtonForeground
-                                          : context.colors.wB,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            tasks.items.isEmpty
-                                ? Expanded(
-                              child: Image.asset(
-                                "assets/empty_list.png",
-                                scale: 2,
-                              ),
-                            )
-                                : Expanded(
-                              child: ReorderableListView.builder(
-                                itemCount: tasks.items.length,
-                                itemBuilder: (context, index) {
-                                  final taskKey =
-                                      tasks.items[index].id.toString();
-                                  return AnimationLimiter(
-                                    key: Key(taskKey),
-                                    child:
-                                        AnimationConfiguration.staggeredList(
-                                      duration:
-                                          const Duration(milliseconds: 400),
-                                      position: index,
-                                      child: SlideAnimation(
-                                        verticalOffset: 300,
-                                        child: FadeInAnimation(
-                                          child: Dismissible(
-                                            onDismissed: (direction) async {
-                                              await Provider.of<
-                                                          TasksViewModel>(
-                                                      context,
-                                                      listen: false)
-                                                  .dismissTask(index,
-                                                      tasks.items[index].id!)
-                                                  .then((value) {
-                                                FeedbackToast.info(
-                                                    "Task Deleted");
-                                              });
-                                            },
-                                            key: Key(taskKey),
-                                            child: Card(
-                                              elevation: 3,
-                                              margin:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 6),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(25),
-                                              ),
-                                              color: context
-                                                  .colors.cardBackground,
-                                              child: Padding(
-                                                padding: const EdgeInsets.all(
-                                                    16.0),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment
-                                                          .start,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Expanded(
-                                                          child:
-                                                              GestureDetector(
-                                                            child:
-                                                                AutoSizeText(
-                                                              tasks
-                                                                  .items[
-                                                                      index]
-                                                                  .title,
-                                                              maxLines: 1,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                              minFontSize: 18,
-                                                              style: tasks.items[index]
-                                                                          .status ==
-                                                                      0
-                                                                  ? TextStyle(
-                                                                      fontSize:
-                                                                          26 *
-                                                                              user.user.tasksTitleSize,
-                                                                      color: context
-                                                                          .colors
-                                                                          .wB,
-                                                                    )
-                                                                  : TextStyle(
-                                                                      color: Colors
-                                                                          .grey,
-                                                                      fontSize:
-                                                                          26 *
-                                                                              user.user.tasksTitleSize,
-                                                                      decoration:
-                                                                          TextDecoration.lineThrough,
-                                                                      decorationThickness:
-                                                                          3,
-                                                                    ),
-                                                            ),
-                                                            onLongPress: () {
-                                                              showGeneralDialog(
-                                                                context:
-                                                                    context,
-                                                                barrierDismissible:
-                                                                    true,
-                                                                barrierLabel:
-                                                                    MaterialLocalizations.of(
-                                                                            context)
-                                                                        .modalBarrierDismissLabel,
-                                                                pageBuilder: (BuildContext context,
-                                                                    Animation<
-                                                                            double>
-                                                                        animation,
-                                                                    Animation<
-                                                                            double>
-                                                                        secondaryAnimation) {
-                                                                  return UpdateTaskDialog(
-                                                                      index:
-                                                                          index);
-                                                                },
-                                                                transitionBuilder: (context,
-                                                                    animation,
-                                                                    secondaryAnimation,
-                                                                    child) {
-                                                                  var fadeAnimation = CurvedAnimation(
-                                                                      parent:
-                                                                          animation,
-                                                                      curve: Curves
-                                                                          .easeInOutSine);
-                                                                  var scaleAnimation = Tween<double>(
-                                                                          begin:
-                                                                              0.8,
-                                                                          end:
-                                                                              1)
-                                                                      .animate(
-                                                                          fadeAnimation);
-                                                                  return FadeTransition(
-                                                                    opacity:
-                                                                        fadeAnimation,
-                                                                    child:
-                                                                        ScaleTransition(
-                                                                      scale:
-                                                                          scaleAnimation,
-                                                                      child:
-                                                                          child,
-                                                                    ),
-                                                                  );
-                                                                },
-                                                              );
-                                                            },
-                                                            onTap: () {
-                                                              tasks
-                                                                  .markAsDone(
-                                                                      index,
-                                                                      user)
-                                                                  .then(
-                                                                      (result) {
-                                                                if (result
-                                                                    is Success) {
-                                                                  FeedbackToast
-                                                                      .success(
-                                                                          result.message);
-                                                                } else if (result
-                                                                    is Failure) {
-                                                                  FeedbackToast
-                                                                      .error(result
-                                                                          .message);
-                                                                } else if (result
-                                                                    is Info) {
-                                                                  FeedbackToast
-                                                                      .info(result
-                                                                          .message);
-                                                                }
-                                                              });
-                                                            },
-                                                          ),
-                                                        ),
-                                                        const Padding(
-                                                            padding: EdgeInsets
-                                                                .only(
-                                                                    right:
-                                                                        10)),
-                                                        tasks.items[index]
-                                                                    .status ==
-                                                                0
-                                                            ? tasks.items[index].notification ==
-                                                                        1 ||
-                                                                    tasks.items[index].notification ==
-                                                                        2
-                                                                ? IconButton(
-                                                                    icon:
-                                                                        const Icon(
-                                                                      Icons
-                                                                          .notifications,
-                                                                      color: Colors
-                                                                          .blue,
-                                                                    ),
-                                                                    onPressed:
-                                                                        () {
-                                                                      tasks
-                                                                          .cancelNotification(tasks.items[index])
-                                                                          .then((result) {
-                                                                        if (result
-                                                                            is Success) {
-                                                                          FeedbackToast.success(result.message);
-                                                                        } else if (result
-                                                                            is Failure) {
-                                                                          FeedbackToast.error(result.message);
-                                                                        } else if (result
-                                                                            is Info) {
-                                                                          FeedbackToast.info(result.message);
-                                                                        }
-                                                                      });
-                                                                    },
-                                                                  )
-                                                                : IconButton(
-                                                                    icon:
-                                                                        const Icon(
-                                                                      Icons
-                                                                          .notifications,
-                                                                      color: Colors
-                                                                          .grey,
-                                                                    ),
-                                                                    onPressed:
-                                                                        () {
-                                                                      tasks
-                                                                          .enableOneTimeNotification(tasks.items[index])
-                                                                          .then((result) {
-                                                                        if (result
-                                                                            is Success) {
-                                                                          FeedbackToast.success(result.message);
-                                                                        } else if (result
-                                                                            is Failure) {
-                                                                          FeedbackToast.error(result.message);
-                                                                        } else if (result
-                                                                            is Info) {
-                                                                          FeedbackToast.info(result.message);
-                                                                        }
-                                                                      });
-                                                                    },
-                                                                    onLongPress:
-                                                                        () {
-                                                                      tasks
-                                                                          .enableDailyNotification(tasks.items[index])
-                                                                          .then((result) {
-                                                                        if (result
-                                                                            is Success) {
-                                                                          FeedbackToast.success(result.message);
-                                                                        } else if (result
-                                                                            is Failure) {
-                                                                          FeedbackToast.error(result.message);
-                                                                        } else if (result
-                                                                            is Info) {
-                                                                          FeedbackToast.info(result.message);
-                                                                        }
-                                                                      });
-                                                                    },
-                                                                  )
-                                                            : const SizedBox
-                                                                .shrink(),
-                                                        const Padding(
-                                                            padding: EdgeInsets
-                                                                .only(
-                                                                    right:
-                                                                        10)),
-                                                        tasks.items[index]
-                                                                    .status ==
-                                                                1
-                                                            ? const Icon(
-                                                                Icons.check,
-                                                                color: Colors
-                                                                    .green,
-                                                              )
-                                                            : const Icon(
-                                                                Icons
-                                                                    .check_outlined,
-                                                                color: Colors
-                                                                    .grey,
-                                                              ),
-                                                      ],
-                                                    ),
-                                                    tasks.items[index].desc
-                                                            .isNotEmpty
-                                                        ? Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    top: 2.0),
-                                                            child: user.user
-                                                                        .descLines !=
-                                                                    0
-                                                                ? ReadMoreText(
-                                                                    moreStyle: TextStyle(
-                                                                        color: context
-                                                                            .colors
-                                                                            .moreLess),
-                                                                    trimExpandedText:
-                                                                        " Show Less",
-                                                                    trimCollapsedText:
-                                                                        "Show More",
-                                                                    lessStyle: TextStyle(
-                                                                        color: context
-                                                                            .colors
-                                                                            .moreLess),
-                                                                    trimLines: user
-                                                                        .user
-                                                                        .descLines,
-                                                                    trimMode:
-                                                                        TrimMode
-                                                                            .Line,
-                                                                    tasks
-                                                                        .items[
-                                                                            index]
-                                                                        .desc,
-                                                                    style:
-                                                                        TextStyle(
-                                                                      fontSize:
-                                                                          20 *
-                                                                              user.user.tasksDescSize,
-                                                                      color: tasks.items[index].status ==
-                                                                              0
-                                                                          ? context.colors.subtitle
-                                                                          : Colors.grey,
-                                                                    ),
-                                                                  )
-                                                                : Text(
-                                                                    tasks
-                                                                        .items[
-                                                                            index]
-                                                                        .desc,
-                                                                    style:
-                                                                        TextStyle(
-                                                                      fontSize:
-                                                                          20 *
-                                                                              user.user.tasksDescSize,
-                                                                      color: tasks.items[index].status ==
-                                                                              0
-                                                                          ? context.colors.subtitle
-                                                                          : Colors.grey,
-                                                                    ),
-                                                                  ),
-                                                          )
-                                                        : const SizedBox
-                                                            .shrink(),
-                                                    tasks.items[index].date
-                                                                .isNotEmpty ||
-                                                            tasks
-                                                                .items[index]
-                                                                .time
-                                                                .isNotEmpty
-                                                        ? Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    top: 7.0),
-                                                            child: Row(
-                                                              children: [
-                                                                tasks
-                                                                        .items[
-                                                                            index]
-                                                                        .date
-                                                                        .isNotEmpty
-                                                                    ? Icon(
-                                                                        Icons
-                                                                            .date_range,
-                                                                        color: tasks.items[index].status == 0
-                                                                            ? context.colors.wB
-                                                                            : Colors.grey,
-                                                                      )
-                                                                    : SizedBox
-                                                                        .shrink(),
-                                                                tasks
-                                                                        .items[
-                                                                            index]
-                                                                        .date
-                                                                        .isNotEmpty
-                                                                    ? Flexible(
-                                                                        child:
-                                                                            Text(
-                                                                          " ${tasks.items[index].date} ",
-                                                                          overflow:
-                                                                              TextOverflow.ellipsis,
-                                                                          style:
-                                                                              TextStyle(
-                                                                            color: tasks.items[index].status == 0 ? context.colors.wB : Colors.grey,
-                                                                            fontWeight: FontWeight.normal,
-                                                                            fontSize: 16,
-                                                                          ),
-                                                                        ),
-                                                                      )
-                                                                    : SizedBox
-                                                                        .shrink(),
-                                                                tasks
-                                                                        .items[
-                                                                            index]
-                                                                        .time
-                                                                        .isNotEmpty
-                                                                    ? Icon(
-                                                                        Icons
-                                                                            .access_time_filled_sharp,
-                                                                        color: tasks.items[index].status == 0
-                                                                            ? context.colors.wB
-                                                                            : Colors.grey,
-                                                                      )
-                                                                    : const SizedBox
-                                                                        .shrink(),
-                                                                Flexible(
-                                                                  child: Text(
-                                                                    " ${tasks.items[index].time}",
-                                                                    overflow:
-                                                                        TextOverflow
-                                                                            .ellipsis,
-                                                                    style:
-                                                                        TextStyle(
-                                                                      color: tasks.items[index].status ==
-                                                                              0
-                                                                          ? context.colors.wB
-                                                                          : Colors.grey,
-                                                                      fontWeight:
-                                                                          FontWeight.normal,
-                                                                      fontSize:
-                                                                          16,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                tasks.items[index].notification ==
-                                                                        2
-                                                                    ? Flexible(
-                                                                        child:
-                                                                            Padding(
-                                                                        padding:
-                                                                            EdgeInsets.only(left: 20),
-                                                                        child:
-                                                                            Container(
-                                                                          constraints:
-                                                                              BoxConstraints(
-                                                                            maxWidth: 100,
-                                                                          ),
-                                                                          decoration:
-                                                                              BoxDecoration(
-                                                                            gradient: const LinearGradient(
-                                                                              colors: [
-                                                                                Color(0xFF0D47A1),
-                                                                                Color(0xFF1976D2),
-                                                                              ],
-                                                                              begin: Alignment.topLeft,
-                                                                              end: Alignment.bottomRight,
-                                                                            ),
-                                                                            borderRadius: BorderRadius.circular(16),
-                                                                          ),
-                                                                          child:
-                                                                              const Center(
-                                                                            child: Text(
-                                                                              'Daily',
-                                                                              textAlign: TextAlign.center,
-                                                                              maxLines: 1,
-                                                                              overflow: TextOverflow.fade,
-                                                                              style: TextStyle(
-                                                                                color: Colors.white,
-                                                                                fontSize: 15,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      ))
-                                                                    : const SizedBox
-                                                                        .shrink()
-                                                              ],
-                                                            ),
-                                                          )
-                                                        : const SizedBox
-                                                            .shrink(),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                onReorderItem:
-                                    (int oldIndex, int newIndex) async {
-                                  await Provider.of<TasksViewModel>(context,
-                                          listen: false)
-                                      .syncAfterReorder(oldIndex, newIndex);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-              },
+  Widget _buildOnePane(BuildContext context) {
+    final padding = MediaQuery.paddingOf(context);
+    // Keeps the cards a comfortable width on tablets.
+    final gutter = math.max(16.0, (MediaQuery.sizeOf(context).width - 640) / 2);
+    return Stack(
+      children: [
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: padding.top + 400,
+          // Drifts up at half the speed of the page, for a little depth.
+          child: ListenableBuilder(
+            listenable: _scrollController,
+            builder: (context, child) => Transform.translate(
+              offset: Offset(
+                  0,
+                  _scrollController.hasClients
+                      ? -_scrollController.offset / 2
+                      : 0),
+              child: child,
             ),
+            child: const ProfileAurora(),
           ),
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            backgroundColor: context.colors.pageBackground,
-            surfaceTintColor: Colors.transparent,
-            title: AnimatedOpacity(
-              opacity: _menuOpen ? 0 : 1,
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                "ToDo",
-                style: TextStyle(
-                  fontSize: 30,
-                  color: context.colors.wB,
-                  fontWeight: FontWeight.bold,
+        ),
+        CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: LargeTitleBarDelegate(
+                title: _title,
+                topInset: padding.top,
+                controller: _scrollController,
+                trailing: _BarActions(items: _menuItems()),
+                titleRevealOffset: _TodoHeader.scrolledAway,
+              ),
+            ),
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: gutter),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const RiseIn(child: _TodoHeader()),
+                    if (_loaded) _Overview(onFilterChanged: _changeFilter),
+                  ],
                 ),
               ),
             ),
-            actions: [
-              ExpandableMenu(
-                iconColor: context.colors.appBarIcons,
-                animationSpeed: 500,
-                onExpandedChanged: (open) => setState(() => _menuOpen = open),
-                width: MediaQuery.orientationOf(context) == Orientation.portrait
-                    ? MediaQuery.sizeOf(context).width / 14
-                    : MediaQuery.sizeOf(context).width / 30,
-                height: 45,
-                items: [
-                  IconButton(
-                      onPressed: () async {
-                        showGeneralDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          barrierLabel: MaterialLocalizations.of(context)
-                              .modalBarrierDismissLabel,
-                          pageBuilder: (BuildContext context,
-                              Animation<double> animation,
-                              Animation<double> secondaryAnimation) {
-                            return TasksOverwriteDialog();
-                          },
-                          transitionBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            var fadeAnimation = CurvedAnimation(
-                                parent: animation, curve: Curves.easeInOutSine);
-                            var scaleAnimation =
-                                Tween<double>(begin: 0.8, end: 1)
-                                    .animate(fadeAnimation);
-                            return FadeTransition(
-                              opacity: fadeAnimation,
-                              child: ScaleTransition(
-                                scale: scaleAnimation,
-                                child: child,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      icon: Icon(
-                        Icons.settings_backup_restore,
-                        color: context.colors.appBarIcons,
-                      )),
-                  IconButton(
-                      onPressed: () async {
-                        Provider.of<TasksViewModel>(context, listen: false)
-                            .backup()
-                            .then((result) {
-                          if (result is Success) {
-                            FeedbackToast.success(result.message);
-                          } else if (result is Failure) {
-                            FeedbackToast.error(result.message);
-                          } else if (result is Info) {
-                            FeedbackToast.info(result.message);
-                          }
-                        });
-                      },
-                      icon: Icon(
-                        Icons.backup,
-                        color: context.colors.appBarIcons,
-                      )),
-                  IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                    const ProfilePage(),
-                            transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) {
-                              const begin = Offset(0.0, 1.0);
-                              const end = Offset.zero;
-                              const curve = Curves.ease;
-                              var tween = Tween(begin: begin, end: end)
-                                  .chain(CurveTween(curve: curve));
-                              var offsetAnimation = animation.drive(tween);
-                              return SlideTransition(
-                                  position: offsetAnimation, child: child);
-                            },
-                          ),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.settings,
-                        color: context.colors.appBarIcons,
-                      )),
+            if (_loaded)
+              _TaskListSliver(
+                padding: EdgeInsets.fromLTRB(gutter, 20, gutter,
+                    TodoActionButtons.height + 24 + padding.bottom),
+                listDelay: _listDelay,
+                onEdit: _editTask,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTwoPanes(BuildContext context) {
+    final padding = MediaQuery.paddingOf(context);
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: Stack(
+            children: [
+              const Positioned.fill(child: ProfileAurora()),
+              CustomScrollView(
+                controller: _overviewPaneScrollController,
+                slivers: [
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: LargeTitleBarDelegate(
+                      title: _title,
+                      topInset: padding.top,
+                      controller: _overviewPaneScrollController,
+                      titleRevealOffset: _TodoHeader.scrolledAway,
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                        16 + padding.left, 0, 16, 24 + padding.bottom),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const RiseIn(child: _TodoHeader()),
+                          if (_loaded)
+                            _Overview(onFilterChanged: _changeFilter),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: AppbarAvatar(),
+            ],
+          ),
+        ),
+        Expanded(
+          flex: 6,
+          child: CustomScrollView(
+            controller: _listPaneScrollController,
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: LargeTitleBarDelegate(
+                  // The title is in the other pane already.
+                  title: "",
+                  topInset: padding.top,
+                  controller: _listPaneScrollController,
+                  trailing: _BarActions(items: _menuItems()),
+                ),
               ),
-              const Padding(padding: EdgeInsets.only(right: 18))
+              if (_loaded)
+                _TaskListSliver(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16 + padding.right,
+                      TodoActionButtons.height + 24 + padding.bottom),
+                  listDelay: _listDelay,
+                  onEdit: _editTask,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<GlassMenuItem> _menuItems() => [
+        GlassMenuItem(
+          icon: Icons.settings_backup_restore_rounded,
+          tooltip: "Restore Backup",
+          onPressed: () =>
+              showFormDialog<void>(context, const TasksOverwriteDialog()),
+        ),
+        GlassMenuItem(
+          icon: Icons.backup_rounded,
+          tooltip: "Back Up Tasks",
+          onPressed: () => Provider.of<TasksViewModel>(context, listen: false)
+              .backup()
+              .then(_showResult),
+        ),
+        GlassMenuItem(
+          icon: Icons.settings_rounded,
+          tooltip: "Settings",
+          onPressed: _openSettings,
+        ),
+      ];
+
+  void _changeFilter(TaskFilter filter) {
+    // The cards rise in again for the new filter, straight away.
+    setState(() => _listDelay = 0);
+    Provider.of<TasksViewModel>(context, listen: false)
+        .fetchTasks(filter: filter);
+  }
+
+  void _addTask() => showFormDialog<void>(context, const TaskDialog());
+
+  void _editTask(TodoItem task) =>
+      showFormDialog<void>(context, TaskDialog(task: task));
+
+  void _openNotes() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const NotesPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            SlideTransition(
+          position: animation.drive(
+              Tween(begin: const Offset(-1, 0), end: Offset.zero)
+                  .chain(CurveTween(curve: Curves.ease))),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  void _openSettings() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const ProfilePage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            SlideTransition(
+          position: animation.drive(
+              Tween(begin: const Offset(0, 1), end: Offset.zero)
+                  .chain(CurveTween(curve: Curves.ease))),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+void _showResult(Result result) => result.when(
+      onSuccess: FeedbackToast.success,
+      onFailure: FeedbackToast.error,
+      onInfo: FeedbackToast.info,
+    );
+
+/// The menu of the tasks' less frequent actions, and the avatar, at the end
+/// of the bar.
+class _BarActions extends StatelessWidget {
+  const _BarActions({required this.items});
+
+  final List<GlassMenuItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GlassMenu(items: items),
+        const SizedBox(width: 10),
+        const AppbarAvatar(),
+      ],
+    );
+  }
+}
+
+/// Today's date over the page's large title, which scrolls away under the
+/// bar.
+class _TodoHeader extends StatelessWidget {
+  const _TodoHeader();
+
+  /// About how far the header scrolls before its title is under the bar, so
+  /// the bar can bring in its own copy of the title.
+  static const scrolledAway = 40.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          DateFormat("EEEE, MMMM d").format(DateTime.now()).toUpperCase(),
+          style: TextStyle(
+            color: context.colors.moreLess,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          _title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: context.colors.wB,
+            fontSize: 34,
+            fontWeight: FontWeight.bold,
+            height: 1.2,
+            letterSpacing: -0.7,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The progress summary and the filters, under the title. Hidden while
+/// there are no tasks, unless a filter other than All is still on, so it
+/// can be turned off.
+class _Overview extends StatelessWidget {
+  const _Overview({required this.onFilterChanged});
+
+  final ValueChanged<TaskFilter> onFilterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final (total, filtered) =
+        context.select<TasksViewModel, (int, bool)>((tasks) => (
+              tasks.finishedTasksCount + tasks.unfinishedTasksCount,
+              tasks.currentFilter is! AllTasksFilter,
+            ));
+    if (total == 0 && !filtered) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (total > 0)
+          const Padding(
+            padding: EdgeInsets.only(top: 18),
+            child: RiseIn(delay: RiseIn.stagger, child: TasksSummaryCard()),
+          ),
+        Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: RiseIn(
+            delay: RiseIn.stagger * 2,
+            child: TaskFilterBar(onChanged: onFilterChanged),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The tasks the filter lets through, or what to show instead when there
+/// are none.
+class _TaskListSliver extends StatelessWidget {
+  const _TaskListSliver({
+    required this.padding,
+    required this.listDelay,
+    required this.onEdit,
+  });
+
+  /// Around the list. Its bottom keeps the last card clear of the buttons.
+  final EdgeInsets padding;
+
+  /// How many sections rise in ahead of the first card.
+  final int listDelay;
+
+  /// Opens the editor for the task.
+  final ValueChanged<TodoItem> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final tasks = context.watch<TasksViewModel>();
+    if (tasks.items.isEmpty) {
+      final reason = switch (tasks.currentFilter) {
+        _ when tasks.finishedTasksCount + tasks.unfinishedTasksCount == 0 =>
+          EmptyTasksReason.noTasks,
+        DoneTasksFilter() => EmptyTasksReason.noneDone,
+        _ => EmptyTasksReason.allDone,
+      };
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        // Centred in the room the buttons leave, within the page rather than
+        // past its end, so an empty page doesn't scroll.
+        child: Padding(
+          padding: EdgeInsets.only(top: padding.top, bottom: padding.bottom),
+          child:
+              RiseIn(key: ValueKey(reason), child: EmptyTasks(reason: reason)),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: padding,
+      // A new list for each filter, so the cards rise in afresh.
+      sliver: _ReorderableTaskList(
+        key: ValueKey(tasks.currentFilter.runtimeType),
+        tasks: tasks,
+        listDelay: listDelay,
+        onEdit: onEdit,
+      ),
+    );
+  }
+}
+
+class _ReorderableTaskList extends StatefulWidget {
+  const _ReorderableTaskList({
+    super.key,
+    required this.tasks,
+    required this.listDelay,
+    required this.onEdit,
+  });
+
+  final TasksViewModel tasks;
+  final int listDelay;
+  final ValueChanged<TodoItem> onEdit;
+
+  @override
+  State<_ReorderableTaskList> createState() => _ReorderableTaskListState();
+}
+
+class _ReorderableTaskListState extends State<_ReorderableTaskList> {
+  /// Whether the list is being laid out for the first time, when the cards in
+  /// view rise in one after another.
+  bool _opening = true;
+
+  /// The tasks listed at the last build, so a task added since can rise in
+  /// by itself.
+  Set<String> _listed = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _opening = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tasks = widget.tasks;
+    final items = tasks.items;
+    // Keyed by uuid, as ids change whenever the list is reordered, with a
+    // count to tell apart any tasks that share one.
+    final occurrences = <String, int>{};
+    final keys = [
+      for (final task in items)
+        switch (occurrences.update(task.uuid, (count) => count + 1,
+            ifAbsent: () => 0)) {
+          0 => task.uuid,
+          final count => "${task.uuid}#$count",
+        },
+    ];
+    final listed = keys.toSet();
+    final added = _opening ? const <String>{} : listed.difference(_listed);
+    _listed = listed;
+    final (titleScale, descriptionScale, descriptionLines) =
+        context.select<UserViewModel, (double, double, int)>((user) => (
+              user.user.tasksTitleSize,
+              user.user.tasksDescSize,
+              user.user.descLines,
+            ));
+
+    TaskCard card(TodoItem task, int index, {bool interactive = true}) {
+      return TaskCard(
+        task: task,
+        titleScale: titleScale,
+        descriptionScale: descriptionScale,
+        descriptionLines: descriptionLines,
+        onToggle: !interactive
+            ? null
+            : () => tasks
+                .markAsDone(
+                    index, Provider.of<UserViewModel>(context, listen: false))
+                .then(_showResult),
+        onEdit: !interactive ? null : () => widget.onEdit(task),
+        onReminder: !interactive
+            ? null
+            : () => (task.notification == 0
+                    ? tasks.enableOneTimeNotification(task)
+                    : tasks.cancelNotification(task))
+                .then(_showResult),
+        onDailyReminder: !interactive || task.notification != 0
+            ? null
+            : () => tasks.enableDailyNotification(task).then(_showResult),
+      );
+    }
+
+    return SliverReorderableList(
+      itemCount: items.length,
+      onReorderStart: (_) => HapticFeedback.mediumImpact(),
+      onReorderItem: tasks.syncAfterReorder,
+      // The card being dragged is drawn again, without its entrance or its
+      // swipe, which would start over in the drag's overlay.
+      proxyDecorator: (child, index, animation) => _LiftedCard(
+        animation: animation,
+        child: card(items[index], index, interactive: false),
+      ),
+      itemBuilder: (context, index) {
+        final task = items[index];
+        final key = keys[index];
+        return ReorderableDelayedDragStartListener(
+          key: ValueKey(key),
+          index: index,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: _cardGap),
+            child: RiseIn(
+              animate: _opening || added.contains(key),
+              delay: _opening
+                  ? RiseIn.stagger * (widget.listDelay + math.min(index, 8))
+                  : Duration.zero,
+              child: Dismissible(
+                key: ValueKey(key),
+                background: const TaskDeleteBackground(
+                    alignment: AlignmentDirectional.centerStart),
+                secondaryBackground: const TaskDeleteBackground(
+                    alignment: AlignmentDirectional.centerEnd),
+                onDismissed: (direction) => tasks
+                    .dismissTask(index, task.id!)
+                    .then((_) => FeedbackToast.info("Task Deleted")),
+                child: card(task, index),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// A card picked up to be reordered: it grows a little and casts a deeper
+/// shadow, then settles back as it's dropped.
+class _LiftedCard extends StatelessWidget {
+  const _LiftedCard({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final lift = Curves.easeOutCubic.transform(animation.value);
+        return Transform.scale(
+          scale: 1 + 0.03 * lift,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                bottom: _cardGap,
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: TaskCard.shape,
+                    shadows: [
+                      BoxShadow(
+                        color: Colors.black.withValues(
+                            alpha: (isDarkTheme ? 0.5 : 0.18) * lift),
+                        blurRadius: 32,
+                        offset: const Offset(0, 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              child!,
             ],
           ),
         );
       },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: _cardGap),
+        child: child,
+      ),
     );
   }
 }

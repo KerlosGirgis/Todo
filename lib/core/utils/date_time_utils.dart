@@ -49,4 +49,51 @@ class DateTimeUtils {
     }
   }
 
+  /// When a task with [date] ("2026-05-13") and [time] is due: at its time,
+  /// or at the end of its day when it has none. Null when it has no date.
+  static DateTime? dueDate(String date, String time) {
+    final day = DateTime.tryParse(date);
+    if (day == null) return null;
+    final timeOfDay = tryParseTime(time);
+    return timeOfDay == null
+        ? DateTime(day.year, day.month, day.day + 1)
+        : DateTime(
+            day.year, day.month, day.day, timeOfDay.hour, timeOfDay.minute);
+  }
+
+  /// [parseTime], or a time from a 24-hour clock such as "21:30", which is
+  /// how the time picker used to write times on phones set to one. Null when
+  /// there's no time, or one that won't parse.
+  static TimeOfDay? tryParseTime(String timeStr) {
+    if (timeStr.isEmpty) return null;
+    try {
+      return parseTime(timeStr);
+    } on FormatException {
+      final match = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(timeStr.trim());
+      if (match == null) return null;
+      return TimeOfDay(
+          hour: int.parse(match.group(1)!), minute: int.parse(match.group(2)!));
+    }
+  }
+
+  /// "9:30 AM", the form [parseTime] and [stringToDateTime] read, whichever
+  /// clock the phone shows.
+  static String formatTime(TimeOfDay time) =>
+      DateFormat('h:mm a').format(DateTime(2000, 1, 1, time.hour, time.minute));
+
+  /// "Today", "Tomorrow", "Yesterday", "Fri, Oct 24", or "Jan 3, 2027" in
+  /// another year.
+  static String friendlyDay(DateTime date, DateTime now) {
+    // Counted in UTC, where every day is 24 hours long.
+    final days = DateTime.utc(date.year, date.month, date.day)
+        .difference(DateTime.utc(now.year, now.month, now.day))
+        .inDays;
+    return switch (days) {
+      0 => "Today",
+      1 => "Tomorrow",
+      -1 => "Yesterday",
+      _ when date.year == now.year => DateFormat("EEE, MMM d").format(date),
+      _ => DateFormat("MMM d, y").format(date),
+    };
+  }
 }

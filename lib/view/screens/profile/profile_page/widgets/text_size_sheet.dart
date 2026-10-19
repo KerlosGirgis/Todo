@@ -1,4 +1,3 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,7 +5,9 @@ import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
+import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/user_view_model.dart';
+import '../../../tasks/todo_page/widgets/task_card.dart';
 import 'profile_button.dart';
 
 const _accent = Color(0xff3D5AFE);
@@ -296,50 +297,24 @@ class _TaskPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-      color: context.colors.cardBackground,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: AutoSizeText(
-                    "Water the plants",
-                    maxLines: 1,
-                    minFontSize: 18,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 26 * titleSize,
-                      color: context.colors.wB,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Icon(Icons.notifications, color: Colors.blue),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                "The ferns on the balcony are looking thirsty.",
-                style: TextStyle(
-                  fontSize: 20 * descSize,
-                  color: context.colors.subtitle,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return TaskCard(
+      task: _sampleTask,
+      titleScale: titleSize,
+      descriptionScale: descSize,
+      descriptionLines: 0,
     );
   }
 }
+
+final _sampleTask = TodoItem(
+  title: "Water the plants",
+  desc: "The ferns on the balcony are looking thirsty.",
+  status: 0,
+  date: "",
+  time: "6:00 PM",
+  uuid: "",
+  notification: 1,
+);
 
 /// A note's card as the notes page draws it.
 class _NoteCardPreview extends StatelessWidget {

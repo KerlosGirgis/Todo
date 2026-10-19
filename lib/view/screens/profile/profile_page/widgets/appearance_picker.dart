@@ -225,15 +225,21 @@ class _PhoneMock extends StatelessWidget {
               width: 17,
               height: 17,
               decoration: ShapeDecoration(
-                color: colors.floatingActionButtonBackground,
+                // The to-do page's add button, in the app's blues in either
+                // theme.
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+                ),
                 shape: const RoundedSuperellipseBorder(
                   borderRadius: BorderRadius.all(Radius.circular(5)),
                 ),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.add_rounded,
                 size: 12,
-                color: colors.floatingActionButtonForeground,
+                color: Colors.white,
               ),
             ),
           ),

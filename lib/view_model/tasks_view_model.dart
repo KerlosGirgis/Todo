@@ -70,8 +70,11 @@ class TasksViewModel with ChangeNotifier {
     try {
       await tasksRepository.refreshAllItems(_allTasks);
     } catch (e) {
-      await fetchTasks();
+      // The order stays as it was in the database.
     }
+    // Rewriting the table gives every task a new id, so the tasks are read
+    // back in: the ids held before would now point at other tasks.
+    await fetchTasks();
   }
 
   Future<Result> updateTask(TodoItem task) async {
@@ -85,6 +88,8 @@ class TasksViewModel with ChangeNotifier {
       return  await enableDailyNotification(task);
     }
     else{
+      // In case the reminder was just turned off.
+      await FlutterLocalNotificationsPlugin().cancel(id: task.uuid.hashCode);
       return Info("Task Updated");
     }
   }
