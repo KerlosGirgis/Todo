@@ -115,12 +115,12 @@ class _AddButtonState extends State<_AddButton> {
               end: Alignment.bottomRight,
               colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
             ),
-            // A glow of its own colour, which lifts it off the page.
+            // A soft shadow of its own colour, which lifts it off the page.
             shadows: [
               BoxShadow(
-                color: _accent.withValues(alpha: isDarkTheme ? 0.5 : 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: _accent.withValues(alpha: isDarkTheme ? 0.22 : 0.25),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
               ),
             ],
           ),

@@ -40,8 +40,9 @@ class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
   @override
   Widget build(BuildContext context) {
     return FormDialog(
+      icon: Icons.settings_backup_restore_rounded,
       title: "Restore Backup",
-      subtitle: "Choose what happens to your tasks, then pick the backup.",
+      subtitle: "Import tasks from a backup file.",
       content: [
         FormDialogGroup(
           children: [

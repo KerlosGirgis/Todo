@@ -4,6 +4,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
 
 const _accent = Color(0xff3D5AFE);
+const _highlight = Color(0xff40C4FF);
 
 /// Opens [dialog], fading and growing it into view like the profile page's
 /// dialogs.
@@ -31,20 +32,23 @@ Future<T?> showFormDialog<T>(BuildContext context, Widget dialog) {
   );
 }
 
-/// A dialog in the style of the profile page's: a centred [title] over an
-/// optional line of [subtitle], then its [content], and its [actions] side by
-/// side at the bottom.
+/// A dialog in the style of the profile page's, under a header of its own:
+/// an [icon] on a tile in the app's blues, then the [title] over a line of
+/// [subtitle], and a button at the end that closes it. Then its [content],
+/// and its [actions] side by side at the bottom.
 class FormDialog extends StatelessWidget {
   const FormDialog({
     super.key,
+    required this.icon,
     required this.title,
-    this.subtitle,
+    required this.subtitle,
     required this.content,
     required this.actions,
   });
 
+  final IconData icon;
   final String title;
-  final String? subtitle;
+  final String subtitle;
   final List<Widget> content;
   final List<Widget> actions;
 
@@ -59,33 +63,44 @@ class FormDialog extends StatelessWidget {
         borderRadius: BorderRadius.all(Radius.circular(28)),
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 26, 20, 20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: context.colors.wB,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.4,
-              ),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                subtitle!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: context.colors.wB.withValues(alpha: 0.55),
-                  fontSize: 14,
-                  height: 1.3,
+            Row(
+              children: [
+                _HeaderIcon(icon),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: context.colors.wB,
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: context.colors.wB.withValues(alpha: 0.55),
+                          fontSize: 13.5,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                const _CloseButton(),
+              ],
+            ),
             const SizedBox(height: 20),
             ...content,
             const SizedBox(height: 20),
@@ -98,6 +113,71 @@ class FormDialog extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The dialog's icon, white on a tile with the add button's gradient.
+class _HeaderIcon extends StatelessWidget {
+  const _HeaderIcon(this.icon);
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: const RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.all(Radius.circular(15)),
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+        ),
+        shadows: [
+          BoxShadow(
+            color: _accent.withValues(alpha: 0.25),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: SizedBox.square(
+        dimension: 48,
+        child: Icon(icon, size: 25, color: Colors.white),
+      ),
+    );
+  }
+}
+
+/// A small round button that closes the dialog, as on iOS's sheets.
+class _CloseButton extends StatelessWidget {
+  const _CloseButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = context.colors.wB;
+    return Tooltip(
+      message: MaterialLocalizations.of(context).closeButtonTooltip,
+      child: Material(
+        color: ink.withValues(alpha: 0.07),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: () => Navigator.of(context).pop(),
+          customBorder: const CircleBorder(),
+          splashFactory: NoSplash.splashFactory,
+          highlightColor: ink.withValues(alpha: 0.1),
+          child: SizedBox.square(
+            dimension: 30,
+            child: Icon(
+              Icons.close_rounded,
+              size: 18,
+              color: ink.withValues(alpha: 0.55),
+            ),
+          ),
         ),
       ),
     );

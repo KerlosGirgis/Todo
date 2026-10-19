@@ -135,7 +135,11 @@ class _TaskDialogState extends State<TaskDialog> {
     final date = DateTime.tryParse(_date);
     final now = DateTime.now();
     return FormDialog(
+      icon: adding ? Icons.add_task_rounded : Icons.edit_rounded,
       title: adding ? "New Task" : "Edit Task",
+      subtitle: adding
+          ? "What do you need to get done?"
+          : "Change its details, then save.",
       content: [
         TextField(
           controller: _titleController,
