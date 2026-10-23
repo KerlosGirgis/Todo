@@ -188,6 +188,7 @@ class _NoteDialogState extends State<NoteDialog> {
       id: note?.id,
       title: title,
       body: note?.body ?? "",
+      delta: note?.delta,
       titleColor: _titleColor.hex,
       coverColor: _cover.hex,
       protected: _locked ? 1 : 0,

@@ -1,3 +1,5 @@
+import 'package:flutter_quill/flutter_quill.dart'
+    show FlutterQuillLocalizations;
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
@@ -44,6 +46,15 @@ class MyApp extends StatelessWidget {
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: AppTheme.getTheme(isDarkMode: isDarkMode),
+            localizationsDelegates: const [FlutterQuillLocalizations.delegate],
+            // The note editor's flutter_quill is still built on
+            // flutter/material.dart, whose widgets look for that library's
+            // own theme and localizations. The bridge hands them the app's.
+            // Above the navigator, so menus quill opens in the overlay, like
+            // copy and paste, find them too.
+            builder: (context, child) =>
+                // ignore: deprecated_member_use
+                MaterialUiCompatibilityBridge(child: child!),
             home: Consumer2<AuthViewModel, UserViewModel>(
               builder: (context, auth, user, _) {
                 return AppGate(auth: auth, user: user);

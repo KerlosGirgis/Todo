@@ -1,6 +1,14 @@
 class Note {
   String title;
+
+  /// The note's text without its formatting, which its card previews, a
+  /// search looks through and the home screen's widget shows.
   String body;
+
+  /// The note's text with its formatting, as a Quill delta in JSON, or null
+  /// for a note that hasn't been written in since notes had formatting,
+  /// whose [body] is all there is.
+  String? delta;
   int? id;
   String titleColor;
   String coverColor;
@@ -9,6 +17,7 @@ class Note {
   Note(
       {required this.title,
       required this.body,
+      this.delta,
       this.id,
       required this.titleColor,
       required this.coverColor,
@@ -18,14 +27,16 @@ class Note {
         id: map['id'],
         title: map['title'],
         body: map['body'],
+        delta: map['delta'],
         titleColor: map['titleColor']?? "#FFFFFF",
         coverColor: map['coverColor']?? "#1E1E1E",
         protected: map['protected']?? 0);
   }
-  Map<String, Object> toMap() {
+  Map<String, Object?> toMap() {
     return {
       'title': title,
       'body': body,
+      'delta': delta,
       'titleColor': titleColor,
       'coverColor': coverColor,
       'protected': protected

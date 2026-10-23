@@ -8,6 +8,7 @@ import 'package:readmore/readmore.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../models/todo_item.dart';
+import '../../../../widgets/check_circle.dart';
 
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);
@@ -68,7 +69,7 @@ class TaskCard extends StatefulWidget {
 class _TaskCardState extends State<TaskCard> {
   /// Where the description and chips start, under the title rather than the
   /// check.
-  static const _textInset = _CheckCircle.size + 12;
+  static const _textInset = CheckCircle.defaultSize + 12;
 
   bool _pressed = false;
 
@@ -163,7 +164,7 @@ class _TaskCardState extends State<TaskCard> {
         children: [
           Row(
             children: [
-              _CheckCircle(doneness: doneness),
+              CheckCircle(doneness: doneness),
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
@@ -407,116 +408,6 @@ class _Chip extends StatelessWidget {
       ),
     );
   }
-}
-
-/// The round check at the start of a card: an empty ring for a task to do,
-/// filled with the app's blues and ticked once it's done, part way between
-/// the two as [doneness] goes from 0 to 1.
-class _CheckCircle extends StatelessWidget {
-  const _CheckCircle({required this.doneness});
-
-  static const size = 26.0;
-
-  final double doneness;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    return CustomPaint(
-      size: const Size.square(size),
-      painter: _CheckPainter(
-        doneness: doneness,
-        ring: context.colors.wB.withValues(alpha: isDarkTheme ? 0.3 : 0.22),
-        glow: isDarkTheme,
-      ),
-    );
-  }
-}
-
-class _CheckPainter extends CustomPainter {
-  const _CheckPainter({
-    required this.doneness,
-    required this.ring,
-    required this.glow,
-  });
-
-  final double doneness;
-  final Color ring;
-
-  /// Whether the fill glows, which only shows up on dark pages.
-  final bool glow;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = size.shortestSide / 2;
-    if (doneness < 1) {
-      canvas.drawCircle(
-        center,
-        radius - 1,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..color = ring.withValues(alpha: ring.a * (1 - doneness)),
-      );
-    }
-    if (doneness <= 0) return;
-
-    // Grows in from the middle, swelling a little past full size on the
-    // way, so it pops.
-    final fillRadius = radius * (0.6 + 0.4 * doneness) +
-        radius * 0.12 * math.sin(math.pi * doneness);
-    final opacity = math.min(1.0, doneness * 1.6);
-    final rect = Rect.fromCircle(center: center, radius: fillRadius);
-    if (glow) {
-      canvas.drawCircle(
-        center,
-        fillRadius,
-        Paint()
-          ..color = _accent.withValues(alpha: 0.5 * opacity)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-      );
-    }
-    canvas.drawCircle(
-      center,
-      fillRadius,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _accent.withValues(alpha: opacity),
-            _highlight.withValues(alpha: opacity),
-          ],
-        ).createShader(rect),
-    );
-
-    // The tick draws itself once the circle has mostly filled.
-    final tick = ((doneness - 0.4) / 0.6).clamp(0.0, 1.0);
-    if (tick <= 0) return;
-    final width = size.width;
-    final height = size.height;
-    final path = Path()
-      ..moveTo(width * 0.29, height * 0.52)
-      ..lineTo(width * 0.44, height * 0.67)
-      ..lineTo(width * 0.72, height * 0.37);
-    final metric = path.computeMetrics().first;
-    canvas.drawPath(
-      metric.extractPath(0, metric.length * tick),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.4
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..color = Colors.white,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_CheckPainter oldDelegate) =>
-      oldDelegate.doneness != doneness ||
-      oldDelegate.ring != ring ||
-      oldDelegate.glow != glow;
 }
 
 /// The bell at the end of a card: tinted with the accent while a reminder is

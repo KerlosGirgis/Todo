@@ -1,14 +1,22 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flex_color_picker/flex_color_picker.dart';
-import 'package:material_ui/material_ui.dart';
+// Only for the editor's cursor: flutter_quill takes the theme of its own
+// Material library.
+import 'package:flutter/material.dart' as legacy show TextSelectionThemeData;
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/quill_delta.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
+import '../../../../../core/utils/note_document_utils.dart';
 import '../../../../../models/note.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
@@ -19,6 +27,7 @@ import '../../../../widgets/rise_in.dart';
 import '../../../profile/profile_page/widgets/aurora.dart';
 import '../widgets/editor_toolbar.dart';
 import '../widgets/note_banner.dart';
+import '../widgets/note_styles.dart';
 
 const _accent = Color(0xff3D5AFE);
 
@@ -31,18 +40,6 @@ const _toolbarGap = 12.0;
 /// iOS's system red, a touch brighter on dark pages, as there.
 Color _systemRed(bool isDarkTheme) =>
     isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
-
-/// A note's text as the editor draws it, at the user's text [size] and in
-/// the casual font if they've chosen it.
-TextStyle noteBodyStyle(BuildContext context,
-        {required double size, required bool casualFont}) =>
-    TextStyle(
-      fontFamily: casualFont ? 'casual' : 'arial',
-      fontWeight: casualFont ? FontWeight.w600 : FontWeight.w400,
-      color: context.colors.wB,
-      fontSize: 26 * size,
-      height: 1.4,
-    );
 
 /// Where a note is read and written: its cover across the top, lit by an
 /// aurora in its own colours, over its text, with the tools for writing in
@@ -58,29 +55,72 @@ class NoteEditorPage extends StatefulWidget {
 
 class _NoteEditorPageState extends State<NoteEditorPage> {
   final _scrollController = ScrollController();
-  late final _bodyController = TextEditingController(text: widget.note.body);
-  final _undoHistoryController = UndoHistoryController();
+  late final _controller = QuillController(
+    document: NoteDocumentUtils.toDocument(widget.note),
+    selection: const TextSelection.collapsed(offset: 0),
+    config: const QuillControllerConfig(
+      // Text from elsewhere comes in plain, in the note's own style: a web
+      // page's colours and fonts would clash with it, or vanish on a dark
+      // page, and its pictures are more than the editor can show.
+      // ignore: experimental_member_use
+      clipboardConfig: QuillClipboardConfig(enableExternalRichPaste: false),
+    ),
+  );
   final _bodyFocusNode = FocusNode();
+  late final StreamSubscription<DocChange> _changes;
 
-  /// The text as it was last saved, which tells the toolbar whether there
-  /// are changes to save.
-  late final _savedBody = ValueNotifier(widget.note.body);
+  /// The text as it was last saved, which tells whether there are changes
+  /// to save.
+  late Delta _savedDelta;
+
+  /// The saved text without its formatting, which the home screen's widget
+  /// shows.
+  late String _savedBody = widget.note.body;
+
+  /// Whether there are changes since the note was last saved, which the
+  /// toolbar's save button shows.
+  final _unsaved = ValueNotifier(false);
 
   /// Whether the text is in a language written from right to left, such as
   /// Arabic, which lines it up on the right.
   late bool _rtl = _isRtl(widget.note.body);
+
+  /// Whether the formatting panel is open, in the keyboard's place.
+  bool _formatting = false;
+
+  /// How far the keyboard was up at the last build, which tells it coming up
+  /// from going down.
+  double _keyboard = 0;
 
   /// Whether the note has been deleted, so its cover doesn't fly back to a
   /// card that's going away.
   bool _deleted = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Before any change, rather than when it's first compared with one.
+    _savedDelta = _controller.document.toDelta();
+    _changes = _controller.changes.listen((_) => _changed());
+    _bodyFocusNode.addListener(_focusChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    // The keyboard coming back up, for writing, puts the formatting away.
+    if (keyboard > _keyboard) _formatting = false;
+    _keyboard = keyboard;
+  }
+
+  @override
   void dispose() {
+    _changes.cancel();
     _scrollController.dispose();
-    _bodyController.dispose();
-    _undoHistoryController.dispose();
+    _controller.dispose();
     _bodyFocusNode.dispose();
-    _savedBody.dispose();
+    _unsaved.dispose();
     super.dispose();
   }
 
@@ -93,9 +133,12 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     // comfortable length on large screens.
     final gutterLeft = math.max(16 + padding.left, (width - 720) / 2);
     final gutterRight = math.max(16 + padding.right, (width - 720) / 2);
-    // The last line scrolls clear of the toolbar.
-    final toolbarClearance =
-        EditorToolbar.height + _toolbarGap + padding.bottom + 24;
+    // How far up the page the toolbar, and the formatting panel over it
+    // while it's open, cover the text.
+    final toolbarCover = EditorToolbar.height +
+        (_formatting ? EditorToolbar.panelHeight : 0) +
+        _toolbarGap +
+        padding.bottom;
     final (autoSave, showCount, casualFont, textSize, titleSize) = context
         .select<UserViewModel, (bool, bool, bool, double, double)>((user) => (
               user.user.autoSave == 1,
@@ -154,7 +197,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                         icon: Icons.chevron_left_rounded,
                         iconSize: 28,
                         tooltip: "Back",
-                        onPressed: () => Navigator.maybePop(context),
+                        // Straight back, even with the formatting open.
+                        onPressed: () => Navigator.pop(context),
                       ),
                     ),
                     trailing: Padding(
@@ -183,33 +227,29 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     // Once the page has mostly covered the notes behind it.
                     child: RiseIn(
                       delay: RiseIn.stagger * 2,
-                      child: TextField(
-                        controller: _bodyController,
-                        focusNode: _bodyFocusNode,
-                        undoController: _undoHistoryController,
-                        // A new note is ready to be written in.
-                        autofocus: note.body.isEmpty,
-                        maxLines: null,
-                        textCapitalization: TextCapitalization.sentences,
+                      child: Directionality(
                         textDirection:
                             _rtl ? TextDirection.rtl : TextDirection.ltr,
-                        style: bodyStyle,
-                        cursorColor: _accent,
-                        // Keeps the line being written clear of the toolbar.
-                        scrollPadding: EdgeInsets.fromLTRB(
-                            20,
-                            20,
-                            20,
-                            EditorToolbar.height +
-                                _toolbarGap +
-                                padding.bottom +
-                                20),
-                        decoration: InputDecoration.collapsed(
-                          hintText: "Start writing…",
-                          hintStyle: bodyStyle.copyWith(
-                              color: context.colors.wB.withValues(alpha: 0.3)),
+                        child: QuillEditor(
+                          controller: _controller,
+                          focusNode: _bodyFocusNode,
+                          // The page's own, as the text scrolls with it.
+                          scrollController: _scrollController,
+                          config: QuillEditorConfig(
+                            scrollable: false,
+                            // A new note is ready to be written in.
+                            autoFocus: note.body.isEmpty,
+                            placeholder: "Start writing…",
+                            customStyles: noteStyles(context, bodyStyle),
+                            textSpanBuilder: checkedLinesSpanBuilder(bodyStyle),
+                            textSelectionThemeData:
+                                const legacy.TextSelectionThemeData(
+                                    cursorColor: _accent),
+                            // Keeps the line being written clear of the
+                            // toolbar.
+                            scrollBottomInset: toolbarCover + 12,
+                          ),
                         ),
-                        onChanged: (text) => _changed(text, autoSave: autoSave),
                       ),
                     ),
                   ),
@@ -220,8 +260,9 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                   hasScrollBody: false,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: _writeAtEnd,
-                    child: SizedBox(height: toolbarClearance),
+                    onTap: _controller.moveCursorToEnd,
+                    // The last line scrolls clear of the toolbar.
+                    child: SizedBox(height: toolbarCover + 24),
                   ),
                 ),
               ],
@@ -232,13 +273,23 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
               bottom: padding.bottom + _toolbarGap,
               child: RiseIn(
                 delay: RiseIn.stagger * 3,
-                child: EditorToolbar(
-                  text: _bodyController,
-                  history: _undoHistoryController,
-                  savedText: _savedBody,
-                  showCount: showCount,
-                  autoSave: autoSave,
-                  onSave: _saveChanges,
+                // Back puts the formatting panel away first, as it would
+                // the keyboard.
+                child: PopScope(
+                  canPop: !_formatting,
+                  onPopInvokedWithResult: (didPop, result) {
+                    if (!didPop) setState(() => _formatting = false);
+                  },
+                  child: EditorToolbar(
+                    controller: _controller,
+                    focusNode: _bodyFocusNode,
+                    unsaved: _unsaved,
+                    formatting: _formatting,
+                    onFormat: _toggleFormatting,
+                    showCount: showCount,
+                    autoSave: autoSave,
+                    onSave: _saveChanges,
+                  ),
                 ),
               ),
             ),
@@ -262,21 +313,42 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
         ),
       ];
 
-  void _changed(String text, {required bool autoSave}) {
-    final rtl = _isRtl(text);
+  void _changed() {
+    final rtl = _isRtl(_controller.document.toPlainText());
     if (rtl != _rtl) setState(() => _rtl = rtl);
-    if (autoSave) _save(text);
+    _unsaved.value = _controller.document.toDelta() != _savedDelta;
+    if (_unsaved.value && context.read<UserViewModel>().user.autoSave == 1) {
+      _save();
+    }
   }
 
-  /// Saves [body] as the note's text.
-  Future<void> _save(String body) async {
+  void _focusChanged() {
+    if (!_bodyFocusNode.hasFocus && _formatting) {
+      setState(() => _formatting = false);
+    }
+  }
+
+  /// Opens the formatting panel in the keyboard's place, or puts it away
+  /// and brings the keyboard back to carry on writing.
+  void _toggleFormatting() {
+    setState(() => _formatting = !_formatting);
+    SystemChannels.textInput
+        .invokeMethod<void>(_formatting ? 'TextInput.hide' : 'TextInput.show');
+  }
+
+  /// Saves the note's text, as it is now.
+  Future<void> _save() async {
     final note = widget.note;
+    final document = _controller.document;
+    final delta = document.toDelta();
+    final body = NoteDocumentUtils.toBody(document);
     try {
       await Provider.of<NotesViewModel>(context, listen: false).updateNote(
         Note(
           id: note.id,
           title: note.title,
           body: body,
+          delta: jsonEncode(delta.toJson()),
           titleColor: note.titleColor,
           coverColor: note.coverColor,
           protected: note.protected,
@@ -286,29 +358,20 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
       FeedbackToast.error("Sorry, Something went wrong, note not saved");
       return;
     }
-    if (mounted) _savedBody.value = body;
+    _savedDelta = delta;
+    _savedBody = body;
+    // Still unsaved if it was written in while it saved.
+    if (mounted) _unsaved.value = _controller.document.toDelta() != delta;
   }
 
   Future<void> _saveChanges() async {
     HapticFeedback.lightImpact();
-    await _save(_bodyController.text);
-  }
-
-  /// Puts the cursor at the end of the text, and the keyboard up.
-  void _writeAtEnd() {
-    _bodyController.selection =
-        TextSelection.collapsed(offset: _bodyController.text.length);
-    if (_bodyFocusNode.hasFocus) {
-      // Still focused after the keyboard was put away, so it's brought back.
-      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
-    } else {
-      _bodyFocusNode.requestFocus();
-    }
+    await _save();
   }
 
   /// Shows the note's saved text on the home screen's widget.
   void _showOnWidget() {
-    final body = _savedBody.value;
+    final body = _savedBody;
     if (body.trim().isEmpty) {
       FeedbackToast.info("Write something to show on the widget first");
       return;

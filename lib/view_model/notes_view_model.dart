@@ -107,6 +107,7 @@ class NotesViewModel with ChangeNotifier {
           final exists = existingNotes.any((e) =>
               e.title == note.title &&
               e.body == note.body &&
+              e.delta == note.delta &&
               e.titleColor == note.titleColor &&
               e.coverColor == note.coverColor &&
               e.protected == note.protected);

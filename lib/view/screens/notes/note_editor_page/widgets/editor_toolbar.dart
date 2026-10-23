@@ -1,26 +1,34 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart' as intl;
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../widgets/glass.dart';
+import 'format_panel.dart';
 
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);
+
+/// The gap between the formatting panel and the bar under it.
+const _panelGap = 10.0;
 
 final _word = RegExp(r'\S+');
 final _thousands = intl.NumberFormat.decimalPattern();
 
 /// The bar along the bottom of the editor, which rides above the keyboard
-/// while it's open: buttons that undo and redo, a count of the note's words
-/// if the user wants one, and, when changes are saved by hand, the button
-/// that saves them.
+/// while it's open: buttons that undo and redo, the one for formatting
+/// while the note's being written, a count of its words if the user wants
+/// one, and, when changes are saved by hand, the button that saves them.
+/// The formatting panel opens above it, in the keyboard's place.
 class EditorToolbar extends StatelessWidget {
   const EditorToolbar({
     super.key,
-    required this.text,
-    required this.history,
-    required this.savedText,
+    required this.controller,
+    required this.focusNode,
+    required this.unsaved,
+    required this.formatting,
+    required this.onFormat,
     required this.showCount,
     required this.autoSave,
     required this.onSave,
@@ -28,12 +36,23 @@ class EditorToolbar extends StatelessWidget {
 
   static const height = 50.0;
 
-  /// The note's text, as it's being written.
-  final TextEditingController text;
-  final UndoHistoryController history;
+  /// How much higher the formatting panel reaches, over the bar.
+  static const panelHeight = FormatPanel.height + _panelGap;
 
-  /// The text as it was last saved.
-  final ValueListenable<String> savedText;
+  /// The note's text, as it's being written.
+  final QuillController controller;
+
+  /// The text's focus, which it has while it's being written.
+  final FocusNode focusNode;
+
+  /// Whether there are changes since the note was last saved.
+  final ValueListenable<bool> unsaved;
+
+  /// Whether the formatting panel is open.
+  final bool formatting;
+
+  /// Opens the formatting panel, or puts it away.
+  final VoidCallback onFormat;
   final bool showCount;
 
   /// Whether changes are saved as they're made, which leaves nothing for a
@@ -43,49 +62,92 @@ class EditorToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: _Capsule(text: text, history: history, showCount: showCount),
-          ),
-        ),
-        if (!autoSave) ...[
-          const SizedBox(width: 12),
-          ListenableBuilder(
-            listenable: Listenable.merge([text, savedText]),
-            builder: (context, child) => _SaveButton(
-              saved: text.text == savedText.value,
-              onPressed: onSave,
+        // Grows out of the bar, from its button's end.
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.9, end: 1).animate(animation),
+              alignment: Alignment.bottomLeft,
+              child: child,
             ),
           ),
-        ],
+          child: formatting
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: _panelGap),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 440),
+                    child: FormatPanel(controller: controller),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: _Capsule(
+                  controller: controller,
+                  focusNode: focusNode,
+                  formatting: formatting,
+                  onFormat: onFormat,
+                  showCount: showCount,
+                ),
+              ),
+            ),
+            if (!autoSave) ...[
+              const SizedBox(width: 12),
+              ValueListenableBuilder(
+                valueListenable: unsaved,
+                builder: (context, unsaved, child) => _SaveButton(
+                  saved: !unsaved,
+                  onPressed: onSave,
+                ),
+              ),
+            ],
+          ],
+        ),
       ],
     );
   }
 }
 
-/// Undo and redo, then the count, on one glass capsule. It's only there
-/// while it has something to offer, so a note that's only being read is
-/// left clear of it.
+/// Undo and redo, then the button for formatting while the note's being
+/// written, then the count, on one glass capsule. It's only there while it
+/// has something to offer, so a note that's only being read is left clear
+/// of it.
 class _Capsule extends StatelessWidget {
   const _Capsule({
-    required this.text,
-    required this.history,
+    required this.controller,
+    required this.focusNode,
+    required this.formatting,
+    required this.onFormat,
     required this.showCount,
   });
 
-  final TextEditingController text;
-  final UndoHistoryController history;
+  final QuillController controller;
+  final FocusNode focusNode;
+  final bool formatting;
+  final VoidCallback onFormat;
   final bool showCount;
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<UndoHistoryValue>(
-      valueListenable: history,
-      builder: (context, value, child) {
-        final shown = showCount || value.canUndo || value.canRedo;
+    return ListenableBuilder(
+      listenable: Listenable.merge([controller, focusNode]),
+      builder: (context, child) {
+        final writing = focusNode.hasFocus;
+        final canUndo = controller.hasUndo;
+        final canRedo = controller.hasRedo;
+        final shown = showCount || writing || canUndo || canRedo;
         return IgnorePointer(
           ignoring: !shown,
           child: AnimatedOpacity(
@@ -101,31 +163,41 @@ class _Capsule extends StatelessWidget {
                 child: Glass(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 3),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _ToolbarButton(
-                          icon: Icons.undo_rounded,
-                          tooltip: "Undo",
-                          onPressed: value.canUndo ? history.undo : null,
-                        ),
-                        _ToolbarButton(
-                          icon: Icons.redo_rounded,
-                          tooltip: "Redo",
-                          onPressed: value.canRedo ? history.redo : null,
-                        ),
-                        if (showCount) ...[
-                          SizedBox(
-                            height: 22,
-                            child: VerticalDivider(
-                              width: 9,
-                              thickness: 0.5,
-                              color: context.colors.wB.withValues(alpha: 0.2),
-                            ),
+                    // Widens, rather than jumping, as the formatting button
+                    // comes and goes.
+                    child: AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _ToolbarButton(
+                            icon: Icons.undo_rounded,
+                            tooltip: "Undo",
+                            onPressed: canUndo
+                                ? () => controller
+                                    .changeWithoutKeyboard(controller.undo)
+                                : null,
                           ),
-                          Flexible(child: _Count(text: text)),
+                          _ToolbarButton(
+                            icon: Icons.redo_rounded,
+                            tooltip: "Redo",
+                            onPressed: canRedo
+                                ? () => controller
+                                    .changeWithoutKeyboard(controller.redo)
+                                : null,
+                          ),
+                          if (writing) ...[
+                            const _Divider(),
+                            _FormatButton(on: formatting, onPressed: onFormat),
+                          ],
+                          if (showCount) ...[
+                            const _Divider(),
+                            Flexible(child: _Count(controller: controller)),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -134,6 +206,22 @@ class _Capsule extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _Divider extends StatelessWidget {
+  const _Divider();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 22,
+      child: VerticalDivider(
+        width: 9,
+        thickness: 0.5,
+        color: context.colors.wB.withValues(alpha: 0.2),
+      ),
     );
   }
 }
@@ -179,12 +267,73 @@ class _ToolbarButton extends StatelessWidget {
   }
 }
 
+/// "Aa", as on Apple's Notes, which opens the formatting panel in the
+/// keyboard's place. It's lit while the panel's open, when it puts it away
+/// and brings the keyboard back.
+class _FormatButton extends StatelessWidget {
+  const _FormatButton({required this.on, required this.onPressed});
+
+  final bool on;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = context.colors.wB;
+    final accent = context.colors.moreLess;
+    return Tooltip(
+      message: on ? "Hide Formatting" : "Format",
+      child: Semantics(
+        selected: on,
+        child: SizedBox(
+          width: 46,
+          height: EditorToolbar.height,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onPressed,
+              customBorder: const CircleBorder(),
+              splashFactory: NoSplash.splashFactory,
+              highlightColor: ink.withValues(alpha: 0.1),
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 38,
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: ShapeDecoration(
+                    shape: const CircleBorder(),
+                    color: on
+                        ? accent.withValues(alpha: 0.16)
+                        : Colors.transparent,
+                  ),
+                  child: Text(
+                    "Aa",
+                    // The size of the icons beside it, which don't scale.
+                    textScaler: TextScaler.noScaling,
+                    style: TextStyle(
+                      color: on ? accent : ink,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.3,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// How many words the note has, as it's written, or how many characters
 /// after a tap, then words again after another.
 class _Count extends StatefulWidget {
-  const _Count({required this.text});
+  const _Count({required this.controller});
 
-  final TextEditingController text;
+  final QuillController controller;
 
   @override
   State<_Count> createState() => _CountState();
@@ -225,9 +374,10 @@ class _CountState extends State<_Count> {
           child: Center(
             widthFactor: 1,
             child: ListenableBuilder(
-              listenable: widget.text,
+              listenable: widget.controller,
               builder: (context, child) {
-                final count = _countOf(widget.text.text);
+                final count =
+                    _countOf(widget.controller.document.toPlainText());
                 final noun = _characters ? "character" : "word";
                 return Text(
                   "${_thousands.format(count)} "

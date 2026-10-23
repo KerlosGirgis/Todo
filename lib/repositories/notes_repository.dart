@@ -18,6 +18,7 @@ class NotesRepository {
       'id',
       'title',
       'body',
+      'delta',
       'titleColor',
       'coverColor',
       'protected'

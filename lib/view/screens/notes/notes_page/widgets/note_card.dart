@@ -395,6 +395,10 @@ class _BodyPreview extends StatelessWidget {
               overflow: TextOverflow.fade,
               textDirection: _textDirection(preview),
               style: style,
+              // Every line as tall as they're counted, even one with a
+              // checklist's box, which comes from another font.
+              strutStyle:
+                  StrutStyle.fromTextStyle(style, forceStrutHeight: true),
             ),
           ],
         );
