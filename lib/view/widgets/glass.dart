@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A frosted, translucent surface in the style of Apple's glass materials:
 /// it blurs whatever is behind it, tints it, and draws a thin bright rim.

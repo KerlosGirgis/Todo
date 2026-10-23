@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Rises into place and fades in when it's first built, after [delay], as the
 /// profile page's sections do when it opens. Whether it runs is up to its

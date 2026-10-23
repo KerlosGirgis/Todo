@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
