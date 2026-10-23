@@ -1,3 +1,5 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,57 +54,60 @@ class _NoteCardState extends State<NoteCard> {
       scale: _pressed ? 0.97 : 1,
       duration: const Duration(milliseconds: 160),
       curve: Curves.easeOut,
-      child: NoteCover(
-        color: coverColor,
-        child: InkWell(
-          onTap: widget.onTap,
-          onLongPress: () {
-            HapticFeedback.mediumImpact();
-            widget.onLongPress();
-          },
-          onHighlightChanged: (pressed) => setState(() => _pressed = pressed),
-          // iOS dims a pressed card instead of rippling, and stays silent.
-          enableFeedback: false,
-          splashFactory: NoSplash.splashFactory,
-          highlightColor: onCover.withValues(alpha: 0.06),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // The title gets at most ~60% of the card so large
-                    // title sizes still leave room for the preview. The
-                    // cap clips the rare title whose first line can't fit.
-                    ConstrainedBox(
-                      constraints:
-                          BoxConstraints(maxHeight: constraints.maxHeight),
-                      child: Text(
-                        note.title,
-                        maxLines: _linesThatFit(context,
-                                constraints.maxHeight * 0.6, titleStyle)
-                            .clamp(1, 3),
-                        overflow: TextOverflow.ellipsis,
-                        textDirection: _textDirection(note.title),
-                        style: titleStyle,
+      child: NoteCoverHero(
+        note: note,
+        cover: NoteCover(
+          color: coverColor,
+          child: InkWell(
+            onTap: widget.onTap,
+            onLongPress: () {
+              HapticFeedback.mediumImpact();
+              widget.onLongPress();
+            },
+            onHighlightChanged: (pressed) => setState(() => _pressed = pressed),
+            // iOS dims a pressed card instead of rippling, and stays silent.
+            enableFeedback: false,
+            splashFactory: NoSplash.splashFactory,
+            highlightColor: onCover.withValues(alpha: 0.06),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // The title gets at most ~60% of the card so large
+                      // title sizes still leave room for the preview. The
+                      // cap clips the rare title whose first line can't fit.
+                      ConstrainedBox(
+                        constraints:
+                            BoxConstraints(maxHeight: constraints.maxHeight),
+                        child: Text(
+                          note.title,
+                          maxLines: _linesThatFit(context,
+                                  constraints.maxHeight * 0.6, titleStyle)
+                              .clamp(1, 3),
+                          overflow: TextOverflow.ellipsis,
+                          textDirection: _textDirection(note.title),
+                          style: titleStyle,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: note.protected == 1
-                            ? _LockedPreview(color: onCover)
-                            : _BodyPreview(
-                                body: note.body,
-                                color: onCover,
-                                casualFont: casualFont,
-                              ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: note.protected == 1
+                              ? _LockedPreview(color: onCover)
+                              : _BodyPreview(
+                                  body: note.body,
+                                  color: onCover,
+                                  casualFont: casualFont,
+                                ),
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -192,6 +197,106 @@ class NoteCover extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A note's [cover] as a [Hero], which flies between the note's card and the
+/// top of its editor when it's opened or closed, turning from one into the
+/// other on the way.
+class NoteCoverHero extends StatelessWidget {
+  const NoteCoverHero({super.key, required this.note, required this.cover});
+
+  final Note note;
+  final NoteCover cover;
+
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: (NoteCoverHero, note.id),
+      // Straight there, rather than along the arc Material's heroes take.
+      createRectTween: (begin, end) => RectTween(begin: begin, end: end),
+      flightShuttleBuilder: _flightShuttle,
+      child: cover,
+    );
+  }
+
+  /// The cover in flight. It eases between the two covers' corners, while
+  /// the content it's leaving fades out and then the content it's heading
+  /// for fades in. Each is laid out at its own cover's size, rather than
+  /// rewrapping as the cover grows or shrinks, and cropped to it.
+  static Widget _flightShuttle(
+    BuildContext flightContext,
+    Animation<double> animation,
+    HeroFlightDirection flightDirection,
+    BuildContext fromHeroContext,
+    BuildContext toHeroContext,
+  ) {
+    final from = (fromHeroContext.widget as Hero).child as NoteCover;
+    final to = (toHeroContext.widget as Hero).child as NoteCover;
+    final fromSize = _sizeOf(fromHeroContext);
+    final toSize = _sizeOf(toHeroContext);
+    // Both ways, the animation runs from the card, at 0, to the editor, at 1.
+    final (card, cardSize, editor, editorSize) =
+        flightDirection == HeroFlightDirection.push
+            ? (from, fromSize, to, toSize)
+            : (to, toSize, from, fromSize);
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final progress = animation.value;
+        return NoteCover(
+          color: editor.color,
+          radius: lerpDouble(card.radius, editor.radius, progress)!,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _AtSize(
+                size: cardSize,
+                child: Opacity(
+                  opacity: 1 - const Interval(0, 0.4).transform(progress),
+                  child: card.child,
+                ),
+              ),
+              _AtSize(
+                size: editorSize,
+                child: Opacity(
+                  opacity: const Interval(0.5, 1).transform(progress),
+                  child: editor.child,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  static Size? _sizeOf(BuildContext context) {
+    final box = context.findRenderObject();
+    return box is RenderBox && box.hasSize ? box.size : null;
+  }
+}
+
+/// Lays [child] out at [size], from the top start corner of the room it's
+/// given, or fills that room when there's no [size].
+class _AtSize extends StatelessWidget {
+  const _AtSize({required this.size, required this.child});
+
+  final Size? size;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = this.size;
+    if (size == null) return child;
+    return OverflowBox(
+      alignment: AlignmentDirectional.topStart,
+      minWidth: size.width,
+      maxWidth: size.width,
+      minHeight: size.height,
+      maxHeight: size.height,
+      child: child,
     );
   }
 }

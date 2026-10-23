@@ -9,11 +9,16 @@ class GlassMenuItem {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
+    this.color,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
+
+  /// The icon's colour, such as red for one that deletes, rather than the
+  /// text colour.
+  final Color? color;
 }
 
 /// A round glass button for a bar, which opens into a glass capsule of
@@ -118,7 +123,7 @@ class _GlassMenuState extends State<GlassMenu>
               width: _itemWidth,
               tooltip: item.tooltip,
               onPressed: () => _choose(item),
-              child: Icon(item.icon, size: 21, color: ink),
+              child: Icon(item.icon, size: 21, color: item.color ?? ink),
             ),
         ],
       ),

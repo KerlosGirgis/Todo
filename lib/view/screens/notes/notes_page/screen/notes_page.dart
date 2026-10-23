@@ -240,13 +240,16 @@ class _NotesPageState extends State<NotesPage> {
     Navigator.push(
       context,
       PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 450),
+        reverseTransitionDuration: const Duration(milliseconds: 400),
         pageBuilder: (context, animation, secondaryAnimation) =>
             NoteEditorPage(note: note),
+        // Fades in around the note's cover, which grows out of its card into
+        // the top of the editor, covering the notes well before it lands.
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            SlideTransition(
-          position: animation.drive(
-              Tween(begin: const Offset(1, 0), end: Offset.zero)
-                  .chain(CurveTween(curve: Curves.ease))),
+            FadeTransition(
+          opacity: animation.drive(
+              CurveTween(curve: const Interval(0, 0.6, curve: Curves.easeOut))),
           child: child,
         ),
       ),

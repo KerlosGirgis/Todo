@@ -85,6 +85,8 @@ class LargeTitleBarDelegate extends SliverPersistentHeaderDelegate {
                   opacity: titleOpacity,
                   child: Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: context.colors.wB,
                       fontSize: 17,

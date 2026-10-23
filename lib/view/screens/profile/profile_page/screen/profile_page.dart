@@ -9,7 +9,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
-import '../../../../widgets/glass.dart';
+import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/large_title.dart';
 import '../widgets/aurora.dart';
 import '../widgets/profile_header.dart';
@@ -240,46 +240,13 @@ List<Widget> _staggered(List<Widget> sections) => [
         ),
     ];
 
-/// A round glass button for the bar, which floats over the aurora.
-class _BarButton extends StatelessWidget {
-  const _BarButton(
-      {required this.icon, required this.tooltip, required this.onPressed});
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: SizedBox.square(
-        dimension: 38,
-        child: Glass(
-          shape: const CircleBorder(),
-          child: Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              onTap: onPressed,
-              customBorder: const CircleBorder(),
-              splashFactory: NoSplash.splashFactory,
-              highlightColor: context.colors.wB.withValues(alpha: 0.1),
-              child: Icon(icon, size: 22, color: context.colors.wB),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _CloseButton extends StatelessWidget {
   const _CloseButton();
 
   @override
   Widget build(BuildContext context) {
     // Points down, the way the page leaves.
-    return _BarButton(
+    return GlassIconButton(
       icon: Icons.keyboard_arrow_down_rounded,
       tooltip: "Close",
       onPressed: () => Navigator.pop(context),
@@ -292,7 +259,7 @@ class _AboutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _BarButton(
+    return GlassIconButton(
       icon: Icons.info_outline_rounded,
       tooltip: "About",
       onPressed: () {
