@@ -6,6 +6,12 @@ import 'package:provider/provider.dart';
 import '../../../../../models/note.dart';
 import '../../../../../view_model/user_view_model.dart';
 
+/// White or black, whichever reads better on a note's [cover].
+Color onCoverColor(Color cover) =>
+    ThemeData.estimateBrightnessForColor(cover) == Brightness.dark
+        ? Colors.white
+        : Colors.black;
+
 class NoteCard extends StatefulWidget {
   const NoteCard({
     super.key,
@@ -23,10 +29,6 @@ class NoteCard extends StatefulWidget {
 }
 
 class _NoteCardState extends State<NoteCard> {
-  // Apple's continuous corners, rather than circular ones.
-  static const _shape = RoundedSuperellipseBorder(
-    borderRadius: BorderRadius.all(Radius.circular(24)),
-  );
   bool _pressed = false;
 
   @override
@@ -37,12 +39,7 @@ class _NoteCardState extends State<NoteCard> {
     final casualFont =
         context.select<UserViewModel, bool>((user) => user.user.casual == 1);
     final coverColor = note.coverColor.toColor;
-    // White or black, whichever reads better on the cover.
-    final onCover =
-        ThemeData.estimateBrightnessForColor(coverColor) == Brightness.dark
-            ? Colors.white
-            : Colors.black;
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final onCover = onCoverColor(coverColor);
     final titleStyle = TextStyle(
       color: note.titleColor.toColor,
       fontSize: 24 * titleSize,
@@ -55,93 +52,185 @@ class _NoteCardState extends State<NoteCard> {
       scale: _pressed ? 0.97 : 1,
       duration: const Duration(milliseconds: 160),
       curve: Curves.easeOut,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          shape: _shape,
-          // A soft, layered shadow on light pages; on dark ones the hairline
-          // edge does the separating, as in Apple's dark mode.
-          shadows: isDarkTheme
-              ? null
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.07),
-                    blurRadius: 24,
-                    spreadRadius: -6,
-                    offset: const Offset(0, 10),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 3,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-        ),
-        child: Material(
-          color: coverColor,
-          clipBehavior: Clip.antiAlias,
-          shape: _shape.copyWith(
-            side: BorderSide(
-              width: 0.5,
-              color: onCover.withValues(
-                  alpha: onCover == Colors.white ? 0.14 : 0.1),
-            ),
-          ),
-          child: InkWell(
-            onTap: widget.onTap,
-            onLongPress: () {
-              HapticFeedback.mediumImpact();
-              widget.onLongPress();
-            },
-            onHighlightChanged: (pressed) => setState(() => _pressed = pressed),
-            // iOS dims a pressed card instead of rippling, and stays silent.
-            enableFeedback: false,
-            splashFactory: NoSplash.splashFactory,
-            highlightColor: onCover.withValues(alpha: 0.06),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // The title gets at most ~60% of the card so large
-                      // title sizes still leave room for the preview. The
-                      // cap clips the rare title whose first line can't fit.
-                      ConstrainedBox(
-                        constraints:
-                            BoxConstraints(maxHeight: constraints.maxHeight),
-                        child: Text(
-                          note.title,
-                          maxLines: _linesThatFit(context,
-                                  constraints.maxHeight * 0.6, titleStyle)
-                              .clamp(1, 3),
-                          overflow: TextOverflow.ellipsis,
-                          textDirection: _textDirection(note.title),
-                          style: titleStyle,
-                        ),
+      child: NoteCover(
+        color: coverColor,
+        child: InkWell(
+          onTap: widget.onTap,
+          onLongPress: () {
+            HapticFeedback.mediumImpact();
+            widget.onLongPress();
+          },
+          onHighlightChanged: (pressed) => setState(() => _pressed = pressed),
+          // iOS dims a pressed card instead of rippling, and stays silent.
+          enableFeedback: false,
+          splashFactory: NoSplash.splashFactory,
+          highlightColor: onCover.withValues(alpha: 0.06),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // The title gets at most ~60% of the card so large
+                    // title sizes still leave room for the preview. The
+                    // cap clips the rare title whose first line can't fit.
+                    ConstrainedBox(
+                      constraints:
+                          BoxConstraints(maxHeight: constraints.maxHeight),
+                      child: Text(
+                        note.title,
+                        maxLines: _linesThatFit(context,
+                                constraints.maxHeight * 0.6, titleStyle)
+                            .clamp(1, 3),
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: _textDirection(note.title),
+                        style: titleStyle,
                       ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: note.protected == 1
-                              ? _LockedPreview(color: onCover)
-                              : _BodyPreview(
-                                  body: note.body,
-                                  color: onCover,
-                                  casualFont: casualFont,
-                                ),
-                        ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: note.protected == 1
+                            ? _LockedPreview(color: onCover)
+                            : _BodyPreview(
+                                body: note.body,
+                                color: onCover,
+                                casualFont: casualFont,
+                              ),
                       ),
-                    ],
-                  );
-                },
-              ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// The surface a note is drawn on: its cover colour, lit softly from above,
+/// with a rim that catches the light along its top edge. A shadow lifts it
+/// off light pages, and on dark ones a colourful cover glows a little of its
+/// own colour, as the add button does. Ink from an [InkWell] in [child]
+/// shows on top of it.
+class NoteCover extends StatelessWidget {
+  const NoteCover({
+    super.key,
+    required this.color,
+    required this.child,
+    this.radius = 24,
+  });
+
+  final Color color;
+  final double radius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    // Apple's continuous corners, rather than circular ones.
+    final shape = RoundedSuperellipseBorder(
+      borderRadius: BorderRadius.all(Radius.circular(radius)),
+    );
+    // Only colours tint the shadow or glow; greys, white and black cast a
+    // plain one.
+    final saturation = HSVColor.fromColor(color).saturation;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: shape,
+        shadows: isDarkTheme
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.3 * saturation),
+                  blurRadius: 28,
+                  spreadRadius: -8,
+                  offset: const Offset(0, 10),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Color.lerp(Colors.black, color, 0.5 * saturation)!
+                      .withValues(alpha: 0.08 + 0.1 * saturation),
+                  blurRadius: 24,
+                  spreadRadius: -6,
+                  offset: const Offset(0, 10),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+      ),
+      child: CustomPaint(
+        foregroundPainter: _RimPainter(
+          shape: shape,
+          lightCover: onCoverColor(color) == Colors.black,
+        ),
+        child: Material(
+          color: color,
+          clipBehavior: Clip.antiAlias,
+          shape: shape,
+          child: Ink(
+            decoration: BoxDecoration(
+              // A faint sheen from the top, as on the settings' icons.
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.lerp(color, Colors.white, 0.08)!,
+                  color,
+                  Color.lerp(color, Colors.black, 0.04)!,
+                ],
+                stops: const [0, 0.55, 1],
+              ),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A hairline around a cover, bright along the top where the light catches
+/// it and fading towards the bottom, as on the glass buttons.
+class _RimPainter extends CustomPainter {
+  const _RimPainter({required this.shape, required this.lightCover});
+
+  final ShapeBorder shape;
+  final bool lightCover;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    canvas.drawPath(
+      shape.getOuterPath(rect.deflate(0.25)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.5
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: lightCover
+              ? [
+                  Colors.white.withValues(alpha: 0.9),
+                  Colors.black.withValues(alpha: 0.1),
+                ]
+              : [
+                  Colors.white.withValues(alpha: 0.3),
+                  Colors.white.withValues(alpha: 0.08),
+                ],
+        ).createShader(rect),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RimPainter oldDelegate) =>
+      oldDelegate.shape != shape || oldDelegate.lightCover != lightCover;
 }
 
 class _BodyPreview extends StatelessWidget {

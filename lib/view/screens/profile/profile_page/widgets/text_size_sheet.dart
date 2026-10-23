@@ -7,6 +7,7 @@ import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/user_view_model.dart';
+import '../../../notes/notes_page/widgets/note_card.dart';
 import '../../../tasks/todo_page/widgets/task_card.dart';
 import 'profile_button.dart';
 
@@ -327,20 +328,8 @@ class _NoteCardPreview extends StatelessWidget {
     return SizedBox(
       width: 160,
       height: 188,
-      child: DecoratedBox(
-        decoration: ShapeDecoration(
-          color: _accent,
-          shape: const RoundedSuperellipseBorder(
-            borderRadius: BorderRadius.all(Radius.circular(24)),
-          ),
-          shadows: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
+      child: NoteCover(
+        color: _accent,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

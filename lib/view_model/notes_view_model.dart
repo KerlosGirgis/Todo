@@ -9,7 +9,6 @@ import '../services/lock_service.dart';
 
 class NotesViewModel with ChangeNotifier {
   List<Note> notes = [];
-  late Note tempNote;
   final NotesRepository notesRepository = NotesRepository();
   final AuthenticationService authService = AuthenticationService();
 
@@ -52,56 +51,14 @@ class NotesViewModel with ChangeNotifier {
       return Failure("Authentication Failed");
     }
   }
-  // Called from the note dialogs' initState, before their first build, so
-  // there's nothing to notify yet (and notifying during a build throws).
-  void newTempNote(){
-    tempNote = Note(title: "", body: "", titleColor: "FFFFFF", coverColor: "1E1E1E", protected: 0);
-  }
 
-  void setTempNote(Note note){
-    tempNote = Note(
-      id: note.id,
-      title: note.title,
-      body: note.body,
-      titleColor: note.titleColor,
-      coverColor: note.coverColor,
-      protected: note.protected,
-    );
-  }
-
-  void clearTempNote(){
-    tempNote = Note(title: "", body: "", titleColor: "FFFFFF", coverColor: "1E1E1E", protected: 0);
-  }
-
-  void setTempNoteTitle(String title){
-    tempNote.title=title;
-    notifyListeners();
-  }
-  void setTempNoteTitleColor(String titleColor){
-    tempNote.titleColor=titleColor;
-    notifyListeners();
-  }
-  void setTempNoteCoverColor(String coverColor){
-    tempNote.coverColor=coverColor;
-    notifyListeners();
-  }
-
-  Future<Result> toggleTempNoteProtection() async {
-
-    if (tempNote.protected == 0) {
-      bool isBioAvailable = await authService.authenticate();
-      if (isBioAvailable) {
-        tempNote.protected=1;
-        notifyListeners();
-        return Success("Fingerprint Enabled");
-      } else{
-        return Failure("Authentication Failed");
-      }
-    } else{
-      tempNote.protected=0;
-      notifyListeners();
-      return Info("Fingerprint Disabled");
+  /// Checks it's the user, with their fingerprint, before a note is locked
+  /// with it.
+  Future<Result> confirmLock() async {
+    if (await authService.authenticate()) {
+      return Success("Fingerprint Enabled");
     }
+    return Failure("Authentication Failed");
   }
 
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {

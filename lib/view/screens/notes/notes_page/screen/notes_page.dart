@@ -1,21 +1,35 @@
-import 'package:flex_color_picker/flex_color_picker.dart';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/core/result.dart';
-import 'package:todo/view/screens/notes/note_editor_page/screen/note_editor_page.dart';
-import 'package:todo/view/screens/notes/notes_page/widgets/notes_overwrite_dialog.dart';
-import 'package:todo/view/screens/tasks/todo_page/screen/todo_page.dart';
-import 'package:todo/view_model/notes_view_model.dart';
-import 'package:todo/view_model/user_view_model.dart';
-import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
-import 'package:todo/view/screens/notes/notes_page/widgets/add_note_dialog.dart';
-import 'package:todo/view/widgets/expandable_menu.dart';
-import 'package:todo/view/screens/notes/notes_page/widgets/reorder_notes_dialog.dart';
+
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
+import '../../../../../models/note.dart';
+import '../../../../../view_model/notes_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
-import '../widgets/update_note_dialog.dart';
+import '../../../../widgets/glass_menu.dart';
+import '../../../../widgets/large_title.dart';
+import '../../../../widgets/page_action_buttons.dart';
+import '../../../../widgets/rise_in.dart';
+import '../../../profile/profile_page/screen/profile_page.dart';
+import '../../../profile/profile_page/widgets/aurora.dart';
+import '../../../tasks/todo_page/screen/todo_page.dart';
+import '../../../tasks/todo_page/widgets/form_dialog.dart';
+import '../../note_editor_page/screen/note_editor_page.dart';
+import '../widgets/empty_notes.dart';
+import '../widgets/note_card.dart';
+import '../widgets/note_dialog.dart';
+import '../widgets/notes_overwrite_dialog.dart';
+import '../widgets/notes_search_field.dart';
+import '../widgets/reorder_notes_dialog.dart';
+
+const _title = "Notes";
+
+/// The gap between cards.
+const _cardGap = 14.0;
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -25,452 +39,491 @@ class NotesPage extends StatefulWidget {
 }
 
 class _NotesPageState extends State<NotesPage> {
-  bool _menuOpen = false;
+  final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
+
+  /// Whether the notes have been read in. Until then there's nothing under
+  /// the title, rather than a "No Notes" that flashes up first.
+  bool _loaded = false;
+
+  /// What the notes are searched for; empty shows them all.
+  String _query = "";
+
+  /// How many sections rise in ahead of the grid's cards: the search field
+  /// when the page opens, and none once the grid only changes.
+  int _gridDelay = 2;
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotesViewModel>(context, listen: false).get();
-    });
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await Provider.of<NotesViewModel>(context, listen: false).get();
+      } finally {
+        if (mounted) setState(() => _loaded = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.sizeOf(context);
-    return Scaffold(
-      backgroundColor: context.colors.pageBackground,
-      appBar: AppBar(
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: false,
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final padding = MediaQuery.paddingOf(context);
+    final width = MediaQuery.sizeOf(context).width;
+    // Clear of a camera cutout on a phone turned on its side, and a
+    // comfortable width on large screens.
+    final gutterLeft = math.max(16 + padding.left, (width - 1040) / 2);
+    final gutterRight = math.max(16 + padding.right, (width - 1040) / 2);
+    // The last cards scroll clear of the buttons, or of the keyboard while
+    // searching.
+    final bottomInset = math.max(PageActionButtons.height + 24 + padding.bottom,
+        MediaQuery.viewInsetsOf(context).bottom + 24);
+    final hasNotes =
+        context.select<NotesViewModel, bool>((notes) => notes.notes.isNotEmpty);
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // There's no app bar to pick the status bar's icons, so they're set here.
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            isDarkTheme ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
+      ),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: context.colors.pageBackground,
-        title: AnimatedOpacity(
-          opacity: _menuOpen ? 0 : 1,
-          duration: const Duration(milliseconds: 200),
-          child: Text(
-            "Notes",
-            style: TextStyle(
-              fontSize: 30,
-              overflow: TextOverflow.ellipsis,
-              color: context.colors.wB,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+        floatingActionButton: PageActionButtons(
+          switchIcon: Icons.checklist_rounded,
+          switchTooltip: "To-Do",
+          onSwitch: _openTodo,
+          addTooltip: "New Note",
+          onAdd: _addNote,
         ),
-        actions: [
-          ExpandableMenu(
-              iconColor: context.colors.appBarIcons,
-              animationSpeed: 500,
-              onExpandedChanged: (open) => setState(() => _menuOpen = open),
-              width: MediaQuery.orientationOf(context) == Orientation.portrait
-                  ? MediaQuery.sizeOf(context).width / 14
-                  : MediaQuery.sizeOf(context).width / 22,
-              height: 45,
-              items: [
-                IconButton(
-                    onPressed: () async {
-                      showGeneralDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierLabel: MaterialLocalizations.of(context)
-                            .modalBarrierDismissLabel,
-                        pageBuilder: (BuildContext context,
-                            Animation<double> animation,
-                            Animation<double> secondaryAnimation) {
-                          return ReorderNotesDialog();
-                        },
-                        transitionBuilder:
-                            (context, animation, secondaryAnimation, child) {
-                          var fadeAnimation = CurvedAnimation(
-                              parent: animation, curve: Curves.easeInOutSine);
-                          var scaleAnimation =
-                          Tween<double>(begin: 0.95, end: 1.0)
-                              .animate(fadeAnimation); // Subtle grow
-                          var slideAnimation = Tween<Offset>(
-                              begin: Offset(0, 0.05), end: Offset.zero)
-                              .animate(fadeAnimation); // Gentle rise
-
-                          return FadeTransition(
-                            opacity: fadeAnimation,
-                            child: ScaleTransition(
-                              scale: scaleAnimation,
-                              child: SlideTransition(
-                                position: slideAnimation,
-                                child: child,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    icon: Icon(
-                      Icons.reorder,
-                      color: context.colors.appBarIcons,
-                    )),
-                IconButton(
-                    onPressed: () {
-                      showGeneralDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierLabel: MaterialLocalizations.of(context)
-                            .modalBarrierDismissLabel,
-                        pageBuilder: (BuildContext context,
-                            Animation<double> animation,
-                            Animation<double> secondaryAnimation) {
-                          return NotesOverwriteDialog();
-                        },
-                        transitionBuilder:
-                            (context, animation, secondaryAnimation, child) {
-                          var fadeAnimation = CurvedAnimation(
-                              parent: animation, curve: Curves.easeInOutSine);
-                          var scaleAnimation = Tween<double>(begin: 0.8, end: 1)
-                              .animate(fadeAnimation);
-                          return FadeTransition(
-                            opacity: fadeAnimation,
-                            child: ScaleTransition(
-                              scale: scaleAnimation,
-                              child: child,
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    icon: Icon(
-                      Icons.settings_backup_restore,
-                      color: context.colors.appBarIcons,
-                    )),
-                IconButton(
-                    onPressed: () async {
-                      Provider.of<NotesViewModel>(context, listen: false)
-                          .backup()
-                          .then((result) {
-                        if (result is Success) {
-                          FeedbackToast.success(result.message);
-                        } else if (result is Failure) {
-                          FeedbackToast.error(result.message);
-                        } else if (result is Info) {
-                          FeedbackToast.info(result.message);
-                        }
-                      });
-                    },
-                    icon: Icon(
-                      Icons.backup,
-                      color: context.colors.appBarIcons,
-                    )),
-                IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                          const ProfilePage(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = Offset(0.0, 1.0);
-                            const end = Offset.zero;
-                            const curve = Curves.ease;
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            var offsetAnimation = animation.drive(tween);
-                            return SlideTransition(
-                                position: offsetAnimation, child: child);
-                          },
-                        ),
-                      );
-                    },
-                    icon: Icon(
-                      Icons.settings,
-                      color: context.colors.appBarIcons,
-                    )),
-              ]),
-          const Padding(
-            padding: EdgeInsets.only(left: 12),
-            child: AppbarAvatar(),
-          ),
-          const Padding(padding: EdgeInsets.only(right: 18)),
-        ],
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-              heroTag: 0,
-              backgroundColor: context.colors.floatingActionButtonBackground,
-              foregroundColor: context.colors.floatingActionButtonForeground,
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                    const TodoPage(),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                      const begin = Offset(1.0, 0.0);
-                      const end = Offset.zero;
-                      const curve = Curves.ease;
-                      var tween = Tween(begin: begin, end: end)
-                          .chain(CurveTween(curve: curve));
-                      var offsetAnimation = animation.drive(tween);
-                      return SlideTransition(
-                          position: offsetAnimation, child: child);
-                    },
-                  ),
-                );
-              },
-              child: const Icon(Icons.checklist_sharp)),
-          const Padding(padding: EdgeInsets.only(bottom: 20)),
-          FloatingActionButton(
-            heroTag: 1,
-            backgroundColor: context.colors.floatingActionButtonBackground,
-            foregroundColor: context.colors.floatingActionButtonForeground,
-            onPressed: () {
-              showGeneralDialog(
-                context: context,
-                barrierDismissible: true,
-                barrierLabel:
-                MaterialLocalizations.of(context).modalBarrierDismissLabel,
-                pageBuilder: (BuildContext context, Animation<double> animation,
-                    Animation<double> secondaryAnimation) {
-                  return AddNoteDialog();
-                },
-                transitionBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  var fadeAnimation = CurvedAnimation(
-                      parent: animation, curve: Curves.easeInOutSine);
-                  var scaleAnimation = Tween<double>(begin: 0.95, end: 1.0)
-                      .animate(fadeAnimation); // Subtle grow
-                  var slideAnimation =
-                  Tween<Offset>(begin: Offset(0, 0.05), end: Offset.zero)
-                      .animate(fadeAnimation); // Gentle rise
-
-                  return FadeTransition(
-                    opacity: fadeAnimation,
-                    child: ScaleTransition(
-                      scale: scaleAnimation,
-                      child: SlideTransition(
-                        position: slideAnimation,
-                        child: child,
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Consumer<NotesViewModel>(
-          builder: (context, notes, child) {
-            return notes.notes.isEmpty
-                ? Center(
-              child: Image.asset(
-                "assets/empty_notes.png",
-                scale: 2,
+        body: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: padding.top + 400,
+              // Drifts up at half the speed of the page, for a little depth.
+              child: ListenableBuilder(
+                listenable: _scrollController,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(
+                      0,
+                      _scrollController.hasClients
+                          ? -_scrollController.offset / 2
+                          : 0),
+                  child: child,
+                ),
+                child: const ProfileAurora(),
               ),
-            )
-                : GridView.builder(
-                itemCount: notes.notes.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.orientationOf(context) ==
-                        Orientation.portrait
-                        ? 2
-                        : 4,
-                    childAspectRatio: 0.7),
-                itemBuilder: (context, index) {
-                  return AnimationLimiter(
-                    child: AnimationConfiguration.staggeredGrid(
-                      duration: const Duration(milliseconds: 600),
-                      position: index,
-                      columnCount: MediaQuery.orientationOf(context) ==
-                          Orientation.portrait
-                          ? 2
-                          : 4,
-                      child: SlideAnimation(
-                        verticalOffset: 400,
-                        child: FadeInAnimation(
-                          child: GestureDetector(
-                            child: Container(
-                              margin: const EdgeInsets.all(16),
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final cardWidth = screenSize.width * 0.8;
-                                  const aspectRatio = 16 / 9;
-                                  return AspectRatio(
-                                    aspectRatio: aspectRatio,
-                                    child: Container(
-                                        width: cardWidth,
-                                        decoration: BoxDecoration(
-                                          color: notes.notes[index]
-                                              .coverColor.toColor,
-                                          borderRadius:
-                                          BorderRadius.circular(12.0),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.8),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Stack(
-                                          children: [
-                                            Center(
-                                              child:
-                                              Consumer<UserViewModel>(
-                                                builder:
-                                                    (context, user, child) {
-                                                  return Text(
-                                                    maxLines: 4,
-                                                    textAlign:
-                                                    TextAlign.center,
-                                                    overflow: TextOverflow
-                                                        .ellipsis,
-                                                    notes
-                                                        .notes[index].title,
-                                                    style: TextStyle(
-                                                        color: notes
-                                                            .notes[index]
-                                                            .titleColor
-                                                            .toColor,
-                                                        fontSize: 24 *
-                                                            user.user
-                                                                .notesTitleSize,
-                                                        fontWeight:
-                                                        FontWeight
-                                                            .bold),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                            notes.notes[index].protected ==
-                                                1
-                                                ? Column(
-                                              mainAxisAlignment:
-                                              MainAxisAlignment
-                                                  .end,
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .end,
-                                                  children: [
-                                                    Flexible(
-                                                      child: Padding(
-                                                        padding:
-                                                        const EdgeInsets
-                                                            .all(
-                                                            7),
-                                                        child: Icon(
-                                                          Icons.lock_rounded,
-                                                          color: ThemeData.estimateBrightnessForColor(
-                                                            notes.notes[index].coverColor.toColor,
-                                                          ) == Brightness.dark
-                                                              ? Colors.white.withValues(alpha: 0.8)
-                                                              : Colors.black.withValues(alpha: 0.6),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            )
-                                                : const SizedBox.shrink(),
-                                          ],
-                                        )),
-                                  );
-                                },
+            ),
+            CustomScrollView(
+              controller: _scrollController,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: LargeTitleBarDelegate(
+                    title: _title,
+                    topInset: padding.top,
+                    controller: _scrollController,
+                    trailing: Padding(
+                      padding: EdgeInsets.only(right: padding.right),
+                      child: _BarActions(items: _menuItems()),
+                    ),
+                    titleRevealOffset: _NotesHeader.scrolledAway,
+                  ),
+                ),
+                SliverPadding(
+                  padding:
+                      EdgeInsets.only(left: gutterLeft, right: gutterRight),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const RiseIn(child: _NotesHeader()),
+                        // Only while there's something to search, or a search
+                        // to clear.
+                        if (_loaded && (hasNotes || _query.isNotEmpty))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: RiseIn(
+                              delay: RiseIn.stagger,
+                              child: NotesSearchField(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                onChanged: _search,
                               ),
                             ),
-                            onTap: () async {
-                              Result status = await notes
-                                  .authenticate(notes.notes[index]);
-                              if (status is Success) {
-                                if (context.mounted) {
-                                  Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (context, animation,
-                                          secondaryAnimation) =>
-                                          NoteEditorPage(
-                                            note: notes.notes[index],
-                                          ),
-                                      transitionsBuilder: (context,
-                                          animation,
-                                          secondaryAnimation,
-                                          child) {
-                                        const begin = Offset(1.0, 0.0);
-                                        const end = Offset.zero;
-                                        const curve = Curves.ease;
-                                        var tween = Tween(
-                                            begin: begin, end: end)
-                                            .chain(
-                                            CurveTween(curve: curve));
-                                        var offsetAnimation =
-                                        animation.drive(tween);
-                                        return SlideTransition(
-                                            position: offsetAnimation,
-                                            child: child);
-                                      },
-                                    ),
-                                  );
-                                }
-                              } else if (status is Failure) {
-                                FeedbackToast.error(status.message);
-                              }
-                            },
-                            onLongPress: () async {
-                              Result status = await notes
-                                  .authenticate(notes.notes[index]);
-                              if (status is Success) {
-                                if (context.mounted) {
-                                  showGeneralDialog(
-                                    context: context,
-                                    barrierDismissible: true,
-                                    barrierLabel:
-                                    MaterialLocalizations.of(context)
-                                        .modalBarrierDismissLabel,
-                                    pageBuilder: (BuildContext context,
-                                        Animation<double> animation,
-                                        Animation<double>
-                                        secondaryAnimation) {
-                                      return UpdateNoteDialog(
-                                          note: notes.notes[index]);
-                                    },
-                                    transitionBuilder: (context, animation,
-                                        secondaryAnimation, child) {
-                                      var fadeAnimation = CurvedAnimation(
-                                          parent: animation,
-                                          curve: Curves.easeInOutSine);
-                                      var scaleAnimation =
-                                      Tween<double>(begin: 0.8, end: 1)
-                                          .animate(fadeAnimation);
-                                      return FadeTransition(
-                                        opacity: fadeAnimation,
-                                        child: ScaleTransition(
-                                          scale: scaleAnimation,
-                                          child: child,
-                                        ),
-                                      );
-                                    },
-                                  );
-                                }
-                              } else if (status is Failure) {
-                                FeedbackToast.error(status.message);
-                              }
-                            },
                           ),
-                        ),
-                      ),
+                      ],
                     ),
-                  );
-                });
-          },
+                  ),
+                ),
+                if (_loaded)
+                  _NoteGridSliver(
+                    query: _query,
+                    padding: EdgeInsets.fromLTRB(
+                        gutterLeft, 20, gutterRight, bottomInset),
+                    gridDelay: _gridDelay,
+                    onOpen: _openNote,
+                    onEdit: _editNote,
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  List<GlassMenuItem> _menuItems() => [
+        GlassMenuItem(
+          icon: Icons.swap_vert_rounded,
+          tooltip: "Reorder Notes",
+          onPressed: () =>
+              showFormDialog<void>(context, const ReorderNotesDialog()),
+        ),
+        GlassMenuItem(
+          icon: Icons.settings_backup_restore_rounded,
+          tooltip: "Restore Backup",
+          onPressed: () =>
+              showFormDialog<void>(context, const NotesOverwriteDialog()),
+        ),
+        GlassMenuItem(
+          icon: Icons.backup_rounded,
+          tooltip: "Back Up Notes",
+          onPressed: () => Provider.of<NotesViewModel>(context, listen: false)
+              .backup()
+              .then(_showResult),
+        ),
+        GlassMenuItem(
+          icon: Icons.settings_rounded,
+          tooltip: "Settings",
+          onPressed: _openSettings,
+        ),
+      ];
+
+  void _search(String query) {
+    // Cards a search brings back show up straight away.
+    setState(() {
+      _query = query;
+      _gridDelay = 0;
+    });
+  }
+
+  void _addNote() {
+    _searchFocusNode.unfocus();
+    showFormDialog<void>(context, const NoteDialog());
+  }
+
+  /// Opens [note] in the editor, once the user's fingerprint opens its lock.
+  Future<void> _openNote(Note note) async {
+    final result = await Provider.of<NotesViewModel>(context, listen: false)
+        .authenticate(note);
+    if (!mounted) return;
+    if (result is Failure) {
+      FeedbackToast.error(result.message);
+      return;
+    }
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            NoteEditorPage(note: note),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            SlideTransition(
+          position: animation.drive(
+              Tween(begin: const Offset(1, 0), end: Offset.zero)
+                  .chain(CurveTween(curve: Curves.ease))),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  /// Opens the dialog that changes [note]'s title, colours and lock, once
+  /// the user's fingerprint opens its lock.
+  Future<void> _editNote(Note note) async {
+    final result = await Provider.of<NotesViewModel>(context, listen: false)
+        .authenticate(note);
+    if (!mounted) return;
+    if (result is Failure) {
+      FeedbackToast.error(result.message);
+      return;
+    }
+    showFormDialog<void>(context, NoteDialog(note: note));
+  }
+
+  void _openTodo() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const TodoPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            SlideTransition(
+          position: animation.drive(
+              Tween(begin: const Offset(1, 0), end: Offset.zero)
+                  .chain(CurveTween(curve: Curves.ease))),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  void _openSettings() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const ProfilePage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            SlideTransition(
+          position: animation.drive(
+              Tween(begin: const Offset(0, 1), end: Offset.zero)
+                  .chain(CurveTween(curve: Curves.ease))),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+void _showResult(Result result) => result.when(
+      onSuccess: FeedbackToast.success,
+      onFailure: FeedbackToast.error,
+      onInfo: FeedbackToast.info,
+    );
+
+/// The notes that [query] finds: those with it in their title or text. A
+/// locked note's text isn't searched, so a search can't give away what's in
+/// it.
+List<Note> _matching(List<Note> notes, String query) {
+  final search = query.trim().toLowerCase();
+  if (search.isEmpty) return notes;
+  return [
+    for (final note in notes)
+      if (note.title.toLowerCase().contains(search) ||
+          (note.protected != 1 && note.body.toLowerCase().contains(search)))
+        note,
+  ];
+}
+
+/// The menu of the notes' less frequent actions, and the avatar, at the end
+/// of the bar.
+class _BarActions extends StatelessWidget {
+  const _BarActions({required this.items});
+
+  final List<GlassMenuItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GlassMenu(items: items),
+        const SizedBox(width: 10),
+        const AppbarAvatar(),
+      ],
+    );
+  }
+}
+
+/// How many notes there are, over the page's large title, which scrolls
+/// away under the bar.
+class _NotesHeader extends StatelessWidget {
+  const _NotesHeader();
+
+  /// About how far the header scrolls before its title is under the bar, so
+  /// the bar can bring in its own copy of the title.
+  static const scrolledAway = 40.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final (count, locked) =
+        context.select<NotesViewModel, (int, int)>((notes) => (
+              notes.notes.length,
+              notes.notes.where((note) => note.protected == 1).length,
+            ));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Blank with no notes, as the empty state says so, but still a line
+        // tall, so the title sits where the to-do page's does.
+        Text(
+          [
+            if (count > 0) count == 1 ? "1 note" : "$count notes",
+            if (locked > 0) "$locked locked",
+          ].join(" · ").toUpperCase(),
+          style: TextStyle(
+            color: context.colors.moreLess,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          _title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: context.colors.wB,
+            fontSize: 34,
+            fontWeight: FontWeight.bold,
+            height: 1.2,
+            letterSpacing: -0.7,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The notes the search finds, or what to show instead when there are none.
+class _NoteGridSliver extends StatelessWidget {
+  const _NoteGridSliver({
+    required this.query,
+    required this.padding,
+    required this.gridDelay,
+    required this.onOpen,
+    required this.onEdit,
+  });
+
+  final String query;
+
+  /// Around the grid. Its bottom keeps the last cards clear of the buttons.
+  final EdgeInsets padding;
+
+  /// How many sections rise in ahead of the first card.
+  final int gridDelay;
+
+  /// Opens the note in the editor, on a tap.
+  final ValueChanged<Note> onOpen;
+
+  /// Opens the dialog that changes the note's cover, on a long press.
+  final ValueChanged<Note> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final notes = context.watch<NotesViewModel>().notes;
+    final matching = _matching(notes, query);
+    if (notes.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        // Centred in the room the buttons leave, within the page rather than
+        // past its end, so an empty page doesn't scroll.
+        child: Padding(
+          padding: EdgeInsets.only(top: padding.top, bottom: padding.bottom),
+          child: const RiseIn(child: EmptyNotes()),
+        ),
+      );
+    }
+    if (matching.isEmpty) {
+      // Near the top rather than centred, which could be behind the keyboard.
+      return SliverPadding(
+        padding: EdgeInsets.fromLTRB(padding.left, 28, padding.right, 0),
+        sliver: SliverToBoxAdapter(
+          child: RiseIn(child: EmptyNotes(query: query.trim())),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: padding,
+      sliver: _NoteGrid(
+        notes: notes,
+        matching: matching,
+        gridDelay: gridDelay,
+        onOpen: onOpen,
+        onEdit: onEdit,
+      ),
+    );
+  }
+}
+
+class _NoteGrid extends StatefulWidget {
+  const _NoteGrid({
+    required this.notes,
+    required this.matching,
+    required this.gridDelay,
+    required this.onOpen,
+    required this.onEdit,
+  });
+
+  /// Every note, which tells a note just added from one the search let back
+  /// in.
+  final List<Note> notes;
+
+  /// The notes the search finds, which the grid shows.
+  final List<Note> matching;
+  final int gridDelay;
+  final ValueChanged<Note> onOpen;
+  final ValueChanged<Note> onEdit;
+
+  @override
+  State<_NoteGrid> createState() => _NoteGridState();
+}
+
+class _NoteGridState extends State<_NoteGrid> {
+  /// Whether the grid is being laid out for the first time, when the cards
+  /// in view rise in one after another.
+  bool _opening = true;
+
+  /// The notes there were at the last build, so a note added since can rise
+  /// in by itself.
+  Set<int?> _known = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _opening = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ids = {for (final note in widget.notes) note.id};
+    // Only a note added makes the count grow; reordering the notes gives
+    // every one of them a new id, but they're the same notes.
+    final added = !_opening && ids.length > _known.length
+        ? ids.difference(_known)
+        : const <int?>{};
+    _known = ids;
+    final notes = widget.matching;
+    return SliverGrid.builder(
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 220,
+        mainAxisSpacing: _cardGap,
+        crossAxisSpacing: _cardGap,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: notes.length,
+      itemBuilder: (context, index) {
+        final note = notes[index];
+        return RiseIn(
+          key: ValueKey(note.id),
+          animate: _opening || added.contains(note.id),
+          delay: _opening
+              ? RiseIn.stagger * (widget.gridDelay + math.min(index, 8))
+              : Duration.zero,
+          child: NoteCard(
+            note: note,
+            onTap: () => widget.onOpen(note),
+            onLongPress: () => widget.onEdit(note),
+          ),
+        );
+      },
     );
   }
 }

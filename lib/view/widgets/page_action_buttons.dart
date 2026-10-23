@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../../widgets/glass.dart';
+import '../../core/extensions/theme_extensions.dart';
+import 'glass.dart';
 
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);
 
-/// The floating buttons at the bottom of the to-do page: a glass one that
-/// switches to the notes, over a glowing one in the app's blues that adds a
-/// task.
-class TodoActionButtons extends StatelessWidget {
-  const TodoActionButtons({
+/// The floating buttons at the bottom of the to-do and notes pages: a glass
+/// one that switches to the other page, over a glowing one in the app's
+/// blues that adds to this one.
+class PageActionButtons extends StatelessWidget {
+  const PageActionButtons({
     super.key,
-    required this.onNotes,
+    required this.switchIcon,
+    required this.switchTooltip,
+    required this.onSwitch,
+    required this.addTooltip,
     required this.onAdd,
   });
 
@@ -20,7 +23,13 @@ class TodoActionButtons extends StatelessWidget {
   /// area, so the list can scroll its last card clear of them.
   static const height = 16 + _GlassButton.size + 16 + _AddButton.size;
 
-  final VoidCallback onNotes;
+  /// The other page's icon and name.
+  final IconData switchIcon;
+  final String switchTooltip;
+  final VoidCallback onSwitch;
+
+  /// What the add button adds, such as "Add Task".
+  final String addTooltip;
   final VoidCallback onAdd;
 
   @override
@@ -29,12 +38,12 @@ class TodoActionButtons extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _GlassButton(
-          icon: Icons.edit_note_rounded,
-          tooltip: "Notes",
-          onPressed: onNotes,
+          icon: switchIcon,
+          tooltip: switchTooltip,
+          onPressed: onSwitch,
         ),
         const SizedBox(height: 16),
-        _AddButton(onPressed: onAdd),
+        _AddButton(tooltip: addTooltip, onPressed: onAdd),
       ],
     );
   }
@@ -81,10 +90,11 @@ class _GlassButton extends StatelessWidget {
 }
 
 class _AddButton extends StatefulWidget {
-  const _AddButton({required this.onPressed});
+  const _AddButton({required this.tooltip, required this.onPressed});
 
   static const size = 60.0;
 
+  final String tooltip;
   final VoidCallback onPressed;
 
   @override
@@ -102,7 +112,7 @@ class _AddButtonState extends State<_AddButton> {
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return Tooltip(
-      message: "Add Task",
+      message: widget.tooltip,
       child: AnimatedScale(
         scale: _pressed ? 0.92 : 1,
         duration: const Duration(milliseconds: 150),

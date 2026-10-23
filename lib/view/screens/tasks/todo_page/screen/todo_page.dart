@@ -15,6 +15,7 @@ import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
+import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../notes/notes_page/screen/notes_page.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
@@ -26,7 +27,6 @@ import '../widgets/task_dialog.dart';
 import '../widgets/task_filter_bar.dart';
 import '../widgets/tasks_overwrite_dialog.dart';
 import '../widgets/tasks_summary_card.dart';
-import '../widgets/todo_action_buttons.dart';
 
 const _title = "ToDo";
 
@@ -96,8 +96,13 @@ class _TodoPageState extends State<TodoPage> {
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: context.colors.pageBackground,
-        floatingActionButton:
-            TodoActionButtons(onNotes: _openNotes, onAdd: _addTask),
+        floatingActionButton: PageActionButtons(
+          switchIcon: Icons.edit_note_rounded,
+          switchTooltip: "Notes",
+          onSwitch: _openNotes,
+          addTooltip: "Add Task",
+          onAdd: _addTask,
+        ),
         body: twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
       ),
     );
@@ -156,7 +161,7 @@ class _TodoPageState extends State<TodoPage> {
             if (_loaded)
               _TaskListSliver(
                 padding: EdgeInsets.fromLTRB(gutter, 20, gutter,
-                    TodoActionButtons.height + 24 + padding.bottom),
+                    PageActionButtons.height + 24 + padding.bottom),
                 listDelay: _listDelay,
                 onEdit: _editTask,
               ),
@@ -224,7 +229,7 @@ class _TodoPageState extends State<TodoPage> {
               if (_loaded)
                 _TaskListSliver(
                   padding: EdgeInsets.fromLTRB(16, 8, 16 + padding.right,
-                      TodoActionButtons.height + 24 + padding.bottom),
+                      PageActionButtons.height + 24 + padding.bottom),
                   listDelay: _listDelay,
                   onEdit: _editTask,
                 ),
