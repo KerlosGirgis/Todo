@@ -36,10 +36,6 @@ class UserViewModel with ChangeNotifier {
   AppColors appColors = AppColors.dark;
 
   late bool isEnabled;
-  late double tempNotesTextSize;
-  late double tempTasksTitleSize;
-  late double tempTasksDescSize;
-  late double tempNotesTitleSize;
 
   UserRepository userRepository = UserRepository();
 
@@ -56,10 +52,6 @@ class UserViewModel with ChangeNotifier {
       appColors = user.theme == 1 ? AppColors.dark : AppColors.light;
     }
     isEnabled = await LockService().isLockEnabled();
-    tempNotesTextSize = user.notesTextSize;
-    tempTasksTitleSize = user.tasksTitleSize;
-    tempTasksDescSize = user.tasksDescSize;
-    tempNotesTitleSize = user.notesTitleSize;
     notifyListeners();
   }
 
@@ -179,9 +171,9 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> setNotesTextSize() async {
-    if (tempNotesTextSize >= 0.25 && tempNotesTextSize <= 2) {
-      user.notesTextSize = tempNotesTextSize;
+  Future<Result> setNotesTextSize(double size) async {
+    if (size >= 0.25 && size <= 2) {
+      user.notesTextSize = size;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
           'widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
@@ -196,9 +188,9 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> setNotesTitleSize() async {
-    if (tempNotesTitleSize >= 0.25 && tempNotesTitleSize <= 2) {
-      user.notesTitleSize = tempNotesTitleSize;
+  Future<Result> setNotesTitleSize(double size) async {
+    if (size >= 0.25 && size <= 2) {
+      user.notesTitleSize = size;
       await userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
@@ -207,9 +199,9 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> setTasksTitleSize() async {
-    if (tempTasksTitleSize >= 0.25 && tempTasksTitleSize <= 2) {
-      user.tasksTitleSize = tempTasksTitleSize;
+  Future<Result> setTasksTitleSize(double size) async {
+    if (size >= 0.25 && size <= 2) {
+      user.tasksTitleSize = size;
       await userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
@@ -218,42 +210,14 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> setTasksDescSize() async {
-    if (tempTasksDescSize >= 0.25 && tempTasksDescSize <= 2) {
-      user.tasksDescSize = tempTasksDescSize;
+  Future<Result> setTasksDescSize(double size) async {
+    if (size >= 0.25 && size <= 2) {
+      user.tasksDescSize = size;
       await userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
     } else {
       return Failure("Enter Valid Value");
-    }
-  }
-
-  void setTempNotesSize(double size) {
-    if (size >= 0.25 && size <= 2) {
-      tempNotesTextSize = size;
-      notifyListeners();
-    }
-  }
-
-  void setTempNotesTitleSize(double size) {
-    if (size >= 0.25 && size <= 2) {
-      tempNotesTitleSize = size;
-      notifyListeners();
-    }
-  }
-
-  void setTempTasksTitleSize(double size) {
-    if (size >= 0.25 && size <= 2) {
-      tempTasksTitleSize = size;
-      notifyListeners();
-    }
-  }
-
-  void setTempTasksDescSize(double size) {
-    if (size >= 0.25 && size <= 2) {
-      tempTasksDescSize = size;
-      notifyListeners();
     }
   }
 

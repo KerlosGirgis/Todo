@@ -31,6 +31,34 @@ const _title = "Notes";
 /// The gap between cards.
 const _cardGap = 14.0;
 
+/// How wide a card grows before another column of them fits.
+const _maxCardWidth = 220.0;
+
+/// A card's width over its height.
+const _cardAspectRatio = 0.8;
+
+/// The page's margins either side: clear of a camera cutout on a phone
+/// turned on its side, and a comfortable width on large screens.
+(double, double) _gutters(double width, EdgeInsets padding) => (
+      math.max(16 + padding.left, (width - 1040) / 2),
+      math.max(16 + padding.right, (width - 1040) / 2),
+    );
+
+/// How big each card is in the grid on this screen, so that a card drawn
+/// elsewhere, like the settings' preview of the title size, is as big and
+/// breaks its title over lines just as it will here.
+Size noteCardSize(BuildContext context) {
+  final width = MediaQuery.sizeOf(context).width;
+  final (left, right) = _gutters(width, MediaQuery.paddingOf(context));
+  final gridWidth = width - left - right;
+  // As the grid's delegate shares the width out between its columns.
+  final columns =
+      math.max(1, (gridWidth / (_maxCardWidth + _cardGap)).ceil());
+  final cardWidth =
+      math.max(0.0, gridWidth - _cardGap * (columns - 1)) / columns;
+  return Size(cardWidth, cardWidth / _cardAspectRatio);
+}
+
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
 
@@ -78,11 +106,8 @@ class _NotesPageState extends State<NotesPage> {
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final padding = MediaQuery.paddingOf(context);
-    final width = MediaQuery.sizeOf(context).width;
-    // Clear of a camera cutout on a phone turned on its side, and a
-    // comfortable width on large screens.
-    final gutterLeft = math.max(16 + padding.left, (width - 1040) / 2);
-    final gutterRight = math.max(16 + padding.right, (width - 1040) / 2);
+    final (gutterLeft, gutterRight) =
+        _gutters(MediaQuery.sizeOf(context).width, padding);
     // The last cards scroll clear of the buttons, or of the keyboard while
     // searching.
     final bottomInset = math.max(PageActionButtons.height + 24 + padding.bottom,
@@ -506,10 +531,10 @@ class _NoteGridState extends State<_NoteGrid> {
     final notes = widget.matching;
     return SliverGrid.builder(
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 220,
+        maxCrossAxisExtent: _maxCardWidth,
         mainAxisSpacing: _cardGap,
         crossAxisSpacing: _cardGap,
-        childAspectRatio: 0.8,
+        childAspectRatio: _cardAspectRatio,
       ),
       itemCount: notes.length,
       itemBuilder: (context, index) {

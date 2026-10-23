@@ -42,13 +42,6 @@ class _NoteCardState extends State<NoteCard> {
         context.select<UserViewModel, bool>((user) => user.user.casual == 1);
     final coverColor = note.coverColor.toColor;
     final onCover = onCoverColor(coverColor);
-    final titleStyle = TextStyle(
-      color: note.titleColor.toColor,
-      fontSize: 24 * titleSize,
-      fontWeight: FontWeight.w600,
-      height: 1.15,
-      letterSpacing: -0.4 * titleSize,
-    );
 
     return AnimatedScale(
       scale: _pressed ? 0.97 : 1,
@@ -69,48 +62,82 @@ class _NoteCardState extends State<NoteCard> {
             enableFeedback: false,
             splashFactory: NoSplash.splashFactory,
             highlightColor: onCover.withValues(alpha: 0.06),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // The title gets at most ~60% of the card so large
-                      // title sizes still leave room for the preview. The
-                      // cap clips the rare title whose first line can't fit.
-                      ConstrainedBox(
-                        constraints:
-                            BoxConstraints(maxHeight: constraints.maxHeight),
-                        child: Text(
-                          note.title,
-                          maxLines: _linesThatFit(context,
-                                  constraints.maxHeight * 0.6, titleStyle)
-                              .clamp(1, 3),
-                          overflow: TextOverflow.ellipsis,
-                          textDirection: _textDirection(note.title),
-                          style: titleStyle,
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: note.protected == 1
-                              ? _LockedPreview(color: onCover)
-                              : _BodyPreview(
-                                  body: note.body,
-                                  color: onCover,
-                                  casualFont: casualFont,
-                                ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+            child: NoteCardContent(
+              note: note,
+              titleSize: titleSize,
+              casualFont: casualFont,
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// What a note's card shows on its cover: the note's title over as much of
+/// its text as fits, or a lock while it's locked. It fits the card at any
+/// [titleSize], so the settings can preview a size on it.
+class NoteCardContent extends StatelessWidget {
+  const NoteCardContent({
+    super.key,
+    required this.note,
+    required this.titleSize,
+    required this.casualFont,
+  });
+
+  final Note note;
+
+  /// The user's size for notes' titles, as a multiple of the default one.
+  final double titleSize;
+  final bool casualFont;
+
+  @override
+  Widget build(BuildContext context) {
+    final onCover = onCoverColor(note.coverColor.toColor);
+    final titleStyle = TextStyle(
+      color: note.titleColor.toColor,
+      fontSize: 24 * titleSize,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+      letterSpacing: -0.4 * titleSize,
+    );
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // The title gets at most ~60% of the card so large title
+              // sizes still leave room for the preview. The cap clips the
+              // rare title whose first line can't fit.
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: constraints.maxHeight),
+                child: Text(
+                  note.title,
+                  maxLines: _linesThatFit(
+                          context, constraints.maxHeight * 0.6, titleStyle)
+                      .clamp(1, 3),
+                  overflow: TextOverflow.ellipsis,
+                  textDirection: _textDirection(note.title),
+                  style: titleStyle,
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: note.protected == 1
+                      ? _LockedPreview(color: onCover)
+                      : _BodyPreview(
+                          body: note.body,
+                          color: onCover,
+                          casualFont: casualFont,
+                        ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
