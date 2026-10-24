@@ -1,7 +1,6 @@
-import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
 
 import '../models/app_lock.dart';
-import 'key_service.dart';
 import 'lock_service.dart';
 
 /// What came of asking for the user's fingerprint.
@@ -21,33 +20,26 @@ enum FingerprintCheck {
 }
 
 class AuthenticationService {
-  final LocalAuthentication _auth = LocalAuthentication();
-  final KeyService _keyService = KeyService();
+  /// The app's own Android code for the fingerprint, which takes only
+  /// Android's strongest biometrics, rather than also the weaker ones, such
+  /// as a face unlock that a photo can fool, as the local_auth plugin did. A
+  /// phone with nothing stronger set up still uses the weaker ones.
+  static const _channel = MethodChannel('com.k.todo/biometrics');
+
   final LockService _lockService = LockService();
 
   Future<bool> authenticate() async =>
       await checkFingerprint() == FingerprintCheck.passed;
 
-  Future<FingerprintCheck> checkFingerprint() async {
+  /// Asks for the user's fingerprint, saying why with [reason].
+  Future<FingerprintCheck> checkFingerprint(
+      {String reason = 'Please authenticate'}) async {
     try {
-      if ((await _auth.getAvailableBiometrics()).isEmpty) {
-        return FingerprintCheck.unavailable;
-      }
-      final passed = await _auth.authenticate(
-        localizedReason: 'Please authenticate',
-        biometricOnly: true,
-      );
-      return passed ? FingerprintCheck.passed : FingerprintCheck.failed;
-    } on LocalAuthException catch (e) {
-      return switch (e.code) {
-        LocalAuthExceptionCode.noBiometricHardware ||
-        LocalAuthExceptionCode.noBiometricsEnrolled ||
-        LocalAuthExceptionCode.noCredentialsSet ||
-        LocalAuthExceptionCode.biometricHardwareTemporarilyUnavailable =>
-          FingerprintCheck.unavailable,
-        LocalAuthExceptionCode.temporaryLockout ||
-        LocalAuthExceptionCode.biometricLockout =>
-          FingerprintCheck.lockedOut,
+      return switch (await _channel
+          .invokeMethod<String>('authenticate', {'reason': reason})) {
+        'passed' => FingerprintCheck.passed,
+        'lockedOut' => FingerprintCheck.lockedOut,
+        'unavailable' => FingerprintCheck.unavailable,
         _ => FingerprintCheck.failed,
       };
     } catch (e) {
@@ -55,22 +47,10 @@ class AuthenticationService {
     }
   }
 
-  Future<bool> authenticateApp() async {
-    bool canAuthenticate = await _auth.canCheckBiometrics;
-    if (!canAuthenticate) return false;
-
-    bool authenticated = await _auth.authenticate(
-      localizedReason: 'Authenticate to access your To-Do app',
-      biometricOnly: true,
-      persistAcrossBackgrounding: true,
-    );
-
-    if (authenticated) {
-      await _keyService.getOrCreateEncryptionKey();
-    }
-
-    return authenticated;
-  }
+  Future<bool> authenticateApp() async =>
+      await checkFingerprint(
+          reason: 'Authenticate to access your To-Do app') ==
+      FingerprintCheck.passed;
 
   /// Whether the App Lock lets the user through, as it does when the app
   /// opens: straight away when the app isn't locked, or with their

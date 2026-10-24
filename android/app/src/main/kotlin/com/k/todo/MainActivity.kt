@@ -3,6 +3,10 @@ package com.k.todo
 import android.os.Build
 import android.os.SystemClock
 import android.view.WindowManager
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+import androidx.biometric.BiometricPrompt
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -29,6 +33,12 @@ class MainActivity: FlutterFragmentActivity() {
                     moveTaskToBack(true)
                     result.success(null)
                 }
+                else -> result.notImplemented()
+            }
+        }
+        MethodChannel(messenger, "com.k.todo/biometrics").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "authenticate" -> authenticate(call.argument<String>("reason")!!, result)
                 else -> result.notImplemented()
             }
         }
@@ -62,6 +72,70 @@ class MainActivity: FlutterFragmentActivity() {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
+    // Asks for the user's fingerprint, or another biometric as strong, giving
+    // [reason], and replies "passed", "failed", "lockedOut" or "unavailable".
+    private fun authenticate(reason: String, result: MethodChannel.Result) {
+        val authenticators = strongestBiometrics()
+        // A prompt that can't show now, with the app put away, would never
+        // reply.
+        if (authenticators == null || supportFragmentManager.isStateSaved) {
+            result.success(if (authenticators == null) "unavailable" else "failed")
+            return
+        }
+        var replied = false
+        fun reply(outcome: String) {
+            if (replied) return
+            replied = true
+            result.success(outcome)
+        }
+        BiometricPrompt(this, mainExecutor, object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(authResult: BiometricPrompt.AuthenticationResult) =
+                reply("passed")
+
+            // Not onAuthenticationFailed, for a single fingerprint that didn't
+            // match: the prompt stays up for another.
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) =
+                reply(
+                    when (errorCode) {
+                        BiometricPrompt.ERROR_LOCKOUT,
+                        BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> "lockedOut"
+                        BiometricPrompt.ERROR_HW_UNAVAILABLE,
+                        BiometricPrompt.ERROR_HW_NOT_PRESENT,
+                        BiometricPrompt.ERROR_NO_BIOMETRICS,
+                        BiometricPrompt.ERROR_SECURITY_UPDATE_REQUIRED -> "unavailable"
+                        else -> "failed"
+                    }
+                )
+        }).authenticate(
+            BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Authentication required")
+                .setSubtitle("Verify identity")
+                .setDescription(reason)
+                .setNegativeButtonText("Cancel")
+                .setAllowedAuthenticators(authenticators)
+                .build()
+        )
+    }
+
+    // Android's Class 3 biometrics, such as a fingerprint, on a phone with one
+    // set up, rather than also its Class 2 ones, such as a face unlock that a
+    // photo can fool. Class 2 only on a phone with no Class 3 one to set up,
+    // or none set up, as there's nothing stronger to ask for, and refusing
+    // them would lock out anyone the App Lock already takes them from. Null
+    // for a phone that can't take any just now.
+    private fun strongestBiometrics(): Int? {
+        val biometrics = BiometricManager.from(this)
+        return when (biometrics.canAuthenticate(BIOMETRIC_STRONG)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> BIOMETRIC_STRONG
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED,
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ->
+                if (biometrics.canAuthenticate(BIOMETRIC_WEAK) ==
+                    BiometricManager.BIOMETRIC_SUCCESS
+                ) BIOMETRIC_WEAK else null
+            else -> null
         }
     }
 

@@ -91,6 +91,7 @@ android {
         implementation 'com.google.errorprone:error_prone_annotations:2.49.0'
         implementation 'androidx.window:window:1.5.1'
         implementation 'androidx.window:window-java:1.5.1'
+        implementation 'androidx.biometric:biometric:1.1.0'
     }
 
 }
