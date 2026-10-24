@@ -23,6 +23,7 @@ import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/widgets/aurora.dart';
 import '../widgets/editor_toolbar.dart';
 import '../widgets/note_banner.dart';
@@ -368,7 +369,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
 
   Future<void> _delete() async {
     final result = await Provider.of<NotesViewModel>(context, listen: false)
-        .deleteNote(widget.note);
+        .deleteNote(widget.note,
+            askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) return;
     switch (result) {
       case Failure(:final message):

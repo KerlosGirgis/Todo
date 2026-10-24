@@ -6,6 +6,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../models/app_lock.dart';
 import '../../../../../view_model/auth_view_model.dart';
+import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
 import '../../profile_page/widgets/profile_button.dart';
@@ -27,6 +28,18 @@ Future<void> withAppLockPassword(
   final password = await showPasswordDialog(context, subtitle: subtitle);
   if (password != null) await action(password);
 }
+
+/// How a locked note asks for the App Lock's password in place of the
+/// fingerprint, on a phone that can't take one: from [context]'s page, if it's
+/// still open by then.
+PasswordPrompt noteLockPasswordPrompt(BuildContext context) => () async {
+      if (!context.mounted) return null;
+      return showPasswordDialog(
+        context,
+        subtitle:
+            "Your fingerprint isn't available, so enter your password instead.",
+      );
+    };
 
 /// Asks for the App Lock's password, saying what for in [subtitle], and
 /// hands it back once it's right, or null if the user cancels.

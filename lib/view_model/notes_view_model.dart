@@ -6,10 +6,16 @@ import 'package:flutter_quill/flutter_quill.dart' show Document;
 import 'package:todo/core/result.dart';
 import 'package:todo/repositories/notes_repository.dart';
 import '../core/utils/note_document_utils.dart';
+import '../models/app_lock.dart';
 import '../models/note.dart';
 import '../services/authentication_service.dart';
 import '../services/file_service.dart';
 import '../services/home_widget_service.dart';
+import '../services/lock_service.dart';
+
+/// Asks the user for the App Lock's password, and gives it once they've
+/// entered it right, or null if they cancel.
+typedef PasswordPrompt = Future<String?> Function();
 
 class NotesViewModel with ChangeNotifier {
   List<Note> _notes = [];
@@ -19,6 +25,7 @@ class NotesViewModel with ChangeNotifier {
 
   final NotesRepository _notesRepository = NotesRepository();
   final AuthenticationService _authService = AuthenticationService();
+  final LockService _lockService = LockService();
   final HomeWidgetService _homeWidgetService = HomeWidgetService();
 
   Future<void> get() async {
@@ -110,8 +117,10 @@ class NotesViewModel with ChangeNotifier {
     get();
   }
 
-  Future<Result> deleteNote(Note note) async {
-    final isAuthenticated = await authenticate(note);
+  Future<Result> deleteNote(Note note,
+      {required PasswordPrompt askForPassword}) async {
+    final isAuthenticated =
+        await authenticate(note, askForPassword: askForPassword);
     if(isAuthenticated is Success){
       try{
         await _notesRepository.deleteNote(note.id!);
@@ -124,18 +133,14 @@ class NotesViewModel with ChangeNotifier {
 
     }
     else{
-      return Failure("Authentication Failed");
+      return isAuthenticated;
     }
   }
 
-  /// Checks it's the user, with their fingerprint, before a note is locked
-  /// with it.
-  Future<Result> confirmLock() async {
-    if (await _authService.authenticate()) {
-      return Success("Fingerprint Enabled");
-    }
-    return Failure("Authentication Failed");
-  }
+  /// Checks it's the user before a note is locked, as the lock will:
+  /// see [_passNoteLock].
+  Future<Result> confirmLock({required PasswordPrompt askForPassword}) =>
+      _passNoteLock(askForPassword);
 
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
     final oldNote = _notes.removeAt(oldIndex);
@@ -205,16 +210,40 @@ class NotesViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> authenticate(Note note) async {
+  /// Checks it's the user, for a locked [note]: see [_passNoteLock].
+  Future<Result> authenticate(Note note,
+      {required PasswordPrompt askForPassword}) async {
     if (note.protected == 1) {
-      bool isAuthenticated = await _authService.authenticate();
-      if (isAuthenticated) {
-        return Success("Authenticated");
-      } else {
-        return Failure("Authentication Failed");
-      }
+      return _passNoteLock(askForPassword);
     } else {
       return Success("Authenticated");
+    }
+  }
+
+  /// Checks it's the user, as a locked note does: with their fingerprint, or,
+  /// on a phone that can't take one, with the App Lock's password, which
+  /// [askForPassword] asks them for.
+  Future<Result> _passNoteLock(PasswordPrompt askForPassword) async {
+    switch (await _authService.checkFingerprint()) {
+      case FingerprintCheck.passed:
+        return Success("Authenticated");
+      case FingerprintCheck.failed:
+        return Failure("Authentication Failed");
+      // Not the password, which anyone who knows it could otherwise get to by
+      // failing the fingerprint on purpose.
+      case FingerprintCheck.lockedOut:
+        return Failure("Too many tries. Try your fingerprint again later.");
+      case FingerprintCheck.unavailable:
+        if (await _lockService.getLock() != AppLock.password) {
+          return Failure(
+              "Fingerprint isn't available. Set an App Lock password instead.");
+        }
+        final password = await askForPassword();
+        if (password != null &&
+            await _authService.passesAppLock(password: password)) {
+          return Success("Authenticated");
+        }
+        return Failure("Authentication Failed");
     }
   }
 

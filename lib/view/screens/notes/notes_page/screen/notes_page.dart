@@ -262,10 +262,10 @@ class _NotesPageState extends State<NotesPage> {
     showFormDialog<void>(context, const NoteDialog());
   }
 
-  /// Opens [note] in the editor, once the user's fingerprint opens its lock.
+  /// Opens [note] in the editor, once its lock lets the user through.
   Future<void> _openNote(Note note) async {
     final result = await Provider.of<NotesViewModel>(context, listen: false)
-        .authenticate(note);
+        .authenticate(note, askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) return;
     if (result is Failure) {
       FeedbackToast.error(result.message);
@@ -291,10 +291,10 @@ class _NotesPageState extends State<NotesPage> {
   }
 
   /// Opens the dialog that changes [note]'s title, colours and lock, once
-  /// the user's fingerprint opens its lock.
+  /// its lock lets the user through.
   Future<void> _editNote(Note note) async {
     final result = await Provider.of<NotesViewModel>(context, listen: false)
-        .authenticate(note);
+        .authenticate(note, askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) return;
     if (result is Failure) {
       FeedbackToast.error(result.message);

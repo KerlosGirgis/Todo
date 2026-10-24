@@ -9,6 +9,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
 import '../../../../../view_model/notes_view_model.dart';
+import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/widgets/profile_button.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
@@ -169,7 +170,9 @@ class _NoteDialogState extends State<NoteDialog> {
       setState(() => _locked = false);
       return;
     }
-    final result = await context.read<NotesViewModel>().confirmLock();
+    final result = await context
+        .read<NotesViewModel>()
+        .confirmLock(askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) return;
     result.when(
       onSuccess: (_) => setState(() => _locked = true),
