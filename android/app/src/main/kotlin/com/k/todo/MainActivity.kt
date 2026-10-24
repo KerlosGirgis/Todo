@@ -2,6 +2,7 @@ package com.k.todo
 
 import android.os.Build
 import android.os.SystemClock
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
@@ -27,6 +28,16 @@ class MainActivity: FlutterFragmentActivity() {
                 // Counts the time the phone has slept, and turning its clock
                 // can't change it.
                 "elapsedRealtime" -> result.success(SystemClock.elapsedRealtime())
+                // The same, with which start of the phone it counts from, as
+                // a restart starts it again.
+                "bootTime" -> result.success(
+                    mapOf(
+                        "boot" to Settings.Global.getInt(
+                            contentResolver, Settings.Global.BOOT_COUNT, 0
+                        ),
+                        "sinceBoot" to SystemClock.elapsedRealtime(),
+                    )
+                )
                 // As Home does, keeping the app's pages, where Back would
                 // close them.
                 "moveToBack" -> {

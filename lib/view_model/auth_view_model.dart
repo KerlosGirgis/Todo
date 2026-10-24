@@ -78,11 +78,19 @@ class AuthViewModel with ChangeNotifier {
     final check = await _lockService.checkPassword(password);
     if (check.matched) return Success("Unlocked");
     if (check.wait > Duration.zero) {
-      final seconds = (check.wait.inMilliseconds / 1000).ceil();
-      return Failure("Too many tries. "
-          "Try again in $seconds ${seconds == 1 ? "second" : "seconds"}.");
+      return Failure("Too many tries. Try again in ${_inWords(check.wait)}.");
     }
     return Failure("Wrong password");
+  }
+
+  /// [wait], rounded up to whole seconds, minutes or hours, as "1 minute".
+  static String _inWords(Duration wait) {
+    String count(int n, String unit) => "$n $unit${n == 1 ? "" : "s"}";
+    final seconds = (wait.inMilliseconds / 1000).ceil();
+    if (seconds < 60) return count(seconds, "second");
+    final minutes = (seconds / 60).ceil();
+    if (minutes < 60) return count(minutes, "minute");
+    return count((minutes / 60).ceil(), "hour");
   }
 
   /// Called as the app is put away, so that it can tell how long it's been
