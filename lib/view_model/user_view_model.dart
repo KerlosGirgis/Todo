@@ -1,20 +1,15 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:material_ui/material_ui.dart';
-import 'package:home_widget/home_widget.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
+import 'package:todo/services/home_widget_service.dart';
+import 'package:todo/services/image_service.dart';
 import 'package:todo/services/lock_service.dart';
+import 'package:todo/services/verse_service.dart';
 import 'package:todo/repositories/user_repository.dart';
 import '../core/result.dart';
-import '../core/theme/app_colors.dart';
 
 class UserViewModel with ChangeNotifier {
-  UserProfile user = UserProfile(
+  UserProfile _user = UserProfile(
       name: "user",
       pic: "000",
       theme: PlatformDispatcher.instance.platformBrightness == Brightness.dark
@@ -32,51 +27,51 @@ class UserViewModel with ChangeNotifier {
       tasksTitleSize: 1,
       tasksDescSize: 1,
       notesTitleSize: 1);
+  UserProfile get user => _user;
 
-  AppColors appColors = AppColors.dark;
+  /// Whether the app is locked with the user's fingerprint.
+  bool _isEnabled = false;
+  bool get isEnabled => _isEnabled;
 
-  late bool isEnabled;
+  /// Today's verse, or null when the user has turned the daily verse off.
+  String? get dailyVerse =>
+      user.verse == 1 ? VerseService.getDailyVerse() : null;
 
-  UserRepository userRepository = UserRepository();
+  final UserRepository _userRepository = UserRepository();
+  final HomeWidgetService _homeWidgetService = HomeWidgetService();
+  final ImageService _imageService = ImageService();
 
   Future<void> get() async {
-    List users;
-    users = await userRepository.getUser();
+    List<UserProfile> users = await _userRepository.getUser();
     if (users.isEmpty) {
-      userRepository.insertUser(user);
-      users = await userRepository.getUser();
-      user = users.first;
-      appColors = AppColors.dark;
-    } else {
-      user = users.first;
-      appColors = user.theme == 1 ? AppColors.dark : AppColors.light;
+      _userRepository.insertUser(user);
+      users = await _userRepository.getUser();
     }
-    isEnabled = await LockService().isLockEnabled();
+    _user = users.first;
+    _isEnabled = await LockService().isLockEnabled();
     notifyListeners();
   }
 
   Future<void> editName(String name) async {
     user.name = name;
-    await userRepository.updateUser(user);
+    await _userRepository.updateUser(user);
     notifyListeners();
   }
 
   Future<void> editPic(String pic) async {
     user.pic = pic;
-    await userRepository.updateUser(user);
+    await _userRepository.updateUser(user);
     notifyListeners();
   }
 
   Future<void> changeTheme() async {
     if (user.theme == 1) {
       user.theme = 0;
-      appColors = AppColors.light;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     } else {
       user.theme = 1;
-      appColors = AppColors.dark;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     }
   }
@@ -84,39 +79,31 @@ class UserViewModel with ChangeNotifier {
   Future<void> changeAutoSave() async {
     if (user.autoSave == 1) {
       user.autoSave = 0;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     } else {
       user.autoSave = 1;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     }
   }
 
   Future<void> changeStartPage(int startPage) async {
     user.startPage = startPage;
-    await userRepository.updateUser(user);
+    await _userRepository.updateUser(user);
     notifyListeners();
-  }
-
-  Future<void> setFontPreference(bool useCasual) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('useCasualFont', useCasual);
-    // Update the home widget after changing the font preference
-    await HomeWidget.saveWidgetData('useCasualFont', useCasual);
-    await HomeWidget.updateWidget(name: 'Note');
   }
 
   Future<void> changeFont() async {
     if (user.casual == 1) {
       user.casual = 0;
-      await userRepository.updateUser(user);
-      setFontPreference(false);
+      await _userRepository.updateUser(user);
+      _homeWidgetService.setCasualFont(false);
       notifyListeners();
     } else {
       user.casual = 1;
-      await userRepository.updateUser(user);
-      setFontPreference(true);
+      await _userRepository.updateUser(user);
+      _homeWidgetService.setCasualFont(true);
       notifyListeners();
     }
   }
@@ -124,11 +111,11 @@ class UserViewModel with ChangeNotifier {
   Future<void> changeCount() async {
     if (user.count == 1) {
       user.count = 0;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     } else {
       user.count = 1;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     }
   }
@@ -136,11 +123,11 @@ class UserViewModel with ChangeNotifier {
   Future<void> changeVerse() async {
     if (user.verse == 1) {
       user.verse = 0;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     } else {
       user.verse = 1;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     }
   }
@@ -148,21 +135,21 @@ class UserViewModel with ChangeNotifier {
   Future<void> resetPlot() async {
     user.unFinished = 0;
     user.finished = 0;
-    await userRepository.updateUser(user);
+    await _userRepository.updateUser(user);
     notifyListeners();
   }
 
   Future<Result> changeLock() async {
     final bool auth = await AuthenticationService().authenticate();
     if (auth) {
-      if (isEnabled) {
+      if (_isEnabled) {
         await LockService().disableLock();
-        isEnabled = false;
+        _isEnabled = false;
         notifyListeners();
         return Info("Lock Disabled");
       } else {
         await LockService().enableLock();
-        isEnabled = true;
+        _isEnabled = true;
         notifyListeners();
         return Success("Lock Enabled");
       }
@@ -174,13 +161,8 @@ class UserViewModel with ChangeNotifier {
   Future<Result> setNotesTextSize(double size) async {
     if (size >= 0.25 && size <= 2) {
       user.notesTextSize = size;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-          'widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
-      await HomeWidget.saveWidgetData(
-          'widgetTextSize', (user.notesTextSize).toStringAsFixed(2));
-      await HomeWidget.updateWidget(name: 'Note');
-      await userRepository.updateUser(user);
+      await _homeWidgetService.setTextSize(user.notesTextSize);
+      await _userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
     } else {
@@ -191,7 +173,7 @@ class UserViewModel with ChangeNotifier {
   Future<Result> setNotesTitleSize(double size) async {
     if (size >= 0.25 && size <= 2) {
       user.notesTitleSize = size;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
     } else {
@@ -202,7 +184,7 @@ class UserViewModel with ChangeNotifier {
   Future<Result> setTasksTitleSize(double size) async {
     if (size >= 0.25 && size <= 2) {
       user.tasksTitleSize = size;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
     } else {
@@ -213,7 +195,7 @@ class UserViewModel with ChangeNotifier {
   Future<Result> setTasksDescSize(double size) async {
     if (size >= 0.25 && size <= 2) {
       user.tasksDescSize = size;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
       return Success("Font Changed");
     } else {
@@ -221,69 +203,17 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  Future<File?>? _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      if (kDebugMode) {
-        print("file returned");
-      }
-      return File(pickedFile.path);
-    }
-    return null;
-  }
-
-  Future<File?> cropImage(File imageFile) async {
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: imageFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarColor: Colors.black,
-          statusBarLight: false,
-          backgroundColor: Colors.black,
-          toolbarWidgetColor: Colors.white,
-          activeControlsWidgetColor: Color(0xff3D5AFE),
-          initAspectRatio: CropAspectRatioPreset.original,
-          cropStyle: CropStyle.circle,
-          lockAspectRatio: false,
-        ),
-      ],
-    );
-
-    if (croppedFile != null) {
-      return File(croppedFile.path);
-    }
-    return null;
-  }
-
-  Future<File> _saveImageToAppStorage(File image) async {
-    final appDir = await getApplicationDocumentsDirectory();
-
-    final fileName = image.path.split('/').last;
-    final oldFile = File(user.pic);
-    if (await oldFile.exists()) {
-      await oldFile.delete();
-    }
-    final savedImage = await image.copy('${appDir.path}/$fileName');
-
-    return savedImage;
-  }
-
   Future<void> pickAndSaveImage() async {
-    final image = await _pickImage();
-    if (image != null) {
-      final croppedImage = await cropImage(image);
-      if (croppedImage != null) {
-        final savedImage = await _saveImageToAppStorage(croppedImage);
-        editPic(savedImage.path);
-      }
+    final path = await _imageService.pickProfilePicture(replacing: user.pic);
+    if (path != null) {
+      editPic(path);
     }
   }
 
   Future<void> setDescLines(int numOfLines) async {
     if (numOfLines >= 0 && numOfLines < 10) {
       user.descLines = numOfLines;
-      await userRepository.updateUser(user);
+      await _userRepository.updateUser(user);
       notifyListeners();
     }
   }

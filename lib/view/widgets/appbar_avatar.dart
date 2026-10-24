@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view_model/user_view_model.dart';
-import 'package:todo/services/verse_service.dart';
 
 import '../../core/extensions/theme_extensions.dart';
 import 'ringed_avatar.dart';
@@ -60,7 +59,7 @@ class _AppbarAvatarState extends State<AppbarAvatar> {
                       heroTag: heroTag,
                       pic: user.user.pic,
                       name: user.user.name,
-                      showVerse: user.user.verse == 1,
+                      verse: user.dailyVerse,
                     ),
                     transitionsBuilder:
                         (context, animation, secondaryAnimation, child) {
@@ -98,13 +97,15 @@ class _ProfileDialog extends StatelessWidget {
     required this.heroTag,
     required this.pic,
     required this.name,
-    required this.showVerse,
+    required this.verse,
   });
 
   final Object heroTag;
   final String pic;
   final String name;
-  final bool showVerse;
+
+  /// Today's verse, or null when the daily verse is turned off.
+  final String? verse;
 
   @override
   Widget build(BuildContext context) {
@@ -141,9 +142,9 @@ class _ProfileDialog extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (showVerse) ...[
+            if (verse != null) ...[
               const SizedBox(height: 24),
-              _VerseCard(verse: VerseService.getDailyVerse()),
+              _VerseCard(verse: verse!),
             ],
           ],
         ),

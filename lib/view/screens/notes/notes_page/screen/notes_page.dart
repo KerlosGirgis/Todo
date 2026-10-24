@@ -335,20 +335,6 @@ void _showResult(Result result) => result.when(
       onInfo: FeedbackToast.info,
     );
 
-/// The notes that [query] finds: those with it in their title or text. A
-/// locked note's text isn't searched, so a search can't give away what's in
-/// it.
-List<Note> _matching(List<Note> notes, String query) {
-  final search = query.trim().toLowerCase();
-  if (search.isEmpty) return notes;
-  return [
-    for (final note in notes)
-      if (note.title.toLowerCase().contains(search) ||
-          (note.protected != 1 && note.body.toLowerCase().contains(search)))
-        note,
-  ];
-}
-
 /// The menu of the notes' less frequent actions, and the avatar, at the end
 /// of the bar.
 class _BarActions extends StatelessWidget {
@@ -383,7 +369,7 @@ class _NotesHeader extends StatelessWidget {
     final (count, locked) =
         context.select<NotesViewModel, (int, int)>((notes) => (
               notes.notes.length,
-              notes.notes.where((note) => note.protected == 1).length,
+              notes.lockedCount,
             ));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,9 +432,9 @@ class _NoteGridSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final notes = context.watch<NotesViewModel>().notes;
-    final matching = _matching(notes, query);
-    if (notes.isEmpty) {
+    final notes = context.watch<NotesViewModel>();
+    final matching = notes.search(query);
+    if (notes.notes.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
         // Centred in the room the buttons leave, within the page rather than
@@ -471,7 +457,7 @@ class _NoteGridSliver extends StatelessWidget {
     return SliverPadding(
       padding: padding,
       sliver: _NoteGrid(
-        notes: notes,
+        notes: notes.notes,
         matching: matching,
         gridDelay: gridDelay,
         onOpen: onOpen,

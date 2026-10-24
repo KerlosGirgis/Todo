@@ -36,10 +36,6 @@ class TasksRepository{
     await db.delete('ToDo', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<void> deleteAllItems() async {
-    await db.delete('ToDo');
-  }
-
   Future<void> updateItem(TodoItem item) async {
     await db
         .update('ToDo', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
@@ -48,6 +44,19 @@ class TasksRepository{
   Future<void> refreshAllItems(List<TodoItem> items) async {
     await db.transaction((txn) async {
       await txn.delete('ToDo');
+      for (var item in items) {
+        await txn.insert('ToDo', item.toMap());
+      }
+    });
+  }
+
+  /// Adds [items], in place of every task there is when [overwrite] is set.
+  Future<void> importItems(List<TodoItem> items,
+      {required bool overwrite}) async {
+    await db.transaction((txn) async {
+      if (overwrite) {
+        await txn.delete('ToDo');
+      }
       for (var item in items) {
         await txn.insert('ToDo', item.toMap());
       }

@@ -184,20 +184,22 @@ class _NoteDialogState extends State<NoteDialog> {
     final notes = context.read<NotesViewModel>();
     Navigator.of(context).pop();
     final note = widget.note;
-    final saved = Note(
-      id: note?.id,
-      title: title,
-      body: note?.body ?? "",
-      delta: note?.delta,
-      titleColor: _titleColor.hex,
-      coverColor: _cover.hex,
-      protected: _locked ? 1 : 0,
-    );
     if (note == null) {
-      await notes.addNote(saved);
+      await notes.addNote(
+        title: title,
+        titleColor: _titleColor.hex,
+        coverColor: _cover.hex,
+        locked: _locked,
+      );
       FeedbackToast.info("Note Added");
     } else {
-      await notes.updateNote(saved);
+      await notes.updateNote(
+        note,
+        title: title,
+        titleColor: _titleColor.hex,
+        coverColor: _cover.hex,
+        locked: _locked,
+      );
       FeedbackToast.info("Note Updated");
     }
   }

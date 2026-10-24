@@ -36,13 +36,30 @@ class NotesRepository {
     await db.delete('Notes', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<void> deleteAllNotes() async {
-    await db.delete('Notes');
-  }
-
   Future<void> updateNote(Note item) async {
     await db
         .update('Notes', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+  }
+
+  Future<void> refreshAllNotes(List<Note> notes) async {
+    await db.transaction((txn) async {
+      await txn.delete('Notes');
+      for (var note in notes) {
+        await txn.insert('Notes', note.toMap());
+      }
+    });
+  }
+
+  /// Adds [notes], in place of every note there is when [overwrite] is set.
+  Future<void> importNotes(List<Note> notes, {required bool overwrite}) async {
+    await db.transaction((txn) async {
+      if (overwrite) {
+        await txn.delete('Notes');
+      }
+      for (var note in notes) {
+        await txn.insert('Notes', note.toMap());
+      }
+    });
   }
 
   Future<Uint8List> exportNotesToJson() async {

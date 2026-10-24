@@ -527,10 +527,7 @@ class _ReorderableTaskListState extends State<_ReorderableTaskList> {
         descriptionLines: descriptionLines,
         onToggle: !interactive
             ? null
-            : () => tasks
-                .markAsDone(
-                    index, Provider.of<UserViewModel>(context, listen: false))
-                .then(_showResult),
+            : () => tasks.markAsDone(index).then(_showResult),
         onEdit: !interactive ? null : () => widget.onEdit(task),
         onReminder: !interactive
             ? null

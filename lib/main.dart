@@ -26,8 +26,8 @@ void main() async {
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => UserViewModel()),
     ChangeNotifierProvider(create: (context) {
-      return AuthViewModel()
-        ..initializeApp(Provider.of<UserViewModel>(context, listen: false));
+      return AuthViewModel(Provider.of<UserViewModel>(context, listen: false))
+        ..initializeApp();
     }),
     ChangeNotifierProvider(create: (_) => TasksViewModel()),
     ChangeNotifierProvider(create: (_) => NotesViewModel()),

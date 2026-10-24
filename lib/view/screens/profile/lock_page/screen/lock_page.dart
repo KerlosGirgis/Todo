@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/view_model/user_view_model.dart';
 
 import '../../../../../view_model/auth_view_model.dart';
 
@@ -34,7 +33,7 @@ class LockPageState extends State<LockPage> {
             Flexible(
               child: IconButton(
                   onPressed: () async {
-                    await Provider.of<AuthViewModel>(context, listen: false).retryAuthentication(Provider.of<UserViewModel>(context, listen: false));
+                    await Provider.of<AuthViewModel>(context, listen: false).retryAuthentication();
                   },
                   icon: const Icon(Icons.refresh_sharp, size: 70, color: Color(0xff3D5AFE))
               )

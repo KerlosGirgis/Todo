@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flex_color_picker/flex_color_picker.dart';
@@ -73,9 +72,9 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   /// to save.
   late Delta _savedDelta;
 
-  /// The saved text without its formatting, which the home screen's widget
+  /// The note as it was last saved, whose text the home screen's widget
   /// shows.
-  late String _savedBody = widget.note.body;
+  late Note _saved = widget.note;
 
   /// Whether there are changes since the note was last saved, which the
   /// toolbar's save button shows.
@@ -338,28 +337,15 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
 
   /// Saves the note's text, as it is now.
   Future<void> _save() async {
-    final note = widget.note;
-    final document = _controller.document;
-    final delta = document.toDelta();
-    final body = NoteDocumentUtils.toBody(document);
+    final delta = _controller.document.toDelta();
     try {
-      await Provider.of<NotesViewModel>(context, listen: false).updateNote(
-        Note(
-          id: note.id,
-          title: note.title,
-          body: body,
-          delta: jsonEncode(delta.toJson()),
-          titleColor: note.titleColor,
-          coverColor: note.coverColor,
-          protected: note.protected,
-        ),
-      );
+      _saved = await Provider.of<NotesViewModel>(context, listen: false)
+          .updateText(widget.note, _controller.document);
     } catch (e) {
       FeedbackToast.error("Sorry, Something went wrong, note not saved");
       return;
     }
     _savedDelta = delta;
-    _savedBody = body;
     // Still unsaved if it was written in while it saved.
     if (mounted) _unsaved.value = _controller.document.toDelta() != delta;
   }
@@ -370,20 +356,14 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   }
 
   /// Shows the note's saved text on the home screen's widget.
-  void _showOnWidget() {
-    final body = _savedBody;
-    if (body.trim().isEmpty) {
-      FeedbackToast.info("Write something to show on the widget first");
-      return;
-    }
-    try {
-      Provider.of<NotesViewModel>(context, listen: false)
-          .updateAndroidWidget(body);
-    } catch (e) {
-      FeedbackToast.error("Sorry, Something went wrong");
-      return;
-    }
-    FeedbackToast.info("Note has been added to the widget");
+  Future<void> _showOnWidget() async {
+    final result = await Provider.of<NotesViewModel>(context, listen: false)
+        .showOnWidget(_saved);
+    result.when(
+      onSuccess: FeedbackToast.success,
+      onFailure: FeedbackToast.error,
+      onInfo: FeedbackToast.info,
+    );
   }
 
   Future<void> _delete() async {

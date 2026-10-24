@@ -2,7 +2,6 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/v4.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
@@ -99,28 +98,23 @@ class _TaskDialogState extends State<TaskDialog> {
     final tasks = context.read<TasksViewModel>();
     Navigator.of(context).pop();
     final task = widget.task;
+    final desc = _descriptionController.text.trim();
     final result = task == null
         ? await tasks.addTask(
-            TodoItem(
-              title: title,
-              desc: _descriptionController.text.trim(),
-              status: 0,
-              date: _date,
-              time: _time,
-              uuid: const UuidV4().generate(),
-              notification: _noReminder,
-            ),
-            _reminder)
-        : await tasks.updateTask(TodoItem(
             title: title,
-            desc: _descriptionController.text.trim(),
-            id: task.id,
-            status: task.status,
+            desc: desc,
             date: _date,
             time: _time,
-            uuid: task.uuid,
             notification: _reminder,
-          ));
+          )
+        : await tasks.updateTask(
+            task,
+            title: title,
+            desc: desc,
+            date: _date,
+            time: _time,
+            notification: _reminder,
+          );
     result.when(
       onSuccess: FeedbackToast.success,
       onFailure: FeedbackToast.error,
