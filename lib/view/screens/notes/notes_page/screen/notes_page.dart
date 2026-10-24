@@ -14,6 +14,7 @@ import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
 import '../../../profile/profile_page/widgets/aurora.dart';
 import '../../../tasks/todo_page/screen/todo_page.dart';
@@ -229,9 +230,7 @@ class _NotesPageState extends State<NotesPage> {
         GlassMenuItem(
           icon: Icons.backup_rounded,
           tooltip: "Back Up Notes",
-          onPressed: () => Provider.of<NotesViewModel>(context, listen: false)
-              .backup()
-              .then(_showResult),
+          onPressed: _backUp,
         ),
         GlassMenuItem(
           icon: Icons.settings_rounded,
@@ -246,6 +245,16 @@ class _NotesPageState extends State<NotesPage> {
       _query = query;
       _gridDelay = 0;
     });
+  }
+
+  /// Backs the notes up, once the App Lock lets the user through.
+  void _backUp() {
+    final notes = Provider.of<NotesViewModel>(context, listen: false);
+    withAppLockPassword(
+      context,
+      subtitle: "Enter your password to back up your notes.",
+      action: (password) => notes.backup(password: password).then(_showResult),
+    );
   }
 
   void _addNote() {

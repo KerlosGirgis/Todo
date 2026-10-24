@@ -9,7 +9,6 @@ import '../core/utils/date_time_utils.dart';
 import '../models/task_filters.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
-import '../services/lock_service.dart';
 import '../services/notification_service.dart';
 
 class TasksViewModel with ChangeNotifier {
@@ -210,12 +209,11 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> backup() async {
-    if (await LockService().isLockEnabled()) {
-      final isAuth = await AuthenticationService().authenticate();
-      if (!isAuth) {
-        return Failure("Authentication Failed");
-      }
+  /// Saves the tasks to a file, once the App Lock lets the user through:
+  /// with [password], for an app locked with one.
+  Future<Result> backup({String? password}) async {
+    if (!await AuthenticationService().passesAppLock(password: password)) {
+      return Failure("Authentication Failed");
     }
     try {
       final bytes = await _tasksRepository.exportToDoToJson();

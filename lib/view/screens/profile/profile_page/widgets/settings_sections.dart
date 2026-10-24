@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
+import '../../../../../models/app_lock.dart';
 import '../../../../../view_model/user_view_model.dart';
+import '../../lock_page/widgets/password_dialogs.dart';
 import 'appearance_picker.dart';
 import 'settings_group.dart';
 import 'text_size_sheet.dart';
@@ -66,16 +68,104 @@ class GeneralSection extends StatelessWidget {
           value: user.user.verse == 1,
           onToggle: user.changeVerse,
         ),
-        SettingsSwitchTile(
-          icon: Icons.fingerprint_rounded,
-          color: _green,
-          title: "App Lock",
-          subtitle: const Text("Unlock with your fingerprint"),
-          value: user.isEnabled,
-          onToggle: () => user.changeLock().then(_showResult),
-        ),
+        const _AppLockTile(),
+        if (user.appLock == AppLock.password) const _ChangePasswordTile(),
       ],
     );
+  }
+}
+
+/// The App Lock's row, with its choices under it. A change takes what the
+/// app is locked with now first, and for a password lock, a new password.
+class _AppLockTile extends StatefulWidget {
+  const _AppLockTile();
+
+  @override
+  State<_AppLockTile> createState() => _AppLockTileState();
+}
+
+class _AppLockTileState extends State<_AppLockTile> {
+  /// The lock being changed to, shown as chosen while the user confirms it.
+  AppLock? _changingTo;
+
+  Future<void> _change(AppLock lock) async {
+    if (_changingTo != null) return;
+    setState(() => _changingTo = lock);
+    final result = await _changeAppLock(context, lock);
+    if (result != null) _showResult(result);
+    // Back to the lock the app has, if the change didn't go through.
+    if (mounted) setState(() => _changingTo = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lock = context.select<UserViewModel, AppLock>((user) => user.appLock);
+    return SettingsTile(
+      icon: Icons.lock_rounded,
+      color: _green,
+      title: "App Lock",
+      subtitle: const Text("Needed each time the app opens"),
+      bottom: CupertinoSlidingSegmentedControl<AppLock>(
+        groupValue: _changingTo ?? lock,
+        onValueChanged: (lock) {
+          if (lock != null) _change(lock);
+        },
+        children: const {
+          AppLock.off: _Segment(label: "Off"),
+          AppLock.fingerprint: _Segment(label: "Fingerprint"),
+          AppLock.password: _Segment(label: "Password"),
+        },
+      ),
+    );
+  }
+}
+
+/// A row that changes the App Lock's password, once the one it has now is
+/// given.
+class _ChangePasswordTile extends StatelessWidget {
+  const _ChangePasswordTile();
+
+  @override
+  Widget build(BuildContext context) {
+    // Read out as a button of its own, rather than as part of the group.
+    return MergeSemantics(
+      child: SettingsTile(
+        icon: Icons.password_rounded,
+        color: _green,
+        title: "Change Password",
+        onTap: () async {
+          final result = await _changeAppLock(context, AppLock.password);
+          if (result != null) _showResult(result);
+        },
+      ),
+    );
+  }
+}
+
+/// Changes the App Lock to [lock], asking first for the password the app is
+/// locked with, if it is, then for a new one, if [lock] is a password. Null
+/// if the user cancels.
+Future<Result?> _changeAppLock(BuildContext context, AppLock lock) async {
+  final user = context.read<UserViewModel>();
+  String? password;
+  if (user.appLock == AppLock.password) {
+    password = await showPasswordDialog(
+      context,
+      subtitle: lock == AppLock.password
+          ? "Enter your current password first."
+          : "Enter your password to change the App Lock.",
+    );
+    if (password == null || !context.mounted) return null;
+  }
+  switch (lock) {
+    case AppLock.off:
+      return user.turnOffAppLock(password: password);
+    case AppLock.fingerprint:
+      return user.lockWithFingerprint(password: password);
+    case AppLock.password:
+      final newPassword = await showNewPasswordDialog(context);
+      if (newPassword == null) return null;
+      return user.lockWithPassword(newPassword, password: password);
   }
 }
 
@@ -203,7 +293,8 @@ class _TextSizeTile extends StatelessWidget {
   }
 }
 
-/// A segment of a segmented control: a label, after an optional icon.
+/// A segment of a segmented control: a label, after an optional icon. The
+/// label shrinks to fit a segment too narrow for it, as in large text.
 class _Segment extends StatelessWidget {
   const _Segment({this.icon, required this.label});
 
@@ -221,7 +312,12 @@ class _Segment extends StatelessWidget {
             Icon(icon, size: 17),
             const SizedBox(width: 6),
           ],
-          Text(label, style: const TextStyle(fontSize: 14.5)),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label, style: const TextStyle(fontSize: 14.5)),
+            ),
+          ),
         ],
       ),
     );

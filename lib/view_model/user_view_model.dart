@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/home_widget_service.dart';
@@ -29,9 +30,12 @@ class UserViewModel with ChangeNotifier {
       notesTitleSize: 1);
   UserProfile get user => _user;
 
-  /// Whether the app is locked with the user's fingerprint.
-  bool _isEnabled = false;
-  bool get isEnabled => _isEnabled;
+  /// What the app asks for each time it opens.
+  AppLock _appLock = AppLock.off;
+  AppLock get appLock => _appLock;
+
+  /// The fewest characters an App Lock password can have.
+  static const minPasswordLength = 4;
 
   /// Today's verse, or null when the user has turned the daily verse off.
   String? get dailyVerse =>
@@ -40,6 +44,8 @@ class UserViewModel with ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
   final HomeWidgetService _homeWidgetService = HomeWidgetService();
   final ImageService _imageService = ImageService();
+  final LockService _lockService = LockService();
+  final AuthenticationService _authService = AuthenticationService();
 
   Future<void> get() async {
     List<UserProfile> users = await _userRepository.getUser();
@@ -48,7 +54,7 @@ class UserViewModel with ChangeNotifier {
       users = await _userRepository.getUser();
     }
     _user = users.first;
-    _isEnabled = await LockService().isLockEnabled();
+    _appLock = await _lockService.getLock();
     notifyListeners();
   }
 
@@ -139,23 +145,47 @@ class UserViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Result> changeLock() async {
-    final bool auth = await AuthenticationService().authenticate();
-    if (auth) {
-      if (_isEnabled) {
-        await LockService().disableLock();
-        _isEnabled = false;
-        notifyListeners();
-        return Info("Lock Disabled");
-      } else {
-        await LockService().enableLock();
-        _isEnabled = true;
-        notifyListeners();
-        return Success("Lock Enabled");
-      }
-    } else {
+  /// Turns the App Lock off, once it lets the user through: with their
+  /// fingerprint, or [password], whichever the app is locked with.
+  Future<Result> turnOffAppLock({String? password}) async {
+    if (!await _authService.passesAppLock(password: password)) {
       return Failure("Authentication Failed");
     }
+    await _lockService.disableLock();
+    _appLock = AppLock.off;
+    notifyListeners();
+    return Info("Lock Disabled");
+  }
+
+  /// Locks the app with the user's fingerprint, once the lock it has now lets
+  /// them through, and their fingerprint shows that it works.
+  Future<Result> lockWithFingerprint({String? password}) async {
+    if (!await _authService.passesAppLock(password: password) ||
+        !await _authService.authenticate()) {
+      return Failure("Authentication Failed");
+    }
+    await _lockService.enableLock();
+    _appLock = AppLock.fingerprint;
+    notifyListeners();
+    return Success("Fingerprint Lock Enabled");
+  }
+
+  /// Locks the app with [newPassword], once the lock it has now lets the user
+  /// through: their fingerprint, or [password]. For an app locked with a
+  /// password already, this changes it.
+  Future<Result> lockWithPassword(String newPassword,
+      {String? password}) async {
+    if (newPassword.length < minPasswordLength) {
+      return Failure("Use at least $minPasswordLength characters");
+    }
+    if (!await _authService.passesAppLock(password: password)) {
+      return Failure("Authentication Failed");
+    }
+    final changing = _appLock == AppLock.password;
+    await _lockService.enableLock(password: newPassword);
+    _appLock = AppLock.password;
+    notifyListeners();
+    return Success(changing ? "Password Changed" : "Password Lock Enabled");
   }
 
   Future<Result> setNotesTextSize(double size) async {

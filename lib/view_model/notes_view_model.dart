@@ -10,7 +10,6 @@ import '../models/note.dart';
 import '../services/authentication_service.dart';
 import '../services/file_service.dart';
 import '../services/home_widget_service.dart';
-import '../services/lock_service.dart';
 
 class NotesViewModel with ChangeNotifier {
   List<Note> _notes = [];
@@ -153,12 +152,11 @@ class NotesViewModel with ChangeNotifier {
     get();
   }
 
-  Future<Result> backup() async {
-    if (await LockService().isLockEnabled()) {
-      final isAuth = await AuthenticationService().authenticate();
-      if (!isAuth) {
-        return Failure("Authentication Failed");
-      }
+  /// Saves the notes to a file, once the App Lock lets the user through:
+  /// with [password], for an app locked with one.
+  Future<Result> backup({String? password}) async {
+    if (!await _authService.passesAppLock(password: password)) {
+      return Failure("Authentication Failed");
     }
     try {
       final bytes = await _notesRepository.exportNotesToJson();

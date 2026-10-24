@@ -1,12 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../models/app_lock.dart';
 import 'key_service.dart';
 import 'lock_service.dart';
 
 class AuthenticationService {
   final LocalAuthentication _auth = LocalAuthentication();
   final KeyService _keyService = KeyService();
+  final LockService _lockService = LockService();
 
   Future<bool> authenticate() async {
     try {
@@ -39,26 +40,15 @@ class AuthenticationService {
     return authenticated;
   }
 
-  Future<bool> initializeApp() async {
-    final LockService lockManager = LockService();
-
-    try {
-      bool isLockEnabled = await lockManager.isLockEnabled();
-
-      if (isLockEnabled) {
-        bool authenticated = await authenticateApp();
-        if (!authenticated) {
-          return false;
-        }
-      }
-
-      return true;
-    } catch (e) {
-      if (kDebugMode) {
-        print('Initialization Error: $e');
-      }
-      return false;
-    }
+  /// Whether the App Lock lets the user through, as it does when the app
+  /// opens: straight away when the app isn't locked, or with their
+  /// fingerprint, or [password], whichever it's locked with.
+  Future<bool> passesAppLock({String? password}) async {
+    return switch (await _lockService.getLock()) {
+      AppLock.off => true,
+      AppLock.fingerprint => await authenticate(),
+      AppLock.password => password != null &&
+          (await _lockService.checkPassword(password)).matched,
+    };
   }
-
 }

@@ -18,6 +18,7 @@ import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../notes/notes_page/screen/notes_page.dart';
+import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
 import '../../../profile/profile_page/widgets/aurora.dart';
 import '../widgets/empty_tasks.dart';
@@ -250,9 +251,7 @@ class _TodoPageState extends State<TodoPage> {
         GlassMenuItem(
           icon: Icons.backup_rounded,
           tooltip: "Back Up Tasks",
-          onPressed: () => Provider.of<TasksViewModel>(context, listen: false)
-              .backup()
-              .then(_showResult),
+          onPressed: _backUp,
         ),
         GlassMenuItem(
           icon: Icons.settings_rounded,
@@ -266,6 +265,16 @@ class _TodoPageState extends State<TodoPage> {
     setState(() => _listDelay = 0);
     Provider.of<TasksViewModel>(context, listen: false)
         .fetchTasks(filter: filter);
+  }
+
+  /// Backs the tasks up, once the App Lock lets the user through.
+  void _backUp() {
+    final tasks = Provider.of<TasksViewModel>(context, listen: false);
+    withAppLockPassword(
+      context,
+      subtitle: "Enter your password to back up your tasks.",
+      action: (password) => tasks.backup(password: password).then(_showResult),
+    );
   }
 
   void _addTask() => showFormDialog<void>(context, const TaskDialog());
