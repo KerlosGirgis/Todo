@@ -7,10 +7,12 @@ import 'package:todo/repositories/tasks_repository.dart';
 import 'package:uuid/v4.dart';
 import '../core/prompts.dart';
 import '../core/utils/date_time_utils.dart';
+import '../models/app_lock.dart';
 import '../models/task_filters.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
 import '../services/backup_service.dart';
+import '../services/lock_service.dart';
 import '../services/notification_service.dart';
 
 class TasksViewModel with ChangeNotifier {
@@ -29,6 +31,11 @@ class TasksViewModel with ChangeNotifier {
   final TasksRepository _tasksRepository = TasksRepository();
   final BackupService _backupService = BackupService();
   final FileService _fileService = FileService();
+  final LockService _lockService = LockService();
+
+  /// Whether the reminders have been checked against the App Lock since the
+  /// app started.
+  bool _remindersChecked = false;
 
   Future<void> fetchTasks({TaskFilter? filter}) async {
     if (filter != null) {
@@ -36,6 +43,18 @@ class TasksViewModel with ChangeNotifier {
     }
     _allTasks = await _tasksRepository.getItems();
     _applyFilter();
+    // A reminder set before reminders went by the App Lock, or one whose
+    // change of lock didn't get to it, still says which task it's for.
+    if (!_remindersChecked) {
+      _remindersChecked = true;
+      try {
+        if (await _lockService.getLock() != AppLock.off) {
+          await refreshReminders();
+        }
+      } catch (e) {
+        // The reminders stay as they were.
+      }
+    }
   }
 
   void _applyFilter() {
@@ -302,7 +321,7 @@ class TasksViewModel with ChangeNotifier {
     final failed = <String>[];
     for (final item in tasks) {
       try {
-        await _setRestoredReminder(item);
+        await _scheduleReminder(item);
       } catch (e) {
         failed.add(item.title);
       }
@@ -319,7 +338,9 @@ class TasksViewModel with ChangeNotifier {
     return Success("Data Restored");
   }
 
-  Future<void> _setRestoredReminder(TodoItem item) async {
+  /// Sets [item]'s reminder, as [TodoItem.notification] holds it, if it's
+  /// still to come.
+  Future<void> _scheduleReminder(TodoItem item) async {
     if (item.notification == 1) {
       if (item.time.isNotEmpty && item.date.isNotEmpty) {
         final scheduledTime =
@@ -329,7 +350,7 @@ class TasksViewModel with ChangeNotifier {
           await NotificationService.scheduleNotification(
             item.uuid.hashCode,
             "Don't Forget Your Task!",
-            item.title,
+            await _reminderText(item),
             scheduledTime,
           );
         }
@@ -342,10 +363,32 @@ class TasksViewModel with ChangeNotifier {
         await NotificationService.scheduleDailyNotification(
           item.uuid.hashCode,
           "Don't Forget Your Task!",
-          item.title,
+          await _reminderText(item),
           time,
         );
       }
+    }
+  }
+
+  /// What [task]'s reminder says under its title: which task it is, but not
+  /// while the app is locked, as the lock screen and the notification shade
+  /// would show it to anyone with the phone.
+  Future<String?> _reminderText(TodoItem task) async =>
+      await _lockService.getLock() == AppLock.off ? task.title : null;
+
+  /// Sets every reminder again, as whether they say which task they're for
+  /// goes by the App Lock: for once it's turned on or off.
+  Future<void> refreshReminders() async {
+    try {
+      for (final task in await _tasksRepository.getItems()) {
+        try {
+          await _scheduleReminder(task);
+        } catch (e) {
+          // That reminder stays as it was.
+        }
+      }
+    } catch (e) {
+      // The reminders stay as they were.
     }
   }
 
@@ -358,7 +401,7 @@ class TasksViewModel with ChangeNotifier {
           await NotificationService.scheduleNotification(
             task.uuid.hashCode,
             "Don't Forget Your Task!",
-            task.title,
+            await _reminderText(task),
             scheduledTime,
           );
           await _tasksRepository.updateItem(
@@ -393,7 +436,7 @@ class TasksViewModel with ChangeNotifier {
         await NotificationService.scheduleDailyNotification(
           task.uuid.hashCode,
           "Don't Forget Your Task!",
-          task.title,
+          await _reminderText(task),
           DateTimeUtils.parseTime(task.time),
         );
         await _tasksRepository.updateItem(

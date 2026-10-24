@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
+import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../lock_page/widgets/password_dialogs.dart';
 import 'appearance_picker.dart';
@@ -148,6 +149,7 @@ class _ChangePasswordTile extends StatelessWidget {
 /// if the user cancels.
 Future<Result?> _changeAppLock(BuildContext context, AppLock lock) async {
   final user = context.read<UserViewModel>();
+  final tasks = context.read<TasksViewModel>();
   String? password;
   if (user.appLock == AppLock.password) {
     password = await showPasswordDialog(
@@ -158,16 +160,20 @@ Future<Result?> _changeAppLock(BuildContext context, AppLock lock) async {
     );
     if (password == null || !context.mounted) return null;
   }
+  final Result result;
   switch (lock) {
     case AppLock.off:
-      return user.turnOffAppLock(password: password);
+      result = await user.turnOffAppLock(password: password);
     case AppLock.fingerprint:
-      return user.lockWithFingerprint(password: password);
+      result = await user.lockWithFingerprint(password: password);
     case AppLock.password:
       final newPassword = await showNewPasswordDialog(context);
       if (newPassword == null) return null;
-      return user.lockWithPassword(newPassword, password: password);
+      result = await user.lockWithPassword(newPassword, password: password);
   }
+  // Reminders say which task they're for only while the app isn't locked.
+  if (result is! Failure) tasks.refreshReminders();
+  return result;
 }
 
 class TasksSection extends StatelessWidget {
