@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/authentication_service.dart';
+import 'package:todo/services/device_service.dart';
 import 'package:todo/services/home_widget_service.dart';
 import 'package:todo/services/image_service.dart';
 import 'package:todo/services/lock_service.dart';
@@ -46,6 +47,7 @@ class UserViewModel with ChangeNotifier {
   final ImageService _imageService = ImageService();
   final LockService _lockService = LockService();
   final AuthenticationService _authService = AuthenticationService();
+  final DeviceService _deviceService = DeviceService();
 
   Future<void> get() async {
     List<UserProfile> users = await _userRepository.getUser();
@@ -54,8 +56,16 @@ class UserViewModel with ChangeNotifier {
       users = await _userRepository.getUser();
     }
     _user = users.first;
-    _appLock = await _lockService.getLock();
+    _setAppLock(await _lockService.getLock());
     notifyListeners();
+  }
+
+  /// Sets what the app is locked with, keeping the app out of the recent
+  /// apps while it's locked, as they'd show anyone its last screen.
+  void _setAppLock(AppLock lock) {
+    _appLock = lock;
+    // Not worth failing over: the lock holds either way.
+    _deviceService.hideFromRecents(lock != AppLock.off).ignore();
   }
 
   Future<void> editName(String name) async {
@@ -152,7 +162,7 @@ class UserViewModel with ChangeNotifier {
       return Failure("Authentication Failed");
     }
     await _lockService.disableLock();
-    _appLock = AppLock.off;
+    _setAppLock(AppLock.off);
     notifyListeners();
     return Info("Lock Disabled");
   }
@@ -165,7 +175,7 @@ class UserViewModel with ChangeNotifier {
       return Failure("Authentication Failed");
     }
     await _lockService.enableLock();
-    _appLock = AppLock.fingerprint;
+    _setAppLock(AppLock.fingerprint);
     notifyListeners();
     return Success("Fingerprint Lock Enabled");
   }
@@ -183,7 +193,7 @@ class UserViewModel with ChangeNotifier {
     }
     final changing = _appLock == AppLock.password;
     await _lockService.enableLock(password: newPassword);
-    _appLock = AppLock.password;
+    _setAppLock(AppLock.password);
     notifyListeners();
     return Success(changing ? "Password Changed" : "Password Lock Enabled");
   }

@@ -1,6 +1,86 @@
 package com.k.todo
 
-import io.flutter.embedding.android.FlutterActivity
+import android.os.Build
+import android.os.SystemClock
+import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.StandardMethodCodec
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
-class MainActivity: FlutterFragmentActivity()
+class MainActivity: FlutterFragmentActivity() {
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        val messenger = flutterEngine.dartExecutor.binaryMessenger
+        MethodChannel(messenger, "com.k.todo/device").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "hideFromRecents" -> {
+                    hideFromRecents(call.arguments as Boolean)
+                    result.success(null)
+                }
+                // Counts the time the phone has slept, and turning its clock
+                // can't change it.
+                "elapsedRealtime" -> result.success(SystemClock.elapsedRealtime())
+                // As Home does, keeping the app's pages, where Back would
+                // close them.
+                "moveToBack" -> {
+                    moveTaskToBack(true)
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
+        // Off the main thread, as stretching a password is slow on purpose.
+        MethodChannel(
+            messenger,
+            "com.k.todo/backup",
+            StandardMethodCodec.INSTANCE,
+            messenger.makeBackgroundTaskQueue(),
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "pbkdf2" -> result.success(
+                    pbkdf2(
+                        call.argument<String>("password")!!,
+                        call.argument<ByteArray>("salt")!!,
+                        call.argument<Int>("iterations")!!,
+                    )
+                )
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    // Keeps the app's last screen out of the recent apps, where anyone could
+    // see it without unlocking the app. Before Android 13 that takes keeping
+    // it out of screenshots too.
+    private fun hideFromRecents(hidden: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(!hidden)
+        } else if (hidden) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
+    // PBKDF2-HMAC-SHA256 (RFC 8018) of the password's UTF-8, for its first
+    // block: a 256-bit key. On the phone's own HMAC, which is native, rather
+    // than through its PBKDF2WithHmacSHA256, which isn't, and takes several
+    // times as long.
+    private fun pbkdf2(password: String, salt: ByteArray, iterations: Int): ByteArray {
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(password.toByteArray(Charsets.UTF_8), "HmacSHA256"))
+        mac.update(salt)
+        var block = mac.doFinal(byteArrayOf(0, 0, 0, 1))
+        val key = block.copyOf()
+        repeat(iterations - 1) {
+            block = mac.doFinal(block)
+            for (i in key.indices) {
+                key[i] = (key[i].toInt() xor block[i].toInt()).toByte()
+            }
+        }
+        return key
+    }
+}

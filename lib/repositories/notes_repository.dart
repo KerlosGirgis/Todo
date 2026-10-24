@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../models/note.dart';
@@ -60,13 +57,5 @@ class NotesRepository {
         await txn.insert('Notes', note.toMap());
       }
     });
-  }
-
-  Future<Uint8List> exportNotesToJson() async {
-    final notes = await getNotes();
-    final jsonString =
-    jsonEncode(notes.map((note) => note.toMap()).toList());
-
-    return utf8.encode(jsonString);
   }
 }

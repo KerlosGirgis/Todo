@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../models/todo_item.dart';
 import '../services/database_service.dart';
@@ -61,13 +59,6 @@ class TasksRepository{
         await txn.insert('ToDo', item.toMap());
       }
     });
-  }
-
-  Future<Uint8List> exportToDoToJson() async {
-    List<TodoItem> items = await getItems();
-    String jsonString =
-    jsonEncode(items.map((item) => item.toMap()).toList());
-    return utf8.encode(jsonString);
   }
 
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/tasks_view_model.dart';
+import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/widgets/profile_button.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
 import 'form_dialog.dart';
@@ -26,10 +27,11 @@ class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
 
   void _import() {
     Provider.of<TasksViewModel>(context, listen: false)
-        .restore(_overwrite)
+        .restore(_overwrite,
+            askForBackupPassword: backupPasswordPrompt(context))
         .then((result) {
       if (mounted) Navigator.pop(context);
-      result.when(
+      result?.when(
         onSuccess: FeedbackToast.success,
         onFailure: FeedbackToast.error,
         onInfo: FeedbackToast.info,

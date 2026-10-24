@@ -5,10 +5,12 @@ import 'package:todo/core/result.dart';
 import 'package:todo/services/file_service.dart';
 import 'package:todo/repositories/tasks_repository.dart';
 import 'package:uuid/v4.dart';
+import '../core/prompts.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/task_filters.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
+import '../services/backup_service.dart';
 import '../services/notification_service.dart';
 
 class TasksViewModel with ChangeNotifier {
@@ -25,6 +27,8 @@ class TasksViewModel with ChangeNotifier {
   int get unfinishedTasksCount =>
       _allTasks.where((task) => task.status == 0).length;
   final TasksRepository _tasksRepository = TasksRepository();
+  final BackupService _backupService = BackupService();
+  final FileService _fileService = FileService();
 
   Future<void> fetchTasks({TaskFilter? filter}) async {
     if (filter != null) {
@@ -209,15 +213,26 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  /// Saves the tasks to a file, once the App Lock lets the user through:
-  /// with [password], for an app locked with one.
-  Future<Result> backup({String? password}) async {
+  /// Saves the tasks to a file locked with a password that
+  /// [askForBackupPassword] gets from the user, once the App Lock lets them
+  /// through: with [password], for an app locked with one. Null if the user
+  /// cancels.
+  Future<Result?> backup({
+    String? password,
+    required NewBackupPasswordPrompt askForBackupPassword,
+  }) async {
     if (!await AuthenticationService().passesAppLock(password: password)) {
       return Failure("Authentication Failed");
     }
     try {
-      final bytes = await _tasksRepository.exportToDoToJson();
-      final outputPath = await FileService().saveFile(bytes, 'todo.json');
+      final tasks = await _tasksRepository.getItems();
+      final file = await _backupService.write(
+        [for (final task in tasks) task.toMap()],
+        kind: BackupKind.tasks,
+        askForPassword: askForBackupPassword,
+      );
+      if (file == null) return null;
+      final outputPath = await _fileService.saveFile(file, 'todo.json');
       if (outputPath == null || outputPath.isEmpty) {
         return Info("You didn't choose a directory");
       }
@@ -227,14 +242,21 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> restore(bool overwrite) async {
+  /// Adds the tasks from a backup file the user picks, once
+  /// [askForBackupPassword] gets the password it's locked with, in place of
+  /// every task there is when [overwrite] is set. Null if the user cancels.
+  Future<Result?> restore(bool overwrite,
+      {required BackupPasswordPrompt askForBackupPassword}) async {
     try {
-      final fileService = FileService();
-
-      final importedTasks = await fileService.pickAndReadTodos();
-      if (importedTasks == null) {
+      final bytes = await _fileService.pickJsonFile();
+      if (bytes == null) {
         return Info("You didn't choose a file");
       }
+      final records = await _backupService.read(bytes,
+          kind: BackupKind.tasks, askForPassword: askForBackupPassword);
+      if (records == null) return null;
+      final importedTasks =
+          records.map<TodoItem>((e) => TodoItem.fromMap(e)).toList();
 
       final existingTasks =
           overwrite ? <TodoItem>[] : await _tasksRepository.getItems();
@@ -257,6 +279,8 @@ class TasksViewModel with ChangeNotifier {
       }
       get();
       return await _setRestoredReminders(newTasks, replaced: overwrite);
+    } on WrongBackupKindException {
+      return Failure("That's a backup of notes, not tasks");
     } catch (e) {
       return Failure("Failed To Restore");
     }

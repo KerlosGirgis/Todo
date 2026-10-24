@@ -273,7 +273,12 @@ class _TodoPageState extends State<TodoPage> {
     withAppLockPassword(
       context,
       subtitle: "Enter your password to back up your tasks.",
-      action: (password) => tasks.backup(password: password).then(_showResult),
+      action: (password) => tasks
+          .backup(
+            password: password,
+            askForBackupPassword: newBackupPasswordPrompt(context),
+          )
+          .then(_showResult),
     );
   }
 
@@ -317,7 +322,9 @@ class _TodoPageState extends State<TodoPage> {
   }
 }
 
-void _showResult(Result result) => result.when(
+/// Shows how [result] went, if there's a result to show: none when the user
+/// cancels.
+void _showResult(Result? result) => result?.when(
       onSuccess: FeedbackToast.success,
       onFailure: FeedbackToast.error,
       onInfo: FeedbackToast.info,

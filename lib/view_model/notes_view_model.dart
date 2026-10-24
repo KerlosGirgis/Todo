@@ -5,17 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_quill/flutter_quill.dart' show Document;
 import 'package:todo/core/result.dart';
 import 'package:todo/repositories/notes_repository.dart';
+import '../core/prompts.dart';
 import '../core/utils/note_document_utils.dart';
 import '../models/app_lock.dart';
 import '../models/note.dart';
 import '../services/authentication_service.dart';
+import '../services/backup_service.dart';
 import '../services/file_service.dart';
 import '../services/home_widget_service.dart';
 import '../services/lock_service.dart';
-
-/// Asks the user for the App Lock's password, and gives it once they've
-/// entered it right, or null if they cancel.
-typedef PasswordPrompt = Future<String?> Function();
 
 class NotesViewModel with ChangeNotifier {
   List<Note> _notes = [];
@@ -27,6 +25,8 @@ class NotesViewModel with ChangeNotifier {
   final AuthenticationService _authService = AuthenticationService();
   final LockService _lockService = LockService();
   final HomeWidgetService _homeWidgetService = HomeWidgetService();
+  final BackupService _backupService = BackupService();
+  final FileService _fileService = FileService();
 
   Future<void> get() async {
     _notes = await _notesRepository.getNotes();
@@ -157,15 +157,36 @@ class NotesViewModel with ChangeNotifier {
     get();
   }
 
-  /// Saves the notes to a file, once the App Lock lets the user through:
-  /// with [password], for an app locked with one.
-  Future<Result> backup({String? password}) async {
+  /// Saves the notes to a file locked with a password that
+  /// [askForBackupPassword] gets from the user, once the App Lock lets them
+  /// through, with [password] for an app locked with one, and while any note
+  /// is locked, once its lock does too. Null if the user cancels.
+  Future<Result?> backup({
+    String? password,
+    required NewBackupPasswordPrompt askForBackupPassword,
+  }) async {
     if (!await _authService.passesAppLock(password: password)) {
       return Failure("Authentication Failed");
     }
     try {
-      final bytes = await _notesRepository.exportNotesToJson();
-      final outputPath = await FileService().saveFile(bytes, 'notes.json');
+      final notes = await _notesRepository.getNotes();
+      // Locked notes go into the file with all they say, so it takes their
+      // lock, as opening one does: the App Lock may be off, or a password,
+      // which a locked note won't take while the fingerprint works. An app
+      // locked with the fingerprint has just asked for it, and the password
+      // just given is the one a locked note falls back on without it.
+      if (notes.any((note) => note.protected == 1) &&
+          await _lockService.getLock() != AppLock.fingerprint) {
+        final unlocked = await _passNoteLock(() async => password);
+        if (unlocked is! Success) return unlocked;
+      }
+      final file = await _backupService.write(
+        [for (final note in notes) note.toMap()],
+        kind: BackupKind.notes,
+        askForPassword: askForBackupPassword,
+      );
+      if (file == null) return null;
+      final outputPath = await _fileService.saveFile(file, 'notes.json');
       if (outputPath == null || outputPath.isEmpty) {
         return Info("You didn't choose a directory");
       }
@@ -175,15 +196,32 @@ class NotesViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> restore(bool overwrite) async {
+  /// Adds the notes from a backup file the user picks, once
+  /// [askForBackupPassword] gets the password it's locked with, in place of
+  /// every note there is when [overwrite] is set. Replacing locked notes
+  /// takes their lock first, as deleting one does, with [askForPassword] for
+  /// the App Lock's password on a phone that can't take a fingerprint. Null
+  /// if the user cancels.
+  Future<Result?> restore(
+    bool overwrite, {
+    required PasswordPrompt askForPassword,
+    required BackupPasswordPrompt askForBackupPassword,
+  }) async {
     try {
-      final fileService = FileService();
-      final importedNotes = await fileService.pickAndReadNotes();
-      if (importedNotes == null) {
+      final currentNotes = await _notesRepository.getNotes();
+      if (overwrite && currentNotes.any((note) => note.protected == 1)) {
+        final unlocked = await _passNoteLock(askForPassword);
+        if (unlocked is! Success) return unlocked;
+      }
+      final bytes = await _fileService.pickJsonFile();
+      if (bytes == null) {
         return Info("You didn't choose a file");
       }
-      final existingNotes =
-          overwrite ? <Note>[] : await _notesRepository.getNotes();
+      final records = await _backupService.read(bytes,
+          kind: BackupKind.notes, askForPassword: askForBackupPassword);
+      if (records == null) return null;
+      final importedNotes = records.map<Note>((e) => Note.fromMap(e)).toList();
+      final existingNotes = overwrite ? <Note>[] : currentNotes;
       final newNotes = <Note>[];
       for (final note in importedNotes) {
         final exists = existingNotes.any((e) =>
@@ -205,6 +243,8 @@ class NotesViewModel with ChangeNotifier {
       }
       get();
       return Success("Data Restored");
+    } on WrongBackupKindException {
+      return Failure("That's a backup of tasks, not notes");
     } catch (e) {
       return Failure("Failed To Restore");
     }

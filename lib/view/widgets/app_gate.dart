@@ -20,16 +20,17 @@ class AppGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (auth.status == AuthStatus.initializing) {
-      return Scaffold(
-        backgroundColor: context.colors.pageBackground,
-        body: const Loading(),
-      );
+    // Once the app has opened, it stays open under the lock page whenever
+    // it locks again: see AppLockGuard.
+    if (auth.opened) {
+      return user.user.startPage == 0 ? const TodoPage() : const NotesPage();
     }
-
     if (auth.status == AuthStatus.unauthenticated) {
       return const LockPage();
     }
-    return user.user.startPage == 0 ? const TodoPage() : const NotesPage();
+    return Scaffold(
+      backgroundColor: context.colors.pageBackground,
+      body: const Loading(),
+    );
   }
 }

@@ -253,7 +253,12 @@ class _NotesPageState extends State<NotesPage> {
     withAppLockPassword(
       context,
       subtitle: "Enter your password to back up your notes.",
-      action: (password) => notes.backup(password: password).then(_showResult),
+      action: (password) => notes
+          .backup(
+            password: password,
+            askForBackupPassword: newBackupPasswordPrompt(context),
+          )
+          .then(_showResult),
     );
   }
 
@@ -338,7 +343,9 @@ class _NotesPageState extends State<NotesPage> {
   }
 }
 
-void _showResult(Result result) => result.when(
+/// Shows how [result] went, if there's a result to show: none when the user
+/// cancels.
+void _showResult(Result? result) => result?.when(
       onSuccess: FeedbackToast.success,
       onFailure: FeedbackToast.error,
       onInfo: FeedbackToast.info,

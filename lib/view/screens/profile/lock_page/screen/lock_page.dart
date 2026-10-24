@@ -28,7 +28,9 @@ class LockPageState extends State<LockPage> {
   Widget build(BuildContext context) {
     final lock = context.select<AuthViewModel, AppLock>((auth) => auth.lock);
     return Scaffold(
-      appBar: AppBar(),
+      // No back button over the app's pages, when it locks again with them
+      // open.
+      appBar: AppBar(automaticallyImplyLeading: false),
       body: lock == AppLock.password
           ? const _PasswordUnlock()
           : Center(

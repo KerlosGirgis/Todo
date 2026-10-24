@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/notes_view_model.dart';
+import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/widgets/profile_button.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
@@ -26,10 +27,14 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
 
   void _import() {
     Provider.of<NotesViewModel>(context, listen: false)
-        .restore(_overwrite)
+        .restore(
+          _overwrite,
+          askForPassword: noteLockPasswordPrompt(context),
+          askForBackupPassword: backupPasswordPrompt(context),
+        )
         .then((result) {
       if (mounted) Navigator.pop(context);
-      result.when(
+      result?.when(
         onSuccess: FeedbackToast.success,
         onFailure: FeedbackToast.error,
         onInfo: FeedbackToast.info,

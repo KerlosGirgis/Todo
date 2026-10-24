@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:todo/services/notification_service.dart';
 import 'package:todo/view/widgets/app_gate.dart';
+import 'package:todo/view/widgets/app_lock_guard.dart';
 import 'package:todo/view_model/auth_view_model.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
@@ -37,32 +38,42 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  /// The navigator of the app's pages, which the lock page goes over
+  /// whenever the app locks again.
+  static final _navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
-    return Selector<UserViewModel, bool>(
-      selector: (_, userVM) => userVM.user.theme == 1,
-      builder: (context, isDarkMode, _) {
-        return ToastificationWrapper(
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.getTheme(isDarkMode: isDarkMode),
-            localizationsDelegates: const [FlutterQuillLocalizations.delegate],
-            // The note editor's flutter_quill is still built on
-            // flutter/material.dart, whose widgets look for that library's
-            // own theme and localizations. The bridge hands them the app's.
-            // Above the navigator, so menus quill opens in the overlay, like
-            // copy and paste, find them too.
-            builder: (context, child) =>
-                // ignore: deprecated_member_use
-                MaterialUiCompatibilityBridge(child: child!),
-            home: Consumer2<AuthViewModel, UserViewModel>(
-              builder: (context, auth, user, _) {
-                return AppGate(auth: auth, user: user);
-              },
+    return AppLockGuard(
+      navigatorKey: _navigatorKey,
+      child: Selector<UserViewModel, bool>(
+        selector: (_, userVM) => userVM.user.theme == 1,
+        builder: (context, isDarkMode, _) {
+          return ToastificationWrapper(
+            child: MaterialApp(
+              navigatorKey: _navigatorKey,
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.getTheme(isDarkMode: isDarkMode),
+              localizationsDelegates: const [
+                FlutterQuillLocalizations.delegate
+              ],
+              // The note editor's flutter_quill is still built on
+              // flutter/material.dart, whose widgets look for that library's
+              // own theme and localizations. The bridge hands them the app's.
+              // Above the navigator, so menus quill opens in the overlay, like
+              // copy and paste, find them too.
+              builder: (context, child) =>
+                  // ignore: deprecated_member_use
+                  MaterialUiCompatibilityBridge(child: child!),
+              home: Consumer2<AuthViewModel, UserViewModel>(
+                builder: (context, auth, user, _) {
+                  return AppGate(auth: auth, user: user);
+                },
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

@@ -104,7 +104,8 @@ class _AppLockTileState extends State<_AppLockTile> {
       icon: Icons.lock_rounded,
       color: _green,
       title: "App Lock",
-      subtitle: const Text("Needed each time the app opens"),
+      subtitle: const Text("Needed each time the app opens, and after a "
+          "minute away"),
       bottom: CupertinoSlidingSegmentedControl<AppLock>(
         groupValue: _changingTo ?? lock,
         onValueChanged: (lock) {
