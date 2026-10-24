@@ -28,9 +28,17 @@ class NotesViewModel with ChangeNotifier {
   final BackupService _backupService = BackupService();
   final FileService _fileService = FileService();
 
+  /// Whether the note on the widget has been checked since the app started:
+  /// see [_checkWidget].
+  bool _widgetChecked = false;
+
   Future<void> get() async {
     _notes = await _notesRepository.getNotes();
     notifyListeners();
+    if (!_widgetChecked) {
+      _widgetChecked = true;
+      await _checkWidget();
+    }
   }
 
   /// The notes that [query] finds: those with it in their title or text. A
@@ -47,17 +55,99 @@ class NotesViewModel with ChangeNotifier {
     ];
   }
 
-  /// Shows [note]'s text on the home screen's widget.
+  /// Shows [note]'s text on the home screen's widget, where anyone can read
+  /// it, so never a locked note's.
   Future<Result> showOnWidget(Note note) async {
+    if (note.protected == 1) {
+      return Info("Locked notes can't go on the widget");
+    }
     if (note.body.trim().isEmpty) {
       return Info("Write something to show on the widget first");
     }
     try {
-      await _homeWidgetService.showNote(note.body);
+      await _homeWidgetService.showNote(note.id!, note.body);
     } catch (e) {
       return Failure("Sorry, Something went wrong");
     }
     return Info("Note has been added to the widget");
+  }
+
+  /// Takes the note with [id] off the widget, if it's the one there: a
+  /// locked note's text has no place on the home screen, nor a deleted one's.
+  Future<void> _takeOffWidget(int? id) async {
+    try {
+      if (id != null && (await _homeWidgetService.shownNote()).id == id) {
+        await _homeWidgetService.clearNote();
+      }
+    } catch (e) {
+      // The widget's own trouble, which the note's change goes ahead without.
+    }
+  }
+
+  /// The note on the widget, as it is now, if it's one of the notes.
+  Future<Note?> _noteOnWidget() async {
+    try {
+      final id = (await _homeWidgetService.shownNote()).id;
+      return _notes.where((note) => id != null && note.id == id).firstOrNull;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Has the widget keep track of [shown], the note it showed before the
+  /// notes were all written again, by its new id, found by what it says.
+  Future<void> _followOnWidget(Note shown) async {
+    final note = _notes.where((note) => _sameNote(note, shown)).firstOrNull;
+    if (note == null) return _clearWidget();
+    try {
+      await _homeWidgetService.followNote(note.id!);
+    } catch (e) {
+      // The widget's own trouble.
+    }
+  }
+
+  /// Takes whatever note is there off the widget.
+  Future<void> _clearWidget() async {
+    try {
+      await _homeWidgetService.clearNote();
+    } catch (e) {
+      // The widget's own trouble.
+    }
+  }
+
+  /// Whether [a] and [b] say the same, in the same colours and lock.
+  static bool _sameNote(Note a, Note b) =>
+      a.title == b.title &&
+      a.body == b.body &&
+      a.delta == b.delta &&
+      a.titleColor == b.titleColor &&
+      a.coverColor == b.coverColor &&
+      a.protected == b.protected;
+
+  /// Makes sure the widget shows no locked note's text, nor a deleted one's,
+  /// as the notes are first read in: in case a change to its note didn't get
+  /// to the widget, or its note was put there before the widget kept track
+  /// of which, and has to be found by its text instead.
+  Future<void> _checkWidget() async {
+    try {
+      final shown = await _homeWidgetService.shownNote();
+      if (shown.text == null) return;
+      if (shown.id case final id?) {
+        final note = _notes.where((note) => note.id == id).firstOrNull;
+        if (note == null || note.protected == 1) {
+          await _homeWidgetService.clearNote();
+        }
+        return;
+      }
+      final notes = _notes.where((note) => note.body == shown.text);
+      if (notes.any((note) => note.protected == 1)) {
+        await _homeWidgetService.clearNote();
+      } else if (notes.firstOrNull case final note?) {
+        await _homeWidgetService.followNote(note.id!);
+      }
+    } catch (e) {
+      // The widget's own trouble.
+    }
   }
 
   /// Adds a note with nothing written in it yet.
@@ -77,15 +167,16 @@ class NotesViewModel with ChangeNotifier {
     get();
   }
 
-  /// Changes [note]'s title, colours and lock, keeping its text.
+  /// Changes [note]'s title, colours and lock, keeping its text. Locking it
+  /// takes it off the widget.
   Future<void> updateNote(
     Note note, {
     required String title,
     required String titleColor,
     required String coverColor,
     required bool locked,
-  }) {
-    return _update(Note(
+  }) async {
+    await _update(Note(
       id: note.id,
       title: title,
       body: note.body,
@@ -94,6 +185,7 @@ class NotesViewModel with ChangeNotifier {
       coverColor: coverColor,
       protected: locked ? 1 : 0,
     ));
+    if (locked) await _takeOffWidget(note.id);
   }
 
   /// Saves [document] as [note]'s text, keeping its title, colours and lock,
@@ -124,6 +216,7 @@ class NotesViewModel with ChangeNotifier {
     if(isAuthenticated is Success){
       try{
         await _notesRepository.deleteNote(note.id!);
+        await _takeOffWidget(note.id);
         get();
         return Info("Note Deleted");
       }
@@ -145,6 +238,7 @@ class NotesViewModel with ChangeNotifier {
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
     final oldNote = _notes.removeAt(oldIndex);
     _notes.insert(newIndex, oldNote);
+    final onWidget = await _noteOnWidget();
     try {
       // A copy, as the next reorder can move notes in the list while this
       // one is still being written.
@@ -153,8 +247,10 @@ class NotesViewModel with ChangeNotifier {
       // The order stays as it was in the database.
     }
     // Rewriting the table gives every note a new id, so the notes are read
-    // back in: the ids held before would now point at other notes.
-    get();
+    // back in: the ids held before would now point at other notes. The
+    // widget's too.
+    await get();
+    if (onWidget != null) await _followOnWidget(onWidget);
   }
 
   /// Saves the notes to a file locked with a password that
@@ -224,13 +320,7 @@ class NotesViewModel with ChangeNotifier {
       final existingNotes = overwrite ? <Note>[] : currentNotes;
       final newNotes = <Note>[];
       for (final note in importedNotes) {
-        final exists = existingNotes.any((e) =>
-            e.title == note.title &&
-            e.body == note.body &&
-            e.delta == note.delta &&
-            e.titleColor == note.titleColor &&
-            e.coverColor == note.coverColor &&
-            e.protected == note.protected);
+        final exists = existingNotes.any((e) => _sameNote(e, note));
         if (exists) continue;
         newNotes.add(note);
       }
@@ -241,6 +331,8 @@ class NotesViewModel with ChangeNotifier {
       } catch (e) {
         return Failure("Restore failed. Data rolled back.");
       }
+      // Replacing the notes deleted the one on the widget, whichever it was.
+      if (overwrite) await _clearWidget();
       get();
       return Success("Data Restored");
     } on WrongBackupKindException {
