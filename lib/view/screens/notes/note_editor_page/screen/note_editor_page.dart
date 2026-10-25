@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flex_color_picker/flex_color_picker.dart';
 // Only for the editor's cursor: flutter_quill takes the theme of its own
 // Material library.
 import 'package:flutter/material.dart' as legacy show TextSelectionThemeData;
@@ -24,15 +23,20 @@ import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
-import '../../../profile/profile_page/widgets/aurora.dart';
 import '../widgets/editor_toolbar.dart';
-import '../widgets/note_banner.dart';
 import '../widgets/note_styles.dart';
+import '../widgets/note_title.dart';
 
 const _accent = Color(0xff3D5AFE);
 
-/// How far below the bar the banner starts.
-const _bannerTop = 8.0;
+/// How far below the bar the note's title starts.
+const _titleTop = 10.0;
+
+/// The gap between the note's title and its text.
+const _titleGap = 14.0;
+
+/// How far the note's title and text are set in from the toolbar's edges.
+const _textInset = 6.0;
 
 /// The toolbar's gap above the bottom of the page, or the keyboard.
 const _toolbarGap = 12.0;
@@ -41,9 +45,9 @@ const _toolbarGap = 12.0;
 Color _systemRed(bool isDarkTheme) =>
     isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
 
-/// Where a note is read and written: its cover across the top, lit by an
-/// aurora in its own colours, over its text, with the tools for writing in
-/// a glass toolbar that rides above the keyboard.
+/// Where a note is read and written: its title at the head of its text, on
+/// the page itself, with the tools for writing in a glass toolbar that rides
+/// above the keyboard.
 class NoteEditorPage extends StatefulWidget {
   const NoteEditorPage({super.key, required this.note});
 
@@ -92,7 +96,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   /// from going down.
   double _keyboard = 0;
 
-  /// Whether the note has been deleted, so its cover doesn't fly back to a
+  /// Whether the note has been deleted, so its title doesn't fly back to a
   /// card that's going away.
   bool _deleted = false;
 
@@ -133,6 +137,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     // comfortable length on large screens.
     final gutterLeft = math.max(16 + padding.left, (width - 720) / 2);
     final gutterRight = math.max(16 + padding.right, (width - 720) / 2);
+    final textLeft = gutterLeft + _textInset;
+    final textRight = gutterRight + _textInset;
     // How far up the page the toolbar, and the formatting panel over it
     // while it's open, cover the text.
     final toolbarCover = EditorToolbar.height +
@@ -162,26 +168,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
         backgroundColor: context.colors.pageBackground,
         body: Stack(
           children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: padding.top + 400,
-              // Drifts up at half the speed of the page, for a little depth.
-              child: ListenableBuilder(
-                listenable: _scrollController,
-                builder: (context, child) => Transform.translate(
-                  offset: Offset(
-                      0,
-                      _scrollController.hasClients
-                          ? -_scrollController.offset / 2
-                          : 0),
-                  child: child,
-                ),
-                child:
-                    ProfileAurora(colors: _glowsFor(note.coverColor.toColor)),
-              ),
-            ),
             CustomScrollView(
               controller: _scrollController,
               slivers: [
@@ -205,24 +191,23 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       padding: EdgeInsets.only(right: padding.right),
                       child: GlassMenu(items: _menuItems(isDarkTheme)),
                     ),
-                    titleRevealOffset:
-                        _bannerTop + NoteBanner.titleScrolledAway(titleSize),
+                    titleRevealOffset: _titleTop +
+                        NoteTitle.titleScrolledAway(context, titleSize),
                   ),
                 ),
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                      gutterLeft, _bannerTop, gutterRight, 0),
+                  padding:
+                      EdgeInsets.fromLTRB(textLeft, _titleTop, textRight, 0),
                   sliver: SliverToBoxAdapter(
                     child: HeroMode(
                       enabled: !_deleted,
-                      child: NoteBanner(note: note, titleSize: titleSize),
+                      child: NoteTitle(note: note, titleSize: titleSize),
                     ),
                   ),
                 ),
                 SliverPadding(
-                  // In line with the banner's text rather than its edge.
-                  padding: EdgeInsets.fromLTRB(
-                      gutterLeft + 6, 22, gutterRight + 6, 0),
+                  padding:
+                      EdgeInsets.fromLTRB(textLeft, _titleGap, textRight, 0),
                   sliver: SliverToBoxAdapter(
                     // Once the page has mostly covered the notes behind it.
                     child: RiseIn(
@@ -384,14 +369,3 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
 }
 
 bool _isRtl(String text) => intl.Bidi.detectRtlDirectionality(text);
-
-/// The aurora's colours for a note's [cover]: the cover's own, beside two of
-/// its neighbours on the colour wheel, or the app's blues behind a white,
-/// grey or black one.
-(Color, Color, Color) _glowsFor(Color cover) {
-  final hsv = HSVColor.fromColor(cover);
-  if (hsv.saturation < 0.25 || hsv.value < 0.25) return ProfileAurora.appColors;
-  Color turned(double degrees) =>
-      hsv.withHue((hsv.hue + degrees) % 360).toColor();
-  return (cover, turned(-28), turned(32));
-}

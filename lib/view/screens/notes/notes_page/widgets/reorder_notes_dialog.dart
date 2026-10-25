@@ -1,4 +1,3 @@
-import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +8,7 @@ import '../../../../../models/note.dart';
 import '../../../profile/profile_page/widgets/profile_button.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
+import 'note_card.dart';
 
 /// Puts the notes in a new order, by dragging their titles up and down a
 /// list on the same surface as the dialogs' settings.
@@ -126,7 +126,7 @@ class _NoteRow extends StatelessWidget {
           child: Row(
             children: [
               const SizedBox(width: 16),
-              _CoverSwatch(note: note),
+              NoteCoverSwatch(note: note),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
@@ -156,46 +156,6 @@ class _NoteRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// A note's cover in miniature, the size of the settings' icons: its
-/// colour, with an icon in its title's colour, or a lock when it's locked.
-class _CoverSwatch extends StatelessWidget {
-  const _CoverSwatch({required this.note});
-
-  static const _size = 30.0;
-
-  final Note note;
-
-  @override
-  Widget build(BuildContext context) {
-    final cover = note.coverColor.toColor;
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        shape: RoundedSuperellipseBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
-          side: BorderSide(
-            width: 0.5,
-            color: context.colors.wB.withValues(alpha: 0.12),
-          ),
-        ),
-        // A faint sheen from the top, as on the settings' icons.
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color.lerp(cover, Colors.white, 0.14)!, cover],
-        ),
-      ),
-      child: SizedBox.square(
-        dimension: _size,
-        child: Icon(
-          note.protected == 1 ? Icons.lock_rounded : Icons.notes_rounded,
-          size: _size * 0.56,
-          color: note.titleColor.toColor,
-        ),
-      ),
     );
   }
 }

@@ -283,14 +283,8 @@ class _NotesPageState extends State<NotesPage> {
         reverseTransitionDuration: const Duration(milliseconds: 400),
         pageBuilder: (context, animation, secondaryAnimation) =>
             NoteEditorPage(note: note),
-        // Fades in around the note's cover, which grows out of its card into
-        // the top of the editor, covering the notes well before it lands.
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            FadeTransition(
-          opacity: animation.drive(
-              CurveTween(curve: const Interval(0, 0.6, curve: Curves.easeOut))),
-          child: child,
-        ),
+            _EditorFade(animation: animation, child: child),
       ),
     );
   }
@@ -341,6 +335,39 @@ class _NotesPageState extends State<NotesPage> {
       ),
     );
   }
+}
+
+/// The note's editor fading in over the notes while the note's title flies
+/// out of its card to the head of the editor, covering them well before it
+/// lands. As it closes, it fades away first, so the title flies back down to
+/// its card over the notes, rather than over the note's text.
+class _EditorFade extends StatefulWidget {
+  const _EditorFade({required this.animation, required this.child});
+
+  /// The editor's route's animation.
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  State<_EditorFade> createState() => _EditorFadeState();
+}
+
+class _EditorFadeState extends State<_EditorFade> {
+  late final _opacity = CurvedAnimation(
+    parent: widget.animation,
+    curve: const Interval(0, 0.6, curve: Curves.easeOut),
+    reverseCurve: const Interval(0.6, 1, curve: Curves.easeIn),
+  );
+
+  @override
+  void dispose() {
+    _opacity.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      FadeTransition(opacity: _opacity, child: widget.child);
 }
 
 /// Shows how [result] went, if there's a result to show: none when the user

@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:provider/provider.dart';
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../models/note.dart';
 import '../../../../../view_model/user_view_model.dart';
 
@@ -47,26 +48,24 @@ class _NoteCardState extends State<NoteCard> {
       scale: _pressed ? 0.97 : 1,
       duration: const Duration(milliseconds: 160),
       curve: Curves.easeOut,
-      child: NoteCoverHero(
-        note: note,
-        cover: NoteCover(
-          color: coverColor,
-          child: InkWell(
-            onTap: widget.onTap,
-            onLongPress: () {
-              HapticFeedback.mediumImpact();
-              widget.onLongPress();
-            },
-            onHighlightChanged: (pressed) => setState(() => _pressed = pressed),
-            // iOS dims a pressed card instead of rippling, and stays silent.
-            enableFeedback: false,
-            splashFactory: NoSplash.splashFactory,
-            highlightColor: onCover.withValues(alpha: 0.06),
-            child: NoteCardContent(
-              note: note,
-              titleSize: titleSize,
-              casualFont: casualFont,
-            ),
+      child: NoteCover(
+        color: coverColor,
+        child: InkWell(
+          onTap: widget.onTap,
+          onLongPress: () {
+            HapticFeedback.mediumImpact();
+            widget.onLongPress();
+          },
+          onHighlightChanged: (pressed) => setState(() => _pressed = pressed),
+          // iOS dims a pressed card instead of rippling, and stays silent.
+          enableFeedback: false,
+          splashFactory: NoSplash.splashFactory,
+          highlightColor: onCover.withValues(alpha: 0.06),
+          child: NoteCardContent(
+            note: note,
+            titleSize: titleSize,
+            casualFont: casualFont,
+            heroTitle: true,
           ),
         ),
       ),
@@ -83,6 +82,7 @@ class NoteCardContent extends StatelessWidget {
     required this.note,
     required this.titleSize,
     required this.casualFont,
+    this.heroTitle = false,
   });
 
   final Note note;
@@ -90,6 +90,10 @@ class NoteCardContent extends StatelessWidget {
   /// The user's size for notes' titles, as a multiple of the default one.
   final double titleSize;
   final bool casualFont;
+
+  /// Whether the title flies into the note's editor as it opens, as a
+  /// [NoteTitleHero], which only a card on the notes page does.
+  final bool heroTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +109,15 @@ class NoteCardContent extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final title = Text(
+            note.title,
+            maxLines:
+                _linesThatFit(context, constraints.maxHeight * 0.6, titleStyle)
+                    .clamp(1, 3),
+            overflow: TextOverflow.ellipsis,
+            textDirection: _textDirection(note.title),
+            style: titleStyle,
+          );
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -113,15 +126,9 @@ class NoteCardContent extends StatelessWidget {
               // rare title whose first line can't fit.
               ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: constraints.maxHeight),
-                child: Text(
-                  note.title,
-                  maxLines: _linesThatFit(
-                          context, constraints.maxHeight * 0.6, titleStyle)
-                      .clamp(1, 3),
-                  overflow: TextOverflow.ellipsis,
-                  textDirection: _textDirection(note.title),
-                  style: titleStyle,
-                ),
+                child: heroTitle
+                    ? NoteTitleHero(note: note, title: title)
+                    : title,
               ),
               Expanded(
                 child: Padding(
@@ -149,23 +156,17 @@ class NoteCardContent extends StatelessWidget {
 /// own colour, as the add button does. Ink from an [InkWell] in [child]
 /// shows on top of it.
 class NoteCover extends StatelessWidget {
-  const NoteCover({
-    super.key,
-    required this.color,
-    required this.child,
-    this.radius = 24,
-  });
+  const NoteCover({super.key, required this.color, required this.child});
 
   final Color color;
-  final double radius;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     // Apple's continuous corners, rather than circular ones.
-    final shape = RoundedSuperellipseBorder(
-      borderRadius: BorderRadius.all(Radius.circular(radius)),
+    const shape = RoundedSuperellipseBorder(
+      borderRadius: BorderRadius.all(Radius.circular(24)),
     );
     // Only colours tint the shadow or glow; greys, white and black cast a
     // plain one.
@@ -228,30 +229,30 @@ class NoteCover extends StatelessWidget {
   }
 }
 
-/// A note's [cover] as a [Hero], which flies between the note's card and the
-/// top of its editor when it's opened or closed, turning from one into the
-/// other on the way.
-class NoteCoverHero extends StatelessWidget {
-  const NoteCoverHero({super.key, required this.note, required this.cover});
+/// A note's [title] as a [Hero], which flies between the note's card and the
+/// head of its editor when it's opened or closed, growing into the editor's
+/// larger title or shrinking back into the card's on the way.
+class NoteTitleHero extends StatelessWidget {
+  const NoteTitleHero({super.key, required this.note, required this.title});
 
   final Note note;
-  final NoteCover cover;
+  final Text title;
 
   @override
   Widget build(BuildContext context) {
     return Hero(
-      tag: (NoteCoverHero, note.id),
+      tag: (NoteTitleHero, note.id),
       // Straight there, rather than along the arc Material's heroes take.
       createRectTween: (begin, end) => RectTween(begin: begin, end: end),
       flightShuttleBuilder: _flightShuttle,
-      child: cover,
+      child: title,
     );
   }
 
-  /// The cover in flight. It eases between the two covers' corners, while
-  /// the content it's leaving fades out and then the content it's heading
-  /// for fades in. Each is laid out at its own cover's size, rather than
-  /// rewrapping as the cover grows or shrinks, and cropped to it.
+  /// The title in flight. The one it's leaving fades out as the one it's
+  /// heading for fades in, each laid out at its own size, so its lines break
+  /// as they do there. Both are scaled on the way, so the two are always as
+  /// big as each other, and one seems to turn into the other.
   static Widget _flightShuttle(
     BuildContext flightContext,
     Animation<double> animation,
@@ -259,8 +260,8 @@ class NoteCoverHero extends StatelessWidget {
     BuildContext fromHeroContext,
     BuildContext toHeroContext,
   ) {
-    final from = (fromHeroContext.widget as Hero).child as NoteCover;
-    final to = (toHeroContext.widget as Hero).child as NoteCover;
+    final from = (fromHeroContext.widget as Hero).child as Text;
+    final to = (toHeroContext.widget as Hero).child as Text;
     final fromSize = _sizeOf(fromHeroContext);
     final toSize = _sizeOf(toHeroContext);
     // Both ways, the animation runs from the card, at 0, to the editor, at 1.
@@ -268,34 +269,51 @@ class NoteCoverHero extends StatelessWidget {
         flightDirection == HeroFlightDirection.push
             ? (from, fromSize, to, toSize)
             : (to, toSize, from, fromSize);
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        final progress = animation.value;
-        return NoteCover(
-          color: editor.color,
-          radius: lerpDouble(card.radius, editor.radius, progress)!,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              _AtSize(
-                size: cardSize,
-                child: Opacity(
-                  opacity: 1 - const Interval(0, 0.4).transform(progress),
-                  child: card.child,
+    // How much larger the editor's title is than the card's.
+    final growth = editor.style!.fontSize! / card.style!.fontSize!;
+    return Directionality(
+      // From the right for a title in Arabic, as it's lined up at both ends.
+      textDirection: card.textDirection ?? TextDirection.ltr,
+      // Text in flight takes the app's style for text, as on both pages,
+      // rather than the warning style text outside a Material gets.
+      child: Material(
+        type: MaterialType.transparency,
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            final progress = animation.value;
+            final scale = lerpDouble(1, growth, progress)!;
+            return Stack(
+              fit: StackFit.expand,
+              clipBehavior: Clip.none,
+              children: [
+                _AtSize(
+                  size: cardSize,
+                  child: Opacity(
+                    opacity: 1 - const Interval(0, 0.6).transform(progress),
+                    child: Transform.scale(
+                      scale: scale,
+                      alignment: AlignmentDirectional.topStart,
+                      child: card,
+                    ),
+                  ),
                 ),
-              ),
-              _AtSize(
-                size: editorSize,
-                child: Opacity(
-                  opacity: const Interval(0.5, 1).transform(progress),
-                  child: editor.child,
+                _AtSize(
+                  size: editorSize,
+                  child: Opacity(
+                    opacity: const Interval(0.3, 1).transform(progress),
+                    child: Transform.scale(
+                      scale: scale / growth,
+                      alignment: AlignmentDirectional.topStart,
+                      child: editor,
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -365,6 +383,47 @@ class _RimPainter extends CustomPainter {
       oldDelegate.shape != shape || oldDelegate.lightCover != lightCover;
 }
 
+/// A note's cover in miniature, by default the size of the settings' icons:
+/// its colour, with an icon in its title's colour, or a lock when it's
+/// locked.
+class NoteCoverSwatch extends StatelessWidget {
+  const NoteCoverSwatch({super.key, required this.note, this.size = 30});
+
+  final Note note;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final cover = note.coverColor.toColor;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: RoundedSuperellipseBorder(
+          // As round as the settings' icons, at any size.
+          borderRadius: BorderRadius.all(Radius.circular(size * 8 / 30)),
+          side: BorderSide(
+            width: 0.5,
+            color: context.colors.wB.withValues(alpha: 0.12),
+          ),
+        ),
+        // A faint sheen from the top, as on the settings' icons.
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color.lerp(cover, Colors.white, 0.14)!, cover],
+        ),
+      ),
+      child: SizedBox.square(
+        dimension: size,
+        child: Icon(
+          note.protected == 1 ? Icons.lock_rounded : Icons.notes_rounded,
+          size: size * 0.56,
+          color: note.titleColor.toColor,
+        ),
+      ),
+    );
+  }
+}
+
 class _BodyPreview extends StatelessWidget {
   const _BodyPreview({
     required this.body,
@@ -405,9 +464,13 @@ class _BodyPreview extends StatelessWidget {
       fontFamily: casualFont ? 'casual' : null,
       fontWeight: casualFont ? FontWeight.w600 : FontWeight.w400,
     );
+    // Every line as tall as they're counted, even one with a checklist's
+    // box, which comes from another font.
+    final strut = StrutStyle.fromTextStyle(style, forceStrutHeight: true);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxLines = _linesThatFit(context, constraints.maxHeight, style);
+        final maxLines = _linesThatFit(context, constraints.maxHeight, style,
+            strutStyle: strut);
         if (maxLines < 1) return const SizedBox.shrink();
         // Fade rather than ellipsis: an ellipsis is never drawn when the last
         // visible line ends in a line break, so lists would look complete.
@@ -422,10 +485,7 @@ class _BodyPreview extends StatelessWidget {
               overflow: TextOverflow.fade,
               textDirection: _textDirection(preview),
               style: style,
-              // Every line as tall as they're counted, even one with a
-              // checklist's box, which comes from another font.
-              strutStyle:
-                  StrutStyle.fromTextStyle(style, forceStrutHeight: true),
+              strutStyle: strut,
             ),
           ],
         );
@@ -473,8 +533,21 @@ TextDirection _textDirection(String text) =>
         : TextDirection.ltr;
 
 /// Whole lines of [style] that fit in [height], so text is never cut mid-line.
-int _linesThatFit(BuildContext context, double height, TextStyle style) {
-  final lineHeight =
-      MediaQuery.textScalerOf(context).scale(style.fontSize!) * style.height!;
+/// A line is measured as [Text] lays it out, with [strutStyle] if it has
+/// one, rather than worked out from the style: the lines come out rounded to
+/// whole pixels, so 20.7 points of line are laid out 21 tall.
+int _linesThatFit(BuildContext context, double height, TextStyle style,
+    {StrutStyle? strutStyle}) {
+  final line = TextPainter(
+    text: TextSpan(
+      text: " ",
+      style: DefaultTextStyle.of(context).style.merge(style),
+    ),
+    textDirection: TextDirection.ltr,
+    textScaler: MediaQuery.textScalerOf(context),
+    strutStyle: strutStyle,
+  )..layout();
+  final lineHeight = line.height;
+  line.dispose();
   return (height / lineHeight).floor();
 }
