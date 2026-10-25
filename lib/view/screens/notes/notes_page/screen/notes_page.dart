@@ -16,7 +16,6 @@ import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
-import '../../../profile/profile_page/widgets/aurora.dart';
 import '../../../tasks/todo_page/screen/todo_page.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
 import '../../note_editor_page/screen/note_editor_page.dart';
@@ -133,81 +132,57 @@ class _NotesPageState extends State<NotesPage> {
           addTooltip: "New Note",
           onAdd: _addNote,
         ),
-        body: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: padding.top + 400,
-              // Drifts up at half the speed of the page, for a little depth.
-              child: ListenableBuilder(
-                listenable: _scrollController,
-                builder: (context, child) => Transform.translate(
-                  offset: Offset(
-                      0,
-                      _scrollController.hasClients
-                          ? -_scrollController.offset / 2
-                          : 0),
-                  child: child,
+        body: CustomScrollView(
+          controller: _scrollController,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: LargeTitleBarDelegate(
+                title: _title,
+                topInset: padding.top,
+                controller: _scrollController,
+                trailing: Padding(
+                  padding: EdgeInsets.only(right: padding.right),
+                  child: _BarActions(items: _menuItems()),
                 ),
-                child: const ProfileAurora(),
+                titleRevealOffset: _NotesHeader.scrolledAway,
               ),
             ),
-            CustomScrollView(
-              controller: _scrollController,
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              slivers: [
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: LargeTitleBarDelegate(
-                    title: _title,
-                    topInset: padding.top,
-                    controller: _scrollController,
-                    trailing: Padding(
-                      padding: EdgeInsets.only(right: padding.right),
-                      child: _BarActions(items: _menuItems()),
-                    ),
-                    titleRevealOffset: _NotesHeader.scrolledAway,
-                  ),
-                ),
-                SliverPadding(
-                  padding:
-                      EdgeInsets.only(left: gutterLeft, right: gutterRight),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const RiseIn(child: _NotesHeader()),
-                        // Only while there's something to search, or a search
-                        // to clear.
-                        if (_loaded && (hasNotes || _query.isNotEmpty))
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: RiseIn(
-                              delay: RiseIn.stagger,
-                              child: NotesSearchField(
-                                controller: _searchController,
-                                focusNode: _searchFocusNode,
-                                onChanged: _search,
-                              ),
-                            ),
+            SliverPadding(
+              padding: EdgeInsets.only(left: gutterLeft, right: gutterRight),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const RiseIn(child: _NotesHeader()),
+                    // Only while there's something to search, or a search
+                    // to clear.
+                    if (_loaded && (hasNotes || _query.isNotEmpty))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: RiseIn(
+                          delay: RiseIn.stagger,
+                          child: NotesSearchField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            onChanged: _search,
                           ),
-                      ],
-                    ),
-                  ),
+                        ),
+                      ),
+                  ],
                 ),
-                if (_loaded)
-                  _NoteGridSliver(
-                    query: _query,
-                    padding: EdgeInsets.fromLTRB(
-                        gutterLeft, 20, gutterRight, bottomInset),
-                    gridDelay: _gridDelay,
-                    onOpen: _openNote,
-                    onEdit: _editNote,
-                  ),
-              ],
+              ),
             ),
+            if (_loaded)
+              _NoteGridSliver(
+                query: _query,
+                padding: EdgeInsets.fromLTRB(
+                    gutterLeft, 20, gutterRight, bottomInset),
+                gridDelay: _gridDelay,
+                onOpen: _openNote,
+                onEdit: _editNote,
+              ),
           ],
         ),
       ),

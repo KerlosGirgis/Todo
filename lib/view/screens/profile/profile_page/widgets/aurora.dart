@@ -7,17 +7,9 @@ const _highlight = Color(0xff40C4FF);
 const _violet = Color(0xff7C4DFF);
 
 /// Soft glows of the app's blues behind the top of the profile page, which
-/// melt into the page's background further down. Other pages can light it
-/// in [colors] of their own.
+/// melt into the page's background further down.
 class ProfileAurora extends StatelessWidget {
-  const ProfileAurora({super.key, this.colors = appColors});
-
-  /// The app's blues.
-  static const appColors = (_accent, _highlight, _violet);
-
-  /// The largest glow's colour, at the top left, then the one at the top
-  /// right, and the one lower down in the middle.
-  final (Color, Color, Color) colors;
+  const ProfileAurora({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +18,6 @@ class ProfileAurora extends StatelessWidget {
       child: CustomPaint(
         size: Size.infinite,
         painter: _AuroraPainter(
-          colors: colors,
           // Colour carries further on a light page, so it's toned down there.
           strength: isDarkTheme ? 1 : 0.6,
           background: context.colors.pageBackground,
@@ -38,12 +29,10 @@ class ProfileAurora extends StatelessWidget {
 
 class _AuroraPainter extends CustomPainter {
   const _AuroraPainter({
-    required this.colors,
     required this.strength,
     required this.background,
   });
 
-  final (Color, Color, Color) colors;
   final double strength;
   final Color background;
 
@@ -65,10 +54,9 @@ class _AuroraPainter extends CustomPainter {
 
     final width = size.width;
     final height = size.height;
-    final (main, highlight, accent) = colors;
-    glow(Offset(width * 0.1, height * 0.2), width * 0.85, main, 0.42);
-    glow(Offset(width * 0.95, height * 0.08), width * 0.7, highlight, 0.3);
-    glow(Offset(width * 0.55, height * 0.62), width * 0.6, accent, 0.2);
+    glow(Offset(width * 0.1, height * 0.2), width * 0.85, _accent, 0.42);
+    glow(Offset(width * 0.95, height * 0.08), width * 0.7, _highlight, 0.3);
+    glow(Offset(width * 0.55, height * 0.62), width * 0.6, _violet, 0.2);
     canvas.drawRect(
       bounds,
       Paint()
@@ -83,7 +71,5 @@ class _AuroraPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_AuroraPainter oldDelegate) =>
-      oldDelegate.colors != colors ||
-      oldDelegate.strength != strength ||
-      oldDelegate.background != background;
+      oldDelegate.strength != strength || oldDelegate.background != background;
 }

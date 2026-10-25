@@ -20,7 +20,6 @@ import '../../../../widgets/rise_in.dart';
 import '../../../notes/notes_page/screen/notes_page.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
-import '../../../profile/profile_page/widgets/aurora.dart';
 import '../widgets/empty_tasks.dart';
 import '../widgets/form_dialog.dart';
 import '../widgets/task_card.dart';
@@ -113,61 +112,38 @@ class _TodoPageState extends State<TodoPage> {
     final padding = MediaQuery.paddingOf(context);
     // Keeps the cards a comfortable width on tablets.
     final gutter = math.max(16.0, (MediaQuery.sizeOf(context).width - 640) / 2);
-    return Stack(
-      children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: padding.top + 400,
-          // Drifts up at half the speed of the page, for a little depth.
-          child: ListenableBuilder(
-            listenable: _scrollController,
-            builder: (context, child) => Transform.translate(
-              offset: Offset(
-                  0,
-                  _scrollController.hasClients
-                      ? -_scrollController.offset / 2
-                      : 0),
-              child: child,
-            ),
-            child: const ProfileAurora(),
+    return CustomScrollView(
+      controller: _scrollController,
+      slivers: [
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: LargeTitleBarDelegate(
+            title: _title,
+            topInset: padding.top,
+            controller: _scrollController,
+            trailing: _BarActions(items: _menuItems()),
+            titleRevealOffset: _TodoHeader.scrolledAway,
           ),
         ),
-        CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: LargeTitleBarDelegate(
-                title: _title,
-                topInset: padding.top,
-                controller: _scrollController,
-                trailing: _BarActions(items: _menuItems()),
-                titleRevealOffset: _TodoHeader.scrolledAway,
-              ),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: gutter),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const RiseIn(child: _TodoHeader()),
+                if (_loaded) _Overview(onFilterChanged: _changeFilter),
+              ],
             ),
-            SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: gutter),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const RiseIn(child: _TodoHeader()),
-                    if (_loaded) _Overview(onFilterChanged: _changeFilter),
-                  ],
-                ),
-              ),
-            ),
-            if (_loaded)
-              _TaskListSliver(
-                padding: EdgeInsets.fromLTRB(gutter, 20, gutter,
-                    PageActionButtons.height + 24 + padding.bottom),
-                listDelay: _listDelay,
-                onEdit: _editTask,
-              ),
-          ],
+          ),
         ),
+        if (_loaded)
+          _TaskListSliver(
+            padding: EdgeInsets.fromLTRB(gutter, 20, gutter,
+                PageActionButtons.height + 24 + padding.bottom),
+            listDelay: _listDelay,
+            onEdit: _editTask,
+          ),
       ],
     );
   }
@@ -178,36 +154,30 @@ class _TodoPageState extends State<TodoPage> {
       children: [
         Expanded(
           flex: 5,
-          child: Stack(
-            children: [
-              const Positioned.fill(child: ProfileAurora()),
-              CustomScrollView(
-                controller: _overviewPaneScrollController,
-                slivers: [
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: LargeTitleBarDelegate(
-                      title: _title,
-                      topInset: padding.top,
-                      controller: _overviewPaneScrollController,
-                      titleRevealOffset: _TodoHeader.scrolledAway,
-                    ),
+          child: CustomScrollView(
+            controller: _overviewPaneScrollController,
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: LargeTitleBarDelegate(
+                  title: _title,
+                  topInset: padding.top,
+                  controller: _overviewPaneScrollController,
+                  titleRevealOffset: _TodoHeader.scrolledAway,
+                ),
+              ),
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                    16 + padding.left, 0, 16, 24 + padding.bottom),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const RiseIn(child: _TodoHeader()),
+                      if (_loaded) _Overview(onFilterChanged: _changeFilter),
+                    ],
                   ),
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
-                        16 + padding.left, 0, 16, 24 + padding.bottom),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const RiseIn(child: _TodoHeader()),
-                          if (_loaded)
-                            _Overview(onFilterChanged: _changeFilter),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
