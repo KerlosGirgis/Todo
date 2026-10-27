@@ -52,3 +52,21 @@ class Info extends Result {
     onInfo(message);
   }
 }
+
+/// What came of asking for something behind a lock: the thing, once the lock
+/// let the user through, or why it didn't.
+sealed class Access<T> {
+  const Access();
+}
+
+class Granted<T> extends Access<T> {
+  final T value;
+
+  const Granted(this.value);
+}
+
+class Denied<T> extends Access<T> {
+  final String message;
+
+  const Denied(this.message);
+}

@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../../../core/utils/note_document_utils.dart';
 import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
 import '../../../../../view_model/user_view_model.dart';
@@ -21,11 +20,15 @@ class NoteCard extends StatefulWidget {
   const NoteCard({
     super.key,
     required this.note,
+    required this.preview,
     required this.onTap,
     required this.onLongPress,
   });
 
   final Note note;
+
+  /// The start of the note's text, or null while it's locked.
+  final NotePreview? preview;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -77,6 +80,7 @@ class _NoteCardState extends State<NoteCard> {
           highlightColor: onCover.withValues(alpha: 0.06),
           child: NoteCardContent(
             note: note,
+            preview: widget.preview,
             titleSize: titleSize,
             casualFont: casualFont,
             heroTitle: true,
@@ -97,12 +101,17 @@ class NoteCardContent extends StatelessWidget {
   const NoteCardContent({
     super.key,
     required this.note,
+    required this.preview,
     required this.titleSize,
     required this.casualFont,
     this.heroTitle = false,
   });
 
   final Note note;
+
+  /// The start of the note's text, set out as the editor sets it, or null
+  /// while it's locked, as nothing of its text is shown then.
+  final NotePreview? preview;
 
   /// The user's size for notes' titles, as a multiple of the default one.
   final double titleSize;
@@ -124,8 +133,7 @@ class NoteCardContent extends StatelessWidget {
       height: 1.15,
       letterSpacing: -0.5 * titleSize,
     );
-    // Nothing of a locked note's text is read, let alone shown.
-    final preview = note.locked ? null : NoteDocumentUtils.preview(note);
+    final preview = this.preview;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: LayoutBuilder(

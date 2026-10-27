@@ -1,14 +1,16 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:ui' show Color;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_quill/flutter_quill.dart' show Document;
 import 'package:todo/core/result.dart';
 import 'package:todo/repositories/notes_repository.dart';
 import '../core/prompts.dart';
 import '../core/utils/note_document_utils.dart';
 import '../models/app_lock.dart';
 import '../models/note.dart';
+import '../models/note_preview.dart';
 import '../services/authentication_service.dart';
 import '../services/backup_service.dart';
 import '../services/file_service.dart';
@@ -30,8 +32,13 @@ class NotesViewModel with ChangeNotifier {
         _backupService = backupService ?? BackupService(),
         _fileService = fileService ?? FileService();
 
+  /// The notes, with all they say.
   List<Note> _notes = [];
-  List<Note> get notes => UnmodifiableListView(_notes);
+
+  /// The notes as the pages get them: without a locked note's text, which
+  /// only its editor gets, once its lock lets the user through.
+  List<Note> _shown = [];
+  List<Note> get notes => UnmodifiableListView(_shown);
 
   int get lockedCount => _notes.where((note) => note.locked).length;
 
@@ -48,12 +55,33 @@ class NotesViewModel with ChangeNotifier {
 
   Future<void> get() async {
     _notes = await _notesRepository.getNotes();
-    notifyListeners();
+    _publish();
     if (!_widgetChecked) {
       _widgetChecked = true;
       await _checkWidget();
     }
   }
+
+  /// Shows the pages the notes as they are now.
+  void _publish() {
+    _shown = [
+      for (final note in _notes) note.locked ? note.withoutText() : note,
+    ];
+    notifyListeners();
+  }
+
+  /// Puts [saved] in place of the note it's a newer copy of, without reading
+  /// all the notes in again.
+  void _replace(Note saved) {
+    final index = _notes.indexWhere((note) => note.id == saved.id);
+    if (index == -1) return;
+    _notes[index] = saved;
+    _publish();
+  }
+
+  /// [note], one of [notes], with all it says, or null when it's gone.
+  Note? _full(Note note) =>
+      _notes.where((each) => each.id == note.id).firstOrNull;
 
   /// The notes that [query] finds: those with it in their title or text. A
   /// locked note's text isn't searched, so a search can't give away what's in
@@ -62,16 +90,102 @@ class NotesViewModel with ChangeNotifier {
     final term = query.trim().toLowerCase();
     if (term.isEmpty) return notes;
     return [
-      for (final note in _notes)
+      for (final note in _shown)
         if (note.title.toLowerCase().contains(term) ||
             (!note.locked && note.body.toLowerCase().contains(term)))
           note,
     ];
   }
 
+  /// The start of [note]'s text as its card shows it, or null for a locked
+  /// note, as nothing of what it says is shown.
+  NotePreview? previewOf(Note note) =>
+      note.locked ? null : NoteDocumentUtils.preview(note);
+
+  /// A form for a new note.
+  NoteDraft newDraft() => NoteDraft._(this, null);
+
+  /// A form that changes [note]'s title, colours and lock, once its lock lets
+  /// the user through: see [_passNoteLock].
+  Future<Access<NoteDraft>> edit(Note note,
+      {required PasswordPrompt askForPassword}) async {
+    final unlocked = await _unlock(note, askForPassword);
+    return switch (unlocked) {
+      Granted(:final value) => Granted(NoteDraft._(this, value)),
+      Denied(:final message) => Denied(message),
+    };
+  }
+
+  /// [note], open to be read and written, once its lock lets the user
+  /// through: see [_passNoteLock].
+  Future<Access<NoteEditorViewModel>> open(Note note,
+      {required PasswordPrompt askForPassword}) async {
+    final unlocked = await _unlock(note, askForPassword);
+    return switch (unlocked) {
+      Granted(:final value) => Granted(NoteEditorViewModel._(this, value)),
+      Denied(:final message) => Denied(message),
+    };
+  }
+
+  /// [note] with all it says, once its lock lets the user through.
+  Future<Access<Note>> _unlock(Note note, PasswordPrompt askForPassword) async {
+    final full = _full(note);
+    if (full == null) return const Denied("Couldn't find the note");
+    final result = await _authenticate(full, askForPassword: askForPassword);
+    if (result is Failure) return Denied(result.message);
+    // As it is now, in case the notes were read in again meanwhile.
+    final unlocked = _full(note);
+    if (unlocked == null) return const Denied("Couldn't find the note");
+    return Granted(unlocked);
+  }
+
+  /// Adds the note [draft] has, or saves the changes to the one it's for.
+  /// Locking a note takes it off the widget.
+  Future<Result> _save(NoteDraft draft) async {
+    // All of it now, as the form may close before the note is saved.
+    final note = draft.note;
+    final title = draft.title.trim();
+    final (titleColor, coverColor, locked) =
+        (draft.titleColor, draft.coverColor, draft.locked);
+    if (title.isEmpty) return Info("Give the note a title");
+    try {
+      if (note == null) {
+        await _notesRepository.insertNote(Note(
+          title: title,
+          titleColor: titleColor,
+          coverColor: coverColor,
+          locked: locked,
+        ));
+        await get();
+        return Info("Note Added");
+      }
+      await _notesRepository.updateNote(note.copyWith(
+        title: title,
+        titleColor: titleColor,
+        coverColor: coverColor,
+        locked: locked,
+      ));
+      if (locked) await _takeOffWidget(note.id);
+      await get();
+      return Info("Note Updated");
+    } catch (e) {
+      return Failure("Couldn't save the note");
+    }
+  }
+
+  /// Saves [content], delta ops, as [note]'s text, keeping its title, colours
+  /// and lock, and returns the note as it's saved.
+  Future<Note> _saveContent(
+      Note note, List<Map<String, dynamic>> content) async {
+    final saved = NoteDocumentUtils.withContent(note, content);
+    await _notesRepository.updateNote(saved);
+    _replace(saved);
+    return saved;
+  }
+
   /// Shows [note]'s text on the home screen's widget, where anyone can read
   /// it, so never a locked note's.
-  Future<Result> showOnWidget(Note note) async {
+  Future<Result> _showOnWidget(Note note) async {
     if (note.locked) {
       return Info("Locked notes can't go on the widget");
     }
@@ -164,65 +278,16 @@ class NotesViewModel with ChangeNotifier {
     }
   }
 
-  /// Adds a note with nothing written in it yet, in colours as 0xAARRGGBB.
-  Future<void> addNote({
-    required String title,
-    required int titleColor,
-    required int coverColor,
-    required bool locked,
-  }) async {
-    await _notesRepository.insertNote(Note(
-      title: title,
-      titleColor: titleColor,
-      coverColor: coverColor,
-      locked: locked,
-    ));
-    get();
-  }
-
-  /// Changes [note]'s title, colours and lock, keeping its text. Locking it
-  /// takes it off the widget.
-  Future<void> updateNote(
-    Note note, {
-    required String title,
-    required int titleColor,
-    required int coverColor,
-    required bool locked,
-  }) async {
-    await _update(note.copyWith(
-      title: title,
-      titleColor: titleColor,
-      coverColor: coverColor,
-      locked: locked,
-    ));
-    if (locked) await _takeOffWidget(note.id);
-  }
-
-  /// Saves [document] as [note]'s text, keeping its title, colours and lock,
-  /// and returns the note as it's saved.
-  Future<Note> updateText(Note note, Document document) async {
-    final saved = note.copyWith(
-      body: NoteDocumentUtils.toBody(document),
-      delta: jsonEncode(document.toDelta().toJson()),
-    );
-    await _update(saved);
-    return saved;
-  }
-
-  Future<void> _update(Note note) async {
-    await _notesRepository.updateNote(note);
-    get();
-  }
-
-  Future<Result> deleteNote(Note note,
+  /// Deletes [note], once its lock lets the user through.
+  Future<Result> _delete(Note note,
       {required PasswordPrompt askForPassword}) async {
     final isAuthenticated =
-        await authenticate(note, askForPassword: askForPassword);
+        await _authenticate(note, askForPassword: askForPassword);
     if(isAuthenticated is Success){
       try{
         await _notesRepository.deleteNote(note.id!);
         await _takeOffWidget(note.id);
-        get();
+        await get();
         return Info("Note Deleted");
       }
       catch(e){
@@ -234,11 +299,6 @@ class NotesViewModel with ChangeNotifier {
       return isAuthenticated;
     }
   }
-
-  /// Checks it's the user before a note is locked, as the lock will:
-  /// see [_passNoteLock].
-  Future<Result> confirmLock({required PasswordPrompt askForPassword}) =>
-      _passNoteLock(askForPassword);
 
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
     final oldNote = _notes.removeAt(oldIndex);
@@ -338,7 +398,7 @@ class NotesViewModel with ChangeNotifier {
       }
       // Replacing the notes deleted the one on the widget, whichever it was.
       if (overwrite) await _clearWidget();
-      get();
+      await get();
       return Success("Data Restored");
     } on WrongBackupKindException {
       return Failure("That's a backup of tasks, not notes");
@@ -348,7 +408,7 @@ class NotesViewModel with ChangeNotifier {
   }
 
   /// Checks it's the user, for a locked [note]: see [_passNoteLock].
-  Future<Result> authenticate(Note note,
+  Future<Result> _authenticate(Note note,
       {required PasswordPrompt askForPassword}) async {
     if (note.locked) {
       return _passNoteLock(askForPassword);
@@ -384,4 +444,195 @@ class NotesViewModel with ChangeNotifier {
     }
   }
 
+}
+
+/// A note as its form has it, being added or having its title, colours and
+/// lock changed, with the form's rules: a plain title follows the cover,
+/// and locking the note takes its lock.
+class NoteDraft with ChangeNotifier {
+  NoteDraft._(this._notes, this.note)
+      : _title = note?.title ?? "",
+        _titleColor = note?.titleColor ?? Note.defaultTitleColor,
+        _coverColor = note?.coverColor ?? Note.defaultCoverColor,
+        _locked = note?.locked ?? false;
+
+  final NotesViewModel _notes;
+
+  /// The note being changed, with all it says, or null for a new one.
+  final Note? note;
+
+  bool get adding => note == null;
+
+  String _title;
+  String get title => _title;
+
+  /// The colours, as 0xAARRGGBB.
+  int _titleColor;
+  int get titleColor => _titleColor;
+  int _coverColor;
+  int get coverColor => _coverColor;
+  bool _locked;
+  bool get locked => _locked;
+
+  /// The title colours that aren't colours, which follow the cover.
+  static const _white = 0xFFFFFFFF;
+  static const _graphite = 0xFF1E1E1E;
+  static const _black = 0xFF000000;
+
+  /// Whether there's a title to save the note with.
+  bool get canSave => _title.trim().isNotEmpty;
+
+  void setTitle(String title) {
+    final could = canSave;
+    _title = title;
+    if (canSave != could) notifyListeners();
+  }
+
+  /// Sets the cover's colour. A white, graphite or black title follows it,
+  /// so it stays readable; a colourful one was picked on purpose, and stays.
+  void setCoverColor(int color) {
+    _coverColor = color;
+    if (_titleColor == _white ||
+        _titleColor == _graphite ||
+        _titleColor == _black) {
+      _titleColor = _isDark(color) ? _white : _graphite;
+    }
+    notifyListeners();
+  }
+
+  void setTitleColor(int color) {
+    _titleColor = color;
+    notifyListeners();
+  }
+
+  /// Whether white reads better than black on [color], as the note's card
+  /// decides the colour of its text, after ThemeData.estimateBrightnessForColor.
+  static bool _isDark(int color) {
+    final luminance = Color(color).computeLuminance();
+    return (luminance + 0.05) * (luminance + 0.05) <= 0.15;
+  }
+
+  /// Locks the note, once its lock lets the user through, as it will each
+  /// time the note opens, or unlocks it, which the note's lock let them do
+  /// as they opened it to change it. Why the note couldn't be locked, or
+  /// null.
+  Future<Result?> setLocked(bool locked,
+      {required PasswordPrompt askForPassword}) async {
+    if (locked && !_locked) {
+      final result = await _notes._passNoteLock(askForPassword);
+      if (result is! Success) return result;
+    }
+    _locked = locked;
+    notifyListeners();
+    return null;
+  }
+
+  /// Adds the note, or saves the changes to the one it's for.
+  Future<Result> save() => _notes._save(this);
+}
+
+/// A note open in its editor, with all it says: its text, saved as it's
+/// written while the user has auto-save on, and what can be done with the
+/// note there.
+class NoteEditorViewModel {
+  NoteEditorViewModel._(this._notes, this._note)
+      : content = NoteDocumentUtils.contentOf(_note) {
+    _edited = content;
+    _editedJson = _savedJson = jsonEncode(content);
+  }
+
+  /// How long the writing pauses before it's saved.
+  static const autoSaveDelay = Duration(milliseconds: 500);
+
+  final NotesViewModel _notes;
+  Note _note;
+
+  /// The note as it was last saved.
+  Note get note => _note;
+
+  /// The note's text as it opened, with its formatting, as Quill delta ops,
+  /// for the editor to start from.
+  final List<Map<String, dynamic>> content;
+
+  /// The text as it's been written, and as it was last saved, as JSON.
+  late List<Map<String, dynamic>> _edited;
+  late String _editedJson;
+  late String _savedJson;
+
+  final _unsaved = ValueNotifier(false);
+
+  /// Whether there are changes since the note was last saved.
+  ValueListenable<bool> get unsaved => _unsaved;
+
+  final _failures = StreamController<String>.broadcast();
+
+  /// Why a save didn't go through, each time one doesn't.
+  Stream<String> get failures => _failures.stream;
+
+  Timer? _autoSave;
+
+  /// The saves in hand, which go one at a time, in order.
+  Future<void> _saving = Future.value();
+  bool _disposed = false;
+
+  /// Takes [content], the editor's text as delta ops, as it's written. With
+  /// [autoSave] on, it's saved once the writing pauses.
+  void edit(List<Map<String, dynamic>> content, {required bool autoSave}) {
+    _edited = content;
+    _editedJson = jsonEncode(content);
+    _unsaved.value = _editedJson != _savedJson;
+    _autoSave?.cancel();
+    _autoSave =
+        autoSave && _unsaved.value ? Timer(autoSaveDelay, save) : null;
+  }
+
+  /// Saves the text as it is now.
+  Future<void> save() {
+    _autoSave?.cancel();
+    _autoSave = null;
+    return _saving = _saving.then((_) => _write());
+  }
+
+  /// Saves straight away what would be saved once the writing paused, as
+  /// when the app is put away.
+  Future<void> flush() => _autoSave == null ? _saving : save();
+
+  Future<void> _write() async {
+    final (content, json) = (_edited, _editedJson);
+    if (json == _savedJson) return;
+    try {
+      _note = await _notes._saveContent(_note, content);
+      _savedJson = json;
+    } catch (e) {
+      if (!_disposed) {
+        _failures.add("Sorry, Something went wrong, note not saved");
+      }
+    }
+    // Still unsaved if it was written in while it saved.
+    if (!_disposed) _unsaved.value = _editedJson != _savedJson;
+  }
+
+  /// Shows the note's saved text on the home screen's widget.
+  Future<Result> showOnWidget() => _notes._showOnWidget(_note);
+
+  /// Deletes the note, once its lock lets the user through, with
+  /// [askForPassword] for the App Lock's password on a phone that can't take
+  /// a fingerprint.
+  Future<Result> delete({required PasswordPrompt askForPassword}) async {
+    final result = await _notes._delete(_note, askForPassword: askForPassword);
+    if (result is! Failure) {
+      _autoSave?.cancel();
+      _autoSave = null;
+    }
+    return result;
+  }
+
+  /// Saves what's waiting to be saved, then lets the editor go.
+  void dispose() {
+    _disposed = true;
+    flush().whenComplete(() {
+      _unsaved.dispose();
+      _failures.close();
+    });
+  }
 }

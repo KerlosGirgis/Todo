@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
@@ -13,7 +12,6 @@ import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/widgets/profile_button.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
-import 'note_card.dart';
 
 const _accent = Color(0xff3D5AFE);
 
@@ -22,9 +20,10 @@ const _pink = Color(0xffFF2D55);
 const _indigo = Color(0xff5856D6);
 const _green = Color(0xff34C759);
 
-/// A new note's colours: a white title on graphite.
-const _graphite = Color(0xff1E1E1E);
-const _white = Color(0xffFFFFFF);
+/// The palette's plain colours, which a new note has: a white title on
+/// graphite.
+const _graphite = Color(Note.defaultCoverColor);
+const _white = Color(Note.defaultTitleColor);
 
 /// The colours on offer for a note's cover and title: iOS's system colours,
 /// with the app's own blue among them, after graphite and white.
@@ -45,25 +44,23 @@ const _palette = <(String, Color)>[
 /// One of the note's two colours.
 enum _ColorTarget { cover, title }
 
-/// Adds a note, or edits [note] when there is one, as the task dialog does:
+/// Adds a note, or edits the one [draft] is for, as the task dialog does:
 /// its title, then its colours and lock in rows like the profile page's
-/// settings. A colour's row opens the palette under it.
+/// settings. A colour's row opens the palette under it. The dialog lets
+/// [draft] go once it closes.
 class NoteDialog extends StatefulWidget {
-  const NoteDialog({super.key, this.note});
+  const NoteDialog({super.key, required this.draft});
 
-  /// The note to edit, or null for a new one.
-  final Note? note;
+  final NoteDraft draft;
 
   @override
   State<NoteDialog> createState() => _NoteDialogState();
 }
 
 class _NoteDialogState extends State<NoteDialog> {
-  late final _titleController = TextEditingController(text: widget.note?.title);
-  late Color _cover = Color(widget.note?.coverColor ?? _graphite.toARGB32());
-  late Color _titleColor =
-      Color(widget.note?.titleColor ?? _white.toARGB32());
-  late bool _locked = widget.note?.locked ?? false;
+  late final _titleController = TextEditingController(text: _draft.title);
+
+  NoteDraft get _draft => widget.draft;
 
   /// The colour whose palette is open under its row, if either's is.
   _ColorTarget? _picking;
@@ -71,6 +68,7 @@ class _NoteDialogState extends State<NoteDialog> {
   @override
   void dispose() {
     _titleController.dispose();
+    _draft.dispose();
     super.dispose();
   }
 
@@ -80,25 +78,22 @@ class _NoteDialogState extends State<NoteDialog> {
     setState(() => _picking = _picking == target ? null : target);
   }
 
+  Color _colorOf(_ColorTarget target) => Color(switch (target) {
+        _ColorTarget.cover => _draft.coverColor,
+        _ColorTarget.title => _draft.titleColor,
+      });
+
   void _setColor(_ColorTarget target, Color color) {
-    setState(() {
-      switch (target) {
-        case _ColorTarget.cover:
-          _cover = color;
-          // A plain title follows the cover, so it stays readable; a
-          // colourful one was picked on purpose, and stays.
-          if (_isPlain(_titleColor)) {
-            _titleColor =
-                onCoverColor(color) == Colors.white ? _white : _graphite;
-          }
-        case _ColorTarget.title:
-          _titleColor = color;
-      }
-    });
+    switch (target) {
+      case _ColorTarget.cover:
+        _draft.setCoverColor(color.toARGB32());
+      case _ColorTarget.title:
+        _draft.setTitleColor(color.toARGB32());
+    }
   }
 
   Future<void> _pickCustomColor(_ColorTarget target) async {
-    final current = target == _ColorTarget.cover ? _cover : _titleColor;
+    final current = _colorOf(target);
     final picked = await showColorPickerDialog(
       context,
       current,
@@ -167,130 +162,106 @@ class _NoteDialogState extends State<NoteDialog> {
   }
 
   Future<void> _toggleLock() async {
-    if (_locked) {
-      setState(() => _locked = false);
-      return;
-    }
-    final result = await context
-        .read<NotesViewModel>()
-        .confirmLock(askForPassword: noteLockPasswordPrompt(context));
+    final result = await _draft.setLocked(!_draft.locked,
+        askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) return;
-    result.when(
-      onSuccess: (_) => setState(() => _locked = true),
+    result?.when(
+      onSuccess: (_) {},
       onFailure: FeedbackToast.error,
       onInfo: FeedbackToast.info,
     );
   }
 
   Future<void> _save() async {
-    final title = _titleController.text.trim();
-    if (title.isEmpty) return;
-    final notes = context.read<NotesViewModel>();
     Navigator.of(context).pop();
-    final note = widget.note;
-    if (note == null) {
-      await notes.addNote(
-        title: title,
-        titleColor: _titleColor.toARGB32(),
-        coverColor: _cover.toARGB32(),
-        locked: _locked,
-      );
-      FeedbackToast.info("Note Added");
-    } else {
-      await notes.updateNote(
-        note,
-        title: title,
-        titleColor: _titleColor.toARGB32(),
-        coverColor: _cover.toARGB32(),
-        locked: _locked,
-      );
-      FeedbackToast.info("Note Updated");
-    }
+    final result = await _draft.save();
+    result.when(
+      onSuccess: FeedbackToast.success,
+      onFailure: FeedbackToast.error,
+      onInfo: FeedbackToast.info,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final ink = context.colors.wB;
-    final adding = widget.note == null;
-    return FormDialog(
-      icon: adding ? Icons.note_add_rounded : Icons.edit_rounded,
-      title: adding ? "New Note" : "Edit Note",
-      subtitle:
-          adding ? "What's this note about?" : "Change its details, then save.",
-      content: [
-        TextField(
-          controller: _titleController,
-          // Ready to type straight away when adding.
-          autofocus: adding,
-          maxLines: 1,
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.done,
-          cursorColor: _accent,
-          style: TextStyle(
-            color: ink,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            letterSpacing: -0.2,
+    final adding = _draft.adding;
+    return ListenableBuilder(
+      listenable: _draft,
+      builder: (context, child) => FormDialog(
+        icon: adding ? Icons.note_add_rounded : Icons.edit_rounded,
+        title: adding ? "New Note" : "Edit Note",
+        subtitle: adding
+            ? "What's this note about?"
+            : "Change its details, then save.",
+        content: [
+          TextField(
+            controller: _titleController,
+            onChanged: _draft.setTitle,
+            // Ready to type straight away when adding.
+            autofocus: adding,
+            maxLines: 1,
+            textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.done,
+            cursorColor: _accent,
+            style: TextStyle(
+              color: ink,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              letterSpacing: -0.2,
+            ),
+            decoration: formFieldDecoration(context, hint: "Title"),
           ),
-          decoration: formFieldDecoration(context, hint: "Title"),
-        ),
-        const SizedBox(height: 16),
-        FormDialogGroup(
-          children: [
-            _ColorTile(
-              icon: Icons.palette_rounded,
-              color: _pink,
-              title: "Cover",
-              value: _cover,
-              open: _picking == _ColorTarget.cover,
-              onTap: () => _togglePalette(_ColorTarget.cover),
-              onSelected: (color) => _setColor(_ColorTarget.cover, color),
-              onCustom: () => _pickCustomColor(_ColorTarget.cover),
-            ),
-            _ColorTile(
-              icon: Icons.format_color_text_rounded,
-              color: _indigo,
-              title: "Title Color",
-              value: _titleColor,
-              open: _picking == _ColorTarget.title,
-              onTap: () => _togglePalette(_ColorTarget.title),
-              onSelected: (color) => _setColor(_ColorTarget.title, color),
-              onCustom: () => _pickCustomColor(_ColorTarget.title),
-            ),
-            SettingsSwitchTile(
-              icon: Icons.fingerprint_rounded,
-              color: _green,
-              title: "Lock Note",
-              subtitle: const Text("Open it with your fingerprint"),
-              value: _locked,
-              onToggle: _toggleLock,
-            ),
-          ],
-        ),
-      ],
-      actions: [
-        ProfileButton(
-          label: "Cancel",
-          tinted: true,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        // Only once there's a title to save.
-        ListenableBuilder(
-          listenable: _titleController,
-          builder: (context, child) => ProfileButton(
+          const SizedBox(height: 16),
+          FormDialogGroup(
+            children: [
+              _ColorTile(
+                icon: Icons.palette_rounded,
+                color: _pink,
+                title: "Cover",
+                value: _colorOf(_ColorTarget.cover),
+                open: _picking == _ColorTarget.cover,
+                onTap: () => _togglePalette(_ColorTarget.cover),
+                onSelected: (color) => _setColor(_ColorTarget.cover, color),
+                onCustom: () => _pickCustomColor(_ColorTarget.cover),
+              ),
+              _ColorTile(
+                icon: Icons.format_color_text_rounded,
+                color: _indigo,
+                title: "Title Color",
+                value: _colorOf(_ColorTarget.title),
+                open: _picking == _ColorTarget.title,
+                onTap: () => _togglePalette(_ColorTarget.title),
+                onSelected: (color) => _setColor(_ColorTarget.title, color),
+                onCustom: () => _pickCustomColor(_ColorTarget.title),
+              ),
+              SettingsSwitchTile(
+                icon: Icons.fingerprint_rounded,
+                color: _green,
+                title: "Lock Note",
+                subtitle: const Text("Open it with your fingerprint"),
+                value: _draft.locked,
+                onToggle: _toggleLock,
+              ),
+            ],
+          ),
+        ],
+        actions: [
+          ProfileButton(
+            label: "Cancel",
+            tinted: true,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          // Only once there's a title to save.
+          ProfileButton(
             label: adding ? "Add" : "Save",
-            onPressed:
-                _titleController.text.trim().isEmpty ? null : () => _save(),
+            onPressed: _draft.canSave ? _save : null,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
-
-/// Whether [color] is white, black or graphite rather than a colour.
-bool _isPlain(Color color) =>
-    color == _white || color == _graphite || color == Colors.black;
 
 /// [color]'s name in the palette, or "Custom" for any other colour.
 String _nameOf(Color color) => _palette

@@ -9,6 +9,7 @@ import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/clock_time.dart';
 import '../../../../../models/note.dart';
+import '../../../../../models/note_preview.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../notes/note_editor_page/widgets/note_styles.dart';
@@ -344,6 +345,7 @@ class _NoteCardPreview extends StatelessWidget {
             color: _accent,
             child: NoteCardContent(
               note: _sampleNote,
+              preview: _samplePreview,
               titleSize: titleSize,
               casualFont: casualFont,
             ),
@@ -356,9 +358,16 @@ class _NoteCardPreview extends StatelessWidget {
 
 final _sampleNote = Note(
   title: "Weekend Plans",
-  body: "Farmers market in the morning, then a long walk by the river.",
+  body: _sampleText,
   coverColor: _accent.toARGB32(),
 );
+
+const _sampleText =
+    "Farmers market in the morning, then a long walk by the river.";
+
+const _samplePreview = NotePreview(lines: [
+  NotePreviewLine(runs: [NotePreviewRun(_sampleText)]),
+]);
 
 /// A note's text as the editor draws it, in as many whole lines as fit, so
 /// that a large size never cuts a line off part way through.

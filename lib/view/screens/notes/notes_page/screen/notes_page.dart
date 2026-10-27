@@ -8,6 +8,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
+import '../../../../../models/note_preview.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/glass_menu.dart';
@@ -239,42 +240,53 @@ class _NotesPageState extends State<NotesPage> {
 
   void _addNote() {
     _searchFocusNode.unfocus();
-    showFormDialog<void>(context, const NoteDialog());
+    final draft =
+        Provider.of<NotesViewModel>(context, listen: false).newDraft();
+    showFormDialog<void>(context, NoteDialog(draft: draft));
   }
 
   /// Opens [note] in the editor, once its lock lets the user through.
   Future<void> _openNote(Note note) async {
-    final result = await Provider.of<NotesViewModel>(context, listen: false)
-        .authenticate(note, askForPassword: noteLockPasswordPrompt(context));
-    if (!mounted) return;
-    if (result is Failure) {
-      FeedbackToast.error(result.message);
+    final access = await Provider.of<NotesViewModel>(context, listen: false)
+        .open(note, askForPassword: noteLockPasswordPrompt(context));
+    if (!mounted) {
+      if (access case Granted(value: final editor)) editor.dispose();
       return;
     }
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 450),
-        reverseTransitionDuration: const Duration(milliseconds: 400),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            NoteEditorPage(note: note),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            _EditorFade(animation: animation, child: child),
-      ),
-    );
+    switch (access) {
+      case Denied(:final message):
+        FeedbackToast.error(message);
+      case Granted(value: final editor):
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 450),
+            reverseTransitionDuration: const Duration(milliseconds: 400),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                NoteEditorPage(editor: editor),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    _EditorFade(animation: animation, child: child),
+          ),
+        );
+    }
   }
 
   /// Opens the dialog that changes [note]'s title, colours and lock, once
   /// its lock lets the user through.
   Future<void> _editNote(Note note) async {
-    final result = await Provider.of<NotesViewModel>(context, listen: false)
-        .authenticate(note, askForPassword: noteLockPasswordPrompt(context));
-    if (!mounted) return;
-    if (result is Failure) {
-      FeedbackToast.error(result.message);
+    final access = await Provider.of<NotesViewModel>(context, listen: false)
+        .edit(note, askForPassword: noteLockPasswordPrompt(context));
+    if (!mounted) {
+      if (access case Granted(value: final draft)) draft.dispose();
       return;
     }
-    showFormDialog<void>(context, NoteDialog(note: note));
+    switch (access) {
+      case Denied(:final message):
+        FeedbackToast.error(message);
+      case Granted(value: final draft):
+        showFormDialog<void>(context, NoteDialog(draft: draft));
+    }
   }
 
   void _openTodo() {
@@ -477,6 +489,7 @@ class _NoteGridSliver extends StatelessWidget {
       sliver: _NoteGrid(
         notes: notes.notes,
         matching: matching,
+        previewOf: notes.previewOf,
         gridDelay: gridDelay,
         onOpen: onOpen,
         onEdit: onEdit,
@@ -489,6 +502,7 @@ class _NoteGrid extends StatefulWidget {
   const _NoteGrid({
     required this.notes,
     required this.matching,
+    required this.previewOf,
     required this.gridDelay,
     required this.onOpen,
     required this.onEdit,
@@ -500,6 +514,9 @@ class _NoteGrid extends StatefulWidget {
 
   /// The notes the search finds, which the grid shows.
   final List<Note> matching;
+
+  /// What a note's card shows of its text.
+  final NotePreview? Function(Note note) previewOf;
   final int gridDelay;
   final ValueChanged<Note> onOpen;
   final ValueChanged<Note> onEdit;
@@ -551,6 +568,7 @@ class _NoteGridState extends State<_NoteGrid> {
               : Duration.zero,
           child: NoteCard(
             note: note,
+            preview: widget.previewOf(note),
             onTap: () => widget.onOpen(note),
             onLongPress: () => widget.onEdit(note),
           ),

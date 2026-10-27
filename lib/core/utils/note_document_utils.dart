@@ -6,12 +6,25 @@ import 'package:flutter_quill/quill_delta.dart';
 import '../../models/note.dart';
 import '../../models/note_preview.dart';
 
-/// Turns a note into the document its editor works on, and that document
-/// back into the plain text the note keeps beside it.
+/// Turns a note's text into the delta ops its editor works on, and those
+/// back into the note, with the plain text it keeps beside them.
 class NoteDocumentUtils {
+  /// [note]'s text with its formatting, as Quill delta ops: as it was saved,
+  /// or as plain text for a note that has no formatting saved yet.
+  static List<Map<String, dynamic>> contentOf(Note note) =>
+      _toDocument(note).toDelta().toJson();
+
+  /// [note] with [content], delta ops, as its text: as [Note.delta], and
+  /// without its formatting as [Note.body].
+  static Note withContent(Note note, List<Map<String, dynamic>> content) =>
+      note.copyWith(
+        body: _toBody(Document.fromJson(content)),
+        delta: jsonEncode(content),
+      );
+
   /// [note]'s text as a document: with its formatting, or as plain text for
   /// a note that has none saved yet.
-  static Document toDocument(Note note) {
+  static Document _toDocument(Note note) {
     final delta = note.delta;
     if (delta != null) {
       try {
@@ -26,7 +39,7 @@ class NoteDocumentUtils {
   /// [document]'s text without its formatting, for [Note.body]. Lists keep
   /// their bullets, numbers and checkboxes, so a checklist still reads as one
   /// on the home screen's widget.
-  static String toBody(Document document) {
+  static String _toBody(Document document) {
     final lines = <String>[];
     for (final (line, number) in _numberedLines(document)) {
       final attributes = line.style.attributes;
@@ -54,7 +67,7 @@ class NoteDocumentUtils {
     // A note with no formatting saved is only its text.
     final key = note.delta ?? "\u0000${note.body}";
     // Taken out and put back, so the ones used least recently go first.
-    final preview = _previews.remove(key) ?? _preview(toDocument(note));
+    final preview = _previews.remove(key) ?? _preview(_toDocument(note));
     _previews[key] = preview;
     if (_previews.length > 64) _previews.remove(_previews.keys.first);
     return preview;

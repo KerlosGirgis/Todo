@@ -6,7 +6,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart' as legacy show TextSelectionThemeData;
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_quill/quill_delta.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -14,8 +13,6 @@ import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
-import '../../../../../core/utils/note_document_utils.dart';
-import '../../../../../models/note.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/glass_icon_button.dart';
@@ -47,11 +44,11 @@ Color _systemRed(bool isDarkTheme) =>
 
 /// Where a note is read and written: its title at the head of its text, on
 /// the page itself, with the tools for writing in a glass toolbar that rides
-/// above the keyboard.
+/// above the keyboard. The page lets [editor] go as it closes.
 class NoteEditorPage extends StatefulWidget {
-  const NoteEditorPage({super.key, required this.note});
+  const NoteEditorPage({super.key, required this.editor});
 
-  final Note note;
+  final NoteEditorViewModel editor;
 
   @override
   State<NoteEditorPage> createState() => _NoteEditorPageState();
@@ -60,7 +57,7 @@ class NoteEditorPage extends StatefulWidget {
 class _NoteEditorPageState extends State<NoteEditorPage> {
   final _scrollController = ScrollController();
   late final _controller = QuillController(
-    document: NoteDocumentUtils.toDocument(widget.note),
+    document: Document.fromJson(_editor.content),
     selection: const TextSelection.collapsed(offset: 0),
     config: const QuillControllerConfig(
       // Text from elsewhere comes in plain, in the note's own style: a web
@@ -72,22 +69,17 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   );
   final _bodyFocusNode = FocusNode();
   late final StreamSubscription<DocChange> _changes;
+  late final StreamSubscription<String> _failures;
 
-  /// The text as it was last saved, which tells whether there are changes
-  /// to save.
-  late Delta _savedDelta;
+  /// Saves what's waiting to be saved as the app is put away, where it may
+  /// be closed.
+  late final AppLifecycleListener _lifecycle;
 
-  /// The note as it was last saved, whose text the home screen's widget
-  /// shows.
-  late Note _saved = widget.note;
-
-  /// Whether there are changes since the note was last saved, which the
-  /// toolbar's save button shows.
-  final _unsaved = ValueNotifier(false);
+  NoteEditorViewModel get _editor => widget.editor;
 
   /// Whether the text is in a language written from right to left, such as
   /// Arabic, which lines it up on the right.
-  late bool _rtl = _isRtl(widget.note.body);
+  late bool _rtl = _isRtl(_editor.note.body);
 
   /// Whether the formatting panel is open, in the keyboard's place.
   bool _formatting = false;
@@ -103,9 +95,9 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   @override
   void initState() {
     super.initState();
-    // Before any change, rather than when it's first compared with one.
-    _savedDelta = _controller.document.toDelta();
     _changes = _controller.changes.listen((_) => _changed());
+    _failures = _editor.failures.listen(FeedbackToast.error);
+    _lifecycle = AppLifecycleListener(onHide: _editor.flush);
     _bodyFocusNode.addListener(_focusChanged);
   }
 
@@ -121,10 +113,13 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   @override
   void dispose() {
     _changes.cancel();
+    _failures.cancel();
+    _lifecycle.dispose();
     _scrollController.dispose();
     _controller.dispose();
     _bodyFocusNode.dispose();
-    _unsaved.dispose();
+    // Saving what's waiting to be saved.
+    _editor.dispose();
     super.dispose();
   }
 
@@ -153,7 +148,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
               user.user.notesTextSize,
               user.user.notesTitleSize,
             ));
-    final note = widget.note;
+    final note = _editor.note;
     final bodyStyle =
         noteBodyStyle(context, size: textSize, casualFont: casualFont);
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -268,7 +263,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                   child: EditorToolbar(
                     controller: _controller,
                     focusNode: _bodyFocusNode,
-                    unsaved: _unsaved,
+                    unsaved: _editor.unsaved,
                     formatting: _formatting,
                     onFormat: _toggleFormatting,
                     showCount: showCount,
@@ -301,10 +296,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   void _changed() {
     final rtl = _isRtl(_controller.document.toPlainText());
     if (rtl != _rtl) setState(() => _rtl = rtl);
-    _unsaved.value = _controller.document.toDelta() != _savedDelta;
-    if (_unsaved.value && context.read<UserViewModel>().user.autoSave) {
-      _save();
-    }
+    _editor.edit(_controller.document.toDelta().toJson(),
+        autoSave: context.read<UserViewModel>().user.autoSave);
   }
 
   void _focusChanged() {
@@ -321,30 +314,14 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
         .invokeMethod<void>(_formatting ? 'TextInput.hide' : 'TextInput.show');
   }
 
-  /// Saves the note's text, as it is now.
-  Future<void> _save() async {
-    final delta = _controller.document.toDelta();
-    try {
-      _saved = await Provider.of<NotesViewModel>(context, listen: false)
-          .updateText(widget.note, _controller.document);
-    } catch (e) {
-      FeedbackToast.error("Sorry, Something went wrong, note not saved");
-      return;
-    }
-    _savedDelta = delta;
-    // Still unsaved if it was written in while it saved.
-    if (mounted) _unsaved.value = _controller.document.toDelta() != delta;
-  }
-
   Future<void> _saveChanges() async {
     HapticFeedback.lightImpact();
-    await _save();
+    await _editor.save();
   }
 
   /// Shows the note's saved text on the home screen's widget.
   Future<void> _showOnWidget() async {
-    final result = await Provider.of<NotesViewModel>(context, listen: false)
-        .showOnWidget(_saved);
+    final result = await _editor.showOnWidget();
     result.when(
       onSuccess: FeedbackToast.success,
       onFailure: FeedbackToast.error,
@@ -353,9 +330,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   }
 
   Future<void> _delete() async {
-    final result = await Provider.of<NotesViewModel>(context, listen: false)
-        .deleteNote(widget.note,
-            askForPassword: noteLockPasswordPrompt(context));
+    final result = await _editor.delete(
+        askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) return;
     switch (result) {
       case Failure(:final message):
