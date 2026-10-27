@@ -8,6 +8,7 @@ import 'package:uuid/v4.dart';
 import '../core/prompts.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/app_lock.dart';
+import '../models/clock_time.dart';
 import '../models/task_filters.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
@@ -16,6 +17,20 @@ import '../services/lock_service.dart';
 import '../services/notification_service.dart';
 
 class TasksViewModel with ChangeNotifier {
+  TasksViewModel({
+    TasksRepository? repository,
+    BackupService? backupService,
+    FileService? fileService,
+    LockService? lockService,
+    AuthenticationService? authService,
+    NotificationService? notificationService,
+  })  : _tasksRepository = repository ?? TasksRepository(),
+        _backupService = backupService ?? BackupService(),
+        _fileService = fileService ?? FileService(),
+        _lockService = lockService ?? LockService(),
+        _authService = authService ?? AuthenticationService(),
+        _notificationService = notificationService ?? NotificationService();
+
   List<TodoItem> _allTasks = [];
   List<TodoItem> _items = [];
 
@@ -24,14 +39,15 @@ class TasksViewModel with ChangeNotifier {
 
   TaskFilter _currentFilter = const AllTasksFilter();
   TaskFilter get currentFilter => _currentFilter;
-  int get finishedTasksCount =>
-      _allTasks.where((task) => task.status == 1).length;
+  int get finishedTasksCount => _allTasks.where((task) => task.done).length;
   int get unfinishedTasksCount =>
-      _allTasks.where((task) => task.status == 0).length;
-  final TasksRepository _tasksRepository = TasksRepository();
-  final BackupService _backupService = BackupService();
-  final FileService _fileService = FileService();
-  final LockService _lockService = LockService();
+      _allTasks.where((task) => !task.done).length;
+  final TasksRepository _tasksRepository;
+  final BackupService _backupService;
+  final FileService _fileService;
+  final LockService _lockService;
+  final AuthenticationService _authService;
+  final NotificationService _notificationService;
 
   /// Whether the reminders have been checked against the App Lock since the
   /// app started.
@@ -102,76 +118,70 @@ class TasksViewModel with ChangeNotifier {
     await fetchTasks();
   }
 
-  /// Changes [task]'s details, and sets its reminder to [notification], as
-  /// [TodoItem.notification] holds it.
+  /// Changes [task]'s details, and sets its [reminder].
   Future<Result> updateTask(
     TodoItem task, {
     required String title,
     required String desc,
-    required String date,
-    required String time,
-    required int notification,
+    required DateTime? day,
+    required ClockTime? time,
+    required Reminder reminder,
   }) async {
     final updated = TodoItem(
       title: title,
       desc: desc,
       id: task.id,
-      status: task.status,
-      date: date,
+      done: task.done,
+      day: day,
       time: time,
       uuid: task.uuid,
-      notification: notification,
+      reminder: reminder,
     );
     await _tasksRepository.updateItem(updated);
     await get();
-    if (updated.notification == 1) {
-      await cancelNotification(updated);
-      return await enableOneTimeNotification(updated);
-    } else if (updated.notification == 2) {
-      await cancelNotification(updated);
-      return  await enableDailyNotification(updated);
-    }
-    else{
-      // In case the reminder was just turned off.
-      await NotificationService.cancelNotification(updated.uuid.hashCode);
-      return Info("Task Updated");
+    switch (updated.reminder) {
+      case Reminder.once:
+        await cancelNotification(updated);
+        return await enableOneTimeNotification(updated);
+      case Reminder.daily:
+        await cancelNotification(updated);
+        return await enableDailyNotification(updated);
+      case Reminder.none:
+        // In case the reminder was just turned off.
+        await _notificationService.cancelNotification(updated.uuid.hashCode);
+        return Info("Task Updated");
     }
   }
 
-  /// Adds a task that isn't done yet, then sets its reminder to
-  /// [notification], as [TodoItem.notification] holds it.
+  /// Adds a task that isn't done yet, then sets its [reminder].
   Future<Result> addTask({
     required String title,
     required String desc,
-    required String date,
-    required String time,
-    required int notification,
+    required DateTime? day,
+    required ClockTime? time,
+    required Reminder reminder,
   }) async {
-    final task = TodoItem(
+    var task = TodoItem(
       title: title,
       desc: desc,
-      status: 0,
-      date: date,
+      day: day,
       time: time,
       uuid: const UuidV4().generate(),
-      notification: 0,
     );
-    task.id = await _tasksRepository.insertItem(task);
+    task = task.copyWith(id: await _tasksRepository.insertItem(task));
     await get();
-    if(notification == 1){
-      return enableOneTimeNotification(task);
-    }
-    else if(notification == 2){
-      return enableDailyNotification(task);
-    }
-    else{
-      return Info("Task Added");
-    }
+    return switch (reminder) {
+      Reminder.once => enableOneTimeNotification(task),
+      // Its day goes, as a daily task has none.
+      Reminder.daily => enableDailyNotification(task),
+      Reminder.none => Info("Task Added"),
+    };
   }
 
   Future<void> dismissTask(int index, int id) async {
-    if (_items[index].notification == 1 || _items[index].notification == 2) {
-      await NotificationService.cancelNotification(_items[index].uuid.hashCode);
+    if (_items[index].reminder != Reminder.none) {
+      await _notificationService
+          .cancelNotification(_items[index].uuid.hashCode);
     }
     _items.removeAt(index);
     notifyListeners();
@@ -180,53 +190,21 @@ class TasksViewModel with ChangeNotifier {
   }
 
   Future<Result> markAsDone(int index) async {
-    if (_items[index].status == 0) {
-      if (_items[index].notification == 1 || _items[index].notification == 2) {
-        await NotificationService.cancelNotification(
-            _items[index].uuid.hashCode);
-        await _tasksRepository.updateItem(
-          TodoItem(
-            title: _items[index].title,
-            desc: _items[index].desc,
-            id: _items[index].id,
-            status: 1,
-            date: _items[index].date,
-            time: _items[index].time,
-            uuid: _items[index].uuid,
-            notification: 0,
-          ),
-        );
+    final task = _items[index];
+    if (!task.done) {
+      if (task.reminder != Reminder.none) {
+        await _notificationService.cancelNotification(task.uuid.hashCode);
+        await _tasksRepository
+            .updateItem(task.copyWith(done: true, reminder: Reminder.none));
         get();
         return Success("Task done");
       } else {
-        _tasksRepository.updateItem(
-          TodoItem(
-            title: _items[index].title,
-            desc: _items[index].desc,
-            id: _items[index].id,
-            status: 1,
-            date: _items[index].date,
-            time: _items[index].time,
-            uuid: _items[index].uuid,
-            notification: _items[index].notification,
-          ),
-        );
+        _tasksRepository.updateItem(task.copyWith(done: true));
         get();
         return Success("Task done");
       }
     } else {
-      _tasksRepository.updateItem(
-        TodoItem(
-          title: _items[index].title,
-          desc: _items[index].desc,
-          id: _items[index].id,
-          status: 0,
-          date: _items[index].date,
-          time: _items[index].time,
-          uuid: _items[index].uuid,
-          notification: _items[index].notification,
-        ),
-      );
+      _tasksRepository.updateItem(task.copyWith(done: false));
       get();
       return Info("Task undone");
     }
@@ -240,7 +218,7 @@ class TasksViewModel with ChangeNotifier {
     String? password,
     required NewBackupPasswordPrompt askForBackupPassword,
   }) async {
-    if (!await AuthenticationService().passesAppLock(password: password)) {
+    if (!await _authService.passesAppLock(password: password)) {
       return Failure("Authentication Failed");
     }
     try {
@@ -313,7 +291,7 @@ class TasksViewModel with ChangeNotifier {
     var oldRemindersOff = true;
     if (replaced) {
       try {
-        await NotificationService.cancelAllNotifications();
+        await _notificationService.cancelAllNotifications();
       } catch (e) {
         oldRemindersOff = false;
       }
@@ -338,35 +316,33 @@ class TasksViewModel with ChangeNotifier {
     return Success("Data Restored");
   }
 
-  /// Sets [item]'s reminder, as [TodoItem.notification] holds it, if it's
-  /// still to come.
+  /// Sets [item]'s reminder, if it's still to come.
   Future<void> _scheduleReminder(TodoItem item) async {
-    if (item.notification == 1) {
-      if (item.time.isNotEmpty && item.date.isNotEmpty) {
-        final scheduledTime =
-            DateTimeUtils.stringToDateTime(item.date, item.time);
-
-        if (scheduledTime.isAfter(DateTime.now()) && item.status == 0) {
-          await NotificationService.scheduleNotification(
+    final time = item.time;
+    if (time == null || item.done) return;
+    switch (item.reminder) {
+      case Reminder.once:
+        final day = item.day;
+        if (day == null) return;
+        final scheduledTime = time.on(day);
+        if (scheduledTime.isAfter(DateTime.now())) {
+          await _notificationService.scheduleNotification(
             item.uuid.hashCode,
             "Don't Forget Your Task!",
             await _reminderText(item),
             scheduledTime,
           );
         }
-      }
-    } else if (item.notification == 2) {
-      // Only its time: a daily reminder has no date.
-      if (item.time.isNotEmpty && item.status == 0) {
-        final time = DateTimeUtils.parseTime(item.time);
-
-        await NotificationService.scheduleDailyNotification(
+      case Reminder.daily:
+        // Only its time: a daily reminder has no day.
+        await _notificationService.scheduleDailyNotification(
           item.uuid.hashCode,
           "Don't Forget Your Task!",
           await _reminderText(item),
           time,
         );
-      }
+      case Reminder.none:
+        break;
     }
   }
 
@@ -394,28 +370,19 @@ class TasksViewModel with ChangeNotifier {
 
   Future<Result> enableOneTimeNotification(TodoItem task) async {
     try {
-      if (task.time.isNotEmpty && task.date.isNotEmpty) {
-        DateTime scheduledTime = DateTimeUtils.stringToDateTime(
-            task.date, task.time);
-        if (scheduledTime.isAfter(DateTime.now()) && task.status == 0) {
-          await NotificationService.scheduleNotification(
+      final day = task.day;
+      final time = task.time;
+      if (day != null && time != null) {
+        DateTime scheduledTime = time.on(day);
+        if (scheduledTime.isAfter(DateTime.now()) && !task.done) {
+          await _notificationService.scheduleNotification(
             task.uuid.hashCode,
             "Don't Forget Your Task!",
             await _reminderText(task),
             scheduledTime,
           );
-          await _tasksRepository.updateItem(
-            TodoItem(
-              title: task.title,
-              desc: task.desc,
-              id: task.id,
-              status: task.status,
-              date: task.date,
-              time: task.time,
-              uuid: task.uuid,
-              notification: 1,
-            ),
-          );
+          await _tasksRepository
+              .updateItem(task.copyWith(reminder: Reminder.once));
           get();
           return Info(
               "Time remaining:\n ${DateTimeUtils.durationToString(scheduledTime.difference(DateTime.now()))}");
@@ -431,26 +398,18 @@ class TasksViewModel with ChangeNotifier {
   }
 
   Future<Result> enableDailyNotification(TodoItem task) async {
-    if (task.time.isNotEmpty) {
+    final time = task.time;
+    if (time != null) {
       try {
-        await NotificationService.scheduleDailyNotification(
+        await _notificationService.scheduleDailyNotification(
           task.uuid.hashCode,
           "Don't Forget Your Task!",
           await _reminderText(task),
-          DateTimeUtils.parseTime(task.time),
+          time,
         );
-        await _tasksRepository.updateItem(
-          TodoItem(
-            title: task.title,
-            desc: task.desc,
-            id: task.id,
-            status: task.status,
-            date: "",
-            time: task.time,
-            uuid: task.uuid,
-            notification: 2,
-          ),
-        );
+        // Without its day, as a daily task has none.
+        await _tasksRepository
+            .updateItem(task.copyWith(reminder: Reminder.daily));
         get();
         return Success("Notification Enabled");
       } catch (e) {
@@ -463,19 +422,9 @@ class TasksViewModel with ChangeNotifier {
 
   Future<Result> cancelNotification(TodoItem task) async {
     try {
-      await NotificationService.cancelNotification(task.uuid.hashCode);
-      await _tasksRepository.updateItem(
-        TodoItem(
-          title: task.title,
-          desc: task.desc,
-          id: task.id,
-          status: task.status,
-          date: task.date,
-          time: task.time,
-          uuid: task.uuid,
-          notification: 0,
-        ),
-      );
+      await _notificationService.cancelNotification(task.uuid.hashCode);
+      await _tasksRepository
+          .updateItem(task.copyWith(reminder: Reminder.none));
       get();
       return Info("Notification Disabled");
     } catch (e) {

@@ -60,9 +60,10 @@ class NoteDialog extends StatefulWidget {
 
 class _NoteDialogState extends State<NoteDialog> {
   late final _titleController = TextEditingController(text: widget.note?.title);
-  late Color _cover = widget.note?.coverColor.toColor ?? _graphite;
-  late Color _titleColor = widget.note?.titleColor.toColor ?? _white;
-  late bool _locked = widget.note?.protected == 1;
+  late Color _cover = Color(widget.note?.coverColor ?? _graphite.toARGB32());
+  late Color _titleColor =
+      Color(widget.note?.titleColor ?? _white.toARGB32());
+  late bool _locked = widget.note?.locked ?? false;
 
   /// The colour whose palette is open under its row, if either's is.
   _ColorTarget? _picking;
@@ -190,8 +191,8 @@ class _NoteDialogState extends State<NoteDialog> {
     if (note == null) {
       await notes.addNote(
         title: title,
-        titleColor: _titleColor.hex,
-        coverColor: _cover.hex,
+        titleColor: _titleColor.toARGB32(),
+        coverColor: _cover.toARGB32(),
         locked: _locked,
       );
       FeedbackToast.info("Note Added");
@@ -199,8 +200,8 @@ class _NoteDialogState extends State<NoteDialog> {
       await notes.updateNote(
         note,
         title: title,
-        titleColor: _titleColor.hex,
-        coverColor: _cover.hex,
+        titleColor: _titleColor.toARGB32(),
+        coverColor: _cover.toARGB32(),
         locked: _locked,
       );
       FeedbackToast.info("Note Updated");

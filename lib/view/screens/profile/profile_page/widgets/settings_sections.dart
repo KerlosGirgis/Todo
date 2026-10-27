@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
+import '../../../../../models/user_profile.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../lock_page/widgets/password_dialogs.dart';
@@ -50,14 +51,16 @@ class GeneralSection extends StatelessWidget {
           color: _blue,
           title: "Start Page",
           subtitle: const Text("Where the app opens"),
-          bottom: CupertinoSlidingSegmentedControl<int>(
+          bottom: CupertinoSlidingSegmentedControl<StartPage>(
             groupValue: user.user.startPage,
             onValueChanged: (page) {
               if (page != null) user.changeStartPage(page);
             },
             children: const {
-              0: _Segment(icon: Icons.checklist_rounded, label: "To-Do"),
-              1: _Segment(icon: Icons.sticky_note_2_rounded, label: "Notes"),
+              StartPage.tasks:
+                  _Segment(icon: Icons.checklist_rounded, label: "To-Do"),
+              StartPage.notes:
+                  _Segment(icon: Icons.sticky_note_2_rounded, label: "Notes"),
             },
           ),
         ),
@@ -66,7 +69,7 @@ class GeneralSection extends StatelessWidget {
           color: _orange,
           title: "Daily Verse",
           subtitle: const Text("Shown when you tap your avatar"),
-          value: user.user.verse == 1,
+          value: user.user.showVerse,
           onToggle: user.changeVerse,
         ),
         const _AppLockTile(),
@@ -233,7 +236,7 @@ class NotesSection extends StatelessWidget {
           color: _mint,
           title: "Auto Save",
           subtitle: const Text("Save changes as you type"),
-          value: user.user.autoSave == 1,
+          value: user.user.autoSave,
           onToggle: user.changeAutoSave,
         ),
         SettingsSwitchTile(
@@ -241,7 +244,7 @@ class NotesSection extends StatelessWidget {
           color: _cyan,
           title: "Word Count",
           subtitle: const Text("Show a live count while you write"),
-          value: user.user.count == 1,
+          value: user.user.wordCount,
           onToggle: user.changeCount,
         ),
         SettingsSwitchTile(
@@ -253,7 +256,7 @@ class NotesSection extends StatelessWidget {
             "A relaxed, handwritten look",
             style: TextStyle(fontFamily: 'casual', fontWeight: FontWeight.w600),
           ),
-          value: user.user.casual == 1,
+          value: user.user.casualFont,
           onToggle: user.changeFont,
         ),
         const _TextSizeTile(

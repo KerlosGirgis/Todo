@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
     return AppLockGuard(
       navigatorKey: _navigatorKey,
       child: Selector<UserViewModel, bool>(
-        selector: (_, userVM) => userVM.user.theme == 1,
+        selector: (_, userVM) => userVM.user.darkTheme,
         builder: (context, isDarkMode, _) {
           return ToastificationWrapper(
             child: MaterialApp(

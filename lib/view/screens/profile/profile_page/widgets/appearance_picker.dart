@@ -16,7 +16,7 @@ class AppearancePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark =
-        context.select<UserViewModel, bool>((user) => user.user.theme == 1);
+        context.select<UserViewModel, bool>((user) => user.user.darkTheme);
     void choose(bool dark) {
       if (dark != isDark) context.read<UserViewModel>().changeTheme();
     }

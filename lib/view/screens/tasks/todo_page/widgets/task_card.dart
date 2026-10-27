@@ -77,7 +77,7 @@ class _TaskCardState extends State<TaskCard> {
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
-    final done = widget.task.status == 1;
+    final done = widget.task.done;
     return AnimatedScale(
       scale: _pressed ? 0.98 : 1,
       duration: const Duration(milliseconds: 160),
@@ -202,7 +202,7 @@ class _TaskCardState extends State<TaskCard> {
                   child: Opacity(
                     opacity: 1 - doneness,
                     child: _ReminderButton(
-                      on: task.notification != 0,
+                      on: task.reminder != Reminder.none,
                       onTap: widget.onReminder,
                       onLongPress: widget.onDailyReminder,
                     ),
@@ -265,9 +265,8 @@ class _TaskCardState extends State<TaskCard> {
     // Done tasks' chips fade back with the rest of the card.
     final strength = lerpDouble(1, 0.5, doneness)!;
     final when = _whenLabel(task, now);
-    final due = DateTimeUtils.dueDate(task.date, task.time);
     // Red once it's overdue, as in Reminders, until it's done.
-    final overdue = due != null && due.isBefore(now) ? 1 - doneness : 0.0;
+    final overdue = task.isPastDue(now) ? 1 - doneness : 0.0;
     final red = _systemRed(isDarkTheme);
     final whenColor = Color.lerp(ink.withValues(alpha: 0.6), red, overdue)!;
     final whenTint = Color.lerp(
@@ -278,14 +277,14 @@ class _TaskCardState extends State<TaskCard> {
     return [
       if (when != null)
         _Chip(
-          icon: task.date.isEmpty
+          icon: task.day == null
               ? Icons.schedule_rounded
               : Icons.calendar_today_rounded,
           label: when,
           color: whenColor.withValues(alpha: whenColor.a * strength),
           tint: whenTint.withValues(alpha: whenTint.a * strength),
         ),
-      if (task.notification == 2)
+      if (task.reminder == Reminder.daily)
         _Chip(
           icon: Icons.repeat_rounded,
           label: "Daily",
@@ -345,13 +344,11 @@ class TaskDeleteBackground extends StatelessWidget {
 /// "Today, 9:30 AM", "Tomorrow", "Fri, Oct 24" or "Jan 3, 2027, 9:30 AM",
 /// or null when the task has neither a date nor a time.
 String? _whenLabel(TodoItem task, DateTime now) {
-  final date = DateTime.tryParse(task.date);
-  final day = date == null
-      ? (task.date.isEmpty ? null : task.date)
-      : DateTimeUtils.friendlyDay(date, now);
+  final day = task.day;
+  final time = task.time;
   final parts = [
-    if (day != null) day,
-    if (task.time.isNotEmpty) task.time,
+    if (day != null) DateTimeUtils.friendlyDay(day, now),
+    if (time != null) time.label,
   ];
   return parts.isEmpty ? null : parts.join(", ");
 }

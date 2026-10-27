@@ -4,7 +4,7 @@ import '../models/note.dart';
 import '../services/database_service.dart';
 
 class NotesRepository {
-  final Database db = DatabaseService.db;
+  Database get db => DatabaseService.db;
 
   Future<void> insertNote(Note note) {
     return db.insert('Notes', note.toMap());

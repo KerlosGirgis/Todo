@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../models/avatar.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/ringed_avatar.dart';
 import 'avatar_picker_sheet.dart';
@@ -15,7 +16,8 @@ class UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pic = context.select<UserViewModel, String>((user) => user.user.pic);
+    final avatar =
+        context.select<UserViewModel, Avatar>((user) => user.user.avatar);
     return LayoutBuilder(builder: (context, constraints) {
       final screenSize = MediaQuery.sizeOf(context);
       // About the same footprint as before, but never more than the space
@@ -39,7 +41,7 @@ class UserAvatar extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Positioned.fill(
-              child: AvatarHalo(child: RingedAvatar(pic: pic)),
+              child: AvatarHalo(child: RingedAvatar(avatar: avatar)),
             ),
             Positioned(
               left: badgeOffset,

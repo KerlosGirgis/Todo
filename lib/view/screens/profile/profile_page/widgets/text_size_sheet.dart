@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:cupertino_ui/cupertino_ui.dart';
-import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
+import '../../../../../models/clock_time.dart';
 import '../../../../../models/note.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/user_view_model.dart';
@@ -218,7 +218,7 @@ class _Preview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final saved = user.user;
-    final casualFont = saved.casual == 1;
+    final casualFont = saved.casualFont;
     return switch (setting) {
       TextSizeSetting.taskTitle =>
         _TaskPreview(titleSize: size, descSize: saved.tasksDescSize),
@@ -318,11 +318,9 @@ class _TaskPreviewState extends State<_TaskPreview> {
 final _sampleTask = TodoItem(
   title: "Water the plants",
   desc: "The ferns on the balcony are looking thirsty.",
-  status: 0,
-  date: "",
-  time: "6:00 PM",
+  time: const ClockTime(18, 0),
   uuid: "",
-  notification: 1,
+  reminder: Reminder.once,
 );
 
 /// A note's card as the notes page draws it, and as big, so its title
@@ -359,9 +357,7 @@ class _NoteCardPreview extends StatelessWidget {
 final _sampleNote = Note(
   title: "Weekend Plans",
   body: "Farmers market in the morning, then a long walk by the river.",
-  titleColor: Colors.white.hex,
-  coverColor: _accent.hex,
-  protected: 0,
+  coverColor: _accent.toARGB32(),
 );
 
 /// A note's text as the editor draws it, in as many whole lines as fit, so

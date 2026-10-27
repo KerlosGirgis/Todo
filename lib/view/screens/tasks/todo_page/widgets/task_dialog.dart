@@ -1,11 +1,11 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../core/utils/date_time_utils.dart';
+import '../../../../../models/clock_time.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../profile/profile_page/widgets/profile_button.dart';
@@ -19,11 +19,6 @@ const _accent = Color(0xff3D5AFE);
 const _red = Color(0xffFF3B30);
 const _blue = Color(0xff007AFF);
 const _orange = Color(0xffFF9500);
-
-/// The task's reminder, as stored in [TodoItem.notification].
-const _noReminder = 0;
-const _onceReminder = 1;
-const _dailyReminder = 2;
 
 /// Adds a task, or edits [task] when there is one: its title and
 /// description, then its date, time and reminder in rows like the profile
@@ -42,9 +37,9 @@ class _TaskDialogState extends State<TaskDialog> {
   late final _titleController = TextEditingController(text: widget.task?.title);
   late final _descriptionController =
       TextEditingController(text: widget.task?.desc);
-  late String _date = widget.task?.date ?? "";
-  late String _time = widget.task?.time ?? "";
-  late int _reminder = widget.task?.notification ?? _noReminder;
+  late DateTime? _date = widget.task?.day;
+  late ClockTime? _time = widget.task?.time;
+  late Reminder _reminder = widget.task?.reminder ?? Reminder.none;
 
   @override
   void dispose() {
@@ -56,7 +51,7 @@ class _TaskDialogState extends State<TaskDialog> {
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final today = DateUtils.dateOnly(now);
-    final date = DateTime.tryParse(_date);
+    final date = _date;
     final picked = await showDatePicker(
       context: context,
       // An overdue date is before the first one on offer, so it isn't kept.
@@ -65,30 +60,33 @@ class _TaskDialogState extends State<TaskDialog> {
       lastDate: DateTime(now.year + 5),
     );
     if (picked != null) {
-      setState(() => _date = DateFormat("yyyy-MM-dd").format(picked));
+      setState(() => _date = picked);
     }
   }
 
   Future<void> _pickTime() async {
+    final time = _time;
     final picked = await showTimePicker(
       context: context,
-      initialTime: DateTimeUtils.tryParseTime(_time) ?? TimeOfDay.now(),
+      initialTime: time == null
+          ? TimeOfDay.now()
+          : TimeOfDay(hour: time.hour, minute: time.minute),
     );
     if (picked == null) return;
     setState(() {
-      _time = DateTimeUtils.formatTime(picked);
+      _time = ClockTime(picked.hour, picked.minute);
       // A time on its own is for today, unless it's for every day.
-      if (_date.isEmpty && _reminder != _dailyReminder) {
-        _date = DateFormat("yyyy-MM-dd").format(DateTime.now());
+      if (_date == null && _reminder != Reminder.daily) {
+        _date = DateUtils.dateOnly(DateTime.now());
       }
     });
   }
 
-  void _setReminder(int reminder) {
+  void _setReminder(Reminder reminder) {
     setState(() {
       _reminder = reminder;
       // A daily reminder goes off at its time every day, so it has no date.
-      if (reminder == _dailyReminder) _date = "";
+      if (reminder == Reminder.daily) _date = null;
     });
   }
 
@@ -103,17 +101,17 @@ class _TaskDialogState extends State<TaskDialog> {
         ? await tasks.addTask(
             title: title,
             desc: desc,
-            date: _date,
+            day: _date,
             time: _time,
-            notification: _reminder,
+            reminder: _reminder,
           )
         : await tasks.updateTask(
             task,
             title: title,
             desc: desc,
-            date: _date,
+            day: _date,
             time: _time,
-            notification: _reminder,
+            reminder: _reminder,
           );
     result.when(
       onSuccess: FeedbackToast.success,
@@ -126,7 +124,8 @@ class _TaskDialogState extends State<TaskDialog> {
   Widget build(BuildContext context) {
     final ink = context.colors.wB;
     final adding = widget.task == null;
-    final date = DateTime.tryParse(_date);
+    final date = _date;
+    final time = _time;
     final now = DateTime.now();
     return FormDialog(
       icon: adding ? Icons.add_task_rounded : Icons.edit_rounded,
@@ -165,16 +164,15 @@ class _TaskDialogState extends State<TaskDialog> {
         const SizedBox(height: 16),
         FormDialogGroup(
           children: [
-            if (_reminder != _dailyReminder)
+            if (_reminder != Reminder.daily)
               SettingsTile(
                 icon: Icons.calendar_today_rounded,
                 color: _red,
                 title: "Date",
                 trailing: _PickedValue(
-                  label: date == null
-                      ? (_date.isEmpty ? null : _date)
-                      : DateTimeUtils.friendlyDay(date, now),
-                  onClear: () => setState(() => _date = ""),
+                  label:
+                      date == null ? null : DateTimeUtils.friendlyDay(date, now),
+                  onClear: () => setState(() => _date = null),
                 ),
                 onTap: _pickDate,
               ),
@@ -183,8 +181,8 @@ class _TaskDialogState extends State<TaskDialog> {
               color: _blue,
               title: "Time",
               trailing: _PickedValue(
-                label: _time.isEmpty ? null : _time,
-                onClear: () => setState(() => _time = ""),
+                label: time?.label,
+                onClear: () => setState(() => _time = null),
               ),
               onTap: _pickTime,
             ),
@@ -195,18 +193,18 @@ class _TaskDialogState extends State<TaskDialog> {
               subtitle: _ReminderHint(
                 reminder: _reminder,
                 date: date,
-                time: _time,
+                time: time,
                 now: now,
               ),
-              bottom: CupertinoSlidingSegmentedControl<int>(
+              bottom: CupertinoSlidingSegmentedControl<Reminder>(
                 groupValue: _reminder,
                 onValueChanged: (reminder) {
                   if (reminder != null) _setReminder(reminder);
                 },
                 children: const {
-                  _noReminder: _Segment("Off"),
-                  _onceReminder: _Segment("Once"),
-                  _dailyReminder: _Segment("Daily"),
+                  Reminder.none: _Segment("Off"),
+                  Reminder.once: _Segment("Once"),
+                  Reminder.daily: _Segment("Daily"),
                 },
               ),
             ),
@@ -280,25 +278,25 @@ class _ReminderHint extends StatelessWidget {
     required this.now,
   });
 
-  final int reminder;
+  final Reminder reminder;
   final DateTime? date;
-  final String time;
+  final ClockTime? time;
   final DateTime now;
 
   @override
   Widget build(BuildContext context) {
     final (hint, missing) = switch (reminder) {
-      _onceReminder when date == null || time.isEmpty => (
+      Reminder.once when date == null || time == null => (
           "Needs a date and a time",
           true
         ),
-      _onceReminder => (
-          "${DateTimeUtils.friendlyDay(date!, now)} at $time",
+      Reminder.once => (
+          "${DateTimeUtils.friendlyDay(date!, now)} at ${time!.label}",
           false
         ),
-      _dailyReminder when time.isEmpty => ("Needs a time", true),
-      _dailyReminder => ("Every day at $time", false),
-      _ => ("No reminder", false),
+      Reminder.daily when time == null => ("Needs a time", true),
+      Reminder.daily => ("Every day at ${time!.label}", false),
+      Reminder.none => ("No reminder", false),
     };
     return Text(
       hint,

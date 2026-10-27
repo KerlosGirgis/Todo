@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../../../core/utils/avatar_utils.dart';
+import '../../../../../models/avatar.dart';
 import '../../../../../view_model/user_view_model.dart';
 import 'profile_button.dart';
 
@@ -27,15 +27,10 @@ Future<void> showAvatarPicker(BuildContext context) {
 class AvatarPickerSheet extends StatelessWidget {
   const AvatarPickerSheet({super.key});
 
-  /// The bundled avatars, by their numbers in [AvatarUtils.getAvatar].
-  static const _avatars = [
-    "000", "001", "002", "003", "004", //
-    "005", "006", "007", "008", "009",
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final pic = context.select<UserViewModel, String>((user) => user.user.pic);
+    final current =
+        context.select<UserViewModel, Avatar>((user) => user.user.avatar);
     return SingleChildScrollView(
       // Clear of the gesture bar, which a bottom sheet's safe area leaves in.
       padding: EdgeInsets.fromLTRB(
@@ -72,10 +67,11 @@ class AvatarPickerSheet extends StatelessWidget {
             mainAxisSpacing: 14,
             crossAxisSpacing: 14,
             children: [
-              for (final avatar in _avatars)
+              for (final (index, avatar) in BundledAvatar.all.indexed)
                 _AvatarOption(
                   avatar: avatar,
-                  selected: avatar == pic,
+                  label: "Avatar ${index + 1}",
+                  selected: avatar == current,
                   onTap: () {
                     context.read<UserViewModel>().editPic(avatar);
                     Navigator.pop(context);
@@ -103,11 +99,13 @@ class AvatarPickerSheet extends StatelessWidget {
 class _AvatarOption extends StatelessWidget {
   const _AvatarOption({
     required this.avatar,
+    required this.label,
     required this.selected,
     required this.onTap,
   });
 
-  final String avatar;
+  final BundledAvatar avatar;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
 
@@ -117,7 +115,7 @@ class _AvatarOption extends StatelessWidget {
       button: true,
       inMutuallyExclusiveGroup: true,
       selected: selected,
-      label: "Avatar ${int.parse(avatar) + 1}",
+      label: label,
       excludeSemantics: true,
       child: GestureDetector(
         onTap: onTap,
@@ -151,7 +149,7 @@ class _AvatarOption extends StatelessWidget {
                       child: Transform.scale(
                         scale: 1.05,
                         child: Image.asset(
-                          AvatarUtils.getAvatar(avatar),
+                          avatar.asset,
                           fit: BoxFit.cover,
                           // Decoded at the size it's shown, not in full.
                           cacheWidth:

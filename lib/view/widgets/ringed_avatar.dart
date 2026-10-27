@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
-import '../../core/utils/avatar_utils.dart';
+import '../../models/avatar.dart';
 
 const _accent = Color(0xff3D5AFE);
 
@@ -10,16 +10,16 @@ const _accent = Color(0xff3D5AFE);
 /// its parent and keeps its proportions at any size, so it also flies
 /// smoothly between sizes in a [Hero].
 class RingedAvatar extends StatelessWidget {
-  const RingedAvatar({super.key, required this.pic});
+  const RingedAvatar({super.key, required this.avatar});
 
-  /// A bundled avatar number such as "000", or the path of a picked photo.
-  final String pic;
+  final Avatar avatar;
 
   @override
   Widget build(BuildContext context) {
-    final ImageProvider image = pic.startsWith("0")
-        ? AssetImage(AvatarUtils.getAvatar(pic))
-        : FileImage(File(pic));
+    final ImageProvider image = switch (avatar) {
+      BundledAvatar(:final asset) => AssetImage(asset),
+      PhotoAvatar(:final path) => FileImage(File(path)),
+    };
     return LayoutBuilder(
       builder: (context, constraints) {
         final ringWidth =

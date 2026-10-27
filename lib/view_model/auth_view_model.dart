@@ -11,7 +11,18 @@ import 'package:todo/view_model/user_view_model.dart';
 enum AuthStatus { initializing, authenticated, unauthenticated }
 
 class AuthViewModel with ChangeNotifier {
-  AuthViewModel(this._userViewModel);
+  AuthViewModel(
+    this._userViewModel, {
+    AuthenticationService? authService,
+    LockService? lockService,
+    DatabaseService? databaseService,
+    DeviceService? deviceService,
+    VerseService? verseService,
+  })  : _authService = authService ?? AuthenticationService(),
+        _lockService = lockService ?? LockService(),
+        _dbService = databaseService ?? DatabaseService(),
+        _deviceService = deviceService ?? DeviceService(),
+        _verseService = verseService ?? VerseService();
 
   AuthStatus _status = AuthStatus.unauthenticated;
   AuthStatus get status => _status;
@@ -38,10 +49,11 @@ class AuthViewModel with ChangeNotifier {
   final _awayFor = Stopwatch();
   Duration? _awaySinceBoot;
 
-  final AuthenticationService _authService = AuthenticationService();
-  final LockService _lockService = LockService();
-  final DatabaseService _dbService = DatabaseService();
-  final DeviceService _deviceService = DeviceService();
+  final AuthenticationService _authService;
+  final LockService _lockService;
+  final DatabaseService _dbService;
+  final DeviceService _deviceService;
+  final VerseService _verseService;
 
   /// Loaded as the app unlocks, as the home page opens on the user's start
   /// page, in their theme.
@@ -167,7 +179,7 @@ class AuthViewModel with ChangeNotifier {
   Future<void> _open() async {
     if (!_opened) {
       await _dbService.openDb();
-      await VerseService.loadVerses();
+      await _verseService.loadVerses();
       await _userViewModel.get();
       _opened = true;
     }

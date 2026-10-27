@@ -16,17 +16,31 @@ import '../services/home_widget_service.dart';
 import '../services/lock_service.dart';
 
 class NotesViewModel with ChangeNotifier {
+  NotesViewModel({
+    NotesRepository? repository,
+    AuthenticationService? authService,
+    LockService? lockService,
+    HomeWidgetService? homeWidgetService,
+    BackupService? backupService,
+    FileService? fileService,
+  })  : _notesRepository = repository ?? NotesRepository(),
+        _authService = authService ?? AuthenticationService(),
+        _lockService = lockService ?? LockService(),
+        _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
+        _backupService = backupService ?? BackupService(),
+        _fileService = fileService ?? FileService();
+
   List<Note> _notes = [];
   List<Note> get notes => UnmodifiableListView(_notes);
 
-  int get lockedCount => _notes.where((note) => note.protected == 1).length;
+  int get lockedCount => _notes.where((note) => note.locked).length;
 
-  final NotesRepository _notesRepository = NotesRepository();
-  final AuthenticationService _authService = AuthenticationService();
-  final LockService _lockService = LockService();
-  final HomeWidgetService _homeWidgetService = HomeWidgetService();
-  final BackupService _backupService = BackupService();
-  final FileService _fileService = FileService();
+  final NotesRepository _notesRepository;
+  final AuthenticationService _authService;
+  final LockService _lockService;
+  final HomeWidgetService _homeWidgetService;
+  final BackupService _backupService;
+  final FileService _fileService;
 
   /// Whether the note on the widget has been checked since the app started:
   /// see [_checkWidget].
@@ -50,7 +64,7 @@ class NotesViewModel with ChangeNotifier {
     return [
       for (final note in _notes)
         if (note.title.toLowerCase().contains(term) ||
-            (note.protected != 1 && note.body.toLowerCase().contains(term)))
+            (!note.locked && note.body.toLowerCase().contains(term)))
           note,
     ];
   }
@@ -58,7 +72,7 @@ class NotesViewModel with ChangeNotifier {
   /// Shows [note]'s text on the home screen's widget, where anyone can read
   /// it, so never a locked note's.
   Future<Result> showOnWidget(Note note) async {
-    if (note.protected == 1) {
+    if (note.locked) {
       return Info("Locked notes can't go on the widget");
     }
     if (note.body.trim().isEmpty) {
@@ -122,7 +136,7 @@ class NotesViewModel with ChangeNotifier {
       a.delta == b.delta &&
       a.titleColor == b.titleColor &&
       a.coverColor == b.coverColor &&
-      a.protected == b.protected;
+      a.locked == b.locked;
 
   /// Makes sure the widget shows no locked note's text, nor a deleted one's,
   /// as the notes are first read in: in case a change to its note didn't get
@@ -134,13 +148,13 @@ class NotesViewModel with ChangeNotifier {
       if (shown.text == null) return;
       if (shown.id case final id?) {
         final note = _notes.where((note) => note.id == id).firstOrNull;
-        if (note == null || note.protected == 1) {
+        if (note == null || note.locked) {
           await _homeWidgetService.clearNote();
         }
         return;
       }
       final notes = _notes.where((note) => note.body == shown.text);
-      if (notes.any((note) => note.protected == 1)) {
+      if (notes.any((note) => note.locked)) {
         await _homeWidgetService.clearNote();
       } else if (notes.firstOrNull case final note?) {
         await _homeWidgetService.followNote(note.id!);
@@ -150,19 +164,18 @@ class NotesViewModel with ChangeNotifier {
     }
   }
 
-  /// Adds a note with nothing written in it yet.
+  /// Adds a note with nothing written in it yet, in colours as 0xAARRGGBB.
   Future<void> addNote({
     required String title,
-    required String titleColor,
-    required String coverColor,
+    required int titleColor,
+    required int coverColor,
     required bool locked,
   }) async {
     await _notesRepository.insertNote(Note(
       title: title,
-      body: "",
       titleColor: titleColor,
       coverColor: coverColor,
-      protected: locked ? 1 : 0,
+      locked: locked,
     ));
     get();
   }
@@ -172,18 +185,15 @@ class NotesViewModel with ChangeNotifier {
   Future<void> updateNote(
     Note note, {
     required String title,
-    required String titleColor,
-    required String coverColor,
+    required int titleColor,
+    required int coverColor,
     required bool locked,
   }) async {
-    await _update(Note(
-      id: note.id,
+    await _update(note.copyWith(
       title: title,
-      body: note.body,
-      delta: note.delta,
       titleColor: titleColor,
       coverColor: coverColor,
-      protected: locked ? 1 : 0,
+      locked: locked,
     ));
     if (locked) await _takeOffWidget(note.id);
   }
@@ -191,14 +201,9 @@ class NotesViewModel with ChangeNotifier {
   /// Saves [document] as [note]'s text, keeping its title, colours and lock,
   /// and returns the note as it's saved.
   Future<Note> updateText(Note note, Document document) async {
-    final saved = Note(
-      id: note.id,
-      title: note.title,
+    final saved = note.copyWith(
       body: NoteDocumentUtils.toBody(document),
       delta: jsonEncode(document.toDelta().toJson()),
-      titleColor: note.titleColor,
-      coverColor: note.coverColor,
-      protected: note.protected,
     );
     await _update(saved);
     return saved;
@@ -271,7 +276,7 @@ class NotesViewModel with ChangeNotifier {
       // which a locked note won't take while the fingerprint works. An app
       // locked with the fingerprint has just asked for it, and the password
       // just given is the one a locked note falls back on without it.
-      if (notes.any((note) => note.protected == 1) &&
+      if (notes.any((note) => note.locked) &&
           await _lockService.getLock() != AppLock.fingerprint) {
         final unlocked = await _passNoteLock(() async => password);
         if (unlocked is! Success) return unlocked;
@@ -305,7 +310,7 @@ class NotesViewModel with ChangeNotifier {
   }) async {
     try {
       final currentNotes = await _notesRepository.getNotes();
-      if (overwrite && currentNotes.any((note) => note.protected == 1)) {
+      if (overwrite && currentNotes.any((note) => note.locked)) {
         final unlocked = await _passNoteLock(askForPassword);
         if (unlocked is! Success) return unlocked;
       }
@@ -345,7 +350,7 @@ class NotesViewModel with ChangeNotifier {
   /// Checks it's the user, for a locked [note]: see [_passNoteLock].
   Future<Result> authenticate(Note note,
       {required PasswordPrompt askForPassword}) async {
-    if (note.protected == 1) {
+    if (note.locked) {
       return _passNoteLock(askForPassword);
     } else {
       return Success("Authenticated");

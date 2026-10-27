@@ -517,11 +517,11 @@ class _ReorderableTaskListState extends State<_ReorderableTaskList> {
         onEdit: !interactive ? null : () => widget.onEdit(task),
         onReminder: !interactive
             ? null
-            : () => (task.notification == 0
+            : () => (task.reminder == Reminder.none
                     ? tasks.enableOneTimeNotification(task)
                     : tasks.cancelNotification(task))
                 .then(_showResult),
-        onDailyReminder: !interactive || task.notification != 0
+        onDailyReminder: !interactive || task.reminder != Reminder.none
             ? null
             : () => tasks.enableDailyNotification(task).then(_showResult),
       );

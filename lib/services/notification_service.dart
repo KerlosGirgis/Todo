@@ -1,6 +1,7 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+
+import '../models/clock_time.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -32,7 +33,7 @@ class NotificationService {
         ?.requestNotificationsPermission();
   }
 
-  static Future<void> showInstantNotification(String title, String body) async {
+  Future<void> showInstantNotification(String title, String body) async {
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
         android: AndroidNotificationDetails(
           'instant_notification_channel_id',
@@ -51,7 +52,7 @@ class NotificationService {
     );
   }
 
-  static Future<void> scheduleNotification(
+  Future<void> scheduleNotification(
       int id, String title, String? body, DateTime scheduledTime) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id: id,
@@ -72,8 +73,8 @@ class NotificationService {
     );
   }
 
-  static Future<void> scheduleDailyNotification(
-      int id, String title, String? body, TimeOfDay scheduledTime) async {
+  Future<void> scheduleDailyNotification(
+      int id, String title, String? body, ClockTime scheduledTime) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id: id,
       title: title,
@@ -91,23 +92,21 @@ class NotificationService {
     );
   }
 
-  static tz.TZDateTime _nextInstanceOfTime(TimeOfDay time) {
+  static tz.TZDateTime _nextInstanceOfTime(ClockTime time) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime.from(
-        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day,
-            time.hour, time.minute),
-        tz.local);
+    tz.TZDateTime scheduledDate =
+        tz.TZDateTime.from(time.on(DateTime.now()), tz.local);
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
     return scheduledDate;
   }
 
-  static Future<void> cancelNotification(int id) async {
+  Future<void> cancelNotification(int id) async {
     await flutterLocalNotificationsPlugin.cancel(id: id);
   }
 
-  static Future<void> cancelAllNotifications() async {
+  Future<void> cancelAllNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
   }
 }

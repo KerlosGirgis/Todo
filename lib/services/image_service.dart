@@ -8,9 +8,9 @@ import 'package:path_provider/path_provider.dart';
 
 class ImageService {
   /// Has the user pick a photo from the gallery and crop it to a circle,
-  /// then keeps it in the app's storage, deleting the picture at
-  /// [replacing]. The kept photo's path, or null when the user backs out.
-  Future<String?> pickProfilePicture({required String replacing}) async {
+  /// then keeps it in the app's storage, deleting the photo at [replacing],
+  /// if there's one. The kept photo's path, or null when the user backs out.
+  Future<String?> pickProfilePicture({String? replacing}) async {
     final image = await _pickImage();
     if (image == null) return null;
     final croppedImage = await _cropImage(image);
@@ -54,13 +54,15 @@ class ImageService {
     return null;
   }
 
-  Future<File> _saveImageToAppStorage(File image, String replacing) async {
+  Future<File> _saveImageToAppStorage(File image, String? replacing) async {
     final appDir = await getApplicationDocumentsDirectory();
 
     final fileName = image.path.split('/').last;
-    final oldFile = File(replacing);
-    if (await oldFile.exists()) {
-      await oldFile.delete();
+    if (replacing != null) {
+      final oldFile = File(replacing);
+      if (await oldFile.exists()) {
+        await oldFile.delete();
+      }
     }
     final savedImage = await image.copy('${appDir.path}/$fileName');
 

@@ -5,6 +5,8 @@ import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
 import '../../core/extensions/theme_extensions.dart';
+import '../../models/avatar.dart';
+import '../../models/verse.dart';
 import 'ringed_avatar.dart';
 
 const _accent = Color(0xff3D5AFE);
@@ -57,7 +59,7 @@ class _AppbarAvatarState extends State<AppbarAvatar> {
                     pageBuilder: (context, animation, secondaryAnimation) =>
                         _ProfileDialog(
                       heroTag: heroTag,
-                      pic: user.user.pic,
+                      avatar: user.user.avatar,
                       name: user.user.name,
                       verse: user.dailyVerse,
                     ),
@@ -82,7 +84,7 @@ class _AppbarAvatarState extends State<AppbarAvatar> {
               child: SizedBox.square(
                 dimension: 44,
                 child:
-                    Hero(tag: heroTag, child: RingedAvatar(pic: user.user.pic)),
+                    Hero(tag: heroTag, child: RingedAvatar(avatar: user.user.avatar)),
               ),
             ),
           ),
@@ -95,17 +97,17 @@ class _AppbarAvatarState extends State<AppbarAvatar> {
 class _ProfileDialog extends StatelessWidget {
   const _ProfileDialog({
     required this.heroTag,
-    required this.pic,
+    required this.avatar,
     required this.name,
     required this.verse,
   });
 
   final Object heroTag;
-  final String pic;
+  final Avatar avatar;
   final String name;
 
   /// Today's verse, or null when the daily verse is turned off.
-  final String? verse;
+  final Verse? verse;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +128,7 @@ class _ProfileDialog extends StatelessWidget {
               child: SizedBox.square(
                 dimension: 152,
                 child: AvatarHalo(
-                  child: Hero(tag: heroTag, child: RingedAvatar(pic: pic)),
+                  child: Hero(tag: heroTag, child: RingedAvatar(avatar: avatar)),
                 ),
               ),
             ),
@@ -156,21 +158,16 @@ class _ProfileDialog extends StatelessWidget {
 class _VerseCard extends StatelessWidget {
   const _VerseCard({required this.verse});
 
-  final String verse;
+  final Verse verse;
 
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final accent = context.colors.moreLess;
-    // Verses are stored as "<text> -- <book chapter:verse>".
-    final separator = verse.lastIndexOf(" -- ");
-    final text = separator == -1 ? verse : verse.substring(0, separator);
-    final reference = separator == -1
-        ? null
-        : _formatReference(verse.substring(separator + 4));
+    final reference = verse.reference;
 
     void copy() {
-      Clipboard.setData(ClipboardData(text: verse)).then((_) {
+      Clipboard.setData(ClipboardData(text: verse.raw)).then((_) {
         FeedbackToast.info("Verse copied to clipboard");
       });
     }
@@ -215,7 +212,7 @@ class _VerseCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 14),
                 child: Text(
-                  text,
+                  verse.text,
                   style: TextStyle(
                     color: context.colors.wB.withValues(alpha: 0.9),
                     fontSize: 17,
@@ -244,11 +241,3 @@ class _VerseCard extends StatelessWidget {
     );
   }
 }
-
-/// "song of solomon 2:4" -> "Song of Solomon 2:4"
-String _formatReference(String reference) => reference
-    .split(" ")
-    .map((word) => word.isEmpty || word == "of"
-        ? word
-        : word[0].toUpperCase() + word.substring(1))
-    .join(" ");

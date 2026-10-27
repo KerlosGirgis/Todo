@@ -6,11 +6,12 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class VerseService {
+  // Loaded once for every instance.
   static List<String>? _verses;
-  static String installId="";
+  static String _installId = "";
 
   // Load and cache verses
-  static Future<void> loadVerses() async {
+  Future<void> loadVerses() async {
     if (_verses == null) {
       String content = await rootBundle.loadString('assets/nasb.json');
       _verses = await Isolate.run(() => List<String>.from(json.decode(content)));
@@ -22,23 +23,23 @@ class VerseService {
       // Generate a new random install-specific identifier
       tempInstallId = Random.secure().nextInt(1000000).toString();
       await prefs.setString('installId', tempInstallId).then((onValue){
-        installId=tempInstallId!;
+        _installId=tempInstallId!;
       });
     }
     else{
-      installId=tempInstallId;
+      _installId=tempInstallId;
     }
   }
 
   // Get daily verse
-  static String getDailyVerse() {
+  String getDailyVerse() {
     if (_verses == null || _verses!.isEmpty) {
       throw Exception('Verses not loaded');
     }
 
     // Use today's date to create a consistent random seed
     String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    int seed = today.hashCode+installId.toString().hashCode;
+    int seed = today.hashCode+_installId.toString().hashCode;
     Random random = Random(seed);
 
     // Pick a random verse based on the seed

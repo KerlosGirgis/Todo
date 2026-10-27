@@ -4,7 +4,7 @@ import '../services/database_service.dart';
 
 class TasksRepository{
 
-  final Database db = DatabaseService.db;
+  Database get db => DatabaseService.db;
 
   Future<int> insertItem(TodoItem item) {
     return db.insert('ToDo', item.toMap());

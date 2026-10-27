@@ -147,9 +147,9 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
         padding.bottom;
     final (autoSave, showCount, casualFont, textSize, titleSize) = context
         .select<UserViewModel, (bool, bool, bool, double, double)>((user) => (
-              user.user.autoSave == 1,
-              user.user.count == 1,
-              user.user.casual == 1,
+              user.user.autoSave,
+              user.user.wordCount,
+              user.user.casualFont,
               user.user.notesTextSize,
               user.user.notesTitleSize,
             ));
@@ -302,7 +302,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     final rtl = _isRtl(_controller.document.toPlainText());
     if (rtl != _rtl) setState(() => _rtl = rtl);
     _unsaved.value = _controller.document.toDelta() != _savedDelta;
-    if (_unsaved.value && context.read<UserViewModel>().user.autoSave == 1) {
+    if (_unsaved.value && context.read<UserViewModel>().user.autoSave) {
       _save();
     }
   }

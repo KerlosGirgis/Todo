@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:material_ui/material_ui.dart';
 
@@ -59,7 +58,7 @@ class NoteTitle extends StatelessWidget {
                 note.title,
                 textDirection: direction,
                 style: TextStyle(
-                  color: _titleInk(context, note.titleColor.toColor),
+                  color: _titleInk(context, Color(note.titleColor)),
                   fontSize: _fontSize * titleSize,
                   fontWeight: FontWeight.bold,
                   height: _lineHeight,

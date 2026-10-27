@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
-import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' as intl;
@@ -51,8 +50,8 @@ class _NoteCardState extends State<NoteCard> {
     final titleSize = context
         .select<UserViewModel, double>((user) => user.user.notesTitleSize);
     final casualFont =
-        context.select<UserViewModel, bool>((user) => user.user.casual == 1);
-    final coverColor = note.coverColor.toColor;
+        context.select<UserViewModel, bool>((user) => user.user.casualFont);
+    final coverColor = Color(note.coverColor);
     final onCover = onCoverColor(coverColor);
 
     return ValueListenableBuilder<bool>(
@@ -115,10 +114,10 @@ class NoteCardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cover = note.coverColor.toColor;
+    final cover = Color(note.coverColor);
     final onCover = onCoverColor(cover);
     final titleStyle = TextStyle(
-      color: note.titleColor.toColor,
+      color: Color(note.titleColor),
       fontSize: 24 * titleSize,
       // As bold as the editor's title, which this one grows into.
       fontWeight: FontWeight.bold,
@@ -126,8 +125,7 @@ class NoteCardContent extends StatelessWidget {
       letterSpacing: -0.5 * titleSize,
     );
     // Nothing of a locked note's text is read, let alone shown.
-    final preview =
-        note.protected == 1 ? null : NoteDocumentUtils.preview(note);
+    final preview = note.locked ? null : NoteDocumentUtils.preview(note);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: LayoutBuilder(
@@ -465,7 +463,7 @@ class NoteCoverSwatch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cover = note.coverColor.toColor;
+    final cover = Color(note.coverColor);
     return DecoratedBox(
       decoration: ShapeDecoration(
         shape: RoundedSuperellipseBorder(
@@ -482,9 +480,9 @@ class NoteCoverSwatch extends StatelessWidget {
       child: SizedBox.square(
         dimension: size,
         child: Icon(
-          note.protected == 1 ? Icons.lock_rounded : Icons.notes_rounded,
+          note.locked ? Icons.lock_rounded : Icons.notes_rounded,
           size: size * 0.56,
-          color: note.titleColor.toColor,
+          color: Color(note.titleColor),
         ),
       ),
     );

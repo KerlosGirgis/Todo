@@ -14,12 +14,12 @@ class DoneTasksFilter implements TaskFilter {
   const DoneTasksFilter();
   @override
   List<TodoItem> apply(List<TodoItem> tasks) =>
-      tasks.where((task) => task.status == 1).toList();
+      tasks.where((task) => task.done).toList();
 }
 
 class UndoneTasksFilter implements TaskFilter {
   const UndoneTasksFilter();
   @override
   List<TodoItem> apply(List<TodoItem> tasks) =>
-      tasks.where((task) => task.status == 0).toList();
+      tasks.where((task) => !task.done).toList();
 }
