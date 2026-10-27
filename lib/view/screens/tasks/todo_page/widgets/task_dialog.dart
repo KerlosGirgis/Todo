@@ -34,24 +34,30 @@ class TaskDialog extends StatefulWidget {
 }
 
 class _TaskDialogState extends State<TaskDialog> {
-  late final _titleController = TextEditingController(text: widget.task?.title);
-  late final _descriptionController =
-      TextEditingController(text: widget.task?.desc);
-  late DateTime? _date = widget.task?.day;
-  late ClockTime? _time = widget.task?.time;
-  late Reminder _reminder = widget.task?.reminder ?? Reminder.none;
+  late final TaskDraft _draft;
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
+
+  @override
+  void initState() {
+    super.initState();
+    _draft = context.read<TasksViewModel>().draft(widget.task);
+    _titleController = TextEditingController(text: _draft.title);
+    _descriptionController = TextEditingController(text: _draft.description);
+  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _draft.dispose();
     super.dispose();
   }
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final today = DateUtils.dateOnly(now);
-    final date = _date;
+    final date = _draft.day;
     final picked = await showDatePicker(
       context: context,
       // An overdue date is before the first one on offer, so it isn't kept.
@@ -59,60 +65,24 @@ class _TaskDialogState extends State<TaskDialog> {
       firstDate: today,
       lastDate: DateTime(now.year + 5),
     );
-    if (picked != null) {
-      setState(() => _date = picked);
-    }
+    if (picked != null) _draft.setDay(picked);
   }
 
   Future<void> _pickTime() async {
-    final time = _time;
+    final time = _draft.time;
     final picked = await showTimePicker(
       context: context,
       initialTime: time == null
           ? TimeOfDay.now()
           : TimeOfDay(hour: time.hour, minute: time.minute),
     );
-    if (picked == null) return;
-    setState(() {
-      _time = ClockTime(picked.hour, picked.minute);
-      // A time on its own is for today, unless it's for every day.
-      if (_date == null && _reminder != Reminder.daily) {
-        _date = DateUtils.dateOnly(DateTime.now());
-      }
-    });
-  }
-
-  void _setReminder(Reminder reminder) {
-    setState(() {
-      _reminder = reminder;
-      // A daily reminder goes off at its time every day, so it has no date.
-      if (reminder == Reminder.daily) _date = null;
-    });
+    if (picked != null) _draft.setTime(ClockTime(picked.hour, picked.minute));
   }
 
   Future<void> _save() async {
-    final title = _titleController.text.trim();
-    if (title.isEmpty) return;
     final tasks = context.read<TasksViewModel>();
     Navigator.of(context).pop();
-    final task = widget.task;
-    final desc = _descriptionController.text.trim();
-    final result = task == null
-        ? await tasks.addTask(
-            title: title,
-            desc: desc,
-            day: _date,
-            time: _time,
-            reminder: _reminder,
-          )
-        : await tasks.updateTask(
-            task,
-            title: title,
-            desc: desc,
-            day: _date,
-            time: _time,
-            reminder: _reminder,
-          );
+    final result = await tasks.save(_draft);
     result.when(
       onSuccess: FeedbackToast.success,
       onFailure: FeedbackToast.error,
@@ -123,110 +93,108 @@ class _TaskDialogState extends State<TaskDialog> {
   @override
   Widget build(BuildContext context) {
     final ink = context.colors.wB;
-    final adding = widget.task == null;
-    final date = _date;
-    final time = _time;
-    final now = DateTime.now();
-    return FormDialog(
-      icon: adding ? Icons.add_task_rounded : Icons.edit_rounded,
-      title: adding ? "New Task" : "Edit Task",
-      subtitle: adding
-          ? "What do you need to get done?"
-          : "Change its details, then save.",
-      content: [
-        TextField(
-          controller: _titleController,
-          // Ready to type straight away when adding.
-          autofocus: adding,
-          maxLines: 1,
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.next,
-          cursorColor: _accent,
-          style: TextStyle(
-            color: ink,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            letterSpacing: -0.2,
-          ),
-          decoration: formFieldDecoration(context, hint: "Title"),
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _descriptionController,
-          minLines: 2,
-          maxLines: 5,
-          keyboardType: TextInputType.multiline,
-          textCapitalization: TextCapitalization.sentences,
-          cursorColor: _accent,
-          style: TextStyle(color: ink, fontSize: 16, height: 1.35),
-          decoration: formFieldDecoration(context, hint: "Description"),
-        ),
-        const SizedBox(height: 16),
-        FormDialogGroup(
-          children: [
-            if (_reminder != Reminder.daily)
-              SettingsTile(
-                icon: Icons.calendar_today_rounded,
-                color: _red,
-                title: "Date",
-                trailing: _PickedValue(
-                  label:
-                      date == null ? null : DateTimeUtils.friendlyDay(date, now),
-                  onClear: () => setState(() => _date = null),
-                ),
-                onTap: _pickDate,
+    final adding = _draft.adding;
+    return ListenableBuilder(
+      listenable: _draft,
+      builder: (context, child) {
+        final date = _draft.day;
+        final now = DateTime.now();
+        return FormDialog(
+          icon: adding ? Icons.add_task_rounded : Icons.edit_rounded,
+          title: adding ? "New Task" : "Edit Task",
+          subtitle: adding
+              ? "What do you need to get done?"
+              : "Change its details, then save.",
+          content: [
+            TextField(
+              controller: _titleController,
+              onChanged: _draft.setTitle,
+              // Ready to type straight away when adding.
+              autofocus: adding,
+              maxLines: 1,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.next,
+              cursorColor: _accent,
+              style: TextStyle(
+                color: ink,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.2,
               ),
-            SettingsTile(
-              icon: Icons.schedule_rounded,
-              color: _blue,
-              title: "Time",
-              trailing: _PickedValue(
-                label: time?.label,
-                onClear: () => setState(() => _time = null),
-              ),
-              onTap: _pickTime,
+              decoration: formFieldDecoration(context, hint: "Title"),
             ),
-            SettingsTile(
-              icon: Icons.notifications_rounded,
-              color: _orange,
-              title: "Reminder",
-              subtitle: _ReminderHint(
-                reminder: _reminder,
-                date: date,
-                time: time,
-                now: now,
-              ),
-              bottom: CupertinoSlidingSegmentedControl<Reminder>(
-                groupValue: _reminder,
-                onValueChanged: (reminder) {
-                  if (reminder != null) _setReminder(reminder);
-                },
-                children: const {
-                  Reminder.none: _Segment("Off"),
-                  Reminder.once: _Segment("Once"),
-                  Reminder.daily: _Segment("Daily"),
-                },
-              ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _descriptionController,
+              onChanged: _draft.setDescription,
+              minLines: 2,
+              maxLines: 5,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              cursorColor: _accent,
+              style: TextStyle(color: ink, fontSize: 16, height: 1.35),
+              decoration: formFieldDecoration(context, hint: "Description"),
+            ),
+            const SizedBox(height: 16),
+            FormDialogGroup(
+              children: [
+                if (_draft.hasDay)
+                  SettingsTile(
+                    icon: Icons.calendar_today_rounded,
+                    color: _red,
+                    title: "Date",
+                    trailing: _PickedValue(
+                      label: date == null
+                          ? null
+                          : DateTimeUtils.friendlyDay(date, now),
+                      onClear: () => _draft.setDay(null),
+                    ),
+                    onTap: _pickDate,
+                  ),
+                SettingsTile(
+                  icon: Icons.schedule_rounded,
+                  color: _blue,
+                  title: "Time",
+                  trailing: _PickedValue(
+                    label: _draft.time?.label,
+                    onClear: () => _draft.setTime(null),
+                  ),
+                  onTap: _pickTime,
+                ),
+                SettingsTile(
+                  icon: Icons.notifications_rounded,
+                  color: _orange,
+                  title: "Reminder",
+                  subtitle: _ReminderHint(draft: _draft, now: now),
+                  bottom: CupertinoSlidingSegmentedControl<Reminder>(
+                    groupValue: _draft.reminder,
+                    onValueChanged: (reminder) {
+                      if (reminder != null) _draft.setReminder(reminder);
+                    },
+                    children: const {
+                      Reminder.none: _Segment("Off"),
+                      Reminder.once: _Segment("Once"),
+                      Reminder.daily: _Segment("Daily"),
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
-      actions: [
-        ProfileButton(
-          label: "Cancel",
-          tinted: true,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        // Only once there's a title to save.
-        ListenableBuilder(
-          listenable: _titleController,
-          builder: (context, child) => ProfileButton(
-            label: adding ? "Add" : "Save",
-            onPressed:
-                _titleController.text.trim().isEmpty ? null : () => _save(),
-          ),
-        ),
-      ],
+          actions: [
+            ProfileButton(
+              label: "Cancel",
+              tinted: true,
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            // Only once there's a title to save.
+            ProfileButton(
+              label: adding ? "Add" : "Save",
+              onPressed: _draft.canSave ? _save : null,
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -271,32 +239,25 @@ class _PickedValue extends StatelessWidget {
 
 /// What the reminder will do, or what it still needs before it can.
 class _ReminderHint extends StatelessWidget {
-  const _ReminderHint({
-    required this.reminder,
-    required this.date,
-    required this.time,
-    required this.now,
-  });
+  const _ReminderHint({required this.draft, required this.now});
 
-  final Reminder reminder;
-  final DateTime? date;
-  final ClockTime? time;
+  final TaskDraft draft;
   final DateTime now;
 
   @override
   Widget build(BuildContext context) {
-    final (hint, missing) = switch (reminder) {
-      Reminder.once when date == null || time == null => (
-          "Needs a date and a time",
-          true
-        ),
-      Reminder.once => (
-          "${DateTimeUtils.friendlyDay(date!, now)} at ${time!.label}",
-          false
-        ),
-      Reminder.daily when time == null => ("Needs a time", true),
-      Reminder.daily => ("Every day at ${time!.label}", false),
-      Reminder.none => ("No reminder", false),
+    final (hint, missing) = switch (draft.reminderStatus(now)) {
+      ReminderStatus.off => ("No reminder", false),
+      ReminderStatus.needsDayAndTime => ("Needs a date and a time", true),
+      ReminderStatus.needsTime => ("Needs a time", true),
+      ReminderStatus.inPast => ("Needs a date and time in the future", true),
+      ReminderStatus.ready => draft.reminder == Reminder.daily
+          ? ("Every day at ${draft.time!.label}", false)
+          : (
+              "${DateTimeUtils.friendlyDay(draft.day!, now)} at "
+                  "${draft.time!.label}",
+              false
+            ),
     };
     return Text(
       hint,

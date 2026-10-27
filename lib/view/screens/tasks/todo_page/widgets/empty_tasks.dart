@@ -3,22 +3,11 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../widgets/ringed_avatar.dart';
 
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);
-
-/// Why the list is empty.
-enum EmptyTasksReason {
-  /// There are no tasks at all.
-  noTasks,
-
-  /// The Done filter is on, and no task is done yet.
-  noneDone,
-
-  /// The Undone filter is on, and every task is done.
-  allDone,
-}
 
 /// Shown in place of the list: an icon in the avatar's glowing ring, and a
 /// line on what to do next.

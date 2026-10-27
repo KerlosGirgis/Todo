@@ -233,8 +233,7 @@ class _TodoPageState extends State<TodoPage> {
   void _changeFilter(TaskFilter filter) {
     // The cards rise in again for the new filter, straight away.
     setState(() => _listDelay = 0);
-    Provider.of<TasksViewModel>(context, listen: false)
-        .fetchTasks(filter: filter);
+    Provider.of<TasksViewModel>(context, listen: false).setFilter(filter);
   }
 
   /// Backs the tasks up, once the App Lock lets the user through.
@@ -418,13 +417,7 @@ class _TaskListSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tasks = context.watch<TasksViewModel>();
-    if (tasks.items.isEmpty) {
-      final reason = switch (tasks.currentFilter) {
-        _ when tasks.finishedTasksCount + tasks.unfinishedTasksCount == 0 =>
-          EmptyTasksReason.noTasks,
-        DoneTasksFilter() => EmptyTasksReason.noneDone,
-        _ => EmptyTasksReason.allDone,
-      };
+    if (tasks.emptyReason case final reason?) {
       return SliverFillRemaining(
         hasScrollBody: false,
         // Centred in the room the buttons leave, within the page rather than
@@ -505,7 +498,7 @@ class _ReorderableTaskListState extends State<_ReorderableTaskList> {
               user.user.descLines,
             ));
 
-    TaskCard card(TodoItem task, int index, {bool interactive = true}) {
+    TaskCard card(TodoItem task, {bool interactive = true}) {
       return TaskCard(
         task: task,
         titleScale: titleScale,
@@ -513,17 +506,15 @@ class _ReorderableTaskListState extends State<_ReorderableTaskList> {
         descriptionLines: descriptionLines,
         onToggle: !interactive
             ? null
-            : () => tasks.markAsDone(index).then(_showResult),
+            : () => tasks.toggleDone(task).then(_showResult),
         onEdit: !interactive ? null : () => widget.onEdit(task),
         onReminder: !interactive
             ? null
-            : () => (task.reminder == Reminder.none
-                    ? tasks.enableOneTimeNotification(task)
-                    : tasks.cancelNotification(task))
-                .then(_showResult),
+            : () => tasks.toggleReminder(task).then(_showResult),
+        // Only while it has no reminder: the bell's tap turns one off.
         onDailyReminder: !interactive || task.reminder != Reminder.none
             ? null
-            : () => tasks.enableDailyNotification(task).then(_showResult),
+            : () => tasks.remindDaily(task).then(_showResult),
       );
     }
 
@@ -535,7 +526,7 @@ class _ReorderableTaskListState extends State<_ReorderableTaskList> {
       // swipe, which would start over in the drag's overlay.
       proxyDecorator: (child, index, animation) => _LiftedCard(
         animation: animation,
-        child: card(items[index], index, interactive: false),
+        child: card(items[index], interactive: false),
       ),
       itemBuilder: (context, index) {
         final task = items[index];
@@ -557,9 +548,9 @@ class _ReorderableTaskListState extends State<_ReorderableTaskList> {
                 secondaryBackground: const TaskDeleteBackground(
                     alignment: AlignmentDirectional.centerEnd),
                 onDismissed: (direction) => tasks
-                    .dismissTask(index, task.id!)
+                    .delete(task)
                     .then((_) => FeedbackToast.info("Task Deleted")),
-                child: card(task, index),
+                child: card(task),
               ),
             ),
           ),
