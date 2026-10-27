@@ -63,6 +63,7 @@ dependencies:
   material_ui: ^1.8.0
   cupertino_ui: any
   cryptography: ^2.9.0
+  characters: ^1.4.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

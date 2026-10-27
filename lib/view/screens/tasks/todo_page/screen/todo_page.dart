@@ -238,17 +238,13 @@ class _TodoPageState extends State<TodoPage> {
 
   /// Backs the tasks up, once the App Lock lets the user through.
   void _backUp() {
-    final tasks = Provider.of<TasksViewModel>(context, listen: false);
-    withAppLockPassword(
-      context,
-      subtitle: "Enter your password to back up your tasks.",
-      action: (password) => tasks
-          .backup(
-            password: password,
-            askForBackupPassword: newBackupPasswordPrompt(context),
-          )
-          .then(_showResult),
-    );
+    Provider.of<TasksViewModel>(context, listen: false)
+        .backup(
+          askForPassword: passwordPrompt(context,
+              subtitle: "Enter your password to back up your tasks."),
+          askForBackupPassword: newBackupPasswordPrompt(context),
+        )
+        .then(_showResult);
   }
 
   void _addTask() => showFormDialog<void>(context, const TaskDialog());

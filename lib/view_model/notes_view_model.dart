@@ -320,15 +320,17 @@ class NotesViewModel with ChangeNotifier {
 
   /// Saves the notes to a file locked with a password that
   /// [askForBackupPassword] gets from the user, once the App Lock lets them
-  /// through, with [password] for an app locked with one, and while any note
-  /// is locked, once its lock does too. Null if the user cancels.
+  /// through, with [askForPassword] for an app locked with a password, and
+  /// while any note is locked, once its lock does too. Null if the user
+  /// cancels.
   Future<Result?> backup({
-    String? password,
+    required PasswordPrompt askForPassword,
     required NewBackupPasswordPrompt askForBackupPassword,
   }) async {
-    if (!await _authService.passesAppLock(password: password)) {
-      return Failure("Authentication Failed");
-    }
+    final pass = await _authService.passAppLock(askForPassword);
+    if (pass == null) return null;
+    if (!pass.passed) return Failure("Authentication Failed");
+    final password = pass.password;
     try {
       final notes = await _notesRepository.getNotes();
       // Locked notes go into the file with all they say, so it takes their

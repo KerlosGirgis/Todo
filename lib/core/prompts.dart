@@ -4,6 +4,11 @@ import 'result.dart';
 /// entered it right, or null if they cancel.
 typedef PasswordPrompt = Future<String?> Function();
 
+/// Asks the user for a new password for the App Lock, of at least
+/// [minLength] characters, twice, so that a typo can't lock them out, and
+/// gives it, or null if they cancel.
+typedef NewPasswordPrompt = Future<String?> Function({required int minLength});
+
 /// Asks the user for a new password for a backup, of at least [minLength]
 /// characters, twice, so that a typo can't lock them out of it, then locks
 /// the backup with it using [lock], and tells whether it did, or false if

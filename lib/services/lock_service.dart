@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 import 'dart:math';
@@ -29,6 +30,12 @@ class LockService {
   final Future<BootTime> Function() _bootTime;
 
   static const _lockKey = 'lockToken';
+
+  static final _changes = StreamController<AppLock>.broadcast();
+
+  /// What the app is locked with, each time it changes, from whichever
+  /// [LockService] changes it.
+  Stream<AppLock> get changes => _changes.stream;
 
   /// The App Lock's password, for an app locked with one: salted and
   /// stretched, never as it was typed.
@@ -80,12 +87,14 @@ class LockService {
     }
     await _forgetFailures();
     await _storage.write(key: _lockKey, value: _generateToken());
+    _changes.add(password == null ? AppLock.fingerprint : AppLock.password);
   }
 
   Future<void> disableLock() async {
     await _storage.delete(key: _lockKey);
     await _storage.delete(key: _passwordKey);
     await _forgetFailures();
+    _changes.add(AppLock.off);
   }
 
   /// Checks [password] against the App Lock's. After [_freeTries] wrong ones

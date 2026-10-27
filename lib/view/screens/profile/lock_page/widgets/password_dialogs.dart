@@ -5,39 +5,42 @@ import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/prompts.dart';
 import '../../../../../core/result.dart';
-import '../../../../../models/app_lock.dart';
 import '../../../../../view_model/auth_view_model.dart';
-import '../../../../../view_model/user_view_model.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
 import '../../profile_page/widgets/profile_button.dart';
 import 'password_field.dart';
 
-/// Runs [action], which needs the App Lock to let the user through: for an
-/// app locked with a password, once the user gives it, which [action] gets
-/// to check again; otherwise straight away, without one, for [action] to
-/// check the lock itself. [subtitle] says what the password is for. Nothing
-/// happens if the user cancels.
-Future<void> withAppLockPassword(
-  BuildContext context, {
-  required String subtitle,
-  required Future<void> Function(String? password) action,
-}) async {
-  if (context.read<UserViewModel>().appLock != AppLock.password) {
-    return action(null);
-  }
-  final password = await showPasswordDialog(context, subtitle: subtitle);
-  if (password != null) await action(password);
-}
+/// How the App Lock's password is asked for, saying what for in [subtitle]:
+/// from [context]'s page, if it's still open by then.
+PasswordPrompt passwordPrompt(BuildContext context,
+        {required String subtitle}) =>
+    () async {
+      if (!context.mounted) return null;
+      return showPasswordDialog(context, subtitle: subtitle);
+    };
 
 /// How a locked note asks for the App Lock's password in place of the
-/// fingerprint, on a phone that can't take one: from [context]'s page, if it's
-/// still open by then.
-PasswordPrompt noteLockPasswordPrompt(BuildContext context) => () async {
+/// fingerprint, on a phone that can't take one.
+PasswordPrompt noteLockPasswordPrompt(BuildContext context) => passwordPrompt(
+      context,
+      subtitle:
+          "Your fingerprint isn't available, so enter your password instead.",
+    );
+
+/// How a new password for the App Lock is asked for: from [context]'s page,
+/// if it's still open by then.
+NewPasswordPrompt newPasswordPrompt(BuildContext context) =>
+    ({required int minLength}) async {
       if (!context.mounted) return null;
-      return showPasswordDialog(
+      return showFormDialog<String>(
         context,
-        subtitle:
-            "Your fingerprint isn't available, so enter your password instead.",
+        _NewPasswordDialog(
+          title: "New Password",
+          subtitle: "You'll need it each time the app opens.",
+          warning: "Pick one you'll remember: there's no way to reset it if "
+              "you forget it.",
+          minLength: minLength,
+        ),
       );
     };
 
@@ -87,21 +90,6 @@ Future<String?> showPasswordDialog(BuildContext context,
     _PasswordDialog(
       subtitle: subtitle,
       check: context.read<AuthViewModel>().checkPassword,
-    ),
-  );
-}
-
-/// Asks for a new password for the App Lock, twice, so that a typo can't
-/// lock the user out, and hands it back, or null if the user cancels.
-Future<String?> showNewPasswordDialog(BuildContext context) {
-  return showFormDialog<String>(
-    context,
-    const _NewPasswordDialog(
-      title: "New Password",
-      subtitle: "You'll need it each time the app opens.",
-      warning: "Pick one you'll remember: there's no way to reset it if you "
-          "forget it.",
-      minLength: UserViewModel.minPasswordLength,
     ),
   );
 }

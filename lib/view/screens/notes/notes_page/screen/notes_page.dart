@@ -225,17 +225,13 @@ class _NotesPageState extends State<NotesPage> {
 
   /// Backs the notes up, once the App Lock lets the user through.
   void _backUp() {
-    final notes = Provider.of<NotesViewModel>(context, listen: false);
-    withAppLockPassword(
-      context,
-      subtitle: "Enter your password to back up your notes.",
-      action: (password) => notes
-          .backup(
-            password: password,
-            askForBackupPassword: newBackupPasswordPrompt(context),
-          )
-          .then(_showResult),
-    );
+    Provider.of<NotesViewModel>(context, listen: false)
+        .backup(
+          askForPassword: passwordPrompt(context,
+              subtitle: "Enter your password to back up your notes."),
+          askForBackupPassword: newBackupPasswordPrompt(context),
+        )
+        .then(_showResult);
   }
 
   void _addNote() {

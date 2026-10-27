@@ -6,7 +6,6 @@ import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
 import '../../../../../models/user_profile.dart';
-import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../lock_page/widgets/password_dialogs.dart';
 import 'appearance_picker.dart';
@@ -54,7 +53,7 @@ class GeneralSection extends StatelessWidget {
           bottom: CupertinoSlidingSegmentedControl<StartPage>(
             groupValue: user.user.startPage,
             onValueChanged: (page) {
-              if (page != null) user.changeStartPage(page);
+              if (page != null) user.setStartPage(page);
             },
             children: const {
               StartPage.tasks:
@@ -70,7 +69,7 @@ class GeneralSection extends StatelessWidget {
           title: "Daily Verse",
           subtitle: const Text("Shown when you tap your avatar"),
           value: user.user.showVerse,
-          onToggle: user.changeVerse,
+          onChanged: user.setShowVerse,
         ),
         const _AppLockTile(),
         if (user.appLock == AppLock.password) const _ChangePasswordTile(),
@@ -95,8 +94,7 @@ class _AppLockTileState extends State<_AppLockTile> {
   Future<void> _change(AppLock lock) async {
     if (_changingTo != null) return;
     setState(() => _changingTo = lock);
-    final result = await _changeAppLock(context, lock);
-    if (result != null) _showResult(result);
+    _showResult(await _changeAppLock(context, lock));
     // Back to the lock the app has, if the change didn't go through.
     if (mounted) setState(() => _changingTo = null);
   }
@@ -138,45 +136,26 @@ class _ChangePasswordTile extends StatelessWidget {
         icon: Icons.password_rounded,
         color: _green,
         title: "Change Password",
-        onTap: () async {
-          final result = await _changeAppLock(context, AppLock.password);
-          if (result != null) _showResult(result);
-        },
+        onTap: () async =>
+            _showResult(await _changeAppLock(context, AppLock.password)),
       ),
     );
   }
 }
 
-/// Changes the App Lock to [lock], asking first for the password the app is
-/// locked with, if it is, then for a new one, if [lock] is a password. Null
-/// if the user cancels.
-Future<Result?> _changeAppLock(BuildContext context, AppLock lock) async {
-  final user = context.read<UserViewModel>();
-  final tasks = context.read<TasksViewModel>();
-  String? password;
-  if (user.appLock == AppLock.password) {
-    password = await showPasswordDialog(
-      context,
-      subtitle: lock == AppLock.password
-          ? "Enter your current password first."
-          : "Enter your password to change the App Lock.",
-    );
-    if (password == null || !context.mounted) return null;
-  }
-  final Result result;
-  switch (lock) {
-    case AppLock.off:
-      result = await user.turnOffAppLock(password: password);
-    case AppLock.fingerprint:
-      result = await user.lockWithFingerprint(password: password);
-    case AppLock.password:
-      final newPassword = await showNewPasswordDialog(context);
-      if (newPassword == null) return null;
-      result = await user.lockWithPassword(newPassword, password: password);
-  }
-  // Reminders say which task they're for only while the app isn't locked.
-  if (result is! Failure) tasks.refreshReminders();
-  return result;
+/// Changes the App Lock to [lock], with the prompts it asks the user with.
+/// Null if the user cancels.
+Future<Result?> _changeAppLock(BuildContext context, AppLock lock) {
+  return context.read<UserViewModel>().changeAppLock(
+        lock,
+        askForPassword: passwordPrompt(
+          context,
+          subtitle: lock == AppLock.password
+              ? "Enter your current password first."
+              : "Enter your password to change the App Lock.",
+        ),
+        askForNewPassword: newPasswordPrompt(context),
+      );
 }
 
 class TasksSection extends StatelessWidget {
@@ -212,7 +191,7 @@ class TasksSection extends StatelessWidget {
             },
             children: {
               0: const _Segment(label: "Off"),
-              for (var lines = 1; lines <= 5; lines++)
+              for (var lines = 1; lines <= UserViewModel.maxDescLines; lines++)
                 lines: _Segment(label: "$lines"),
             },
           ),
@@ -237,7 +216,7 @@ class NotesSection extends StatelessWidget {
           title: "Auto Save",
           subtitle: const Text("Save changes as you type"),
           value: user.user.autoSave,
-          onToggle: user.changeAutoSave,
+          onChanged: user.setAutoSave,
         ),
         SettingsSwitchTile(
           icon: Icons.numbers_rounded,
@@ -245,7 +224,7 @@ class NotesSection extends StatelessWidget {
           title: "Word Count",
           subtitle: const Text("Show a live count while you write"),
           value: user.user.wordCount,
-          onToggle: user.changeCount,
+          onChanged: user.setWordCount,
         ),
         SettingsSwitchTile(
           icon: Icons.font_download_rounded,
@@ -257,7 +236,7 @@ class NotesSection extends StatelessWidget {
             style: TextStyle(fontFamily: 'casual', fontWeight: FontWeight.w600),
           ),
           value: user.user.casualFont,
-          onToggle: user.changeFont,
+          onChanged: user.setCasualFont,
         ),
         const _TextSizeTile(
           setting: TextSizeSetting.noteTitle,
@@ -334,7 +313,9 @@ class _Segment extends StatelessWidget {
   }
 }
 
-void _showResult(Result result) => result.when(
+/// Shows how [result] went, if there's a result to show: none when the user
+/// cancels.
+void _showResult(Result? result) => result?.when(
       onSuccess: FeedbackToast.success,
       onFailure: FeedbackToast.error,
       onInfo: FeedbackToast.info,

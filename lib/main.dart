@@ -30,7 +30,8 @@ void main() async {
       return AuthViewModel(Provider.of<UserViewModel>(context, listen: false))
         ..initializeApp();
     }),
-    ChangeNotifierProvider(create: (_) => TasksViewModel()),
+    // From the start, to follow the App Lock, which the reminders go by.
+    ChangeNotifierProvider(create: (_) => TasksViewModel(), lazy: false),
     ChangeNotifierProvider(create: (_) => NotesViewModel()),
   ], child: const MyApp()));
 }

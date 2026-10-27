@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
@@ -60,7 +61,18 @@ class TasksViewModel with ChangeNotifier {
         _lockService = lockService ?? LockService(),
         _authService = authService ?? AuthenticationService(),
         _notificationService = notificationService ?? NotificationService(),
-        _now = clock ?? DateTime.now;
+        _now = clock ?? DateTime.now {
+    // Reminders say which task they're for only while the app isn't locked.
+    _lockChanges = _lockService.changes.listen((_) => refreshReminders());
+  }
+
+  late final StreamSubscription<AppLock> _lockChanges;
+
+  @override
+  void dispose() {
+    _lockChanges.cancel();
+    super.dispose();
+  }
 
   List<TodoItem> _allTasks = [];
   List<TodoItem> _items = [];
@@ -265,15 +277,15 @@ class TasksViewModel with ChangeNotifier {
 
   /// Saves the tasks to a file locked with a password that
   /// [askForBackupPassword] gets from the user, once the App Lock lets them
-  /// through: with [password], for an app locked with one. Null if the user
-  /// cancels.
+  /// through: with [askForPassword], for an app locked with a password. Null
+  /// if the user cancels.
   Future<Result?> backup({
-    String? password,
+    required PasswordPrompt askForPassword,
     required NewBackupPasswordPrompt askForBackupPassword,
   }) async {
-    if (!await _authService.passesAppLock(password: password)) {
-      return Failure("Authentication Failed");
-    }
+    final pass = await _authService.passAppLock(askForPassword);
+    if (pass == null) return null;
+    if (!pass.passed) return Failure("Authentication Failed");
     try {
       final tasks = await _tasksRepository.getItems();
       final file = await _backupService.write(

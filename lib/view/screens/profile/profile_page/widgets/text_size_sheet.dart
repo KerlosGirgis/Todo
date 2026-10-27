@@ -134,14 +134,18 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
               Expanded(
                 child: CupertinoSlider(
                   value: size,
-                  min: 0.25,
-                  max: 2,
-                  divisions: 14,
+                  min: UserViewModel.minTextSize,
+                  max: UserViewModel.maxTextSize,
+                  divisions: ((UserViewModel.maxTextSize -
+                              UserViewModel.minTextSize) /
+                          UserViewModel.textSizeStep)
+                      .round(),
                   activeColor: _accent,
-                  // Snapped to the eighths the divisions stand for, so the
+                  // Snapped to the steps the divisions stand for, so the
                   // value reads cleanly and matches the saved one exactly.
-                  onChanged: (value) =>
-                      setState(() => _size = (value * 8).round() / 8),
+                  onChanged: (value) => setState(() => _size =
+                      (value / UserViewModel.textSizeStep).round() *
+                          UserViewModel.textSizeStep),
                 ),
               ),
               const SizedBox(width: 12),

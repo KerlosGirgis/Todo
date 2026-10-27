@@ -33,8 +33,7 @@ class AuthViewModel with ChangeNotifier {
   bool get opened => _opened;
 
   /// What the app is locked with, which the lock page asks for.
-  AppLock _lock = AppLock.off;
-  AppLock get lock => _lock;
+  AppLock get lock => _userViewModel.appLock;
 
   /// How long the app can be away before it has to be unlocked again: long
   /// enough to pick a file or a photo in another app and come back.
@@ -56,7 +55,7 @@ class AuthViewModel with ChangeNotifier {
   final VerseService _verseService;
 
   /// Loaded as the app unlocks, as the home page opens on the user's start
-  /// page, in their theme.
+  /// page, in their theme. It also has what the app is locked with.
   final UserViewModel _userViewModel;
 
   Future<void> initializeApp() async {
@@ -148,10 +147,7 @@ class AuthViewModel with ChangeNotifier {
     }
   }
 
-  void _lockAgain() {
-    _lock = _userViewModel.appLock;
-    initializeApp();
-  }
+  void _lockAgain() => initializeApp();
 
   /// Puts the app away from the lock page it's locked again with, leaving
   /// the pages under it as they are, unsaved writing and all.
@@ -162,8 +158,8 @@ class AuthViewModel with ChangeNotifier {
   /// locked, for the lock page to ask for it.
   Future<bool> _unlocksAsItOpens() async {
     try {
-      _lock = await _lockService.getLock();
-      return switch (_lock) {
+      await _userViewModel.loadAppLock();
+      return switch (lock) {
         AppLock.off => true,
         AppLock.fingerprint => await _authService.authenticateApp(),
         AppLock.password => false,

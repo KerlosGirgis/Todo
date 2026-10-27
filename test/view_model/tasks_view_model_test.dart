@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
@@ -82,9 +84,13 @@ class FakeLock extends LockService {
   FakeLock() : super.withClock(() => throw StateError("No waits"));
 
   AppLock lock = AppLock.off;
+  final changed = StreamController<AppLock>.broadcast();
 
   @override
   Future<AppLock> getLock() async => lock;
+
+  @override
+  Stream<AppLock> get changes => changed.stream;
 }
 
 /// Noon on a Wednesday.
@@ -93,18 +99,22 @@ final now = DateTime(2026, 5, 13, 12);
 void main() {
   late FakeTasksRepository repository;
   late FakeNotifications notifications;
+  late FakeLock lock;
   late TasksViewModel tasks;
 
   setUp(() {
     repository = FakeTasksRepository();
     notifications = FakeNotifications();
+    lock = FakeLock();
     tasks = TasksViewModel(
       repository: repository,
       notificationService: notifications,
-      lockService: FakeLock(),
+      lockService: lock,
       clock: () => now,
     );
   });
+
+  tearDown(() => tasks.dispose());
 
   /// Adds a task through its form.
   Future<Result> add(String title,
@@ -281,6 +291,24 @@ void main() {
       await tasks.get();
       expect(task("Second").done, isTrue);
       expect(task("First").done, isFalse);
+    });
+  });
+
+  group('reminders', () {
+    test("say which task they're for only while the app isn't locked",
+        () async {
+      await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
+      await add("Stretch",
+          time: const ClockTime(7, 0), reminder: Reminder.daily);
+      expect(notifications.bodies.values, ["Call", "Stretch"]);
+      lock.lock = AppLock.password;
+      lock.changed.add(AppLock.password);
+      await pumpEventQueue();
+      expect(notifications.bodies.values, [null, null]);
+      lock.lock = AppLock.off;
+      lock.changed.add(AppLock.off);
+      await pumpEventQueue();
+      expect(notifications.bodies.values, ["Call", "Stretch"]);
     });
   });
 

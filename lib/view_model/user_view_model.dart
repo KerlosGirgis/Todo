@@ -1,3 +1,4 @@
+import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/avatar.dart';
@@ -10,6 +11,7 @@ import 'package:todo/services/image_service.dart';
 import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/verse_service.dart';
 import 'package:todo/repositories/user_repository.dart';
+import '../core/prompts.dart';
 import '../core/result.dart';
 
 class UserViewModel with ChangeNotifier {
@@ -55,6 +57,19 @@ class UserViewModel with ChangeNotifier {
   /// The fewest characters an App Lock password can have.
   static const minPasswordLength = 4;
 
+  /// The most characters a name can have.
+  static const maxNameLength = 20;
+
+  /// The text sizes on offer, as multiples of the default ones: from a
+  /// quarter to twice the size, in eighths.
+  static const minTextSize = 0.25;
+  static const maxTextSize = 2.0;
+  static const textSizeStep = 0.125;
+
+  /// The most lines of a task's description that can show before "Show
+  /// More".
+  static const maxDescLines = 5;
+
   /// Today's verse, or null when the user has turned the daily verse off.
   Verse? get dailyVerse =>
       user.showVerse ? Verse.parse(_verseService.getDailyVerse()) : null;
@@ -78,6 +93,15 @@ class UserViewModel with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reads what the app is locked with, which, unlike the profile, needs
+  /// nothing opened first, as the app checks it before it opens.
+  Future<void> loadAppLock() async {
+    final lock = await _lockService.getLock();
+    final changed = lock != _appLock;
+    _setAppLock(lock);
+    if (changed) notifyListeners();
+  }
+
   /// Sets what the app is locked with, keeping the app out of the recent
   /// apps while it's locked, as they'd show anyone its last screen.
   void _setAppLock(AppLock lock) {
@@ -93,38 +117,97 @@ class UserViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> editName(String name) => _save(user.copyWith(name: name));
+  /// Saves the profile with [change], unless [unchanged]: a notification
+  /// rebuilds every page that shows the profile.
+  Future<void> _set(bool unchanged, UserProfile Function() change) async {
+    if (!unchanged) await _save(change());
+  }
 
-  Future<void> editPic(Avatar avatar) => _save(user.copyWith(avatar: avatar));
+  /// Renames the user to [name], without the spaces at either end.
+  Future<Result> rename(String name) async {
+    name = name.trim();
+    if (name.isEmpty) return Failure("Name can't be empty");
+    // Counted as the name's field counts them, by what reads as one.
+    if (name.characters.length > maxNameLength) {
+      return Failure("Use at most $maxNameLength characters");
+    }
+    await _save(user.copyWith(name: name));
+    return Info("Name Updated");
+  }
 
-  Future<void> changeTheme() => _save(user.copyWith(darkTheme: !user.darkTheme));
+  Future<void> setAvatar(Avatar avatar) =>
+      _set(avatar == user.avatar, () => user.copyWith(avatar: avatar));
 
-  Future<void> changeAutoSave() =>
-      _save(user.copyWith(autoSave: !user.autoSave));
+  /// Has the user pick a photo of their own for their avatar, in place of
+  /// the one they picked before, if they did.
+  Future<void> pickPhoto() async {
+    final avatar = user.avatar;
+    final path = await _imageService.pickProfilePicture(
+        replacing: avatar is PhotoAvatar ? avatar.path : null);
+    if (path != null) {
+      setAvatar(PhotoAvatar(path));
+    }
+  }
 
-  Future<void> changeStartPage(StartPage startPage) =>
-      _save(user.copyWith(startPage: startPage));
+  Future<void> setDarkTheme(bool darkTheme) => _set(
+      darkTheme == user.darkTheme, () => user.copyWith(darkTheme: darkTheme));
 
-  Future<void> changeFont() async {
-    final casualFont = !user.casualFont;
+  Future<void> setAutoSave(bool autoSave) => _set(
+      autoSave == user.autoSave, () => user.copyWith(autoSave: autoSave));
+
+  Future<void> setStartPage(StartPage startPage) => _set(
+      startPage == user.startPage, () => user.copyWith(startPage: startPage));
+
+  /// Puts notes, and the home screen's widget, in the handwritten font, or
+  /// back in the regular one.
+  Future<void> setCasualFont(bool casualFont) async {
+    if (casualFont == user.casualFont) return;
     _user = user.copyWith(casualFont: casualFont);
     await _userRepository.updateUser(user);
     _homeWidgetService.setCasualFont(casualFont);
     notifyListeners();
   }
 
-  Future<void> changeCount() =>
-      _save(user.copyWith(wordCount: !user.wordCount));
+  Future<void> setWordCount(bool wordCount) => _set(
+      wordCount == user.wordCount, () => user.copyWith(wordCount: wordCount));
 
-  Future<void> changeVerse() =>
-      _save(user.copyWith(showVerse: !user.showVerse));
+  Future<void> setShowVerse(bool showVerse) => _set(
+      showVerse == user.showVerse, () => user.copyWith(showVerse: showVerse));
 
   Future<void> resetPlot() =>
       _save(user.copyWith(unfinished: 0, finished: 0));
 
+  /// Changes what the app is locked with to [lock], once the lock it has now
+  /// lets the user through: their fingerprint, or the password
+  /// [askForPassword] gets from them. A password lock takes a new password
+  /// from [askForNewPassword]; for an app locked with one already, this
+  /// changes it. Null if the user cancels.
+  Future<Result?> changeAppLock(
+    AppLock lock, {
+    required PasswordPrompt askForPassword,
+    required NewPasswordPrompt askForNewPassword,
+  }) async {
+    String? password;
+    if (_appLock == AppLock.password) {
+      password = await askForPassword();
+      if (password == null) return null;
+    }
+    switch (lock) {
+      case AppLock.off:
+        return _turnOffAppLock(password: password);
+      case AppLock.fingerprint:
+        return _lockWithFingerprint(password: password);
+      case AppLock.password:
+        final newPassword =
+            await askForNewPassword(minLength: minPasswordLength);
+        if (newPassword == null) return null;
+        return _lockWithPassword(newPassword, password: password);
+    }
+  }
+
   /// Turns the App Lock off, once it lets the user through: with their
   /// fingerprint, or [password], whichever the app is locked with.
-  Future<Result> turnOffAppLock({String? password}) async {
+  Future<Result> _turnOffAppLock({String? password}) async {
     if (!await _authService.passesAppLock(password: password)) {
       return Failure("Authentication Failed");
     }
@@ -136,7 +219,7 @@ class UserViewModel with ChangeNotifier {
 
   /// Locks the app with the user's fingerprint, once the lock it has now lets
   /// them through, and their fingerprint shows that it works.
-  Future<Result> lockWithFingerprint({String? password}) async {
+  Future<Result> _lockWithFingerprint({String? password}) async {
     if (!await _authService.passesAppLock(password: password) ||
         !await _authService.authenticate()) {
       return Failure("Authentication Failed");
@@ -150,7 +233,7 @@ class UserViewModel with ChangeNotifier {
   /// Locks the app with [newPassword], once the lock it has now lets the user
   /// through: their fingerprint, or [password]. For an app locked with a
   /// password already, this changes it.
-  Future<Result> lockWithPassword(String newPassword,
+  Future<Result> _lockWithPassword(String newPassword,
       {String? password}) async {
     if (newPassword.length < minPasswordLength) {
       return Failure("Use at least $minPasswordLength characters");
@@ -165,8 +248,12 @@ class UserViewModel with ChangeNotifier {
     return Success(changing ? "Password Changed" : "Password Lock Enabled");
   }
 
+  /// Whether [size] is one of the text sizes on offer.
+  static bool _isTextSize(double size) =>
+      size >= minTextSize && size <= maxTextSize;
+
   Future<Result> setNotesTextSize(double size) async {
-    if (size >= 0.25 && size <= 2) {
+    if (_isTextSize(size)) {
       _user = user.copyWith(notesTextSize: size);
       await _homeWidgetService.setTextSize(user.notesTextSize);
       await _userRepository.updateUser(user);
@@ -178,7 +265,7 @@ class UserViewModel with ChangeNotifier {
   }
 
   Future<Result> setNotesTitleSize(double size) async {
-    if (size >= 0.25 && size <= 2) {
+    if (_isTextSize(size)) {
       await _save(user.copyWith(notesTitleSize: size));
       return Success("Font Changed");
     } else {
@@ -187,7 +274,7 @@ class UserViewModel with ChangeNotifier {
   }
 
   Future<Result> setTasksTitleSize(double size) async {
-    if (size >= 0.25 && size <= 2) {
+    if (_isTextSize(size)) {
       await _save(user.copyWith(tasksTitleSize: size));
       return Success("Font Changed");
     } else {
@@ -196,7 +283,7 @@ class UserViewModel with ChangeNotifier {
   }
 
   Future<Result> setTasksDescSize(double size) async {
-    if (size >= 0.25 && size <= 2) {
+    if (_isTextSize(size)) {
       await _save(user.copyWith(tasksDescSize: size));
       return Success("Font Changed");
     } else {
@@ -204,18 +291,12 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  Future<void> pickAndSaveImage() async {
-    final avatar = user.avatar;
-    final path = await _imageService.pickProfilePicture(
-        replacing: avatar is PhotoAvatar ? avatar.path : null);
-    if (path != null) {
-      editPic(PhotoAvatar(path));
-    }
-  }
-
-  Future<void> setDescLines(int numOfLines) async {
-    if (numOfLines >= 0 && numOfLines < 10) {
-      await _save(user.copyWith(descLines: numOfLines));
+  /// Shows [lines] lines of a task's description before "Show More", or the
+  /// whole of it for 0.
+  Future<void> setDescLines(int lines) async {
+    if (lines >= 0 && lines <= maxDescLines) {
+      await _set(
+          lines == user.descLines, () => user.copyWith(descLines: lines));
     }
   }
 }

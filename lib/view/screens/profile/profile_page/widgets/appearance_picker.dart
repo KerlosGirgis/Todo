@@ -17,9 +17,7 @@ class AppearancePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark =
         context.select<UserViewModel, bool>((user) => user.user.darkTheme);
-    void choose(bool dark) {
-      if (dark != isDark) context.read<UserViewModel>().changeTheme();
-    }
+    void choose(bool dark) => context.read<UserViewModel>().setDarkTheme(dark);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),

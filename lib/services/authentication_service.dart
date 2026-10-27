@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 
+import '../core/prompts.dart';
 import '../models/app_lock.dart';
 import 'lock_service.dart';
 
@@ -18,6 +19,10 @@ enum FingerprintCheck {
   /// the sensor isn't working.
   unavailable,
 }
+
+/// What came of letting the user through the App Lock: whether they got
+/// through, and the password they gave, for an app locked with one.
+typedef AppLockPass = ({bool passed, String? password});
 
 class AuthenticationService {
   /// The app's own Android code for the fingerprint, which takes only
@@ -62,5 +67,17 @@ class AuthenticationService {
       AppLock.password => password != null &&
           (await _lockService.checkPassword(password)).matched,
     };
+  }
+
+  /// Lets the user through the App Lock, as [passesAppLock] does, asking
+  /// them with [askForPassword] for the password of an app locked with one.
+  /// Null if they cancel.
+  Future<AppLockPass?> passAppLock(PasswordPrompt askForPassword) async {
+    if (await _lockService.getLock() != AppLock.password) {
+      return (passed: await passesAppLock(), password: null);
+    }
+    final password = await askForPassword();
+    if (password == null) return null;
+    return (passed: await passesAppLock(password: password), password: password);
   }
 }

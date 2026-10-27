@@ -150,7 +150,7 @@ class SettingsSwitchTile extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.value,
-    required this.onToggle,
+    required this.onChanged,
   });
 
   final IconData icon;
@@ -158,7 +158,9 @@ class SettingsSwitchTile extends StatelessWidget {
   final String title;
   final Widget? subtitle;
   final bool value;
-  final VoidCallback onToggle;
+
+  /// Turns the setting on or off, as the switch now says.
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -169,11 +171,11 @@ class SettingsSwitchTile extends StatelessWidget {
         color: color,
         title: title,
         subtitle: subtitle,
-        onTap: onToggle,
+        onTap: () => onChanged(!value),
         trailing: CupertinoSwitch(
           value: value,
           activeTrackColor: _accent,
-          onChanged: (_) => onToggle(),
+          onChanged: onChanged,
         ),
       ),
     );

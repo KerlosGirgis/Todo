@@ -161,8 +161,8 @@ class _NoteDialogState extends State<NoteDialog> {
     if (mounted && picked != current) _setColor(target, picked);
   }
 
-  Future<void> _toggleLock() async {
-    final result = await _draft.setLocked(!_draft.locked,
+  Future<void> _setLocked(bool locked) async {
+    final result = await _draft.setLocked(locked,
         askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) return;
     result?.when(
@@ -241,7 +241,7 @@ class _NoteDialogState extends State<NoteDialog> {
                 title: "Lock Note",
                 subtitle: const Text("Open it with your fingerprint"),
                 value: _draft.locked,
-                onToggle: _toggleLock,
+                onChanged: _setLocked,
               ),
             ],
           ),

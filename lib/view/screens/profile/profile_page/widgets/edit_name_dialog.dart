@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+import 'package:todo/core/result.dart';
 import 'package:todo/core/ui/feedback_toast.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
@@ -61,16 +62,17 @@ class _EditNameDialogState extends State<EditNameDialog> {
     super.dispose();
   }
 
-  void _save() {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      FeedbackToast.error("Name can't be empty");
-      return;
-    }
-    context.read<UserViewModel>().editName(name).then((value) {
-      FeedbackToast.info("Name Updated");
-    });
-    Navigator.of(context).pop();
+  Future<void> _save() async {
+    final result =
+        await context.read<UserViewModel>().rename(_nameController.text);
+    if (!mounted) return;
+    // Open still, to fix the name, when it won't do.
+    if (result is! Failure) Navigator.of(context).pop();
+    result.when(
+      onSuccess: FeedbackToast.success,
+      onFailure: FeedbackToast.error,
+      onInfo: FeedbackToast.info,
+    );
   }
 
   @override
@@ -117,7 +119,7 @@ class _EditNameDialogState extends State<EditNameDialog> {
               controller: _nameController,
               autofocus: true,
               maxLines: 1,
-              maxLength: 20,
+              maxLength: UserViewModel.maxNameLength,
               textCapitalization: TextCapitalization.words,
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _save(),

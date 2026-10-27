@@ -73,7 +73,7 @@ class AvatarPickerSheet extends StatelessWidget {
                   label: "Avatar ${index + 1}",
                   selected: avatar == current,
                   onTap: () {
-                    context.read<UserViewModel>().editPic(avatar);
+                    context.read<UserViewModel>().setAvatar(avatar);
                     Navigator.pop(context);
                   },
                 ),
@@ -87,7 +87,7 @@ class AvatarPickerSheet extends StatelessWidget {
             onPressed: () {
               final user = context.read<UserViewModel>();
               Navigator.pop(context);
-              user.pickAndSaveImage();
+              user.pickPhoto();
             },
           ),
         ],
