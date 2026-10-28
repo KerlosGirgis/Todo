@@ -34,7 +34,7 @@ void main() async {
     // From the start, to follow the App Lock, which the reminders go by.
     ChangeNotifierProvider(create: (_) => TasksViewModel(), lazy: false),
     ChangeNotifierProvider(create: (_) => NotesViewModel()),
-    Provider(create: (_) => TourViewModel()),
+    ChangeNotifierProvider(create: (_) => TourViewModel()),
   ], child: const MyApp()));
 }
 

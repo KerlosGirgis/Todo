@@ -83,12 +83,16 @@ class _TodoPageState extends State<TodoPage> {
   final _buttonsKey = GlobalKey();
   final _menuKey = GlobalKey();
 
+  /// Which tours are due, which says when the user asks for them again.
+  late final TourViewModel _tours;
+
   @override
   void initState() {
     super.initState();
+    _tours = Provider.of<TourViewModel>(context, listen: false)
+      ..addListener(_toursReplayed);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final tourDue = Provider.of<TourViewModel>(context, listen: false)
-          .isDue(PageTour.tasks);
+      final tourDue = _tours.isDue(PageTour.tasks);
       var touring = false;
       try {
         await Provider.of<TasksViewModel>(context, listen: false).get();
@@ -107,6 +111,7 @@ class _TodoPageState extends State<TodoPage> {
 
   @override
   void dispose() {
+    _tours.removeListener(_toursReplayed);
     _tourStart?.cancel();
     _tour.dispose();
     _scrollController.dispose();
@@ -117,6 +122,15 @@ class _TodoPageState extends State<TodoPage> {
 
   /// Shows the user how the page works: on the first card, or on an example
   /// one when there are no tasks.
+  /// Shows the tour again once the user asks for the tips again in the
+  /// settings, as they come back from them.
+  Future<void> _toursReplayed() async {
+    if (_touring || !await _tours.isDue(PageTour.tasks) || !mounted) return;
+    setState(() => _touring = true);
+    _tourStart?.cancel();
+    _tourStart = Timer(_tourDelay, _startTour);
+  }
+
   void _startTour() {
     final tasks = Provider.of<TasksViewModel>(context, listen: false).items;
     _tour.start(
@@ -130,8 +144,7 @@ class _TodoPageState extends State<TodoPage> {
       ),
       onEnd: () {
         setState(() => _touring = false);
-        Provider.of<TourViewModel>(context, listen: false)
-            .finish(PageTour.tasks);
+        _tours.finish(PageTour.tasks);
       },
     );
   }

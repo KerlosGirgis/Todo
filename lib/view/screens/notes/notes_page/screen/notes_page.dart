@@ -108,12 +108,16 @@ class _NotesPageState extends State<NotesPage> {
   final _buttonsKey = GlobalKey();
   final _menuKey = GlobalKey();
 
+  /// Which tours are due, which says when the user asks for them again.
+  late final TourViewModel _tours;
+
   @override
   void initState() {
     super.initState();
+    _tours = Provider.of<TourViewModel>(context, listen: false)
+      ..addListener(_toursReplayed);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final tourDue = Provider.of<TourViewModel>(context, listen: false)
-          .isDue(PageTour.notes);
+      final tourDue = _tours.isDue(PageTour.notes);
       var touring = false;
       try {
         await Provider.of<NotesViewModel>(context, listen: false).get();
@@ -132,6 +136,7 @@ class _NotesPageState extends State<NotesPage> {
 
   @override
   void dispose() {
+    _tours.removeListener(_toursReplayed);
     _tourStart?.cancel();
     _tour.dispose();
     _scrollController.dispose();
@@ -142,6 +147,15 @@ class _NotesPageState extends State<NotesPage> {
 
   /// Shows the user how the page works: on the first card, or on an example
   /// one when there are no notes.
+  /// Shows the tour again once the user asks for the tips again in the
+  /// settings, as they come back from them.
+  Future<void> _toursReplayed() async {
+    if (_touring || !await _tours.isDue(PageTour.notes) || !mounted) return;
+    setState(() => _touring = true);
+    _tourStart?.cancel();
+    _tourStart = Timer(_tourDelay, _startTour);
+  }
+
   void _startTour() {
     _searchFocusNode.unfocus();
     final notes = Provider.of<NotesViewModel>(context, listen: false);
@@ -160,8 +174,7 @@ class _NotesPageState extends State<NotesPage> {
       ),
       onEnd: () {
         setState(() => _touring = false);
-        Provider.of<TourViewModel>(context, listen: false)
-            .finish(PageTour.notes);
+        _tours.finish(PageTour.notes);
       },
     );
   }

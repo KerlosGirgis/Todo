@@ -26,8 +26,7 @@ void main() {
     expect(await tours.isDue(PageTour.notes), isTrue);
   });
 
-  test('a finished tour stays finished the next time the app opens',
-      () async {
+  test('a finished tour stays finished the next time the app opens', () async {
     await TourViewModel().finish(PageTour.notes);
     expect(await TourViewModel().isDue(PageTour.notes), isFalse);
   });
@@ -37,6 +36,19 @@ void main() {
     SharedPreferences.setMockInitialValues(
         {'tour.tasks': PageTour.tasks.version - 1});
     expect(await TourViewModel().isDue(PageTour.tasks), isTrue);
+  });
+
+  test('asking for the tips again makes every tour due, and says so', () async {
+    final tours = TourViewModel();
+    await tours.finish(PageTour.tasks);
+    await tours.finish(PageTour.notes);
+    var told = 0;
+    tours.addListener(() => told++);
+
+    await tours.replay();
+    expect(told, 1);
+    expect(await tours.isDue(PageTour.tasks), isTrue);
+    expect(await tours.isDue(PageTour.notes), isTrue);
   });
 
   test('no tour shows without settings to remember it in', () async {

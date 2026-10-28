@@ -6,6 +6,7 @@ import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
 import '../../../../../models/user_profile.dart';
+import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../lock_page/widgets/password_dialogs.dart';
 import 'appearance_picker.dart';
@@ -23,6 +24,7 @@ const _teal = Color(0xff30B0C7);
 const _mint = Color(0xff00C7BE);
 const _cyan = Color(0xff32ADE6);
 const _pink = Color(0xffFF2D55);
+const _yellow = Color(0xffFFCC00);
 
 class AppearanceSection extends StatelessWidget {
   const AppearanceSection({super.key});
@@ -73,7 +75,32 @@ class GeneralSection extends StatelessWidget {
         ),
         const _AppLockTile(),
         if (user.appLock == AppLock.password) const _ChangePasswordTile(),
+        const _ShowTipsTile(),
       ],
+    );
+  }
+}
+
+/// A row that shows the pages' tips again: back on the page the settings
+/// were opened from, straight away, and on the other page when it next
+/// opens.
+class _ShowTipsTile extends StatelessWidget {
+  const _ShowTipsTile();
+
+  @override
+  Widget build(BuildContext context) {
+    // Read out as a button of its own, rather than as part of the group.
+    return MergeSemantics(
+      child: SettingsTile(
+        icon: Icons.lightbulb_rounded,
+        color: _yellow,
+        title: "Show Tips Again",
+        subtitle: const Text("How the To-Do and Notes pages work"),
+        onTap: () {
+          context.read<TourViewModel>().replay();
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 }
