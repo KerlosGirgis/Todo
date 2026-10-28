@@ -20,8 +20,9 @@ class NotePreview {
 /// The kinds of list a line can be an item of.
 enum NoteListKind { bullet, numbered, checked, unchecked }
 
-/// A line of a note: a paragraph, a heading, or an item of a list, maybe in
-/// a quote, as the editor sets it out.
+/// A line of a note: a paragraph, a heading, an item of a list, a line of
+/// code or a rule across the note, maybe in a quote, as the editor sets it
+/// out.
 class NotePreviewLine {
   const NotePreviewLine({
     required this.runs,
@@ -30,12 +31,15 @@ class NotePreviewLine {
     this.number,
     this.indent = 0,
     this.quote = false,
+    this.code = false,
+    this.divider = false,
   });
 
   final List<NotePreviewRun> runs;
 
   /// 1 for a title, 2 for a heading and 3 for a subheading, as the editor
-  /// names them; 0 for the text in between.
+  /// names them, then 4 to 6 for the smaller headings; 0 for the text in
+  /// between.
   final int heading;
 
   /// The list the line is an item of, if it's in one.
@@ -49,11 +53,18 @@ class NotePreviewLine {
   final int indent;
   final bool quote;
 
+  /// Whether the line is in a block of code.
+  final bool code;
+
+  /// Whether the line is a rule across the note, with no text of its own.
+  final bool divider;
+
   String get text => runs.map((run) => run.text).join();
 
   /// Whether the line is only there to space out the ones around it. An
-  /// empty item of a list is still an item.
-  bool get isBlank => list == null && text.trim().isEmpty;
+  /// empty item of a list is still an item, as an empty line of code is
+  /// still code.
+  bool get isBlank => list == null && !code && !divider && text.trim().isEmpty;
 }
 
 /// A stretch of a line's text that's all in the same style.
@@ -65,6 +76,10 @@ class NotePreviewRun {
     this.underline = false,
     this.strikethrough = false,
     this.link = false,
+    this.code = false,
+    this.highlight = false,
+    this.superscript = false,
+    this.subscript = false,
   });
 
   final String text;
@@ -73,4 +88,10 @@ class NotePreviewRun {
   final bool underline;
   final bool strikethrough;
   final bool link;
+
+  /// Whether the text is code, in the middle of a line.
+  final bool code;
+  final bool highlight;
+  final bool superscript;
+  final bool subscript;
 }

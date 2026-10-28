@@ -9,6 +9,24 @@ import '../../models/note_preview.dart';
 /// Turns a note's text into the delta ops its editor works on, and those
 /// back into the note, with the plain text it keeps beside them.
 class NoteDocumentUtils {
+  /// A rule across a note, between its parts, as Markdown's `---` is one.
+  /// It's the embed Quill's own Markdown reader makes of it.
+  static const divider = BlockEmbed('divider', 'hr');
+
+  /// How a rule across a note reads as plain text.
+  static const dividerText = "———";
+
+  /// Highlighted text, as Markdown's `==text==` is, in a marker's yellow.
+  /// The editor draws it in a yellow of its own, to read on a light page or
+  /// a dark one.
+  static const highlight = BackgroundAttribute('#ffff00');
+
+  /// Whether [line] is a rule across the note.
+  static bool isDivider(Line line) =>
+      line.childCount == 1 &&
+      line.children.single is Embed &&
+      (line.children.single as Embed).value.type == divider.type;
+
   /// [note]'s text with its formatting, as Quill delta ops: as it was saved,
   /// or as plain text for a note that has no formatting saved yet.
   static List<Map<String, dynamic>> contentOf(Note note) =>
@@ -38,7 +56,8 @@ class NoteDocumentUtils {
 
   /// [document]'s text without its formatting, for [Note.body]. Lists keep
   /// their bullets, numbers and checkboxes, so a checklist still reads as one
-  /// on the home screen's widget.
+  /// on the home screen's widget, and a rule across the note is a line of
+  /// dashes.
   static String _toBody(Document document) {
     final lines = <String>[];
     for (final (line, number) in _numberedLines(document)) {
@@ -53,7 +72,7 @@ class NoteDocumentUtils {
         Attribute.unchecked => "☐ ",
         _ => "",
       };
-      final text = line.toPlainText();
+      final text = isDivider(line) ? "$dividerText\n" : line.toPlainText();
       lines
           .add("${"    " * level}$marker${text.substring(0, text.length - 1)}");
     }
@@ -109,6 +128,12 @@ class NoteDocumentUtils {
                 strikethrough:
                     leaf.style.containsKey(Attribute.strikeThrough.key),
                 link: leaf.style.containsKey(Attribute.link.key),
+                code: leaf.style.containsKey(Attribute.inlineCode.key),
+                highlight: leaf.style.containsKey(Attribute.background.key),
+                superscript: leaf.style.attributes[Attribute.script.key] ==
+                    Attribute.superscript,
+                subscript: leaf.style.attributes[Attribute.script.key] ==
+                    Attribute.subscript,
               ),
         ],
         heading: attributes[Attribute.header.key]?.value as int? ?? 0,
@@ -116,6 +141,8 @@ class NoteDocumentUtils {
         number: number,
         indent: attributes[Attribute.indent.key]?.value as int? ?? 0,
         quote: attributes.containsKey(Attribute.blockQuote.key),
+        code: attributes.containsKey(Attribute.codeBlock.key),
+        divider: isDivider(line),
       );
       // No blank line first, nor two in a row.
       if (previewLine.isBlank && (lines.isEmpty || lines.last.isBlank)) {

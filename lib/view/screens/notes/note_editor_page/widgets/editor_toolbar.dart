@@ -29,6 +29,7 @@ class EditorToolbar extends StatelessWidget {
     required this.unsaved,
     required this.formatting,
     required this.onFormat,
+    required this.onLink,
     required this.showCount,
     required this.autoSave,
     required this.onSave,
@@ -53,6 +54,10 @@ class EditorToolbar extends StatelessWidget {
 
   /// Opens the formatting panel, or puts it away.
   final VoidCallback onFormat;
+
+  /// Opens the link the cursor's on to be changed, or links the text, from
+  /// the formatting panel.
+  final VoidCallback onLink;
   final bool showCount;
 
   /// Whether changes are saved as they're made, which leaves nothing for a
@@ -84,7 +89,7 @@ class EditorToolbar extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: _panelGap),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 440),
-                    child: FormatPanel(controller: controller),
+                    child: FormatPanel(controller: controller, onLink: onLink),
                   ),
                 )
               : const SizedBox.shrink(),
@@ -351,10 +356,12 @@ class _CountState extends State<_Count> {
     if (!identical(text, _countedText) || _characters != _countedCharacters) {
       _countedText = text;
       _countedCharacters = _characters;
+      // Without the rules across the note, which aren't words.
+      final words = text.replaceAll(Embed.kObjectReplacementCharacter, " ");
       _count = _characters
           // Leaving out spaces and line breaks, and counting an emoji as one.
-          ? text.characters.where((c) => c.trim().isNotEmpty).length
-          : _word.allMatches(text).length;
+          ? words.characters.where((c) => c.trim().isNotEmpty).length
+          : _word.allMatches(words).length;
     }
     return _count;
   }

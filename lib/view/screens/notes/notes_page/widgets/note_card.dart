@@ -587,14 +587,17 @@ class _PreviewLines extends StatelessWidget {
         var room = (constraints.maxHeight / lineHeight).floor();
         final rows = <Widget>[];
         var cut = false;
-        for (final line in lines) {
+        for (final (index, line) in lines.indexed) {
           if (room == 0) {
             cut = true;
             break;
           }
           final span = _spanOf(line, style);
-          final width = constraints.maxWidth - layout.leadOf(line);
-          final count = _lineCount(context, span, style, strut, width);
+          final width = constraints.maxWidth -
+              layout.leadOf(line) -
+              (line.code ? layout.codeInset : 0);
+          final count =
+              line.divider ? 1 : _lineCount(context, span, style, strut, width);
           final shown = math.min(count, room);
           rows.add(_PreviewRow(
             line: line,
@@ -605,6 +608,10 @@ class _PreviewLines extends StatelessWidget {
             layout: layout,
             ink: ink,
             cover: cover,
+            // Where a block of code starts and ends, which round it off.
+            codeStarts: line.code && (index == 0 || !lines[index - 1].code),
+            codeEnds: line.code &&
+                (index == lines.length - 1 || !lines[index + 1].code),
           ));
           room -= shown;
           if (shown < count) {
@@ -630,8 +637,10 @@ class _PreviewLines extends StatelessWidget {
     );
   }
 
-  /// [line]'s text, in its heading's style, struck through once it's ticked
-  /// off, and with its words' own formatting.
+  /// [line]'s text, in its heading's style or as code, struck through once
+  /// it's ticked off, and with its words' own formatting. Code and
+  /// highlighted words are on a tint of the cover's ink, as the editor's
+  /// marker yellow would clash with the cover.
   TextSpan _spanOf(NotePreviewLine line, TextStyle style) {
     final done = line.list == NoteListKind.checked;
     // Bolder than the casual font, which is already semibold.
@@ -649,7 +658,24 @@ class _PreviewLines extends StatelessWidget {
           fontWeight: bold,
           letterSpacing: -0.25,
         ),
-      3 => TextStyle(color: ink.withValues(alpha: 0.82), fontWeight: bold),
+      3 || 4 => TextStyle(color: ink.withValues(alpha: 0.82), fontWeight: bold),
+      5 => TextStyle(
+          color: ink.withValues(alpha: 0.76),
+          fontSize: style.fontSize! * 0.95,
+          fontWeight: bold,
+        ),
+      6 => TextStyle(
+          color: ink.withValues(alpha: 0.6),
+          fontSize: style.fontSize! * 0.9,
+          fontWeight: bold,
+        ),
+      _ when line.code => TextStyle(
+          color: ink.withValues(alpha: 0.75),
+          fontFamily: _code,
+          fontSize: style.fontSize! * 0.88,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0,
+        ),
       _ => line.quote ? TextStyle(color: ink.withValues(alpha: 0.5)) : null,
     };
     final faded = ink.withValues(alpha: 0.38);
@@ -664,6 +690,16 @@ class _PreviewLines extends StatelessWidget {
             style: TextStyle(
               fontWeight: run.bold ? bold : null,
               fontStyle: run.italic ? FontStyle.italic : null,
+              fontFamily: run.code ? _code : null,
+              letterSpacing: run.code ? 0 : null,
+              backgroundColor: run.code || run.highlight
+                  ? ink.withValues(alpha: run.code ? 0.12 : 0.2)
+                  : null,
+              fontFeatures: run.superscript
+                  ? const [FontFeature.superscripts()]
+                  : run.subscript
+                      ? const [FontFeature.subscripts()]
+                      : null,
               decoration: TextDecoration.combine([
                 if (done || run.strikethrough) TextDecoration.lineThrough,
                 if (run.underline || run.link) TextDecoration.underline,
@@ -677,9 +713,12 @@ class _PreviewLines extends StatelessWidget {
   }
 }
 
+/// The font code is in, as the editor sets it.
+const _code = 'monospace';
+
 /// Where a preview's lines start: in from the edge by a step for each level
-/// they're in, after a quote's bar, and after the bullet, number or check
-/// of a list's item.
+/// they're in, after a quote's bar, after the bullet, number or check of a
+/// list's item, and inside the block a line of code is in.
 class _LineLayout {
   const _LineLayout({required this.fontSize, required this.lineHeight});
 
@@ -693,13 +732,19 @@ class _LineLayout {
   static const quoteBar = 2.5;
   double get quoteGap => fontSize * 0.55;
 
+  /// How far code is set in from either side of its block.
+  double get codeInset => fontSize * 0.45;
+
   double leadOf(NotePreviewLine line) =>
       step * line.indent +
       (line.quote ? quoteBar + quoteGap : 0) +
-      (line.list != null ? step : 0);
+      (line.list != null ? step : 0) +
+      (line.code ? codeInset : 0);
 }
 
-/// A line of a preview, [lines] lines long, after its marks.
+/// A line of a preview, [lines] lines long, after its marks; or a line of
+/// code on its block's tint, which [codeStarts] or [codeEnds] there; or a
+/// hairline across the card for a rule across the note.
 class _PreviewRow extends StatelessWidget {
   const _PreviewRow({
     required this.line,
@@ -710,6 +755,8 @@ class _PreviewRow extends StatelessWidget {
     required this.layout,
     required this.ink,
     required this.cover,
+    this.codeStarts = false,
+    this.codeEnds = false,
   });
 
   final NotePreviewLine line;
@@ -720,9 +767,36 @@ class _PreviewRow extends StatelessWidget {
   final _LineLayout layout;
   final Color ink;
   final Color cover;
+  final bool codeStarts;
+  final bool codeEnds;
 
   @override
   Widget build(BuildContext context) {
+    if (line.divider) {
+      return Padding(
+        padding: EdgeInsetsDirectional.only(start: layout.step * line.indent),
+        child: SizedBox(
+          height: layout.lineHeight,
+          child: Center(
+            child: DecoratedBox(
+              decoration: ShapeDecoration(
+                shape: const StadiumBorder(),
+                color: ink.withValues(alpha: 0.28),
+              ),
+              child: const SizedBox(width: double.infinity, height: 1.2),
+            ),
+          ),
+        ),
+      );
+    }
+    final text = Text.rich(
+      span,
+      maxLines: lines,
+      overflow: TextOverflow.clip,
+      style: style,
+      strutStyle: strut,
+    );
+    final corner = Radius.circular(layout.fontSize * 0.4);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -757,13 +831,21 @@ class _PreviewRow extends StatelessWidget {
             ),
           ),
         Expanded(
-          child: Text.rich(
-            span,
-            maxLines: lines,
-            overflow: TextOverflow.clip,
-            style: style,
-            strutStyle: strut,
-          ),
+          child: line.code
+              ? DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: ink.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.vertical(
+                      top: codeStarts ? corner : Radius.zero,
+                      bottom: codeEnds ? corner : Radius.zero,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: layout.codeInset),
+                    child: text,
+                  ),
+                )
+              : text,
         ),
       ],
     );

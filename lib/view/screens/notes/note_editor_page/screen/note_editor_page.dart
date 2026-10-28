@@ -20,7 +20,10 @@ import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
+import '../../../tasks/todo_page/widgets/form_dialog.dart';
 import '../widgets/editor_toolbar.dart';
+import '../widgets/link_dialog.dart';
+import '../widgets/note_formatting.dart';
 import '../widgets/note_styles.dart';
 import '../widgets/note_title.dart';
 
@@ -210,24 +213,35 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       child: Directionality(
                         textDirection:
                             _rtl ? TextDirection.rtl : TextDirection.ltr,
-                        child: QuillEditor(
-                          controller: _controller,
-                          focusNode: _bodyFocusNode,
-                          // The page's own, as the text scrolls with it.
-                          scrollController: _scrollController,
-                          config: QuillEditorConfig(
-                            scrollable: false,
-                            // A new note is ready to be written in.
-                            autoFocus: note.body.isEmpty,
-                            placeholder: "Start writing…",
-                            customStyles: noteStyles(context, bodyStyle),
-                            textSpanBuilder: checkedLinesSpanBuilder(bodyStyle),
-                            textSelectionThemeData:
-                                const legacy.TextSelectionThemeData(
-                                    cursorColor: _accent),
-                            // Keeps the line being written clear of the
-                            // toolbar.
-                            scrollBottomInset: toolbarCover + 12,
+                        // For raised and lowered text, which the editor sets
+                        // letter by letter in the style around it.
+                        child: DefaultTextStyle.merge(
+                          style: bodyStyle,
+                          child: QuillEditor(
+                            controller: _controller,
+                            focusNode: _bodyFocusNode,
+                            // The page's own, as the text scrolls with it.
+                            scrollController: _scrollController,
+                            config: QuillEditorConfig(
+                              scrollable: false,
+                              // A new note is ready to be written in.
+                              autoFocus: note.body.isEmpty,
+                              placeholder: "Start writing…",
+                              customStyles: noteStyles(context, bodyStyle),
+                              customStyleBuilder:
+                                  highlightStyleBuilder(context),
+                              textSpanBuilder:
+                                  checkedLinesSpanBuilder(bodyStyle),
+                              embedBuilders: [NoteDividerBuilder(bodyStyle)],
+                              // Code in a note is a few lines at most.
+                              showCodeBlockLineNumbers: false,
+                              textSelectionThemeData:
+                                  const legacy.TextSelectionThemeData(
+                                      cursorColor: _accent),
+                              // Keeps the line being written clear of the
+                              // toolbar.
+                              scrollBottomInset: toolbarCover + 12,
+                            ),
                           ),
                         ),
                       ),
@@ -266,6 +280,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     unsaved: _editor.unsaved,
                     formatting: _formatting,
                     onFormat: _toggleFormatting,
+                    onLink: _editLink,
                     showCount: showCount,
                     autoSave: autoSave,
                     onSave: _saveChanges,
@@ -312,6 +327,37 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     setState(() => _formatting = !_formatting);
     SystemChannels.textInput
         .invokeMethod<void>(_formatting ? 'TextInput.hide' : 'TextInput.show');
+  }
+
+  /// Changes the link the cursor's on, or takes it off, or links the text
+  /// picked out, or writes a new link at the cursor, as the link dialog
+  /// says. The keyboard comes back up to carry on writing after it.
+  Future<void> _editLink() async {
+    final link = _controller.linkAtSelection;
+    final selection = _controller.selection;
+    final range =
+        link?.range ?? TextRange(start: selection.start, end: selection.end);
+    final text =
+        _controller.document.getPlainText(range.start, range.end - range.start);
+    final change = await showFormDialog<LinkChange>(
+      context,
+      LinkDialog(
+        url: link?.url,
+        text: text,
+        // A link over more than a line, or a rule, keeps the text it has.
+        textEditable: !text.contains("\n") &&
+            !text.contains(Embed.kObjectReplacementCharacter),
+      ),
+    );
+    if (!mounted) return;
+    switch (change) {
+      case SetLink(:final url, text: final linkText):
+        _controller.setLink(range, url, text: linkText);
+      case RemoveLink():
+        _controller.removeLink(range);
+      case null:
+        break;
+    }
   }
 
   Future<void> _saveChanges() async {
