@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
@@ -11,12 +12,14 @@ import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/task_filters.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/tasks_view_model.dart';
+import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../../widgets/tour.dart';
 import '../../../notes/notes_page/screen/notes_page.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
@@ -27,11 +30,18 @@ import '../widgets/task_dialog.dart';
 import '../widgets/task_filter_bar.dart';
 import '../widgets/tasks_overwrite_dialog.dart';
 import '../widgets/tasks_summary_card.dart';
+import '../widgets/todo_tour.dart';
 
 const _title = "ToDo";
 
 /// The gap between cards.
 const _cardGap = 12.0;
+
+/// The room above the list's first card.
+const _listTop = 20.0;
+
+/// How long the page takes to rise in, which its tour waits for.
+const _tourDelay = Duration(milliseconds: 900);
 
 class TodoPage extends StatefulWidget {
   const TodoPage({
@@ -57,24 +67,73 @@ class _TodoPageState extends State<TodoPage> {
   /// the filter when the page opens, and none when only the list changes.
   int _listDelay = 2;
 
+  /// The page's tour, which shows once, as the page first opens.
+  final _tour = TourController();
+  Timer? _tourStart;
+
+  /// Whether the tour is on, or about to be, when the first card has
+  /// [_firstCardKey], for the tour to find it by. It's only there then, as a
+  /// global key moves a card's state along with it when the cards are
+  /// reordered.
+  bool _touring = false;
+
+  /// What the tour points at.
+  final _headerKey = GlobalKey();
+  final _firstCardKey = GlobalKey();
+  final _buttonsKey = GlobalKey();
+  final _menuKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final tourDue = Provider.of<TourViewModel>(context, listen: false)
+          .isDue(PageTour.tasks);
+      var touring = false;
       try {
         await Provider.of<TasksViewModel>(context, listen: false).get();
+        touring = await tourDue;
       } finally {
-        if (mounted) setState(() => _loaded = true);
+        if (mounted) {
+          setState(() {
+            _loaded = true;
+            _touring = touring;
+          });
+        }
       }
+      if (touring && mounted) _tourStart = Timer(_tourDelay, _startTour);
     });
   }
 
   @override
   void dispose() {
+    _tourStart?.cancel();
+    _tour.dispose();
     _scrollController.dispose();
     _overviewPaneScrollController.dispose();
     _listPaneScrollController.dispose();
     super.dispose();
+  }
+
+  /// Shows the user how the page works: on the first card, or on an example
+  /// one when there are no tasks.
+  void _startTour() {
+    final tasks = Provider.of<TasksViewModel>(context, listen: false).items;
+    _tour.start(
+      todoTour(
+        task: tasks.firstOrNull,
+        card: _firstCardKey,
+        header: _headerKey,
+        gap: _listTop,
+        buttons: _buttonsKey,
+        menu: _menuKey,
+      ),
+      onEnd: () {
+        setState(() => _touring = false);
+        Provider.of<TourViewModel>(context, listen: false)
+            .finish(PageTour.tasks);
+      },
+    );
   }
 
   @override
@@ -93,17 +152,23 @@ class _TodoPageState extends State<TodoPage> {
             isDarkTheme ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
       ),
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: context.colors.pageBackground,
-        floatingActionButton: PageActionButtons(
-          switchIcon: Icons.edit_note_rounded,
-          switchTooltip: "Notes",
-          onSwitch: _openNotes,
-          addTooltip: "Add Task",
-          onAdd: _addTask,
+      child: Tour(
+        controller: _tour,
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          backgroundColor: context.colors.pageBackground,
+          floatingActionButton: KeyedSubtree(
+            key: _buttonsKey,
+            child: PageActionButtons(
+              switchIcon: Icons.edit_note_rounded,
+              switchTooltip: "Notes",
+              onSwitch: _openNotes,
+              addTooltip: "Add Task",
+              onAdd: _addTask,
+            ),
+          ),
+          body: twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
         ),
-        body: twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
       ),
     );
   }
@@ -121,7 +186,7 @@ class _TodoPageState extends State<TodoPage> {
             title: _title,
             topInset: padding.top,
             controller: _scrollController,
-            trailing: _BarActions(items: _menuItems()),
+            trailing: _BarActions(items: _menuItems(), menuKey: _menuKey),
             titleRevealOffset: _TodoHeader.scrolledAway,
           ),
         ),
@@ -129,6 +194,7 @@ class _TodoPageState extends State<TodoPage> {
           padding: EdgeInsets.symmetric(horizontal: gutter),
           sliver: SliverToBoxAdapter(
             child: Column(
+              key: _headerKey,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const RiseIn(child: _TodoHeader()),
@@ -139,10 +205,11 @@ class _TodoPageState extends State<TodoPage> {
         ),
         if (_loaded)
           _TaskListSliver(
-            padding: EdgeInsets.fromLTRB(gutter, 20, gutter,
+            padding: EdgeInsets.fromLTRB(gutter, _listTop, gutter,
                 PageActionButtons.height + 24 + padding.bottom),
             listDelay: _listDelay,
             onEdit: _editTask,
+            firstCardKey: _touring ? _firstCardKey : null,
           ),
       ],
     );
@@ -171,6 +238,7 @@ class _TodoPageState extends State<TodoPage> {
                     16 + padding.left, 0, 16, 24 + padding.bottom),
                 sliver: SliverToBoxAdapter(
                   child: Column(
+                    key: _headerKey,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const RiseIn(child: _TodoHeader()),
@@ -194,7 +262,7 @@ class _TodoPageState extends State<TodoPage> {
                   title: "",
                   topInset: padding.top,
                   controller: _listPaneScrollController,
-                  trailing: _BarActions(items: _menuItems()),
+                  trailing: _BarActions(items: _menuItems(), menuKey: _menuKey),
                 ),
               ),
               if (_loaded)
@@ -203,6 +271,7 @@ class _TodoPageState extends State<TodoPage> {
                       PageActionButtons.height + 24 + padding.bottom),
                   listDelay: _listDelay,
                   onEdit: _editTask,
+                  firstCardKey: _touring ? _firstCardKey : null,
                 ),
             ],
           ),
@@ -298,16 +367,17 @@ void _showResult(Result? result) => result?.when(
 /// The menu of the tasks' less frequent actions, and the avatar, at the end
 /// of the bar.
 class _BarActions extends StatelessWidget {
-  const _BarActions({required this.items});
+  const _BarActions({required this.items, required this.menuKey});
 
   final List<GlassMenuItem> items;
+  final GlobalKey menuKey;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GlassMenu(items: items),
+        GlassMenu(key: menuKey, items: items),
         const SizedBox(width: 10),
         const AppbarAvatar(),
       ],
@@ -399,6 +469,7 @@ class _TaskListSliver extends StatelessWidget {
     required this.padding,
     required this.listDelay,
     required this.onEdit,
+    required this.firstCardKey,
   });
 
   /// Around the list. Its bottom keeps the last card clear of the buttons.
@@ -409,6 +480,9 @@ class _TaskListSliver extends StatelessWidget {
 
   /// Opens the editor for the task.
   final ValueChanged<TodoItem> onEdit;
+
+  /// The key for the first card, if it's to have one.
+  final GlobalKey? firstCardKey;
 
   @override
   Widget build(BuildContext context) {
@@ -433,6 +507,7 @@ class _TaskListSliver extends StatelessWidget {
         tasks: tasks,
         listDelay: listDelay,
         onEdit: onEdit,
+        firstCardKey: firstCardKey,
       ),
     );
   }
@@ -444,11 +519,13 @@ class _ReorderableTaskList extends StatefulWidget {
     required this.tasks,
     required this.listDelay,
     required this.onEdit,
+    required this.firstCardKey,
   });
 
   final TasksViewModel tasks;
   final int listDelay;
   final ValueChanged<TodoItem> onEdit;
+  final GlobalKey? firstCardKey;
 
   @override
   State<_ReorderableTaskList> createState() => _ReorderableTaskListState();
@@ -546,7 +623,10 @@ class _ReorderableTaskListState extends State<_ReorderableTaskList> {
                 onDismissed: (direction) => tasks
                     .delete(task)
                     .then((_) => FeedbackToast.info("Task Deleted")),
-                child: card(task),
+                child: KeyedSubtree(
+                  key: index == 0 ? widget.firstCardKey : null,
+                  child: card(task),
+                ),
               ),
             ),
           ),

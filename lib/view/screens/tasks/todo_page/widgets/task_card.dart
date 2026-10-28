@@ -31,6 +31,9 @@ class TaskCard extends StatefulWidget {
     this.onEdit,
     this.onReminder,
     this.onDailyReminder,
+    this.checkKey,
+    this.titleKey,
+    this.bellKey,
   });
 
   // Apple's continuous corners, as on the note and profile cards.
@@ -61,6 +64,12 @@ class TaskCard extends StatefulWidget {
 
   /// Turns a daily reminder on, on a long press of the bell.
   final VoidCallback? onDailyReminder;
+
+  /// Keys for the check, the title and the bell, so that a tour can point at
+  /// them on a copy of the card.
+  final Key? checkKey;
+  final Key? titleKey;
+  final Key? bellKey;
 
   @override
   State<TaskCard> createState() => _TaskCardState();
@@ -164,10 +173,11 @@ class _TaskCardState extends State<TaskCard> {
         children: [
           Row(
             children: [
-              CheckCircle(doneness: doneness),
+              CheckCircle(key: widget.checkKey, doneness: doneness),
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
+                  key: widget.titleKey,
                   onLongPress: widget.onEdit == null ? null : _edit,
                   child: Text(
                     task.title,
@@ -202,6 +212,7 @@ class _TaskCardState extends State<TaskCard> {
                   child: Opacity(
                     opacity: 1 - doneness,
                     child: _ReminderButton(
+                      key: widget.bellKey,
                       on: task.reminder != Reminder.none,
                       onTap: widget.onReminder,
                       onLongPress: widget.onDailyReminder,
@@ -410,7 +421,12 @@ class _Chip extends StatelessWidget {
 /// The bell at the end of a card: tinted with the accent while a reminder is
 /// on, and faint while it's off.
 class _ReminderButton extends StatelessWidget {
-  const _ReminderButton({required this.on, this.onTap, this.onLongPress});
+  const _ReminderButton({
+    super.key,
+    required this.on,
+    this.onTap,
+    this.onLongPress,
+  });
 
   final bool on;
   final VoidCallback? onTap;

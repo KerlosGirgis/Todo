@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
@@ -10,11 +11,13 @@ import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
 import '../../../../../view_model/notes_view_model.dart';
+import '../../../../../view_model/tour_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../../widgets/tour.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
 import '../../../tasks/todo_page/screen/todo_page.dart';
@@ -25,6 +28,7 @@ import '../widgets/note_card.dart';
 import '../widgets/note_dialog.dart';
 import '../widgets/notes_overwrite_dialog.dart';
 import '../widgets/notes_search_field.dart';
+import '../widgets/notes_tour.dart';
 import '../widgets/reorder_notes_dialog.dart';
 
 const _title = "Notes";
@@ -37,6 +41,12 @@ const _maxCardWidth = 220.0;
 
 /// A card's width over its height.
 const _cardAspectRatio = 0.8;
+
+/// The room above the grid's first row.
+const _gridTop = 20.0;
+
+/// How long the page takes to rise in, which its tour waits for.
+const _tourDelay = Duration(milliseconds: 900);
 
 /// The page's margins either side: clear of a camera cutout on a phone
 /// turned on its side, and a comfortable width on large screens.
@@ -83,24 +93,77 @@ class _NotesPageState extends State<NotesPage> {
   /// when the page opens, and none once the grid only changes.
   int _gridDelay = 2;
 
+  /// The page's tour, which shows once, as the page first opens.
+  final _tour = TourController();
+  Timer? _tourStart;
+
+  /// Whether the tour is on, or about to be, when the first card has
+  /// [_firstCardKey], for the tour to find it by.
+  bool _touring = false;
+
+  /// What the tour points at.
+  final _headerKey = GlobalKey();
+  final _firstCardKey = GlobalKey();
+  final _searchKey = GlobalKey();
+  final _buttonsKey = GlobalKey();
+  final _menuKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final tourDue = Provider.of<TourViewModel>(context, listen: false)
+          .isDue(PageTour.notes);
+      var touring = false;
       try {
         await Provider.of<NotesViewModel>(context, listen: false).get();
+        touring = await tourDue;
       } finally {
-        if (mounted) setState(() => _loaded = true);
+        if (mounted) {
+          setState(() {
+            _loaded = true;
+            _touring = touring;
+          });
+        }
       }
+      if (touring && mounted) _tourStart = Timer(_tourDelay, _startTour);
     });
   }
 
   @override
   void dispose() {
+    _tourStart?.cancel();
+    _tour.dispose();
     _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Shows the user how the page works: on the first card, or on an example
+  /// one when there are no notes.
+  void _startTour() {
+    _searchFocusNode.unfocus();
+    final notes = Provider.of<NotesViewModel>(context, listen: false);
+    final note = notes.notes.firstOrNull;
+    _tour.start(
+      notesTour(
+        note: note,
+        preview: note == null ? null : notes.previewOf(note),
+        card: _firstCardKey,
+        header: _headerKey,
+        gap: _gridTop,
+        // Only there with notes to search.
+        search: note == null ? null : _searchKey,
+        buttons: _buttonsKey,
+        menu: _menuKey,
+      ),
+      onEnd: () {
+        setState(() => _touring = false);
+        Provider.of<TourViewModel>(context, listen: false)
+            .finish(PageTour.notes);
+      },
+    );
   }
 
   @override
@@ -123,68 +186,77 @@ class _NotesPageState extends State<NotesPage> {
             isDarkTheme ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
       ),
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: context.colors.pageBackground,
-        floatingActionButton: PageActionButtons(
-          switchIcon: Icons.checklist_rounded,
-          switchTooltip: "To-Do",
-          onSwitch: _openTodo,
-          addTooltip: "New Note",
-          onAdd: _addNote,
-        ),
-        body: CustomScrollView(
-          controller: _scrollController,
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: [
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: LargeTitleBarDelegate(
-                title: _title,
-                topInset: padding.top,
-                controller: _scrollController,
-                trailing: Padding(
-                  padding: EdgeInsets.only(right: padding.right),
-                  child: _BarActions(items: _menuItems()),
-                ),
-                titleRevealOffset: _NotesHeader.scrolledAway,
-              ),
+      child: Tour(
+        controller: _tour,
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          backgroundColor: context.colors.pageBackground,
+          floatingActionButton: KeyedSubtree(
+            key: _buttonsKey,
+            child: PageActionButtons(
+              switchIcon: Icons.checklist_rounded,
+              switchTooltip: "To-Do",
+              onSwitch: _openTodo,
+              addTooltip: "New Note",
+              onAdd: _addNote,
             ),
-            SliverPadding(
-              padding: EdgeInsets.only(left: gutterLeft, right: gutterRight),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const RiseIn(child: _NotesHeader()),
-                    // Only while there's something to search, or a search
-                    // to clear.
-                    if (_loaded && (hasNotes || _query.isNotEmpty))
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: RiseIn(
-                          delay: RiseIn.stagger,
-                          child: NotesSearchField(
-                            controller: _searchController,
-                            focusNode: _searchFocusNode,
-                            onChanged: _search,
+          ),
+          body: CustomScrollView(
+            controller: _scrollController,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: LargeTitleBarDelegate(
+                  title: _title,
+                  topInset: padding.top,
+                  controller: _scrollController,
+                  trailing: Padding(
+                    padding: EdgeInsets.only(right: padding.right),
+                    child: _BarActions(items: _menuItems(), menuKey: _menuKey),
+                  ),
+                  titleRevealOffset: _NotesHeader.scrolledAway,
+                ),
+              ),
+              SliverPadding(
+                padding: EdgeInsets.only(left: gutterLeft, right: gutterRight),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    key: _headerKey,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const RiseIn(child: _NotesHeader()),
+                      // Only while there's something to search, or a search
+                      // to clear.
+                      if (_loaded && (hasNotes || _query.isNotEmpty))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: RiseIn(
+                            delay: RiseIn.stagger,
+                            child: NotesSearchField(
+                              key: _searchKey,
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              onChanged: _search,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (_loaded)
-              _NoteGridSliver(
-                query: _query,
-                padding: EdgeInsets.fromLTRB(
-                    gutterLeft, 20, gutterRight, bottomInset),
-                gridDelay: _gridDelay,
-                onOpen: _openNote,
-                onEdit: _editNote,
-              ),
-          ],
+              if (_loaded)
+                _NoteGridSliver(
+                  query: _query,
+                  padding: EdgeInsets.fromLTRB(
+                      gutterLeft, _gridTop, gutterRight, bottomInset),
+                  gridDelay: _gridDelay,
+                  onOpen: _openNote,
+                  onEdit: _editNote,
+                  firstCardKey: _touring ? _firstCardKey : null,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -364,16 +436,17 @@ void _showResult(Result? result) => result?.when(
 /// The menu of the notes' less frequent actions, and the avatar, at the end
 /// of the bar.
 class _BarActions extends StatelessWidget {
-  const _BarActions({required this.items});
+  const _BarActions({required this.items, required this.menuKey});
 
   final List<GlassMenuItem> items;
+  final GlobalKey menuKey;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GlassMenu(items: items),
+        GlassMenu(key: menuKey, items: items),
         const SizedBox(width: 10),
         const AppbarAvatar(),
       ],
@@ -440,6 +513,7 @@ class _NoteGridSliver extends StatelessWidget {
     required this.gridDelay,
     required this.onOpen,
     required this.onEdit,
+    required this.firstCardKey,
   });
 
   final String query;
@@ -455,6 +529,9 @@ class _NoteGridSliver extends StatelessWidget {
 
   /// Opens the dialog that changes the note's cover, on a long press.
   final ValueChanged<Note> onEdit;
+
+  /// The key for the first card, if it's to have one.
+  final GlobalKey? firstCardKey;
 
   @override
   Widget build(BuildContext context) {
@@ -489,6 +566,7 @@ class _NoteGridSliver extends StatelessWidget {
         gridDelay: gridDelay,
         onOpen: onOpen,
         onEdit: onEdit,
+        firstCardKey: firstCardKey,
       ),
     );
   }
@@ -502,6 +580,7 @@ class _NoteGrid extends StatefulWidget {
     required this.gridDelay,
     required this.onOpen,
     required this.onEdit,
+    required this.firstCardKey,
   });
 
   /// Every note, which tells a note just added from one the search let back
@@ -516,6 +595,7 @@ class _NoteGrid extends StatefulWidget {
   final int gridDelay;
   final ValueChanged<Note> onOpen;
   final ValueChanged<Note> onEdit;
+  final GlobalKey? firstCardKey;
 
   @override
   State<_NoteGrid> createState() => _NoteGridState();
@@ -562,11 +642,14 @@ class _NoteGridState extends State<_NoteGrid> {
           delay: _opening
               ? RiseIn.stagger * (widget.gridDelay + math.min(index, 8))
               : Duration.zero,
-          child: NoteCard(
-            note: note,
-            preview: widget.previewOf(note),
-            onTap: () => widget.onOpen(note),
-            onLongPress: () => widget.onEdit(note),
+          child: KeyedSubtree(
+            key: index == 0 ? widget.firstCardKey : null,
+            child: NoteCard(
+              note: note,
+              preview: widget.previewOf(note),
+              onTap: () => widget.onOpen(note),
+              onLongPress: () => widget.onEdit(note),
+            ),
           ),
         );
       },

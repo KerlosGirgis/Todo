@@ -9,6 +9,7 @@ import 'package:todo/view/widgets/app_lock_guard.dart';
 import 'package:todo/view_model/auth_view_model.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
+import 'package:todo/view_model/tour_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -33,6 +34,7 @@ void main() async {
     // From the start, to follow the App Lock, which the reminders go by.
     ChangeNotifierProvider(create: (_) => TasksViewModel(), lazy: false),
     ChangeNotifierProvider(create: (_) => NotesViewModel()),
+    Provider(create: (_) => TourViewModel()),
   ], child: const MyApp()));
 }
 
