@@ -9,16 +9,36 @@ class DatabaseService {
   DatabaseService._internal();
   static Database? _db;
 
+  /// The key the database is open with, which a change of App Lock locks
+  /// with its password, or keeps as it is.
+  static String? _key;
+  String? get key => _key;
+
   final secureStorage = const FlutterSecureStorage();
   static const int _databaseVersion = 6;
 
-  Future<Database> openDb() async {
+  /// Opens the database with [key], which the App Lock's password unlocked,
+  /// or else with the key kept as it is, or a new one for a new database.
+  Future<Database> openDb({String? key}) async {
     var databasesPath = await getDatabasesPath();
     String path = '$databasesPath/Database.db';
-    String? dbKey = await KeyService().getOrCreateEncryptionKey();
+    final keys = KeyService();
+    final dbKey = key ?? await keys.unlockedKey() ?? await _newKey(path, keys);
     _db = await openDatabase(path,
         password: dbKey, version: _databaseVersion, onCreate: _onCreate,onUpgrade: _onUpgrade);
+    _key = dbKey;
     return _db!;
+  }
+
+  /// A key for a new database. Not for one that's there already, without its
+  /// key: another one would never open it.
+  Future<String> _newKey(String path, KeyService keys) async {
+    if (await databaseExists(path)) {
+      throw StateError("The database's key is missing");
+    }
+    final key = KeyService.newKey();
+    await keys.keepUnlocked(key);
+    return key;
   }
 
   Future<void> _onCreate(Database db, int version) async {

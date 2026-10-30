@@ -5,6 +5,7 @@ import 'package:todo/models/avatar.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/models/verse.dart';
 import 'package:todo/services/authentication_service.dart';
+import 'package:todo/services/database_service.dart';
 import 'package:todo/services/device_service.dart';
 import 'package:todo/services/home_widget_service.dart';
 import 'package:todo/services/image_service.dart';
@@ -23,13 +24,16 @@ class UserViewModel with ChangeNotifier {
     AuthenticationService? authService,
     DeviceService? deviceService,
     VerseService? verseService,
+    DatabaseService? databaseService,
   })  : _userRepository = repository ?? UserRepository(),
         _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
         _imageService = imageService ?? ImageService(),
         _lockService = lockService ?? LockService(),
-        _authService = authService ?? AuthenticationService(),
+        _authService =
+            authService ?? AuthenticationService(lockService: lockService),
         _deviceService = deviceService ?? DeviceService(),
-        _verseService = verseService ?? VerseService();
+        _verseService = verseService ?? VerseService(),
+        _dbService = databaseService ?? DatabaseService();
 
   UserProfile _user = UserProfile(
       name: "user",
@@ -81,6 +85,7 @@ class UserViewModel with ChangeNotifier {
   final AuthenticationService _authService;
   final DeviceService _deviceService;
   final VerseService _verseService;
+  final DatabaseService _dbService;
 
   Future<void> get() async {
     List<UserProfile> users = await _userRepository.getUser();
@@ -211,7 +216,9 @@ class UserViewModel with ChangeNotifier {
     if (!await _authService.passesAppLock(password: password)) {
       return Failure("Authentication Failed");
     }
-    await _lockService.disableLock();
+    if (!await _withKey((key) => _lockService.disableLock(key: key))) {
+      return Failure(_unchangeable);
+    }
     _setAppLock(AppLock.off);
     notifyListeners();
     return Info("Lock Disabled");
@@ -224,7 +231,9 @@ class UserViewModel with ChangeNotifier {
         !await _authService.authenticate()) {
       return Failure("Authentication Failed");
     }
-    await _lockService.enableLock();
+    if (!await _withKey((key) => _lockService.enableLock(key: key))) {
+      return Failure(_unchangeable);
+    }
     _setAppLock(AppLock.fingerprint);
     notifyListeners();
     return Success("Fingerprint Lock Enabled");
@@ -242,10 +251,29 @@ class UserViewModel with ChangeNotifier {
       return Failure("Authentication Failed");
     }
     final changing = _appLock == AppLock.password;
-    await _lockService.enableLock(password: newPassword);
+    if (!await _withKey(
+        (key) => _lockService.enableLock(password: newPassword, key: key))) {
+      return Failure(_unchangeable);
+    }
     _setAppLock(AppLock.password);
     notifyListeners();
     return Success(changing ? "Password Changed" : "Password Lock Enabled");
+  }
+
+  static const _unchangeable = "Couldn't change the App Lock";
+
+  /// Changes the lock with [change], given the database's key, which the
+  /// lock keeps as it is, or a password locks: the one it's open with.
+  /// Whether it did.
+  Future<bool> _withKey(Future<void> Function(String key) change) async {
+    final key = _dbService.key;
+    if (key == null) return false;
+    try {
+      await change(key);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Whether [size] is one of the text sizes on offer.

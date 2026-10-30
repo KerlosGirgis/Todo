@@ -40,8 +40,11 @@ class FakeLock extends LockService {
   Future<AppLock> getLock() async => AppLock.password;
 
   @override
-  Future<PasswordCheck> checkPassword(String password) async =>
-      (matched: password == "1234", wait: Duration.zero);
+  Future<PasswordCheck> checkPassword(String password) async => (
+        matched: password == "1234",
+        wait: Duration.zero,
+        key: password == "1234" ? "database key" : null,
+      );
 }
 
 class _NoDatabase implements Database {
@@ -52,7 +55,7 @@ class _NoDatabase implements Database {
 /// A database that opens, which nothing here reads.
 class FakeDatabase implements DatabaseService {
   @override
-  Future<Database> openDb() async => _NoDatabase();
+  Future<Database> openDb({String? key}) async => _NoDatabase();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -25,13 +25,16 @@ enum FingerprintCheck {
 typedef AppLockPass = ({bool passed, String? password});
 
 class AuthenticationService {
+  AuthenticationService({LockService? lockService})
+      : _lockService = lockService ?? LockService();
+
   /// The app's own Android code for the fingerprint, which takes only
   /// Android's strongest biometrics, rather than also the weaker ones, such
   /// as a face unlock that a photo can fool, as the local_auth plugin did. A
   /// phone with nothing stronger set up still uses the weaker ones.
   static const _channel = MethodChannel('com.k.todo/biometrics');
 
-  final LockService _lockService = LockService();
+  final LockService _lockService;
 
   Future<bool> authenticate() async =>
       await checkFingerprint() == FingerprintCheck.passed;
@@ -59,14 +62,19 @@ class AuthenticationService {
 
   /// Whether the App Lock lets the user through, as it does when the app
   /// opens: straight away when the app isn't locked, or with their
-  /// fingerprint, or [password], whichever it's locked with.
+  /// fingerprint, or [password], whichever it's locked with. Not when the
+  /// lock can't be checked.
   Future<bool> passesAppLock({String? password}) async {
-    return switch (await _lockService.getLock()) {
-      AppLock.off => true,
-      AppLock.fingerprint => await authenticate(),
-      AppLock.password => password != null &&
-          (await _lockService.checkPassword(password)).matched,
-    };
+    try {
+      return switch (await _lockService.getLock()) {
+        AppLock.off => true,
+        AppLock.fingerprint => await authenticate(),
+        AppLock.password => password != null &&
+            (await _lockService.checkPassword(password)).matched,
+      };
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Lets the user through the App Lock, as [passesAppLock] does, asking

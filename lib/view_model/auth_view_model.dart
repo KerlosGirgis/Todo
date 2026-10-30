@@ -76,17 +76,32 @@ class AuthViewModel with ChangeNotifier {
     await initializeApp();
   }
 
-  /// Opens the app with [password], for an app locked with one.
+  /// Opens the app with [password], for an app locked with one, which
+  /// unlocks the database's key too.
   Future<Result> unlock(String password) async {
-    final result = await checkPassword(password);
-    if (result is Success) await _open();
-    return result;
+    final PasswordCheck check;
+    try {
+      check = await _lockService.checkPassword(password);
+    } catch (e) {
+      return Failure(_uncheckable);
+    }
+    if (check.matched) await _open(key: check.key);
+    return _resultOf(check);
   }
 
   /// Checks [password] against the App Lock's, as the lock page does, for
   /// the dialogs that ask for it again.
   Future<Result> checkPassword(String password) async {
-    final check = await _lockService.checkPassword(password);
+    try {
+      return _resultOf(await _lockService.checkPassword(password));
+    } catch (e) {
+      return Failure(_uncheckable);
+    }
+  }
+
+  static const _uncheckable = "Couldn't check the password";
+
+  static Result _resultOf(PasswordCheck check) {
     if (check.matched) return Success("Unlocked");
     if (check.wait > Duration.zero) {
       return Failure("Too many tries. Try again in ${_inWords(check.wait)}.");
@@ -172,9 +187,11 @@ class AuthViewModel with ChangeNotifier {
     }
   }
 
-  Future<void> _open() async {
+  /// Opens the app, and the database with [key], the one the App Lock's
+  /// password unlocked, if it's locked with one.
+  Future<void> _open({String? key}) async {
     if (!_opened) {
-      await _dbService.openDb();
+      await _dbService.openDb(key: key);
       await _verseService.loadVerses();
       await _userViewModel.get();
       _opened = true;

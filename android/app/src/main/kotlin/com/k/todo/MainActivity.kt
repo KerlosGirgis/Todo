@@ -3,6 +3,8 @@ package com.k.todo
 import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import android.view.WindowManager
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
@@ -12,8 +14,11 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StandardMethodCodec
+import java.security.KeyStore
 import java.time.ZoneId
+import javax.crypto.KeyGenerator
 import javax.crypto.Mac
+import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
 
 class MainActivity: FlutterFragmentActivity() {
@@ -72,6 +77,31 @@ class MainActivity: FlutterFragmentActivity() {
                         call.argument<Int>("iterations")!!,
                     )
                 )
+                else -> result.notImplemented()
+            }
+        }
+        // The same, on a queue of its own, which takes one call at a time, so
+        // the phone's key below is only ever made once.
+        MethodChannel(
+            messenger,
+            "com.k.todo/lock",
+            StandardMethodCodec.INSTANCE,
+            messenger.makeBackgroundTaskQueue(),
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "keyFromPassword" -> try {
+                    result.success(
+                        boundToPhone(
+                            pbkdf2(
+                                call.argument<String>("password")!!,
+                                call.argument<ByteArray>("salt")!!,
+                                call.argument<Int>("iterations")!!,
+                            )
+                        )
+                    )
+                } catch (e: Exception) {
+                    result.error("keystore", e.message, null)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -171,5 +201,26 @@ class MainActivity: FlutterFragmentActivity() {
             }
         }
         return key
+    }
+
+    // [secret] through an HMAC whose key the phone's keystore makes and keeps,
+    // and never lets out, so that a password the App Lock's key is made from
+    // can only be guessed on this phone, a guess at a time, rather than on a
+    // copy of the app's data, as fast as computers can go.
+    private fun boundToPhone(secret: ByteArray): ByteArray {
+        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        val key = keyStore.getKey(PHONE_KEY, null) as SecretKey?
+            ?: KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_HMAC_SHA256, "AndroidKeyStore")
+                .apply {
+                    init(KeyGenParameterSpec.Builder(PHONE_KEY, KeyProperties.PURPOSE_SIGN).build())
+                }
+                .generateKey()
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(key)
+        return mac.doFinal(secret)
+    }
+
+    private companion object {
+        const val PHONE_KEY = "appLockPassword"
     }
 }

@@ -131,7 +131,8 @@ class _PasswordUnlockState extends State<_PasswordUnlock> {
                 ListenableBuilder(
                   listenable: _controller,
                   builder: (context, child) => ProfileButton(
-                    label: "Unlock",
+                    // The password takes a moment to unlock the data with.
+                    label: _checking ? "Checking…" : "Unlock",
                     onPressed:
                         _controller.text.isEmpty || _checking ? null : _unlock,
                   ),

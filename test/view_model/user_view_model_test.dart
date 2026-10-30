@@ -1,14 +1,17 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/avatar.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/repositories/user_repository.dart';
 import 'package:todo/services/authentication_service.dart';
+import 'package:todo/services/database_service.dart';
 import 'package:todo/services/device_service.dart';
 import 'package:todo/services/home_widget_service.dart';
 import 'package:todo/services/lock_service.dart';
+import 'package:todo/services/verse_service.dart';
 import 'package:todo/view_model/auth_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
@@ -52,6 +55,56 @@ class FakeDevice extends DeviceService {
 LockService newLock() =>
     LockService.withClock(() async => (boot: 1, sinceBoot: Duration.zero));
 
+/// The database's key, as the app made it.
+const dbKey =
+    "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
+
+/// The database's key as it's kept while the App Lock isn't a password.
+Future<String?> unlockedKey() =>
+    const FlutterSecureStorage().read(key: 'encryptionKey');
+
+class _NoDatabase implements Database {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// The database, open with [dbKey].
+class FakeDatabase implements DatabaseService {
+  /// The key the app opened it with, which the App Lock's password unlocked,
+  /// or null for the one kept as it is.
+  String? openedWith;
+
+  @override
+  String? get key => dbKey;
+
+  @override
+  Future<Database> openDb({String? key}) async {
+    openedWith = key;
+    return _NoDatabase();
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// A phone whose fingerprint always matches.
+class PassingFingerprint extends AuthenticationService {
+  PassingFingerprint() : super(lockService: newLock());
+
+  @override
+  Future<FingerprintCheck> checkFingerprint(
+          {String reason = 'Please authenticate'}) async =>
+      FingerprintCheck.passed;
+}
+
+class FakeVerses implements VerseService {
+  @override
+  Future<void> loadVerses() async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -61,7 +114,7 @@ void main() {
   late UserViewModel user;
 
   setUp(() async {
-    FlutterSecureStorage.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({'encryptionKey': dbKey});
     repository = FakeUserRepository();
     homeWidget = FakeHomeWidget();
     device = FakeDevice();
@@ -70,6 +123,7 @@ void main() {
       homeWidgetService: homeWidget,
       lockService: newLock(),
       deviceService: device,
+      databaseService: FakeDatabase(),
     );
     await user.get();
     repository.updates = 0;
@@ -159,6 +213,7 @@ void main() {
       expect((result as Success).message, "Password Lock Enabled");
       expect(user.appLock, AppLock.password);
       expect(await newLock().getLock(), AppLock.password);
+      expect(await unlockedKey(), isNull);
       expect(device.hidden, isTrue);
       await Future<void>.delayed(Duration.zero);
       expect(changes, [AppLock.password]);
@@ -190,7 +245,25 @@ void main() {
             askForPassword: () async => "1234", askForNewPassword: newPassword);
         expect((result as Info).message, "Lock Disabled");
         expect(user.appLock, AppLock.off);
+        expect(await unlockedKey(), dbKey);
         expect(device.hidden, isFalse);
+      });
+
+      test('keeps the key as it is again for the fingerprint', () async {
+        final fingerprint = UserViewModel(
+          repository: repository,
+          homeWidgetService: homeWidget,
+          lockService: newLock(),
+          authService: PassingFingerprint(),
+          deviceService: device,
+          databaseService: FakeDatabase(),
+        );
+        await fingerprint.loadAppLock();
+        final result = await fingerprint.changeAppLock(AppLock.fingerprint,
+            askForPassword: () async => "1234", askForNewPassword: newPassword);
+        expect((result as Success).message, "Fingerprint Lock Enabled");
+        expect(await newLock().getLock(), AppLock.fingerprint);
+        expect(await unlockedKey(), dbKey);
       });
 
       test("doesn't change for a wrong password", () async {
@@ -205,7 +278,8 @@ void main() {
             askForPassword: () async => "1234",
             askForNewPassword: ({required minLength}) async => "4321");
         expect((result as Success).message, "Password Changed");
-        expect((await newLock().checkPassword("4321")).matched, isTrue);
+        expect((await newLock().checkPassword("4321")).key, dbKey);
+        expect((await newLock().checkPassword("1234")).matched, isFalse);
       });
 
       test("won't take a new password that's too short", () async {
@@ -227,6 +301,7 @@ void main() {
         homeWidgetService: homeWidget,
         lockService: newLock(),
         deviceService: device,
+        databaseService: FakeDatabase(),
       );
       final auth = AuthViewModel(fresh, lockService: newLock());
       expect(auth.lock, AppLock.off);
@@ -235,9 +310,35 @@ void main() {
       expect(auth.lock, AppLock.password);
     });
 
+    test('opens the database with the key only its password unlocks',
+        () async {
+      await user.changeAppLock(AppLock.password,
+          askForPassword: () async => null,
+          askForNewPassword: ({required minLength}) async => "1234");
+      final database = FakeDatabase();
+      final auth = AuthViewModel(
+        UserViewModel(
+          repository: repository,
+          homeWidgetService: homeWidget,
+          lockService: newLock(),
+          deviceService: device,
+          databaseService: database,
+        ),
+        lockService: newLock(),
+        databaseService: database,
+        verseService: FakeVerses(),
+      );
+      await auth.initializeApp();
+      expect(await auth.unlock("0000"), isA<Failure>());
+      expect(auth.status, AuthStatus.unauthenticated);
+      expect(await auth.unlock("1234"), isA<Success>());
+      expect(auth.status, AuthStatus.authenticated);
+      expect(database.openedWith, dbKey);
+    });
+
     test('asks for its password only when the app is locked with one',
         () async {
-      final auth = AuthenticationService();
+      final auth = AuthenticationService(lockService: newLock());
       var asked = 0;
       Future<String?> ask() async {
         asked++;
