@@ -2,10 +2,6 @@ name: Release
 
 permissions:
   contents: write
-  packages: write
-  actions: write
-  issues: write
-  pull-requests: write
 
 on:
   push:
@@ -20,48 +16,52 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      - uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          distribution: 'adopt'
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Increase watcher limit
         run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
-          flutter-version: '3.41.4'
+          # F-Droid's build reads this version with a sed: keep it quoted, with nothing after it.
+          flutter-version: '3.47.7'
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: disable analytics
         run: flutter config --no-analytics
 
       - name: Build Android APKs
         env:
-          RELEASE_STORE_FILE: ${{ github.workspace }}/android/app/kkey.keystore
           ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           ANDROID_KEY_ALIAS_PASSWORD: ${{ secrets.ANDROID_KEY_ALIAS_PASSWORD }}
         run: |
-          echo $ANDROID_SIGNING_KEY | base64 --decode > ${{ github.workspace }}/android/app/kkey.keystore
+          trap 'rm -f android/app/kkey.keystore' EXIT
+          printf '%s' "$ANDROID_SIGNING_KEY" | base64 --decode > android/app/kkey.keystore
           flutter build apk --release --split-per-abi --target-platform=android-arm,android-arm64,android-x64
 
-      - name: Upload APKs to release
-        uses: actions/upload-artifact@v4
+      - name: Upload APKs as a workflow artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-apks
           path: build/app/outputs/flutter-apk/*.apk
 
+      # A manual run from a branch only builds; a tag (pushed or picked) also releases.
       - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
+        if: github.ref_type == 'tag'
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         with:
           artifacts: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk,build/app/outputs/flutter-apk/app-arm64-v8a-release.apk,build/app/outputs/flutter-apk/app-x86_64-release.apk
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -69,6 +69,15 @@ jobs:
           name: Todo ${{ github.ref_name }}
           body: |
             ## Release Notes
-            - UI improvements.
-            - Added the ability to customize task and note font sizes.
-            - Updated dependencies and various bug fixes.
+            - Redesigned the To-Do, Notes and Profile pages.
+            - Added rich text formatting to notes: headings, lists, checklists, quotes, code, links, highlights and more.
+            - Daily tasks are now checked off day by day, with a week view and streaks.
+            - Added task filters.
+            - Added a password option to App Lock. The password also locks the app's encrypted data, so it can't be recovered if forgotten.
+            - App Lock now locks again after a minute away and hides the app's screen from recent apps.
+            - Backups are now encrypted with a password. Older backups can still be restored.
+            - Reminders hide task names while App Lock is on and follow the phone's time zone. One-time reminders no longer repeat every year.
+            - Locked notes can no longer be shown on the home screen widget.
+            - Added a quick tour of the To-Do and Notes pages. Replay it with Show Tips Again in settings.
+            - Added profile picture cropping.
+            - Removed unneeded permissions, updated dependencies and fixed various bugs.

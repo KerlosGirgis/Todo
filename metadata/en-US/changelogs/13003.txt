@@ -1,0 +1,9 @@
+• Redesigned the To-Do, Notes and Profile pages.
+• Added rich text to notes: headings, lists, checklists and more.
+• Daily tasks are now checked off day by day, with streaks.
+• Added task filters.
+• Added a password option to App Lock. It locks your data too and can't be reset if forgotten.
+• App Lock now locks again after a minute away.
+• Backups are now encrypted with a password.
+• Reminders now follow the phone's time zone.
+• Updated dependencies and fixed various bugs.
