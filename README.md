@@ -37,6 +37,7 @@ No account, no ads, no tracking, and no internet permission.
 ### ✅ Tasks
 
 - **Reminders.** Give a task a date and a time, and get reminded once or every day.
+- **Daily tasks.** A daily task starts fresh every day and remembers whether you did it, with its past week and your streak on its card.
 - **Quick gestures.** Tap a task to check it off, swipe it away to delete it, or press and hold to drag it into place.
 - **Your progress at a glance.** A progress ring shows how far along you are, and filters split the list into done and undone.
 - **Nothing slips by.** An overdue task's date turns red until it's done.

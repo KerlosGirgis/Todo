@@ -10,7 +10,7 @@ class DatabaseService {
   static Database? _db;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 5;
+  static const int _databaseVersion = 6;
 
   Future<Database> openDb() async {
     var databasesPath = await getDatabasesPath();
@@ -31,7 +31,9 @@ class DatabaseService {
       date TEXT,
       time TEXT,
       uuid TEXT,
-      notification INTEGER
+      notification INTEGER,
+      since TEXT,
+      doneDays TEXT
     )
     ''');
     await db.execute('''
@@ -81,6 +83,24 @@ class DatabaseService {
     }
     if(oldVersion < 5){
       await db.execute('ALTER TABLE Notes ADD COLUMN delta TEXT');
+    }
+    if (oldVersion < 6) {
+      // They may be there already: an older build that opens the database
+      // puts its version back, but leaves the columns.
+      final columns = {
+        for (final column in await db.rawQuery('PRAGMA table_info(ToDo)'))
+          column['name'],
+      };
+      if (!columns.contains('since')) {
+        await db.execute('ALTER TABLE ToDo ADD COLUMN since TEXT');
+      }
+      if (!columns.contains('doneDays')) {
+        await db.execute('ALTER TABLE ToDo ADD COLUMN doneDays TEXT');
+      }
+      // The daily tasks there are count their days from today, as nothing
+      // says how earlier ones went.
+      await db.execute("UPDATE ToDo SET since = date('now', 'localtime') "
+          "WHERE notification = 2 AND (since IS NULL OR since = '')");
     }
   }
 

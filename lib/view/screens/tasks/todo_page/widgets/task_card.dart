@@ -3,10 +3,12 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:readmore/readmore.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/utils/date_time_utils.dart';
+import '../../../../../models/daily_progress.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../widgets/check_circle.dart';
 
@@ -17,9 +19,15 @@ const _highlight = Color(0xff40C4FF);
 Color _systemRed(bool isDarkTheme) =>
     isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
 
+/// iOS's system orange on dark pages, and a deeper one that reads on light
+/// ones.
+Color _orange(bool isDarkTheme) =>
+    isDarkTheme ? const Color(0xffFF9F0A) : const Color(0xffC93400);
+
 /// A task on the to-do page, on the same surface as the profile page's
 /// cards: a round check that fills in once it's done, its title and
-/// description, when it's due, and a bell for its reminder.
+/// description, when it's due, and a bell for its reminder. A daily task's
+/// also shows how its last seven days went, and its streak.
 class TaskCard extends StatefulWidget {
   const TaskCard({
     super.key,
@@ -165,7 +173,10 @@ class _TaskCardState extends State<TaskCard> {
     // Text fades back as the task gets done.
     Color fade(double alpha, double doneAlpha) =>
         ink.withValues(alpha: lerpDouble(alpha, doneAlpha, doneness));
-    final chips = _chips(context, doneness);
+    final now = DateTime.now();
+    // Today as the card has it, which is how the tour can check it off.
+    final progress = task.progress.withDay(now, done: task.done);
+    final chips = _chips(context, doneness, now, progress);
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 6, 14),
       child: Column(
@@ -232,6 +243,19 @@ class _TaskCardState extends State<TaskCard> {
               padding: const EdgeInsets.fromLTRB(_textInset, 10, 10, 0),
               child: Wrap(spacing: 6, runSpacing: 6, children: chips),
             ),
+          if (task.isDaily)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(_textInset, 12, 10, 0),
+              // Fades back with the chips once the task's done for the day.
+              child: Opacity(
+                opacity: lerpDouble(1, 0.5, doneness)!,
+                child: _WeekStrip(
+                  progress: progress,
+                  today: now,
+                  doneness: doneness,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -267,14 +291,17 @@ class _TaskCardState extends State<TaskCard> {
     );
   }
 
-  /// When the task is due, and whether it repeats daily.
-  List<Widget> _chips(BuildContext context, double doneness) {
+  /// When the task is due, whether it repeats daily, and for how many days
+  /// in a row it's been done.
+  List<Widget> _chips(BuildContext context, double doneness, DateTime now,
+      DailyProgress progress) {
     final task = widget.task;
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
-    final now = DateTime.now();
     // Done tasks' chips fade back with the rest of the card.
     final strength = lerpDouble(1, 0.5, doneness)!;
+    final streak = progress.streak(now);
+    final orange = _orange(isDarkTheme);
     final when = _whenLabel(task, now);
     // Red once it's overdue, as in Reminders, until it's done.
     final overdue = task.isPastDue(now) ? 1 - doneness : 0.0;
@@ -307,8 +334,183 @@ class _TaskCardState extends State<TaskCard> {
             ],
           ),
         ),
+      if (task.isDaily && streak >= 2)
+        _Chip(
+          icon: Icons.local_fire_department_rounded,
+          label: "$streak-day streak",
+          color: orange.withValues(alpha: strength),
+          tint:
+              orange.withValues(alpha: (isDarkTheme ? 0.18 : 0.12) * strength),
+        ),
     ];
   }
+}
+
+/// A daily task's last seven days, today last, each with its initial: filled
+/// in with the app's blues on a day the task was done, ringed on one it
+/// wasn't, and bare on one from before it was daily. Today's is ringed in
+/// the accent until it fills in as the task gets done.
+class _WeekStrip extends StatelessWidget {
+  const _WeekStrip({
+    required this.progress,
+    required this.today,
+    required this.doneness,
+  });
+
+  final DailyProgress progress;
+  final DateTime today;
+
+  /// How far today has filled in, as the card goes from to-do (0) to done
+  /// (1).
+  final double doneness;
+
+  static const _length = 7;
+
+  @override
+  Widget build(BuildContext context) {
+    final days = [
+      for (var back = _length - 1; back >= 0; back--)
+        DateTime(today.year, today.month, today.day - back),
+    ];
+    final statuses = [for (final day in days) progress.statusOf(day, today)];
+    int count(DayStatus status) =>
+        statuses.where((each) => each == status).length;
+    // Big enough for its initial at the user's text size.
+    final size =
+        math.max(24.0, MediaQuery.textScalerOf(context).scale(11.5) + 11);
+    return Semantics(
+      label: "Last $_length days: ${count(DayStatus.done)} done, "
+          "${count(DayStatus.missed)} missed"
+          "${statuses.last == DayStatus.due ? ", today still to do" : ""}",
+      excludeSemantics: true,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        // Smaller, rather than off the card, at the largest text sizes.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final (index, day) in days.indexed) ...[
+                if (index > 0) const SizedBox(width: 6),
+                index == _length - 1
+                    ? _DayDot(
+                        day: day,
+                        status: DayStatus.due,
+                        fill: doneness,
+                        size: size,
+                      )
+                    : _DayDot(
+                        day: day,
+                        status: statuses[index],
+                        fill: statuses[index] == DayStatus.done ? 1 : 0,
+                        size: size,
+                      ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A day of a [_WeekStrip]: its initial, in a circle.
+class _DayDot extends StatelessWidget {
+  const _DayDot({
+    required this.day,
+    required this.status,
+    required this.fill,
+    required this.size,
+  });
+
+  final DateTime day;
+
+  /// How the day went, short of being done.
+  final DayStatus status;
+
+  /// How far it's filled in with the app's blues: all the way on a day the
+  /// task was done.
+  final double fill;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final ink = context.colors.wB;
+    final accent = context.colors.moreLess;
+    final (ring, letter) = switch (status) {
+      DayStatus.due => (accent, accent),
+      DayStatus.missed => (
+          ink.withValues(alpha: isDarkTheme ? 0.3 : 0.22),
+          ink.withValues(alpha: 0.5)
+        ),
+      DayStatus.done || DayStatus.untracked => (
+          ink.withValues(alpha: 0),
+          ink.withValues(alpha: 0.25)
+        ),
+    };
+    return CustomPaint(
+      painter: _DayDotPainter(ring: ring, fill: fill),
+      child: SizedBox.square(
+        dimension: size,
+        child: Center(
+          child: Text(
+            DateFormat("EEEEE").format(day),
+            style: TextStyle(
+              color: Color.lerp(letter, Colors.white, fill),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              height: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DayDotPainter extends CustomPainter {
+  const _DayDotPainter({required this.ring, required this.fill});
+
+  final Color ring;
+  final double fill;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2;
+    if (fill < 1 && ring.a > 0) {
+      canvas.drawCircle(
+        center,
+        radius - 0.75,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5
+          ..color = ring.withValues(alpha: ring.a * (1 - fill)),
+      );
+    }
+    if (fill <= 0) return;
+    // Grows in from the middle, as the task's check does.
+    final fillRadius = radius * (0.6 + 0.4 * fill);
+    canvas.drawCircle(
+      center,
+      fillRadius,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            _accent.withValues(alpha: math.min(1, fill * 1.6)),
+            _highlight.withValues(alpha: math.min(1, fill * 1.6)),
+          ],
+        ).createShader(Rect.fromCircle(center: center, radius: fillRadius)),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_DayDotPainter oldDelegate) =>
+      oldDelegate.ring != ring || oldDelegate.fill != fill;
 }
 
 /// What a [TaskCard] uncovers as it's swiped away: the red of a delete

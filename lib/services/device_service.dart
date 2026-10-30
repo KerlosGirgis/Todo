@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 /// phone it counts from, and how long ago that was, asleep or not.
 typedef BootTime = ({int boot, Duration sinceBoot});
 
-/// What the App Lock needs from the phone, through the app's own Android
-/// code: the recent apps, which show the app's last screen, a clock, and
-/// putting the app away.
+/// What the app needs from the phone, through its own Android code: for the
+/// App Lock, the recent apps, which show the app's last screen, a clock, and
+/// putting the app away; for reminders, its time zone.
 class DeviceService {
   static const _channel = MethodChannel('com.k.todo/device');
 
@@ -33,4 +33,8 @@ class DeviceService {
   /// Puts the app away, as Home does, with its pages as they are, where Back
   /// would close them.
   Future<void> moveToBack() => _channel.invokeMethod<void>('moveToBack');
+
+  /// The phone's time zone, such as "Africa/Cairo".
+  Future<String> timeZone() async =>
+      (await _channel.invokeMethod<String>('timeZone'))!;
 }

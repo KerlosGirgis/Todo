@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/clock_time.dart';
+import 'package:todo/models/daily_progress.dart';
 import 'package:todo/models/task_filters.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/repositories/tasks_repository.dart';
+import 'package:todo/services/file_service.dart';
 import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/notification_service.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
@@ -46,12 +50,43 @@ class FakeTasksRepository extends TasksRepository {
       ..clear()
       ..addAll(items.map(_withId));
   }
+
+  @override
+  Future<void> importItems(List<TodoItem> items,
+      {required bool overwrite}) async {
+    if (overwrite) rows.clear();
+    rows.addAll(items.map(_withId));
+  }
+}
+
+/// A file picker that picks [records], as a backup from before backups
+/// were locked.
+class FakeFiles extends FileService {
+  FakeFiles(this.records);
+
+  final List<Map<String, Object>> records;
+
+  @override
+  Future<Uint8List?> pickJsonFile() async => utf8.encode(jsonEncode(records));
 }
 
 class FakeNotifications extends NotificationService {
   final once = <int, DateTime>{};
   final daily = <int, ClockTime>{};
   final bodies = <int, String?>{};
+
+  @override
+  String timeZone = "Africa/Cairo";
+
+  /// The time zone the reminders were all set in: the phone's, unless a test
+  /// says otherwise.
+  String? setIn = "Africa/Cairo";
+
+  @override
+  Future<String?> remindersTimeZone() async => setIn;
+
+  @override
+  Future<void> setRemindersTimeZone(String timeZone) async => setIn = timeZone;
 
   @override
   Future<void> scheduleNotification(
@@ -75,6 +110,12 @@ class FakeNotifications extends NotificationService {
 
   @override
   Future<void> cancelAllNotifications() async {
+    once.clear();
+    daily.clear();
+  }
+
+  @override
+  Future<void> cancelPendingNotifications() async {
     once.clear();
     daily.clear();
   }
@@ -102,15 +143,19 @@ void main() {
   late FakeLock lock;
   late TasksViewModel tasks;
 
+  /// What the view model's clock says: [now], unless a test moves it on.
+  late DateTime time;
+
   setUp(() {
     repository = FakeTasksRepository();
     notifications = FakeNotifications();
     lock = FakeLock();
+    time = now;
     tasks = TasksViewModel(
       repository: repository,
       notificationService: notifications,
       lockService: lock,
-      clock: () => now,
+      clock: () => time,
     );
   });
 
@@ -309,6 +354,201 @@ void main() {
       lock.changed.add(AppLock.off);
       await pumpEventQueue();
       expect(notifications.bodies.values, ["Call", "Stretch"]);
+    });
+
+    /// Tasks with reminders set by an older version, or in another time
+    /// zone: one still to come, one gone that went off once but is set to go
+    /// off again a year on, and a daily one.
+    Future<void> setEarlier() async {
+      await repository.insertItem(TodoItem(
+        uuid: "call",
+        title: "Call",
+        day: DateTime(2026, 5, 13),
+        time: const ClockTime(18, 0),
+        reminder: Reminder.once,
+      ));
+      await repository.insertItem(TodoItem(
+        uuid: "shop",
+        title: "Shop",
+        day: DateTime(2026, 5, 12),
+        time: const ClockTime(9, 0),
+        reminder: Reminder.once,
+      ));
+      await repository.insertItem(TodoItem(
+        uuid: "stretch",
+        title: "Stretch",
+        time: const ClockTime(7, 0),
+        reminder: Reminder.daily,
+      ));
+      notifications.once["shop".hashCode] = DateTime(2027, 5, 12, 9);
+    }
+
+    for (final (earlier, why) in [
+      (null, "before reminders went by the phone's time zone"),
+      ("Europe/London", "in another time zone"),
+    ]) {
+      test("set $why are all set afresh in the phone's", () async {
+        await setEarlier();
+        notifications.setIn = earlier;
+        await tasks.get();
+        expect(
+            notifications.once, {"call".hashCode: DateTime(2026, 5, 13, 18)});
+        expect(
+            notifications.daily, {"stretch".hashCode: const ClockTime(7, 0)});
+        expect(notifications.setIn, "Africa/Cairo");
+      });
+    }
+
+    test("set in the phone's time zone are left as they are", () async {
+      await setEarlier();
+      await tasks.get();
+      expect(notifications.once, {"shop".hashCode: DateTime(2027, 5, 12, 9)});
+      expect(notifications.daily, isEmpty);
+    });
+  });
+
+  group('daily tasks', () {
+    Future<void> addStretch() =>
+        add("Stretch", time: const ClockTime(7, 0), reminder: Reminder.daily);
+
+    test('count their days from the day they become daily', () async {
+      await addStretch();
+      final stretch = task("Stretch");
+      expect(stretch.progress.since, DateTime(2026, 5, 13));
+      expect(stretch.progress.doneDays, isEmpty);
+      expect(stretch.done, isFalse);
+    });
+
+    test('are done for today only, and keep reminding every day', () async {
+      await addStretch();
+      final result = await tasks.toggleDone(task("Stretch"));
+      expect((result as Success).message, "Done for today");
+      expect(task("Stretch").done, isTrue);
+      expect(task("Stretch").reminder, Reminder.daily);
+      expect(notifications.daily.values.single, const ClockTime(7, 0));
+      expect(repository.rows.single.progress.doneDays, {DateTime(2026, 5, 13)});
+
+      time = DateTime(2026, 5, 14, 8);
+      await tasks.get();
+      expect(task("Stretch").done, isFalse);
+      expect(tasks.finishedTasksCount, 0);
+      await tasks.toggleDone(task("Stretch"));
+      expect(repository.rows.single.progress.doneDays,
+          {DateTime(2026, 5, 13), DateTime(2026, 5, 14)});
+    });
+
+    test('take today back off when checked again', () async {
+      await addStretch();
+      await tasks.toggleDone(task("Stretch"));
+      final result = await tasks.toggleDone(task("Stretch"));
+      expect((result as Info).message, "Task undone");
+      expect(task("Stretch").done, isFalse);
+      expect(repository.rows.single.progress.doneDays, isEmpty);
+      expect(notifications.daily, hasLength(1));
+    });
+
+    test('keep the days that went by without them as missed', () async {
+      await addStretch();
+      time = DateTime(2026, 5, 15, 9);
+      await tasks.get();
+      final progress = task("Stretch").progress;
+      DayStatus on(int day) => progress.statusOf(DateTime(2026, 5, day), time);
+      expect(on(12), DayStatus.untracked);
+      expect(on(13), DayStatus.missed);
+      expect(on(14), DayStatus.missed);
+      expect(on(15), DayStatus.due);
+    });
+
+    test('start over as a new day begins', () async {
+      await addStretch();
+      await tasks.toggleDone(task("Stretch"));
+      var changes = 0;
+      tasks.addListener(() => changes++);
+      tasks.checkForNewDay();
+      expect(changes, 0);
+      time = DateTime(2026, 5, 14, 0, 0, 1);
+      tasks.checkForNewDay();
+      expect(changes, 1);
+      expect(tasks.today, DateTime(2026, 5, 14));
+      expect(task("Stretch").done, isFalse);
+      expect(task("Stretch").progress.isDoneOn(DateTime(2026, 5, 13)), isTrue);
+    });
+
+    test('start out done today when a done task becomes daily', () async {
+      await add("Read");
+      await tasks.toggleDone(task("Read"));
+      final draft = tasks.draft(task("Read"))
+        ..setTime(const ClockTime(21, 0))
+        ..setReminder(Reminder.daily);
+      await tasks.save(draft);
+      final read = task("Read");
+      expect(read.isDaily, isTrue);
+      expect(read.done, isTrue);
+      expect(read.progress.since, DateTime(2026, 5, 13));
+      expect(read.progress.doneDays, {DateTime(2026, 5, 13)});
+    });
+
+    test('stay as done as they were, with their days, once not daily',
+        () async {
+      await addStretch();
+      await tasks.toggleDone(task("Stretch"));
+      await tasks.toggleReminder(task("Stretch"));
+      expect(task("Stretch").reminder, Reminder.none);
+      expect(task("Stretch").done, isTrue);
+      expect(notifications.daily, isEmpty);
+      // No longer starting over each day.
+      time = DateTime(2026, 5, 14, 9);
+      await tasks.get();
+      expect(task("Stretch").done, isTrue);
+      expect(task("Stretch").progress.doneDays, {DateTime(2026, 5, 13)});
+    });
+
+    test("set their reminder again with the App Lock, even when done today",
+        () async {
+      await addStretch();
+      await tasks.toggleDone(task("Stretch"));
+      lock.lock = AppLock.password;
+      lock.changed.add(AppLock.password);
+      await pumpEventQueue();
+      expect(notifications.bodies.values.single, isNull);
+    });
+
+    test('from a backup older than their days count them from today', () async {
+      final restoring = TasksViewModel(
+        repository: repository,
+        notificationService: notifications,
+        lockService: lock,
+        fileService: FakeFiles([
+          {
+            'title': "Stretch",
+            'status': 1,
+            'time': "7:00 AM",
+            'uuid': "u-1",
+            'notification': 2,
+          },
+          {
+            'title': "Read",
+            'status': 0,
+            'time': "9:00 PM",
+            'uuid': "u-2",
+            'notification': 2,
+            'since': "2026-05-01",
+            'doneDays': "2026-05-11,2026-05-12",
+          },
+        ]),
+        clock: () => time,
+      );
+      addTearDown(restoring.dispose);
+      final result = await restoring.restore(true,
+          askForBackupPassword: (open) async => false);
+      expect(result, isA<Success>());
+      TodoItem restored(String title) =>
+          restoring.items.singleWhere((task) => task.title == title);
+      expect(restored("Stretch").progress.since, DateTime(2026, 5, 13));
+      expect(restored("Stretch").done, isFalse);
+      expect(restored("Read").progress.since, DateTime(2026, 5, 1));
+      expect(restored("Read").progress.streak(time), 2);
+      expect(notifications.daily, hasLength(2));
     });
   });
 

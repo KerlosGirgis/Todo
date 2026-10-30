@@ -12,6 +12,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StandardMethodCodec
+import java.time.ZoneId
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -38,6 +39,9 @@ class MainActivity: FlutterFragmentActivity() {
                         "sinceBoot" to SystemClock.elapsedRealtime(),
                     )
                 )
+                // The phone's time zone, such as "Africa/Cairo", which
+                // reminders go by to keep to its clock through summer time.
+                "timeZone" -> result.success(ZoneId.systemDefault().id)
                 // As Home does, keeping the app's pages, where Back would
                 // close them.
                 "moveToBack" -> {

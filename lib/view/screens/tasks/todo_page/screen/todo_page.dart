@@ -86,11 +86,18 @@ class _TodoPageState extends State<TodoPage> {
   /// Which tours are due, which says when the user asks for them again.
   late final TourViewModel _tours;
 
+  /// Starts the daily tasks over when the app comes back on a new day.
+  late final AppLifecycleListener _lifecycle;
+
   @override
   void initState() {
     super.initState();
     _tours = Provider.of<TourViewModel>(context, listen: false)
       ..addListener(_toursReplayed);
+    _lifecycle = AppLifecycleListener(
+      onResume:
+          Provider.of<TasksViewModel>(context, listen: false).checkForNewDay,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final tourDue = _tours.isDue(PageTour.tasks);
       var touring = false;
@@ -111,6 +118,7 @@ class _TodoPageState extends State<TodoPage> {
 
   @override
   void dispose() {
+    _lifecycle.dispose();
     _tours.removeListener(_toursReplayed);
     _tourStart?.cancel();
     _tour.dispose();
@@ -399,7 +407,7 @@ class _BarActions extends StatelessWidget {
 }
 
 /// Today's date over the page's large title, which scrolls away under the
-/// bar.
+/// bar: the day the tasks are for, which turns over with them.
 class _TodoHeader extends StatelessWidget {
   const _TodoHeader();
 
@@ -413,7 +421,10 @@ class _TodoHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          DateFormat("EEEE, MMMM d").format(DateTime.now()).toUpperCase(),
+          DateFormat("EEEE, MMMM d")
+              .format(context
+                  .select<TasksViewModel, DateTime>((tasks) => tasks.today))
+              .toUpperCase(),
           style: TextStyle(
             color: context.colors.moreLess,
             fontSize: 12.5,

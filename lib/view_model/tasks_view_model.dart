@@ -10,6 +10,7 @@ import '../core/prompts.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/app_lock.dart';
 import '../models/clock_time.dart';
+import '../models/daily_progress.dart';
 import '../models/task_filters.dart';
 import '../models/todo_item.dart';
 import '../services/authentication_service.dart';
@@ -71,6 +72,7 @@ class TasksViewModel with ChangeNotifier {
   @override
   void dispose() {
     _lockChanges.cancel();
+    _dayEnd?.cancel();
     super.dispose();
   }
 
@@ -103,25 +105,67 @@ class TasksViewModel with ChangeNotifier {
   final NotificationService _notificationService;
   final DateTime Function() _now;
 
-  /// Whether the reminders have been checked against the App Lock since the
-  /// app started.
+  /// Whether the reminders have been checked against the phone's time zone
+  /// and the App Lock since the app started.
   bool _remindersChecked = false;
 
+  /// The day the tasks stand on, which a daily task is done or not for.
+  DateTime get today => _day ?? _dateOf(_now());
+  DateTime? _day;
+
+  /// Goes off as the next day begins, to start the daily tasks over.
+  Timer? _dayEnd;
+
   Future<void> get() async {
-    _allTasks = await _tasksRepository.getItems();
-    _applyFilter();
-    // A reminder set before reminders went by the App Lock, or one whose
-    // change of lock didn't get to it, still says which task it's for.
+    final today = _dateOf(_now());
+    _setDay(today, await _tasksRepository.getItems());
+    _awaitNewDay();
+    // Reminders set in another time zone, or before reminders went by the
+    // phone's, keep to another clock, and a one-time one from back then goes
+    // off again every year, so they're all set afresh. Otherwise, a reminder
+    // set before reminders went by the App Lock, or one whose change of lock
+    // didn't get to it, may still say which task it's for.
     if (!_remindersChecked) {
       _remindersChecked = true;
       try {
-        if (await _lockService.getLock() != AppLock.off) {
+        final timeZone = _notificationService.timeZone;
+        if (await _notificationService.remindersTimeZone() != timeZone) {
+          await _notificationService.cancelPendingNotifications();
+          // Until they all are, they're set afresh at each start.
+          if (await refreshReminders()) {
+            await _notificationService.setRemindersTimeZone(timeZone);
+          }
+        } else if (await _lockService.getLock() != AppLock.off) {
           await refreshReminders();
         }
       } catch (e) {
         // The reminders stay as they were.
       }
     }
+  }
+
+  /// Starts each daily task over, not done yet, if a new day has begun since
+  /// the tasks were brought up to date: at midnight, or as the app comes
+  /// back after it.
+  void checkForNewDay() {
+    if (_day == null) return;
+    final today = _dateOf(_now());
+    if (today != _day) _setDay(today, _allTasks);
+    _awaitNewDay();
+  }
+
+  /// Lists [tasks] as they stand on [today].
+  void _setDay(DateTime today, List<TodoItem> tasks) {
+    _day = today;
+    _allTasks = [for (final task in tasks) task.asOf(today)];
+    _applyFilter();
+  }
+
+  void _awaitNewDay() {
+    _dayEnd?.cancel();
+    final now = _now();
+    _dayEnd = Timer(DateTime(now.year, now.month, now.day + 1).difference(now),
+        checkForNewDay);
   }
 
   /// Lists only the tasks [filter] lets through.
@@ -216,6 +260,7 @@ class TasksViewModel with ChangeNotifier {
       time: time,
       uuid: task.uuid,
       reminder: reminder,
+      progress: _progressAs(task, reminder),
     );
     await _tasksRepository.updateItem(updated);
     await get();
@@ -246,9 +291,20 @@ class TasksViewModel with ChangeNotifier {
     await get();
   }
 
-  /// Marks [task] done, which turns its reminder off, or not done again.
+  /// Marks [task] done, which turns its reminder off, or not done again. A
+  /// daily task is done for today only, and keeps reminding the user every
+  /// day.
   Future<Result> toggleDone(TodoItem task) async {
     task = _current(task);
+    if (task.isDaily) {
+      final done = !task.done;
+      await _tasksRepository.updateItem(task.copyWith(
+        done: done,
+        progress: task.progress.withDay(today, done: done),
+      ));
+      await get();
+      return done ? Success("Done for today") : Info("Task undone");
+    }
     if (task.done) {
       await _tasksRepository.updateItem(task.copyWith(done: false));
       await get();
@@ -317,8 +373,14 @@ class TasksViewModel with ChangeNotifier {
       final records = await _backupService.read(bytes,
           kind: BackupKind.tasks, askForPassword: askForBackupPassword);
       if (records == null) return null;
-      final importedTasks =
-          records.map<TodoItem>((e) => TodoItem.fromMap(e)).toList();
+      final importedTasks = records.map<TodoItem>((e) {
+        final task = TodoItem.fromMap(e);
+        // A daily task from a backup older than tasks' days counts its days
+        // from today on.
+        return task.isDaily && task.progress.since == null
+            ? task.copyWith(progress: task.progress.startingOn(today))
+            : task;
+      }).toList();
 
       final existingTasks =
           overwrite ? <TodoItem>[] : await _tasksRepository.getItems();
@@ -389,11 +451,11 @@ class TasksViewModel with ChangeNotifier {
   /// Sets [item]'s reminder, if it's still to come.
   Future<void> _scheduleReminder(TodoItem item) async {
     final time = item.time;
-    if (time == null || item.done) return;
+    if (time == null) return;
     switch (item.reminder) {
       case Reminder.once:
         final day = item.day;
-        if (day == null) return;
+        if (day == null || item.done) return;
         final scheduledTime = time.on(day);
         if (scheduledTime.isAfter(_now())) {
           await _notificationService.scheduleNotification(
@@ -404,7 +466,8 @@ class TasksViewModel with ChangeNotifier {
           );
         }
       case Reminder.daily:
-        // Only its time: a daily reminder has no day.
+        // Only its time: a daily reminder has no day. Done today or not, as
+        // it goes off every day.
         await _notificationService.scheduleDailyNotification(
           item.uuid.hashCode,
           "Don't Forget Your Task!",
@@ -423,19 +486,24 @@ class TasksViewModel with ChangeNotifier {
       await _lockService.getLock() == AppLock.off ? task.title : null;
 
   /// Sets every reminder again, as whether they say which task they're for
-  /// goes by the App Lock: for once it's turned on or off.
-  Future<void> refreshReminders() async {
+  /// goes by the App Lock: for once it's turned on or off. Whether every one
+  /// was set.
+  Future<bool> refreshReminders() async {
+    var allSet = true;
     try {
       for (final task in await _tasksRepository.getItems()) {
         try {
           await _scheduleReminder(task);
         } catch (e) {
-          // That reminder stays as it was.
+          // The others are set all the same.
+          allSet = false;
         }
       }
     } catch (e) {
       // The reminders stay as they were.
+      return false;
     }
+    return allSet;
   }
 
   Future<Result> _remindOnce(TodoItem task) async {
@@ -478,8 +546,10 @@ class TasksViewModel with ChangeNotifier {
           time,
         );
         // Without its day, as a daily task has none.
-        await _tasksRepository
-            .updateItem(task.copyWith(reminder: Reminder.daily));
+        await _tasksRepository.updateItem(task.copyWith(
+          reminder: Reminder.daily,
+          progress: _progressAs(task, Reminder.daily),
+        ));
         await get();
         return Success("Notification Enabled");
       } catch (e) {
@@ -489,6 +559,13 @@ class TasksViewModel with ChangeNotifier {
       return Info("Please set time");
     }
   }
+
+  /// [task]'s days once its reminder is [reminder]: one that becomes daily
+  /// counts its days from today on, with today done if the task is.
+  DailyProgress _progressAs(TodoItem task, Reminder reminder) =>
+      reminder == Reminder.daily && !task.isDaily
+          ? task.progress.startingOn(today).withDay(today, done: task.done)
+          : task.progress;
 
   Future<Result> _cancelReminder(TodoItem task) async {
     try {
@@ -502,6 +579,8 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 }
+
+DateTime _dateOf(DateTime time) => DateTime(time.year, time.month, time.day);
 
 /// A task as its form has it, being added or changed, with the form's
 /// rules: a time on its own is for today, and a daily task has no day.

@@ -19,7 +19,9 @@ class TasksRepository{
       'date',
       'time',
       'uuid',
-      'notification'
+      'notification',
+      'since',
+      'doneDays',
     ]);
     List<TodoItem> items = [];
     if (maps.isNotEmpty) {

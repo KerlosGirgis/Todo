@@ -25,6 +25,7 @@ void main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   await NotificationService.init();
   tz.initializeTimeZones();
+  await NotificationService.followPhoneTimeZone();
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => UserViewModel()),
     ChangeNotifierProvider(create: (context) {
