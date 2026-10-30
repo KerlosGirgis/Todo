@@ -13,6 +13,7 @@ void main() {
     expect(LinkUtils.linkOf("HTTPS://Example.com"), "HTTPS://Example.com");
     expect(LinkUtils.linkOf("mailto:me@example.com"), "mailto:me@example.com");
     expect(LinkUtils.linkOf("tel:+15551234"), "tel:+15551234");
+    expect(LinkUtils.linkOf("geo:30.0444,31.2357"), "geo:30.0444,31.2357");
   });
 
   test('an email address is written to', () {

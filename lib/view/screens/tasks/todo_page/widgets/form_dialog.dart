@@ -32,6 +32,20 @@ Future<T?> showFormDialog<T>(BuildContext context, Widget dialog) {
   );
 }
 
+/// Closes the dialog [context] is in, even once another page has come over
+/// it: the lock page does, when the app locks again while the dialog waits
+/// on another app, such as the file picker. [Navigator.pop] would close the
+/// lock page instead, as it closes whichever page is on top.
+void closeFormDialog(BuildContext context) {
+  final route = ModalRoute.of(context);
+  if (route == null || !route.isActive) return;
+  if (route.isCurrent) {
+    Navigator.of(context).pop();
+  } else {
+    Navigator.of(context).removeRoute(route);
+  }
+}
+
 /// A dialog in the style of the profile page's, under a header of its own:
 /// an [icon] on a tile in the app's blues, then the [title] over a line of
 /// [subtitle], and a button at the end that closes it. Then its [content],

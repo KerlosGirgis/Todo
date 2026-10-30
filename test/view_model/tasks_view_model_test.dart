@@ -279,6 +279,31 @@ void main() {
       expect(task("Call mum").reminder, Reminder.none);
       expect(notifications.once, isEmpty);
     });
+
+    test('a done task given a reminder still to come is to do again', () async {
+      await add("Call", time: const ClockTime(18, 0));
+      await tasks.toggleDone(task("Call"));
+      final draft = tasks.draft(task("Call"))..setReminder(Reminder.once);
+      final result = await tasks.save(draft);
+      expect(
+          (result as Info).message, startsWith("Task undone. Time remaining"));
+      final call = task("Call");
+      expect(call.done, isFalse);
+      expect(call.reminder, Reminder.once);
+      expect(notifications.once[call.uuid.hashCode], DateTime(2026, 5, 13, 18));
+    });
+
+    test('a done task stays done when its reminder has already gone', () async {
+      await add("Late", time: const ClockTime(9, 0));
+      await tasks.toggleDone(task("Late"));
+      final draft = tasks.draft(task("Late"))..setReminder(Reminder.once);
+      final result = await tasks.save(draft);
+      expect(
+          (result as Info).message, "Please set time and date in the future");
+      expect(task("Late").done, isTrue);
+      expect(task("Late").reminder, Reminder.none);
+      expect(notifications.once, isEmpty);
+    });
   });
 
   group('commands', () {

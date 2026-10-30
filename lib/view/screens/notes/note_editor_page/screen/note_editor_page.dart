@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
+import '../../../../../core/utils/link_utils.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/glass_icon_button.dart';
@@ -233,6 +234,12 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               textSpanBuilder:
                                   checkedLinesSpanBuilder(bodyStyle),
                               embedBuilders: [NoteDividerBuilder(bodyStyle)],
+                              // A link opens as the link dialog meant it.
+                              // Quill would take one it doesn't know, such
+                              // as geo: or a capitalised HTTPS://, for a
+                              // web address, and put https:// before it.
+                              transformLink: (link) =>
+                                  LinkUtils.linkOf(link) ?? link,
                               // Code in a note is a few lines at most.
                               showCodeBlockLineNumbers: false,
                               textSelectionThemeData:

@@ -53,10 +53,19 @@ class _AppLockGuardState extends State<AppLockGuard> {
     final locked = _auth.opened && _auth.status != AuthStatus.authenticated;
     if (navigator == null || locked == (_lockRoute != null)) return;
     if (locked) {
-      navigator.push(_lockRoute = _lockPageRoute(_auth));
+      final route = _lockRoute = _lockPageRoute(_auth);
+      navigator.push(route);
+      // Only unlocking takes the lock page off. If anything else does, such
+      // as a Navigator.pop meant for a page under it, it goes straight back.
+      route.popped.whenComplete(() {
+        if (!mounted || _lockRoute != route) return;
+        _lockRoute = null;
+        _lockChanged();
+      });
     } else {
-      navigator.removeRoute(_lockRoute!);
+      final route = _lockRoute!;
       _lockRoute = null;
+      if (route.isActive) navigator.removeRoute(route);
     }
   }
 

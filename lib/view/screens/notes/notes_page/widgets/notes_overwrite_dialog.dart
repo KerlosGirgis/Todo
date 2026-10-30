@@ -33,7 +33,7 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
           askForBackupPassword: backupPasswordPrompt(context),
         )
         .then((result) {
-      if (mounted) Navigator.pop(context);
+      if (mounted) closeFormDialog(context);
       result?.when(
         onSuccess: FeedbackToast.success,
         onFailure: FeedbackToast.error,

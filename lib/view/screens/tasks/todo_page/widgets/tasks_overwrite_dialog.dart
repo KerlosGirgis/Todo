@@ -30,7 +30,7 @@ class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
         .restore(_overwrite,
             askForBackupPassword: backupPasswordPrompt(context))
         .then((result) {
-      if (mounted) Navigator.pop(context);
+      if (mounted) closeFormDialog(context);
       result?.when(
         onSuccess: FeedbackToast.success,
         onFailure: FeedbackToast.error,

@@ -506,13 +506,16 @@ class TasksViewModel with ChangeNotifier {
     return allSet;
   }
 
+  /// Reminds the user of [task] once, on its day at its time, if that's
+  /// still to come. A task done already is to do again, as a reminder of it
+  /// means it isn't done.
   Future<Result> _remindOnce(TodoItem task) async {
     try {
       final day = task.day;
       final time = task.time;
       if (day != null && time != null) {
         DateTime scheduledTime = time.on(day);
-        if (scheduledTime.isAfter(_now()) && !task.done) {
+        if (scheduledTime.isAfter(_now())) {
           await _notificationService.scheduleNotification(
             task.uuid.hashCode,
             "Don't Forget Your Task!",
@@ -520,10 +523,11 @@ class TasksViewModel with ChangeNotifier {
             scheduledTime,
           );
           await _tasksRepository
-              .updateItem(task.copyWith(reminder: Reminder.once));
+              .updateItem(task.copyWith(done: false, reminder: Reminder.once));
           await get();
-          return Info(
-              "Time remaining:\n ${DateTimeUtils.durationToString(scheduledTime.difference(_now()))}");
+          final remaining = "Time remaining:\n "
+              "${DateTimeUtils.durationToString(scheduledTime.difference(_now()))}";
+          return Info(task.done ? "Task undone. $remaining" : remaining);
         } else {
           return Info("Please set time and date in the future");
         }
