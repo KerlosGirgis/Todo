@@ -17,12 +17,10 @@ class AppearancePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark =
         context.select<UserViewModel, bool>((user) => user.user.darkTheme);
-    final amoled =
-        context.select<UserViewModel, bool>((user) => user.user.amoledTheme);
     void choose(bool dark) => context.read<UserViewModel>().setDarkTheme(dark);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 2),
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
       child: Column(
        children: [
        Row(
@@ -41,20 +39,6 @@ class AppearancePicker extends StatelessWidget {
             onTap: () => choose(true),
           ),
         ],
-      ),
-      AnimatedSize(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-        child: isDark
-            ? SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text("AMOLED Black",
-                    style: TextStyle(color: context.colors.wB)),
-                value: amoled,
-                onChanged: (v) =>
-                    context.read<UserViewModel>().setAmoledTheme(v),
-              )
-            : const SizedBox(width: double.infinity),
       ),
       ],
       ),
