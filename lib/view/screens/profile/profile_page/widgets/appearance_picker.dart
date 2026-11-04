@@ -22,7 +22,7 @@ class AppearancePicker extends StatelessWidget {
     void choose(bool dark) => context.read<UserViewModel>().setDarkTheme(dark);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 2),
       child: Column(
        children: [
        Row(
@@ -48,7 +48,7 @@ class AppearancePicker extends StatelessWidget {
         child: isDark
             ? SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text("AMOLED black",
+                title: Text("AMOLED Black",
                     style: TextStyle(color: context.colors.wB)),
                 value: amoled,
                 onChanged: (v) =>
