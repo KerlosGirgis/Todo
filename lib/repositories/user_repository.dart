@@ -15,6 +15,7 @@ class UserRepository{
       'name',
       'pic',
       'theme',
+      'amoled',
       'autoSave',
       'casual',
       'verse',

@@ -21,7 +21,9 @@ class AppearancePicker extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
-      child: Row(
+      child: Column(
+       children: [
+       Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _Option(
@@ -37,6 +39,8 @@ class AppearancePicker extends StatelessWidget {
             onTap: () => choose(true),
           ),
         ],
+      ),
+      ],
       ),
     );
   }

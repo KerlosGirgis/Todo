@@ -31,9 +31,21 @@ class AppearanceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SettingsGroup(
+    final user = context.watch<UserViewModel>();
+    return SettingsGroup(
       title: "Appearance",
-      children: [AppearancePicker()],
+      children: [
+        const AppearancePicker(),
+        if (user.user.darkTheme)
+          SettingsSwitchTile(
+            icon: Icons.contrast_rounded,
+            color: _indigo,
+            title: "AMOLED Black",
+            subtitle: const Text("Pure black backgrounds in dark mode"),
+            value: user.user.amoledTheme,
+            onChanged: user.setAmoledTheme,
+          ),
+      ],
     );
   }
 }

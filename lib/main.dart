@@ -50,14 +50,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppLockGuard(
       navigatorKey: _navigatorKey,
-      child: Selector<UserViewModel, bool>(
-        selector: (_, userVM) => userVM.user.darkTheme,
-        builder: (context, isDarkMode, _) {
+      child: Selector<UserViewModel, (bool, bool)>(
+        selector: (_, userVM) =>
+            (userVM.user.darkTheme, userVM.user.amoledTheme),
+        builder: (context, theme, _) {
+          final (isDarkMode, isAmoled) = theme;
           return ToastificationWrapper(
             child: MaterialApp(
               navigatorKey: _navigatorKey,
               debugShowCheckedModeBanner: false,
-              theme: AppTheme.getTheme(isDarkMode: isDarkMode),
+              theme: AppTheme.getTheme(isDarkMode: isDarkMode, isAmoled: isAmoled),
               localizationsDelegates: const [
                 FlutterQuillLocalizations.delegate
               ],

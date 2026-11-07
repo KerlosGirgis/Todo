@@ -40,6 +40,7 @@ class UserViewModel with ChangeNotifier {
       avatar: BundledAvatar.fallback,
       darkTheme:
           PlatformDispatcher.instance.platformBrightness == Brightness.dark,
+      amoledTheme: false,
       autoSave: true,
       casualFont: false,
       showVerse: true,
@@ -156,6 +157,9 @@ class UserViewModel with ChangeNotifier {
 
   Future<void> setDarkTheme(bool darkTheme) => _set(
       darkTheme == user.darkTheme, () => user.copyWith(darkTheme: darkTheme));
+
+  Future<void> setAmoledTheme(bool amoled) => _set(
+      amoled == user.amoledTheme, () => user.copyWith(amoledTheme: amoled));
 
   Future<void> setAutoSave(bool autoSave) => _set(
       autoSave == user.autoSave, () => user.copyWith(autoSave: autoSave));

@@ -68,6 +68,13 @@ class AppColors extends ThemeExtension<AppColors> {
     dialogExitContainer: const Color(0xff404040),
   );
 
+  static final amoled = dark.copyWith(
+    pageBackground: Colors.black,
+    cardBackground: const Color(0xff0D0D0D),
+    dialogIconContainer: const Color(0xff1A1A1A),
+    dialogExitContainer: const Color(0xff1A1A1A),
+  );
+
   /// Safe accessor
   static AppColors of(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>();

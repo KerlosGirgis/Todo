@@ -15,7 +15,7 @@ class DatabaseService {
   String? get key => _key;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 6;
+  static const int _databaseVersion = 7;
 
   /// Opens the database with [key], which the App Lock's password unlocked,
   /// or else with the key kept as it is, or a new one for a new database.
@@ -62,6 +62,7 @@ class DatabaseService {
       name TEXT,
       pic TEXT,
       theme INTEGER,
+      amoled INTEGER DEFAULT 0,
       autoSave INTEGER,
       casual INTEGER,
       verse INTEGER,
@@ -121,6 +122,16 @@ class DatabaseService {
       // says how earlier ones went.
       await db.execute("UPDATE ToDo SET since = date('now', 'localtime') "
           "WHERE notification = 2 AND (since IS NULL OR since = '')");
+    }
+    if (oldVersion < 7) {
+      final columns = {
+        for (final column in await db.rawQuery('PRAGMA table_info(User)'))
+          column['name'],
+      };
+      if (!columns.contains('amoled')) {
+        await db.execute(
+            'ALTER TABLE User ADD COLUMN amoled INTEGER DEFAULT 0');
+      }
     }
   }
 

@@ -9,6 +9,7 @@ class UserProfile {
     required this.name,
     required this.avatar,
     required this.darkTheme,
+    required this.amoledTheme,
     required this.autoSave,
     required this.casualFont,
     required this.showVerse,
@@ -27,6 +28,7 @@ class UserProfile {
   final String name;
   final Avatar avatar;
   final bool darkTheme;
+  final bool amoledTheme;
 
   /// Whether notes save as they're written, rather than with a button.
   final bool autoSave;
@@ -57,6 +59,7 @@ class UserProfile {
     String? name,
     Avatar? avatar,
     bool? darkTheme,
+    bool? amoledTheme,
     bool? autoSave,
     bool? casualFont,
     bool? showVerse,
@@ -75,6 +78,7 @@ class UserProfile {
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,
       darkTheme: darkTheme ?? this.darkTheme,
+      amoledTheme: amoledTheme ?? this.amoledTheme,
       autoSave: autoSave ?? this.autoSave,
       casualFont: casualFont ?? this.casualFont,
       showVerse: showVerse ?? this.showVerse,
@@ -98,6 +102,7 @@ class UserProfile {
       name: map['name'] as String? ?? "",
       avatar: Avatar.decode(map['pic'] as String? ?? "000"),
       darkTheme: map['theme'] == 1,
+      amoledTheme: map['amoled'] == 1,
       autoSave: map['autoSave'] == 1,
       casualFont: map['casual'] == 1,
       showVerse: map['verse'] == 1,
@@ -120,6 +125,7 @@ class UserProfile {
       'name': name,
       'pic': avatar.encoded,
       'theme': darkTheme ? 1 : 0,
+      'amoled': amoledTheme ? 1 : 0,
       'autoSave': autoSave ? 1 : 0,
       'casual': casualFont ? 1 : 0,
       'verse': showVerse ? 1 : 0,
