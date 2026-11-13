@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/note.dart';
+import 'package:todo/models/trashed.dart';
 import 'package:todo/repositories/notes_repository.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/home_widget_service.dart';
@@ -38,6 +39,55 @@ class FakeNotesRepository extends NotesRepository {
   @override
   Future<void> deleteNote(int id) async =>
       rows.removeWhere((row) => row.id == id);
+
+  /// The trash, the first deleted first. Like the real one, it keeps a note
+  /// as backups do, and never gives an entry's id to another.
+  final trash = <Trashed<Note>>[];
+  var _nextTrashId = 1;
+
+  @override
+  Future<Trashed<Note>> moveToTrash(Note note,
+      {required DateTime deletedAt}) async {
+    final index = rows.indexWhere((row) => row.id == note.id);
+    if (index == -1) throw StateError("No note ${note.id}");
+    rows.removeAt(index);
+    final id = _nextTrashId++;
+    trash.add(Trashed(
+      id: id,
+      item: Note.fromMap({...note.toMap(), 'id': note.id}),
+      deletedAt: deletedAt,
+    ));
+    return Trashed(id: id, item: note, deletedAt: deletedAt);
+  }
+
+  @override
+  Future<List<Trashed<Note>>> getTrash() async => trash.reversed.toList();
+
+  /// Back with the id it had when no note has it, among the notes in the
+  /// order of their ids, as the table lists them; or else at the end.
+  @override
+  Future<int?> restoreFromTrash(int id, Note note) async {
+    final index = trash.indexWhere((entry) => entry.id == id);
+    if (index == -1) return null;
+    trash.removeAt(index);
+    final free = note.id != null && rows.every((row) => row.id != note.id);
+    if (!free) {
+      // Past every id there is, as some rows come with their own.
+      _nextId =
+          rows.fold(_nextId, (top, row) => top > row.id! ? top : row.id! + 1);
+    }
+    final row =
+        Note.fromMap({...note.toMap(), 'id': free ? note.id : _nextId++});
+    final after = rows.indexWhere((each) => each.id! > row.id!);
+    rows.insert(after == -1 ? rows.length : after, row);
+    return row.id;
+  }
+
+  @override
+  Future<void> deleteFromTrash(Iterable<int> ids) async {
+    final gone = ids.toSet();
+    trash.removeWhere((entry) => gone.contains(entry.id));
+  }
 }
 
 class FakeAuth extends AuthenticationService {
@@ -235,6 +285,105 @@ void main() {
     });
   });
 
+  group('trash', () {
+    /// Moves the note titled [title] to the trash, from its editor.
+    Future<Trashed<Note>> trash(String title) async {
+      final editor = ((await notes.open(shown(title),
+              askForPassword: noPassword)) as Granted<NoteEditorViewModel>)
+          .value;
+      final trashed = await editor.delete(askForPassword: noPassword);
+      return (trashed as Granted<Trashed<Note>>).value;
+    }
+
+    List<String> titles() => [for (final note in notes.notes) note.title];
+
+    test("hides a locked note's text, as the pages do", () async {
+      final trashed = await trash("Diary");
+      expect(trashed.item.body, isEmpty);
+      expect(notes.trash.single.item.locked, isTrue);
+      expect(notes.trash.single.item.body, isEmpty);
+      expect(repository.trash.single.item.body, "secret");
+    });
+
+    test("puts a note back where it was, a locked one still locked, "
+        "without its lock", () async {
+      final trashed = await trash("Open");
+      await trash("Diary");
+      final asked = auth.fingerprintsAsked;
+      expect(await notes.restoreFromTrash(trashed), isA<Success>());
+      expect(titles(), ["Open"]);
+      expect(await notes.restoreFromTrash(notes.trash.single), isA<Success>());
+      expect(titles(), ["Open", "Diary"]);
+      expect(repository.rows.last.body, "secret");
+      expect(repository.rows.last.locked, isTrue);
+      expect(shown("Diary").body, isEmpty);
+      expect(auth.fingerprintsAsked, asked);
+      expect(notes.trash, isEmpty);
+    });
+
+    test("puts a note back once, however often it's asked", () async {
+      final trashed = await trash("Open");
+      await notes.restoreFromTrash(trashed);
+      expect(await notes.restoreFromTrash(trashed), isA<Info>());
+      expect(titles(), ["Open", "Diary"]);
+    });
+
+    test("puts every note back", () async {
+      await trash("Diary");
+      await trash("Open");
+      final result = await notes.restoreAllFromTrash();
+      expect((result as Success).message, "2 Notes Restored");
+      expect(titles(), ["Open", "Diary"]);
+    });
+
+    test("deletes a note for good", () async {
+      final trashed = await trash("Open");
+      expect(await notes.deleteForever(trashed, askForPassword: noPassword),
+          isA<Info>());
+      expect(notes.trash, isEmpty);
+      expect(repository.trash, isEmpty);
+    });
+
+    test("deletes a locked note for good only once its lock lets the user",
+        () async {
+      await trash("Diary");
+      final entry = notes.trash.single;
+      auth.fingerprint = FingerprintCheck.failed;
+      expect(await notes.deleteForever(entry, askForPassword: noPassword),
+          isA<Failure>());
+      expect(repository.trash, hasLength(1));
+      auth.fingerprint = FingerprintCheck.passed;
+      expect(await notes.deleteForever(entry, askForPassword: noPassword),
+          isA<Info>());
+      expect(repository.trash, isEmpty);
+    });
+
+    test("empties the trash once the lock lets the user, with a locked note "
+        "in it", () async {
+      await trash("Open");
+      await trash("Diary");
+      auth.fingerprint = FingerprintCheck.failed;
+      expect(await notes.emptyTrash(askForPassword: noPassword),
+          isA<Failure>());
+      expect(repository.trash, hasLength(2));
+      auth.fingerprint = FingerprintCheck.passed;
+      final asked = auth.fingerprintsAsked;
+      final result = await notes.emptyTrash(askForPassword: noPassword);
+      expect((result as Info).message, "2 Notes Deleted Forever");
+      expect(auth.fingerprintsAsked, asked + 1);
+      expect(repository.trash, isEmpty);
+    });
+
+    test("empties the trash without the lock when no note in it is locked",
+        () async {
+      await trash("Open");
+      final asked = auth.fingerprintsAsked;
+      expect(await notes.emptyTrash(askForPassword: noPassword), isA<Info>());
+      expect(auth.fingerprintsAsked, asked);
+      expect(notes.trash, isEmpty);
+    });
+  });
+
   group('NoteEditorViewModel', () {
     Future<NoteEditorViewModel> openNote(String title) async =>
         ((await notes.open(shown(title), askForPassword: noPassword))
@@ -325,12 +474,32 @@ void main() {
           "Locked notes can't go on the widget");
     });
 
-    test("deletes the note, and takes it off the widget", () async {
+    test("moves the note to the trash, and takes it off the widget", () async {
       final editor = await openNote("Open");
       await editor.showOnWidget();
-      expect(await editor.delete(askForPassword: noPassword), isA<Info>());
+      final trashed = await editor.delete(askForPassword: noPassword);
+      expect((trashed as Granted<Trashed<Note>>).value.item.title, "Open");
       expect(repository.rows.map((note) => note.title), ["Diary"]);
+      expect(notes.notes.map((note) => note.title), ["Diary"]);
+      expect(notes.trash.single.item.body, "Plans\nWalk by the river");
       expect(homeWidget.id, isNull);
+    });
+
+    test("puts what's waiting to be saved in the trash with the note",
+        () async {
+      final editor = await openNote("Open");
+      editor.edit(edited, autoSave: true);
+      await editor.delete(askForPassword: noPassword);
+      expect(repository.trash.single.item.body, "Plans for Sunday");
+      expect(repository.trash.single.item.delta, jsonEncode(edited));
+    });
+
+    test("keeps a locked note where it is when its lock says no", () async {
+      final editor = await openNote("Diary");
+      auth.fingerprint = FingerprintCheck.failed;
+      expect(await editor.delete(askForPassword: noPassword), isA<Denied>());
+      expect(repository.rows.map((note) => note.title), ["Open", "Diary"]);
+      expect(repository.trash, isEmpty);
     });
   });
 }

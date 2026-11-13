@@ -49,11 +49,12 @@ void closeFormDialog(BuildContext context) {
 /// A dialog in the style of the profile page's, under a header of its own:
 /// an [icon] on a tile in the app's blues, then the [title] over a line of
 /// [subtitle], and a button at the end that closes it. Then its [content],
-/// and its [actions] side by side at the bottom.
+/// if it has any, and its [actions] side by side at the bottom.
 class FormDialog extends StatelessWidget {
   const FormDialog({
     super.key,
     required this.icon,
+    this.color,
     required this.title,
     required this.subtitle,
     required this.content,
@@ -61,6 +62,10 @@ class FormDialog extends StatelessWidget {
   });
 
   final IconData icon;
+
+  /// The colour of the icon's tile, such as red for a dialog that deletes,
+  /// in place of the app's blues.
+  final Color? color;
   final String title;
   final String subtitle;
   final List<Widget> content;
@@ -84,7 +89,7 @@ class FormDialog extends StatelessWidget {
           children: [
             Row(
               children: [
-                _HeaderIcon(icon),
+                _HeaderIcon(icon, color: color),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -115,8 +120,10 @@ class FormDialog extends StatelessWidget {
                 const _CloseButton(),
               ],
             ),
-            const SizedBox(height: 20),
-            ...content,
+            if (content.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              ...content,
+            ],
             const SizedBox(height: 20),
             Row(
               children: [
@@ -133,14 +140,17 @@ class FormDialog extends StatelessWidget {
   }
 }
 
-/// The dialog's icon, white on a tile with the add button's gradient.
+/// The dialog's icon, white on a tile with the add button's gradient, or
+/// one that lightens [color] the same way.
 class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon(this.icon);
+  const _HeaderIcon(this.icon, {this.color});
 
   final IconData icon;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final color = this.color;
     return DecoratedBox(
       decoration: ShapeDecoration(
         shape: const RoundedSuperellipseBorder(
@@ -149,11 +159,13 @@ class _HeaderIcon extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+          colors: color == null
+              ? [_accent, Color.lerp(_accent, _highlight, 0.7)!]
+              : [color, Color.lerp(color, Colors.white, 0.25)!],
         ),
         shadows: [
           BoxShadow(
-            color: _accent.withValues(alpha: 0.25),
+            color: (color ?? _accent).withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

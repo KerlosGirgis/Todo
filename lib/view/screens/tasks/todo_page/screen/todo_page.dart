@@ -11,6 +11,7 @@ import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/task_filters.dart';
 import '../../../../../models/todo_item.dart';
+import '../../../../../models/trashed.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
@@ -23,6 +24,7 @@ import '../../../../widgets/tour.dart';
 import '../../../notes/notes_page/screen/notes_page.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
+import '../../../trash/trash_page/screen/trash_page.dart';
 import '../widgets/empty_tasks.dart';
 import '../widgets/form_dialog.dart';
 import '../widgets/task_card.dart';
@@ -314,6 +316,11 @@ class _TodoPageState extends State<TodoPage> {
           onPressed: _backUp,
         ),
         GlassMenuItem(
+          icon: Icons.delete_outline_rounded,
+          tooltip: "Trash",
+          onPressed: () => Navigator.push(context, trashRoute(TrashKind.task)),
+        ),
+        GlassMenuItem(
           icon: Icons.settings_rounded,
           tooltip: "Settings",
           onPressed: _openSettings,
@@ -384,6 +391,20 @@ void _showResult(Result? result) => result?.when(
       onFailure: FeedbackToast.error,
       onInfo: FeedbackToast.info,
     );
+
+/// Moves [task] to the trash, as its card has been swiped away, and says so
+/// with an Undo that puts it back where it was.
+Future<void> _moveToTrash(TasksViewModel tasks, TodoItem task) async {
+  final trashed = await tasks.delete(task);
+  if (trashed == null) {
+    FeedbackToast.error("Couldn't delete the task");
+    return;
+  }
+  FeedbackToast.deleted(
+    "Task moved to Trash",
+    onUndo: () => tasks.restoreFromTrash(trashed).then(FeedbackToast.undone),
+  );
+}
 
 /// The menu of the tasks' less frequent actions, and the avatar, at the end
 /// of the bar.
@@ -644,9 +665,7 @@ class _ReorderableTaskListState extends State<_ReorderableTaskList> {
                     alignment: AlignmentDirectional.centerStart),
                 secondaryBackground: const TaskDeleteBackground(
                     alignment: AlignmentDirectional.centerEnd),
-                onDismissed: (direction) => tasks
-                    .delete(task)
-                    .then((_) => FeedbackToast.info("Task Deleted")),
+                onDismissed: (direction) => _moveToTrash(tasks, task),
                 child: KeyedSubtree(
                   key: index == 0 ? widget.firstCardKey : null,
                   child: card(task),

@@ -9,6 +9,7 @@ import 'package:todo/models/clock_time.dart';
 import 'package:todo/models/daily_progress.dart';
 import 'package:todo/models/task_filters.dart';
 import 'package:todo/models/todo_item.dart';
+import 'package:todo/models/trashed.dart';
 import 'package:todo/repositories/tasks_repository.dart';
 import 'package:todo/services/file_service.dart';
 import 'package:todo/services/lock_service.dart';
@@ -56,6 +57,57 @@ class FakeTasksRepository extends TasksRepository {
       {required bool overwrite}) async {
     if (overwrite) rows.clear();
     rows.addAll(items.map(_withId));
+  }
+
+  /// The trash, the first deleted first. Like the real one, it keeps a task
+  /// as backups do, and never gives an entry's id to another.
+  final trash = <Trashed<TodoItem>>[];
+  var _nextTrashId = 1;
+  bool failMoves = false;
+
+  @override
+  Future<Trashed<TodoItem>> moveToTrash(TodoItem item,
+      {required DateTime deletedAt}) async {
+    if (failMoves) throw StateError("Disk full");
+    final index = rows.indexWhere((row) => row.id == item.id);
+    if (index == -1) throw StateError("No task ${item.id}");
+    rows.removeAt(index);
+    final id = _nextTrashId++;
+    trash.add(Trashed(
+      id: id,
+      item: TodoItem.fromMap({...item.toMap(), 'id': item.id}),
+      deletedAt: deletedAt,
+    ));
+    return Trashed(id: id, item: item, deletedAt: deletedAt);
+  }
+
+  @override
+  Future<List<Trashed<TodoItem>>> getTrash() async => trash.reversed.toList();
+
+  /// Back with the id it had when no task has it, among the tasks in the
+  /// order of their ids, as the table lists them; or else at the end.
+  @override
+  Future<int?> restoreFromTrash(int id, TodoItem item) async {
+    final index = trash.indexWhere((entry) => entry.id == id);
+    if (index == -1) return null;
+    trash.removeAt(index);
+    final free = item.id != null && rows.every((row) => row.id != item.id);
+    if (!free) {
+      // Past every id there is, as some rows come with their own.
+      _nextId =
+          rows.fold(_nextId, (top, row) => top > row.id! ? top : row.id! + 1);
+    }
+    final row =
+        TodoItem.fromMap({...item.toMap(), 'id': free ? item.id : _nextId++});
+    final after = rows.indexWhere((each) => each.id! > row.id!);
+    rows.insert(after == -1 ? rows.length : after, row);
+    return row.id;
+  }
+
+  @override
+  Future<void> deleteFromTrash(Iterable<int> ids) async {
+    final gone = ids.toSet();
+    trash.removeWhere((entry) => gone.contains(entry.id));
   }
 }
 
@@ -589,6 +641,123 @@ void main() {
       await tasks.get();
       tasks.setFilter(const UndoneTasksFilter());
       expect(tasks.emptyReason, EmptyTasksReason.allDone);
+    });
+  });
+
+  group('trash', () {
+    List<String> titles() => [for (final task in tasks.items) task.title];
+    List<String> inTrash() => [for (final entry in tasks.trash) entry.item.title];
+
+    test('deleting a task moves it there, and turns its reminder off',
+        () async {
+      await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
+      await add("Shop");
+      final trashed = await tasks.delete(task("Call"));
+      expect(trashed!.item.title, "Call");
+      expect(trashed.deletedAt, now);
+      expect(titles(), ["Shop"]);
+      expect(inTrash(), ["Call"]);
+      expect(notifications.once, isEmpty);
+    });
+
+    test('a task that cannot be moved there stays on the list', () async {
+      await add("Call");
+      repository.failMoves = true;
+      expect(await tasks.delete(task("Call")), isNull);
+      expect(titles(), ["Call"]);
+      expect(tasks.trash, isEmpty);
+    });
+
+    test('lists the last deleted first', () async {
+      await add("First");
+      await add("Second");
+      await tasks.delete(task("First"));
+      await tasks.delete(task("Second"));
+      expect(inTrash(), ["Second", "First"]);
+    });
+
+    test('undo puts a task back where it was, with its reminder', () async {
+      await add("First");
+      await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
+      await add("Last");
+      final trashed = await tasks.delete(task("Call"));
+      expect(await tasks.restoreFromTrash(trashed!), isA<Success>());
+      expect(titles(), ["First", "Call", "Last"]);
+      expect(task("Call").reminder, Reminder.once);
+      expect(notifications.once.keys, [task("Call").uuid.hashCode]);
+      expect(tasks.trash, isEmpty);
+    });
+
+    test("puts a task back once, however often it's asked", () async {
+      await add("Call");
+      final trashed = await tasks.delete(task("Call"));
+      await tasks.restoreFromTrash(trashed!);
+      expect(await tasks.restoreFromTrash(trashed), isA<Info>());
+      expect(titles(), ["Call"]);
+    });
+
+    test("doesn't remind of a task put back after its time has gone",
+        () async {
+      await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
+      final trashed = await tasks.delete(task("Call"));
+      time = DateTime(2026, 5, 13, 19);
+      expect(await tasks.restoreFromTrash(trashed!), isA<Success>());
+      expect(notifications.once, isEmpty);
+    });
+
+    test('a task put back takes a new uuid when one on the list has its own',
+        () async {
+      await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
+      final trashed = await tasks.delete(task("Call"));
+      // As a backup restored since might bring it back.
+      await repository.insertItem(trashed!.item);
+      notifications.once.clear();
+      await tasks.restoreFromTrash(trashed);
+      final calls = tasks.items.where((task) => task.title == "Call");
+      expect(calls, hasLength(2));
+      final putBack =
+          calls.singleWhere((task) => task.uuid != trashed.item.uuid);
+      expect(notifications.once.keys, [putBack.uuid.hashCode]);
+    });
+
+    test("a daily task put back keeps its days, and reminds again", () async {
+      await add("Stretch", time: const ClockTime(7, 0), reminder: Reminder.daily);
+      await tasks.toggleDone(task("Stretch"));
+      final trashed = await tasks.delete(task("Stretch"));
+      expect(notifications.daily, isEmpty);
+      await tasks.restoreFromTrash(trashed!);
+      expect(task("Stretch").done, isTrue);
+      expect(task("Stretch").progress.doneDays, {DateTime(2026, 5, 13)});
+      expect(notifications.daily.values.single, const ClockTime(7, 0));
+    });
+
+    test('puts every task back', () async {
+      await add("First");
+      await add("Second");
+      await add("Third");
+      await tasks.delete(task("Third"));
+      await tasks.delete(task("First"));
+      final result = await tasks.restoreAllFromTrash();
+      expect((result as Success).message, "2 Tasks Restored");
+      expect(titles(), ["First", "Second", "Third"]);
+      expect(tasks.trash, isEmpty);
+    });
+
+    test('deletes a task for good, or all of them', () async {
+      await add("First");
+      await add("Second");
+      await add("Third");
+      final first = await tasks.delete(task("First"));
+      await tasks.delete(task("Second"));
+      await tasks.delete(task("Third"));
+      expect(await tasks.deleteForever(first!), isA<Info>());
+      expect(inTrash(), ["Third", "Second"]);
+      expect(await tasks.restoreFromTrash(first), isA<Info>());
+      expect(titles(), isEmpty);
+      final result = await tasks.emptyTrash();
+      expect((result as Info).message, "2 Tasks Deleted Forever");
+      expect(tasks.trash, isEmpty);
+      expect(repository.trash, isEmpty);
     });
   });
 }

@@ -382,17 +382,25 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     );
   }
 
+  /// Moves the note to the trash and closes it, saying so with an Undo that
+  /// puts it back.
   Future<void> _delete() async {
+    final notes = context.read<NotesViewModel>();
     final result = await _editor.delete(
         askForPassword: noteLockPasswordPrompt(context));
-    if (!mounted) return;
     switch (result) {
-      case Failure(:final message):
+      case Denied(:final message):
         FeedbackToast.error(message);
-      case Success(:final message) || Info(:final message):
-        setState(() => _deleted = true);
-        Navigator.pop(context);
-        FeedbackToast.info(message);
+      case Granted(value: final trashed):
+        if (mounted) {
+          setState(() => _deleted = true);
+          Navigator.pop(context);
+        }
+        FeedbackToast.deleted(
+          "Note moved to Trash",
+          onUndo: () =>
+              notes.restoreFromTrash(trashed).then(FeedbackToast.undone),
+        );
     }
   }
 }

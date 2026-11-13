@@ -13,6 +13,7 @@ import '../models/clock_time.dart';
 import '../models/daily_progress.dart';
 import '../models/task_filters.dart';
 import '../models/todo_item.dart';
+import '../models/trashed.dart';
 import '../services/authentication_service.dart';
 import '../services/backup_service.dart';
 import '../services/lock_service.dart';
@@ -87,6 +88,12 @@ class TasksViewModel with ChangeNotifier {
   int get finishedTasksCount => _allTasks.where((task) => task.done).length;
   int get unfinishedTasksCount =>
       _allTasks.where((task) => !task.done).length;
+
+  List<Trashed<TodoItem>> _trash = [];
+
+  /// The tasks in the trash, the last deleted first, once [getTrash] has
+  /// read them in.
+  List<Trashed<TodoItem>> get trash => UnmodifiableListView(_trash);
 
   /// Why the filter lets no task through, or null while it lets some.
   EmptyTasksReason? get emptyReason {
@@ -278,17 +285,153 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  /// Deletes [task], and its reminder.
-  Future<void> delete(TodoItem task) async {
+  /// Moves [task] to the trash, where it waits to be put back or deleted
+  /// for good, and turns its reminder off. Gives the entry it's in the trash
+  /// as, which puts it back, or null if it couldn't be moved, which leaves
+  /// it on the list.
+  Future<Trashed<TodoItem>?> delete(TodoItem task) async {
     task = _current(task);
     // Off the list straight away, as its card has been swiped away.
     _items.removeWhere((each) => each.uuid == task.uuid && each.id == task.id);
     notifyListeners();
-    if (task.reminder != Reminder.none) {
-      await _notificationService.cancelNotification(task.uuid.hashCode);
+    final Trashed<TodoItem> trashed;
+    try {
+      trashed = await _tasksRepository.moveToTrash(task, deletedAt: _now());
+    } catch (e) {
+      // Back on the list, as it's still there.
+      await get();
+      return null;
     }
-    await _tasksRepository.deleteItem(task.id!);
+    if (task.reminder != Reminder.none) {
+      try {
+        await _notificationService.cancelNotification(task.uuid.hashCode);
+      } catch (e) {
+        // It's in the trash all the same.
+      }
+    }
+    _trash = await _tasksRepository.getTrash();
     await get();
+    return trashed;
+  }
+
+  /// Reads in the tasks in the trash.
+  Future<void> getTrash() async {
+    _trash = await _tasksRepository.getTrash();
+    notifyListeners();
+  }
+
+  /// Puts the task [entry] holds back on the list, where it was when it
+  /// can, with its reminder, if that's still to come.
+  Future<Result> restoreFromTrash(Trashed<TodoItem> entry) async {
+    final TodoItem? task;
+    try {
+      task = await _putBack(entry, await _uuidsInUse());
+    } catch (e) {
+      return Failure("Couldn't restore the task");
+    }
+    await getTrash();
+    await get();
+    if (task == null) return Info("That task isn't in the Trash anymore");
+    if (!await _remindAgain(task)) {
+      return Failure("Task restored, but its reminder couldn't be set");
+    }
+    return Success("Task Restored");
+  }
+
+  /// Puts every task in the trash back on the list, with their reminders.
+  Future<Result> restoreAllFromTrash() async {
+    final restored = <TodoItem>[];
+    var allBack = true;
+    try {
+      final uuids = await _uuidsInUse();
+      // The first deleted first, so a task deleted later can't take the
+      // place it had.
+      for (final entry in (await _tasksRepository.getTrash()).reversed) {
+        try {
+          if (await _putBack(entry, uuids) case final task?) {
+            restored.add(task);
+          }
+        } catch (e) {
+          allBack = false;
+        }
+      }
+    } catch (e) {
+      allBack = false;
+    }
+    await getTrash();
+    await get();
+    var remindersSet = true;
+    for (final task in restored) {
+      if (!await _remindAgain(task)) remindersSet = false;
+    }
+    if (!allBack) {
+      return Failure(restored.isEmpty
+          ? "Couldn't restore the tasks"
+          : "Couldn't restore every task");
+    }
+    if (!remindersSet) {
+      return Failure("Tasks restored, but not every reminder could be set");
+    }
+    return Success(restored.length == 1
+        ? "Task Restored"
+        : "${restored.length} Tasks Restored");
+  }
+
+  /// Deletes the task [entry] holds for good.
+  Future<Result> deleteForever(Trashed<TodoItem> entry) async {
+    try {
+      await _tasksRepository.deleteFromTrash([entry.id]);
+    } catch (e) {
+      return Failure("Couldn't delete the task");
+    }
+    await getTrash();
+    return Info("Task Deleted Forever");
+  }
+
+  /// Deletes every task in the trash for good.
+  Future<Result> emptyTrash() async {
+    final int count;
+    try {
+      // The ones there are now, as the user saw them.
+      final ids = [for (final entry in _trash) entry.id];
+      await _tasksRepository.deleteFromTrash(ids);
+      count = ids.length;
+    } catch (e) {
+      return Failure("Couldn't delete the tasks");
+    }
+    await getTrash();
+    return Info(
+        count == 1 ? "1 Task Deleted Forever" : "$count Tasks Deleted Forever");
+  }
+
+  /// The uuids of the tasks on the list, which a task put back can't share.
+  Future<Set<String>> _uuidsInUse() async =>
+      {for (final task in await _tasksRepository.getItems()) task.uuid};
+
+  /// Puts [entry]'s task back on the list, under a new uuid if a task on
+  /// the list has its own, [uuids] being theirs: one restored from a backup
+  /// since, say. Its reminder goes by its uuid, so they can't share one. The
+  /// task as it's back, or null if it isn't in the trash anymore.
+  Future<TodoItem?> _putBack(Trashed<TodoItem> entry, Set<String> uuids) async {
+    var task = entry.item;
+    if (uuids.contains(task.uuid)) {
+      task = task.copyWith(uuid: const UuidV4().generate());
+    }
+    final id = await _tasksRepository.restoreFromTrash(entry.id, task);
+    if (id == null) return null;
+    uuids.add(task.uuid);
+    return task.copyWith(id: id);
+  }
+
+  /// Sets [task]'s reminder again, as it's put back from the trash, if it's
+  /// still to come. Whether it could be.
+  Future<bool> _remindAgain(TodoItem task) async {
+    try {
+      await _scheduleReminder(task);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Marks [task] done, which turns its reminder off, or not done again. A

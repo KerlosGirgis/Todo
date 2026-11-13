@@ -15,7 +15,7 @@ class DatabaseService {
   String? get key => _key;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 7;
+  static const int _databaseVersion = 8;
 
   /// Opens the database with [key], which the App Lock's password unlocked,
   /// or else with the key kept as it is, or a new one for a new database.
@@ -88,7 +88,24 @@ class DatabaseService {
       protected INTEGER
     )
     ''');
+    await db.execute(_createTrash);
   }
+
+  /// The trash, where deleted tasks and notes wait until they're put back or
+  /// deleted for good. Each entry is one task or note, its kind "task" or
+  /// "note", kept as backups keep it, in JSON; with the id it had, so it can
+  /// go back where it was, and when it was deleted, as ISO 8601. Its ids are
+  /// never used again, so an Undo for an entry deleted for good since can't
+  /// put back another.
+  static const _createTrash = '''
+    CREATE TABLE IF NOT EXISTS Trash(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT,
+      itemId INTEGER,
+      item TEXT,
+      deletedAt TEXT
+    )
+    ''';
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE User ADD COLUMN notesTextSize REAL DEFAULT 1');
@@ -132,6 +149,11 @@ class DatabaseService {
         await db.execute(
             'ALTER TABLE User ADD COLUMN amoled INTEGER DEFAULT 0');
       }
+    }
+    if (oldVersion < 8) {
+      // It may be there already, from before an older build put the
+      // version back.
+      await db.execute(_createTrash);
     }
   }
 

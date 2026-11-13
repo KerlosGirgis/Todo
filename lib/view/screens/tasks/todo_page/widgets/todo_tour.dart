@@ -86,7 +86,7 @@ List<TourStep> todoTour({
       target: target,
       icon: Icons.delete_rounded,
       title: "Delete a Task",
-      message: "Swipe a task left or right to delete it.",
+      message: "Swipe a task left or right to move it to the Trash.",
       demo: demo(
         [TourGesture.swipe],
         touchAlignment: const Alignment(0.6, 0),
@@ -123,8 +123,8 @@ List<TourStep> todoTour({
       target: menu,
       icon: Icons.menu_rounded,
       title: "More Options",
-      message: "Back up and restore your tasks, or open Settings, from this "
-          "menu.",
+      message: "Back up and restore your tasks, find deleted ones in the "
+          "Trash, or open Settings, from this menu.",
       radius: 19,
     ),
   ];

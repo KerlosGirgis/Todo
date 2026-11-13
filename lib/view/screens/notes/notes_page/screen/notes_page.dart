@@ -10,6 +10,7 @@ import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
+import '../../../../../models/trashed.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
@@ -22,6 +23,7 @@ import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
 import '../../../tasks/todo_page/screen/todo_page.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
+import '../../../trash/trash_page/screen/trash_page.dart';
 import '../../note_editor_page/screen/note_editor_page.dart';
 import '../widgets/empty_notes.dart';
 import '../widgets/note_card.dart';
@@ -294,6 +296,11 @@ class _NotesPageState extends State<NotesPage> {
           onPressed: _backUp,
         ),
         GlassMenuItem(
+          icon: Icons.delete_outline_rounded,
+          tooltip: "Trash",
+          onPressed: _openTrash,
+        ),
+        GlassMenuItem(
           icon: Icons.settings_rounded,
           tooltip: "Settings",
           onPressed: _openSettings,
@@ -368,6 +375,11 @@ class _NotesPageState extends State<NotesPage> {
       case Granted(value: final draft):
         showFormDialog<void>(context, NoteDialog(draft: draft));
     }
+  }
+
+  void _openTrash() {
+    _searchFocusNode.unfocus();
+    Navigator.push(context, trashRoute(TrashKind.note));
   }
 
   void _openTodo() {

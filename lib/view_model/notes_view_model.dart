@@ -11,6 +11,7 @@ import '../core/utils/note_document_utils.dart';
 import '../models/app_lock.dart';
 import '../models/note.dart';
 import '../models/note_preview.dart';
+import '../models/trashed.dart';
 import '../services/authentication_service.dart';
 import '../services/backup_service.dart';
 import '../services/file_service.dart';
@@ -25,12 +26,14 @@ class NotesViewModel with ChangeNotifier {
     HomeWidgetService? homeWidgetService,
     BackupService? backupService,
     FileService? fileService,
+    DateTime Function()? clock,
   })  : _notesRepository = repository ?? NotesRepository(),
         _authService = authService ?? AuthenticationService(),
         _lockService = lockService ?? LockService(),
         _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
         _backupService = backupService ?? BackupService(),
-        _fileService = fileService ?? FileService();
+        _fileService = fileService ?? FileService(),
+        _now = clock ?? DateTime.now;
 
   /// The notes, with all they say.
   List<Note> _notes = [];
@@ -42,12 +45,21 @@ class NotesViewModel with ChangeNotifier {
 
   int get lockedCount => _notes.where((note) => note.locked).length;
 
+  /// The notes in the trash, with all they say.
+  List<Trashed<Note>> _trash = [];
+
+  /// The notes in the trash, the last deleted first, as the trash page gets
+  /// them, once [getTrash] has read them in: without a locked note's text.
+  List<Trashed<Note>> _trashShown = [];
+  List<Trashed<Note>> get trash => UnmodifiableListView(_trashShown);
+
   final NotesRepository _notesRepository;
   final AuthenticationService _authService;
   final LockService _lockService;
   final HomeWidgetService _homeWidgetService;
   final BackupService _backupService;
   final FileService _fileService;
+  final DateTime Function() _now;
 
   /// Whether the note on the widget has been checked since the app started:
   /// see [_checkWidget].
@@ -278,26 +290,149 @@ class NotesViewModel with ChangeNotifier {
     }
   }
 
-  /// Deletes [note], once its lock lets the user through.
-  Future<Result> _delete(Note note,
+  /// Moves [note] to the trash, where it waits to be put back or deleted for
+  /// good, once its lock lets the user through, as deleting a locked note
+  /// always has, and takes it off the widget. Gives the entry it's in the
+  /// trash as, which puts it back.
+  Future<Access<Trashed<Note>>> _moveToTrash(Note note,
       {required PasswordPrompt askForPassword}) async {
-    final isAuthenticated =
-        await _authenticate(note, askForPassword: askForPassword);
-    if(isAuthenticated is Success){
-      try{
-        await _notesRepository.deleteNote(note.id!);
-        await _takeOffWidget(note.id);
-        await get();
-        return Info("Note Deleted");
-      }
-      catch(e){
-        return Failure("Couldn't delete the note");
-      }
+    switch (await _authenticate(note, askForPassword: askForPassword)) {
+      case Failure(:final message) || Info(:final message):
+        return Denied(message);
+      case Success():
+        break;
+    }
+    final Trashed<Note> trashed;
+    try {
+      trashed = await _notesRepository.moveToTrash(note, deletedAt: _now());
+    } catch (e) {
+      return const Denied("Couldn't delete the note");
+    }
+    await _takeOffWidget(note.id);
+    await get();
+    await getTrash();
+    return Granted(_shownInTrash(trashed));
+  }
 
+  /// Reads in the notes in the trash.
+  Future<void> getTrash() async {
+    _trash = await _notesRepository.getTrash();
+    _publishTrash();
+  }
+
+  /// Shows the trash page the notes in the trash as they are now.
+  void _publishTrash() {
+    _trashShown = [for (final entry in _trash) _shownInTrash(entry)];
+    notifyListeners();
+  }
+
+  /// [entry] as the pages get it: without a locked note's text.
+  static Trashed<Note> _shownInTrash(Trashed<Note> entry) =>
+      entry.item.locked ? entry.withItem(entry.item.withoutText()) : entry;
+
+  /// [entry], one of [trash], with all its note says, or null when it isn't
+  /// in the trash anymore.
+  Future<Trashed<Note>?> _fullEntry(Trashed<Note> entry) async {
+    bool same(Trashed<Note> each) => each.id == entry.id;
+    return _trash.where(same).firstOrNull ??
+        (await _notesRepository.getTrash()).where(same).firstOrNull;
+  }
+
+  /// Puts the note [entry] holds back with the notes, where it was when it
+  /// can. A locked note comes back locked, so it doesn't take the lock.
+  Future<Result> restoreFromTrash(Trashed<Note> entry) async {
+    final int? id;
+    try {
+      final full = await _fullEntry(entry);
+      id = full == null
+          ? null
+          : await _notesRepository.restoreFromTrash(full.id, full.item);
+    } catch (e) {
+      return Failure("Couldn't restore the note");
     }
-    else{
-      return isAuthenticated;
+    await getTrash();
+    await get();
+    if (id == null) return Info("That note isn't in the Trash anymore");
+    return Success("Note Restored");
+  }
+
+  /// Puts every note in the trash back with the notes.
+  Future<Result> restoreAllFromTrash() async {
+    var restored = 0;
+    var allBack = true;
+    try {
+      // The first deleted first, so a note deleted later can't take the
+      // place it had.
+      for (final entry in (await _notesRepository.getTrash()).reversed) {
+        try {
+          if (await _notesRepository.restoreFromTrash(entry.id, entry.item) !=
+              null) {
+            restored++;
+          }
+        } catch (e) {
+          allBack = false;
+        }
+      }
+    } catch (e) {
+      allBack = false;
     }
+    await getTrash();
+    await get();
+    if (!allBack) {
+      return Failure(restored == 0
+          ? "Couldn't restore the notes"
+          : "Couldn't restore every note");
+    }
+    return Success(
+        restored == 1 ? "Note Restored" : "$restored Notes Restored");
+  }
+
+  /// Deletes the note [entry] holds for good, once its lock lets the user
+  /// through, as deleting a locked note always has.
+  Future<Result> deleteForever(Trashed<Note> entry,
+      {required PasswordPrompt askForPassword}) async {
+    final Trashed<Note>? full;
+    try {
+      full = await _fullEntry(entry);
+    } catch (e) {
+      return Failure("Couldn't delete the note");
+    }
+    if (full == null) return Info("That note isn't in the Trash anymore");
+    final unlocked =
+        await _authenticate(full.item, askForPassword: askForPassword);
+    if (unlocked is! Success) return unlocked;
+    try {
+      await _notesRepository.deleteFromTrash([full.id]);
+    } catch (e) {
+      return Failure("Couldn't delete the note");
+    }
+    await getTrash();
+    return Info("Note Deleted Forever");
+  }
+
+  /// Deletes every note in the trash for good, once the note lock lets the
+  /// user through, while any of them is locked.
+  Future<Result> emptyTrash({required PasswordPrompt askForPassword}) async {
+    final List<Trashed<Note>> trash;
+    try {
+      // As they are now, so no locked note goes without the lock.
+      trash = await _notesRepository.getTrash();
+    } catch (e) {
+      return Failure("Couldn't delete the notes");
+    }
+    if (trash.any((entry) => entry.item.locked)) {
+      final unlocked = await _passNoteLock(askForPassword);
+      if (unlocked is! Success) return unlocked;
+    }
+    try {
+      await _notesRepository.deleteFromTrash([for (final e in trash) e.id]);
+    } catch (e) {
+      return Failure("Couldn't delete the notes");
+    }
+    await getTrash();
+    return Info(trash.length == 1
+        ? "1 Note Deleted Forever"
+        : "${trash.length} Notes Deleted Forever");
   }
 
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
@@ -617,12 +752,17 @@ class NoteEditorViewModel {
   /// Shows the note's saved text on the home screen's widget.
   Future<Result> showOnWidget() => _notes._showOnWidget(_note);
 
-  /// Deletes the note, once its lock lets the user through, with
+  /// Moves the note to the trash, once its lock lets the user through, with
   /// [askForPassword] for the App Lock's password on a phone that can't take
-  /// a fingerprint.
-  Future<Result> delete({required PasswordPrompt askForPassword}) async {
-    final result = await _notes._delete(_note, askForPassword: askForPassword);
-    if (result is! Failure) {
+  /// a fingerprint. What's still to be saved, as the editor would save it
+  /// as it closes, goes with it. Gives the entry it's in the trash as, which
+  /// puts it back.
+  Future<Access<Trashed<Note>>> delete(
+      {required PasswordPrompt askForPassword}) async {
+    await flush();
+    final result =
+        await _notes._moveToTrash(_note, askForPassword: askForPassword);
+    if (result is Granted) {
       _autoSave?.cancel();
       _autoSave = null;
     }

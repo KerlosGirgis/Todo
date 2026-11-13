@@ -1,10 +1,14 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../models/todo_item.dart';
+import '../models/trashed.dart';
 import '../services/database_service.dart';
+import 'trash_table.dart';
 
 class TasksRepository{
 
   Database get db => DatabaseService.db;
+
+  static const _trash = TrashTable(TrashKind.task);
 
   Future<int> insertItem(TodoItem item) {
     return db.insert('ToDo', item.toMap());
@@ -63,4 +67,24 @@ class TasksRepository{
     });
   }
 
+  /// Moves [item] to the trash, as it was at [deletedAt], and gives the
+  /// entry it's there as.
+  Future<Trashed<TodoItem>> moveToTrash(TodoItem item,
+      {required DateTime deletedAt}) async {
+    final id = await _trash.moveIn(db, 'ToDo',
+        itemId: item.id, item: item.toMap(), deletedAt: deletedAt);
+    return Trashed(id: id, item: item, deletedAt: deletedAt);
+  }
+
+  /// The tasks in the trash, the last deleted first.
+  Future<List<Trashed<TodoItem>>> getTrash() => _trash.read(db, TodoItem.fromMap);
+
+  /// Takes the trash's entry [id] out of it, and puts [item] back on the
+  /// list, where it was if no task has its id now. Its id there, or null
+  /// when the entry isn't in the trash anymore.
+  Future<int?> restoreFromTrash(int id, TodoItem item) =>
+      _trash.moveOut(db, 'ToDo', id, itemId: item.id, item: item.toMap());
+
+  /// Deletes the trash's entries [ids] for good.
+  Future<void> deleteFromTrash(Iterable<int> ids) => _trash.delete(db, ids);
 }

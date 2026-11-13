@@ -76,8 +76,8 @@ List<TourStep> notesTour({
       target: menu,
       icon: Icons.menu_rounded,
       title: "More Options",
-      message: "Reorder your notes, back them up, restore a backup or open "
-          "Settings from this menu.",
+      message: "Reorder your notes, back them up, restore a backup, find "
+          "deleted ones in the Trash, or open Settings from this menu.",
       radius: 19,
     ),
   ];

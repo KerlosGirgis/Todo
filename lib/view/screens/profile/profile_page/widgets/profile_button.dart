@@ -5,7 +5,8 @@ import '../../../../../core/extensions/theme_extensions.dart';
 const _accent = Color(0xff3D5AFE);
 
 /// A wide button for the profile page's sheets and dialogs: filled with the
-/// accent for the main action, or [tinted] with it for the others.
+/// accent for the main action, or [tinted] with it for the others; in red
+/// for one that's [destructive].
 class ProfileButton extends StatelessWidget {
   const ProfileButton({
     super.key,
@@ -13,6 +14,7 @@ class ProfileButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.tinted = false,
+    this.destructive = false,
   });
 
   final String label;
@@ -22,14 +24,23 @@ class ProfileButton extends StatelessWidget {
   final IconData? icon;
   final bool tinted;
 
+  /// Whether it deletes something for good, which colours it red.
+  final bool destructive;
+
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
+    // iOS's system red, a touch brighter on dark pages, as there.
+    final color = destructive
+        ? (isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30))
+        : _accent;
     final style = FilledButton.styleFrom(
       backgroundColor:
-          tinted ? _accent.withValues(alpha: isDarkTheme ? 0.2 : 0.1) : _accent,
-      foregroundColor: tinted ? context.colors.moreLess : Colors.white,
+          tinted ? color.withValues(alpha: isDarkTheme ? 0.2 : 0.1) : color,
+      foregroundColor: tinted
+          ? (destructive ? color : context.colors.moreLess)
+          : Colors.white,
       disabledBackgroundColor: ink.withValues(alpha: 0.08),
       disabledForegroundColor: ink.withValues(alpha: 0.3),
       minimumSize: const Size.fromHeight(50),
