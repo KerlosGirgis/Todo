@@ -132,20 +132,22 @@ void main() {
   group('settings', () {
     test('are saved when they change, and only then', () async {
       await user.setDarkTheme(!user.user.darkTheme);
+      await user.setAmoledTheme(true);
       await user.setAutoSave(false);
       await user.setStartPage(StartPage.notes);
       await user.setWordCount(true);
       await user.setShowVerse(false);
       await user.setAvatar(const BundledAvatar("004"));
-      expect(repository.updates, 6);
+      expect(repository.updates, 7);
       expect(repository.rows.single.toMap(), user.user.toMap());
 
       var notified = 0;
       user.addListener(() => notified++);
+      await user.setAmoledTheme(true);
       await user.setAutoSave(false);
       await user.setStartPage(StartPage.notes);
       await user.setAvatar(const BundledAvatar("004"));
-      expect(repository.updates, 6);
+      expect(repository.updates, 7);
       expect(notified, 0);
     });
 

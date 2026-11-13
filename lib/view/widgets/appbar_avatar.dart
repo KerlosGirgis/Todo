@@ -112,7 +112,7 @@ class _ProfileDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: context.colors.cardBackground,
+      backgroundColor: context.colors.dialogBackground,
       surfaceTintColor: Colors.transparent,
       clipBehavior: Clip.antiAlias,
       insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),

@@ -8,6 +8,7 @@ void main() {
     'name': "Kerlos",
     'pic': "003",
     'theme': 1,
+    'amoled': 1,
     'autoSave': 1,
     'casual': 0,
     'verse': 1,
@@ -25,6 +26,7 @@ void main() {
   test('reads the switches as bools', () {
     final user = UserProfile.fromMap(stored);
     expect(user.darkTheme, isTrue);
+    expect(user.amoledTheme, isTrue);
     expect(user.autoSave, isTrue);
     expect(user.casualFont, isFalse);
     expect(user.showVerse, isTrue);

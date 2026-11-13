@@ -16,7 +16,7 @@ Future<void> showAvatarPicker(BuildContext context) {
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
-    backgroundColor: context.colors.cardBackground,
+    backgroundColor: context.colors.dialogBackground,
     shape: const RoundedSuperellipseBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
     ),
@@ -171,7 +171,7 @@ class _AvatarOption extends StatelessWidget {
                         // Cut out of whatever it overlaps by the sheet's
                         // own colour.
                         border: Border.all(
-                            color: context.colors.cardBackground, width: 2),
+                            color: context.colors.dialogBackground, width: 2),
                       ),
                       child: const Padding(
                         padding: EdgeInsets.all(2),

@@ -28,7 +28,7 @@ class ReorderNotesDialog extends StatelessWidget {
     // The rows, filled like the settings around them, and opaque, so a row
     // picked up still reads over the others.
     final surface = Color.alphaBlend(context.colors.wB.withValues(alpha: 0.06),
-        context.colors.cardBackground);
+        context.colors.dialogBackground);
     return FormDialog(
       icon: Icons.swap_vert_rounded,
       title: "Reorder Notes",

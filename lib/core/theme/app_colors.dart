@@ -6,6 +6,11 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color floatingActionButtonForeground;
   final Color wB;
   final Color cardBackground;
+
+  /// What dialogs and sheets are filled with: the cards' colour, but a
+  /// lighter one in AMOLED black, whose cards are too near the page for a
+  /// dialog over it to stand out.
+  final Color dialogBackground;
   final Color subtitle;
   final Color pageBackground;
   final Color profileAlertBackground;
@@ -22,6 +27,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.floatingActionButtonForeground,
     required this.wB,
     required this.cardBackground,
+    required this.dialogBackground,
     required this.subtitle,
     required this.pageBackground,
     required this.profileAlertBackground,
@@ -39,6 +45,7 @@ class AppColors extends ThemeExtension<AppColors> {
     floatingActionButtonForeground: Colors.white,
     wB: Colors.black,
     cardBackground: Color(0xffF5F5F5),
+    dialogBackground: Color(0xffF5F5F5),
     subtitle: Color(0xff424242),
     pageBackground: Color(0xffEDEDED),
     profileAlertBackground: Colors.grey,
@@ -56,6 +63,7 @@ class AppColors extends ThemeExtension<AppColors> {
     floatingActionButtonForeground: Colors.grey.shade300,
     wB: Colors.white,
     cardBackground: const Color(0xff1E1E1E),
+    dialogBackground: const Color(0xff1E1E1E),
     subtitle: Colors.grey.shade200,
     pageBackground: const Color(0xff121212),
     profileAlertBackground: Colors.grey.shade800.withValues(alpha: .8),
@@ -71,8 +79,8 @@ class AppColors extends ThemeExtension<AppColors> {
   static final amoled = dark.copyWith(
     pageBackground: Colors.black,
     cardBackground: const Color(0xff0D0D0D),
-    dialogIconContainer: const Color(0xff1A1A1A),
-    dialogExitContainer: const Color(0xff1A1A1A),
+    // iOS's raised grey, which its own dialogs and sheets have over black.
+    dialogBackground: const Color(0xff1C1C1E),
   );
 
   /// Safe accessor
@@ -94,6 +102,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? floatingActionButtonForeground,
     Color? wB,
     Color? cardBackground,
+    Color? dialogBackground,
     Color? subtitle,
     Color? pageBackground,
     Color? profileAlertBackground,
@@ -114,6 +123,7 @@ class AppColors extends ThemeExtension<AppColors> {
           this.floatingActionButtonForeground,
       wB: wB ?? this.wB,
       cardBackground: cardBackground ?? this.cardBackground,
+      dialogBackground: dialogBackground ?? this.dialogBackground,
       subtitle: subtitle ?? this.subtitle,
       pageBackground: pageBackground ?? this.pageBackground,
       profileAlertBackground:
@@ -150,6 +160,8 @@ class AppColors extends ThemeExtension<AppColors> {
       )!,
       wB: Color.lerp(wB, other.wB, t)!,
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
+      dialogBackground:
+          Color.lerp(dialogBackground, other.dialogBackground, t)!,
       subtitle: Color.lerp(subtitle, other.subtitle, t)!,
       pageBackground: Color.lerp(pageBackground, other.pageBackground, t)!,
       profileAlertBackground: Color.lerp(

@@ -82,7 +82,7 @@ class _EditNameDialogState extends State<EditNameDialog> {
       borderSide: BorderSide.none,
     );
     return Dialog(
-      backgroundColor: context.colors.cardBackground,
+      backgroundColor: context.colors.dialogBackground,
       surfaceTintColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       constraints: const BoxConstraints(minWidth: 280, maxWidth: 400),

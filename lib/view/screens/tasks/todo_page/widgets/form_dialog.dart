@@ -69,7 +69,7 @@ class FormDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: context.colors.cardBackground,
+      backgroundColor: context.colors.dialogBackground,
       surfaceTintColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       constraints: const BoxConstraints(minWidth: 280, maxWidth: 440),

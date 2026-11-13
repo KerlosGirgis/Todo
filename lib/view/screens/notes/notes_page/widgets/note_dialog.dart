@@ -128,7 +128,7 @@ class _NoteDialogState extends State<NoteDialog> {
       subheading: const _PickerSubheading("Shades"),
       wheelSubheading: const _PickerSubheading("Shades"),
       selectedPickerTypeColor: _accent,
-      backgroundColor: context.colors.cardBackground,
+      backgroundColor: context.colors.dialogBackground,
       surfaceTintColor: Colors.transparent,
       shape: const RoundedSuperellipseBorder(
         borderRadius: BorderRadius.all(Radius.circular(28)),

@@ -17,13 +17,13 @@ class AppearancePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark =
         context.select<UserViewModel, bool>((user) => user.user.darkTheme);
+    final amoled =
+        context.select<UserViewModel, bool>((user) => user.user.amoledTheme);
     void choose(bool dark) => context.read<UserViewModel>().setDarkTheme(dark);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
-      child: Column(
-       children: [
-       Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _Option(
@@ -35,12 +35,11 @@ class AppearancePicker extends StatelessWidget {
           _Option(
             label: "Dark",
             dark: true,
+            amoled: amoled,
             selected: isDark,
             onTap: () => choose(true),
           ),
         ],
-      ),
-      ],
       ),
     );
   }
@@ -50,12 +49,16 @@ class _Option extends StatelessWidget {
   const _Option({
     required this.label,
     required this.dark,
+    this.amoled = false,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
   final bool dark;
+
+  /// Whether the dark theme is in AMOLED black, which its preview then shows.
+  final bool amoled;
   final bool selected;
   final VoidCallback onTap;
 
@@ -85,7 +88,7 @@ class _Option extends StatelessWidget {
                   ),
                 ),
               ),
-              child: _PhoneMock(dark: dark),
+              child: _PhoneMock(dark: dark, amoled: amoled),
             ),
             const SizedBox(height: 10),
             Text(
@@ -136,18 +139,23 @@ class _Check extends StatelessWidget {
   }
 }
 
-/// A miniature of the to-do page in the light or the dark theme.
+/// A miniature of the to-do page in the light or the dark theme, the dark
+/// one in AMOLED black if [amoled].
 class _PhoneMock extends StatelessWidget {
-  const _PhoneMock({required this.dark});
+  const _PhoneMock({required this.dark, this.amoled = false});
 
   final bool dark;
+  final bool amoled;
 
   @override
   Widget build(BuildContext context) {
-    final colors = dark ? AppColors.dark : AppColors.light;
-    // A shade further from the page than the real cards, so they read at
-    // this size.
-    final card = dark ? const Color(0xff2A2A2A) : Colors.white;
+    // The cards a shade further from the page than the real ones, so they
+    // read at this size.
+    final (colors, card) = switch ((dark, amoled)) {
+      (false, _) => (AppColors.light, Colors.white),
+      (true, false) => (AppColors.dark, const Color(0xff2A2A2A)),
+      (true, true) => (AppColors.amoled, const Color(0xff1A1A1A)),
+    };
     final ink = colors.wB;
     Widget line(double width, double height, double alpha) => Container(
           width: width,
