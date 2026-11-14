@@ -112,7 +112,8 @@ android.applicationVariants.all { variant ->
     variant.outputs.each { output ->
         def abiVersionCode = project.ext.abiCodes.get(output.getFilter(OutputFile.ABI))
         if (abiVersionCode != null) {
-            output.versionCodeOverride = variant.versionCode * 1000 + abiVersionCode
+            // Not variant.versionCode: since Flutter 3.50 that returns Flutter's own per-ABI code (1013).
+            output.versionCodeOverride = flutterVersionCode.toInteger() * 1000 + abiVersionCode
         }
     }
 }
