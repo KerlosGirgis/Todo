@@ -43,6 +43,8 @@ void main() {
       'notification': 1,
       'since': "",
       'doneDays': "",
+      'parent': "",
+      'folded': 0,
     };
 
     test('reads the stored columns', () {

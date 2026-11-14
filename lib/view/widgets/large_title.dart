@@ -31,13 +31,11 @@ class LargeTitleBarDelegate extends SliverPersistentHeaderDelegate {
   /// the page's own, larger title has slid under the bar.
   final double titleRevealOffset;
 
-  static const _barHeight = 48.0;
+  @override
+  double get minExtent => topInset + TitleBar.height;
 
   @override
-  double get minExtent => topInset + _barHeight;
-
-  @override
-  double get maxExtent => topInset + _barHeight;
+  double get maxExtent => topInset + TitleBar.height;
 
   @override
   Widget build(
@@ -46,59 +44,15 @@ class LargeTitleBarDelegate extends SliverPersistentHeaderDelegate {
       listenable: controller,
       builder: (context, child) {
         final offset = controller.hasClients ? controller.offset : 0.0;
-        final frost = (offset / 16).clamp(0.0, 1.0);
-        // The compact title takes over as the large one slides under the bar.
-        final titleOpacity =
-            ((offset - titleRevealOffset) / 16).clamp(0.0, 1.0);
-        return Stack(
-          // Only the frosted background is clipped to the bar, so buttons on
-          // it can cast their shadows past its edge.
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: ClipRect(
-                child: BackdropFilter(
-                  enabled: frost > 0,
-                  filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: context.colors.pageBackground
-                          .withValues(alpha: 0.8 * frost),
-                      border: Border(
-                        bottom: BorderSide(
-                          width: 0.5,
-                          color:
-                              context.colors.wB.withValues(alpha: 0.16 * frost),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                  top: topInset, left: leading == null ? 0 : 16, right: 16),
-              child: NavigationToolbar(
-                leading: leading,
-                middle: Opacity(
-                  opacity: titleOpacity,
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: context.colors.wB,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ),
-                trailing: trailing,
-              ),
-            ),
-          ],
+        return TitleBar(
+          title: title,
+          topInset: topInset,
+          frost: (offset / 16).clamp(0.0, 1.0),
+          // The compact title takes over as the large one slides under the
+          // bar.
+          titleOpacity: ((offset - titleRevealOffset) / 16).clamp(0.0, 1.0),
+          leading: leading,
+          trailing: trailing,
         );
       },
     );
@@ -112,6 +66,107 @@ class LargeTitleBarDelegate extends SliverPersistentHeaderDelegate {
       leading != oldDelegate.leading ||
       trailing != oldDelegate.trailing ||
       titleRevealOffset != oldDelegate.titleRevealOffset;
+}
+
+/// A bar across the top of a page, in the style of an iOS navigation bar:
+/// clear at first, and frosted, with a hairline under it and its compact
+/// [title], once content is under it. A [LargeTitleBarDelegate] pins one
+/// over a page that scrolls; a page that doesn't scroll, but has content
+/// passing under its bar all the same, has one of its own.
+class TitleBar extends StatelessWidget {
+  const TitleBar({
+    super.key,
+    required this.title,
+    required this.topInset,
+    this.frost = 1,
+    this.titleOpacity = 1,
+    this.leading,
+    this.trailing,
+    this.bottom,
+  });
+
+  /// How tall the bar is under the status bar, without its [bottom].
+  static const height = 48.0;
+
+  final String title;
+
+  /// The status bar height, which the bar extends behind.
+  final double topInset;
+
+  /// How frosted the bar is, from clear to fully so, and how much of its
+  /// title shows.
+  final double frost;
+  final double titleOpacity;
+  final Widget? leading;
+  final Widget? trailing;
+
+  /// A row under the bar's own, on the same frosted surface, such as a
+  /// segmented control.
+  final Widget? bottom;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = this.bottom;
+    return Stack(
+      // Only the frosted background is clipped to the bar, so buttons on
+      // it can cast their shadows past its edge.
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: ClipRect(
+            child: BackdropFilter(
+              enabled: frost > 0,
+              filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: context.colors.pageBackground
+                      .withValues(alpha: 0.8 * frost),
+                  border: Border(
+                    bottom: BorderSide(
+                      width: 0.5,
+                      color: context.colors.wB.withValues(alpha: 0.16 * frost),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: topInset + height,
+              child: Padding(
+                padding: EdgeInsets.only(
+                    top: topInset, left: leading == null ? 0 : 16, right: 16),
+                child: NavigationToolbar(
+                  leading: leading,
+                  middle: Opacity(
+                    opacity: titleOpacity,
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: context.colors.wB,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
+                  trailing: trailing,
+                ),
+              ),
+            ),
+            if (bottom != null) bottom,
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 /// The large title at the top of a page's scrolling content, which scrolls

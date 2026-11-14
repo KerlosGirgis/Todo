@@ -167,6 +167,10 @@ class UserViewModel with ChangeNotifier {
   Future<void> setStartPage(StartPage startPage) => _set(
       startPage == user.startPage, () => user.copyWith(startPage: startPage));
 
+  /// Has the to-do page list the tasks, or map them.
+  Future<void> setTasksView(TasksView view) =>
+      _set(view == user.tasksView, () => user.copyWith(tasksView: view));
+
   /// Puts notes, and the home screen's widget, in the handwritten font, or
   /// back in the regular one.
   Future<void> setCasualFont(bool casualFont) async {

@@ -210,6 +210,23 @@ class TasksSection extends StatelessWidget {
     return SettingsGroup(
       title: "Tasks",
       children: [
+        SettingsTile(
+          icon: Icons.hub_rounded,
+          color: _green,
+          title: "Show Tasks As",
+          subtitle: const Text("A list, or a map that branches into subtasks"),
+          bottom: CupertinoSlidingSegmentedControl<TasksView>(
+            groupValue: user.user.tasksView,
+            onValueChanged: (view) {
+              if (view != null) user.setTasksView(view);
+            },
+            children: const {
+              TasksView.list:
+                  _Segment(icon: Icons.view_agenda_rounded, label: "List"),
+              TasksView.map: _Segment(icon: Icons.hub_rounded, label: "Map"),
+            },
+          ),
+        ),
         const _TextSizeTile(
           setting: TextSizeSetting.taskTitle,
           icon: Icons.title_rounded,

@@ -5,8 +5,13 @@ import 'package:todo/services/tour_service.dart';
 /// tour: raising one shows that tour again, to everyone, after an update that
 /// changes how its page works.
 enum PageTour {
-  tasks(1),
-  notes(1);
+  /// The to-do page's list. Its second version came with subtasks, which a
+  /// swipe now adds.
+  tasks(2),
+  notes(1),
+
+  /// The to-do page's map, which shows the first time the tasks are mapped.
+  map(1);
 
   const PageTour(this.version);
 

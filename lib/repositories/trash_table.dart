@@ -13,16 +13,21 @@ class TrashTable {
   final TrashKind kind;
 
   /// Moves the row with [itemId] from [table] to the trash, where it's kept
-  /// as [item], and gives the trash's id for it. Throws when there's no such
-  /// row, as it's been deleted already.
+  /// as [item], and gives the trash's id for it. The rows with the ids
+  /// [alongWith] go with it, as a task's subtasks do: [item] holds them too.
+  /// Throws when there's no row [itemId], as it's been deleted already.
   Future<int> moveIn(Database db, String table,
       {required int? itemId,
+      Iterable<int?> alongWith = const [],
       required Map<String, Object?> item,
       required DateTime deletedAt}) {
     return db.transaction((txn) async {
       final deleted =
           await txn.delete(table, where: 'id = ?', whereArgs: [itemId]);
       if (deleted == 0) throw StateError("There's no row $itemId to delete");
+      for (final id in alongWith) {
+        await txn.delete(table, where: 'id = ?', whereArgs: [id]);
+      }
       return txn.insert(
         name,
         Trashed.toRow(
@@ -46,20 +51,39 @@ class TrashTable {
   /// Takes the entry [id] out of the trash and puts [item] back in [table],
   /// with the id it had, [itemId], when no row has it now. Rows are listed
   /// in the order of their ids, so it goes back where it was; otherwise it
-  /// goes at the end. Its id there, or null when the entry isn't in the
-  /// trash anymore: put back or deleted for good already.
+  /// goes at the end. The rows [alongWith] go back after it, as a task's
+  /// subtasks do, each with the `id` it has when they're all free, or else
+  /// at the end with [item], in their order. The id [item] has there, or
+  /// null when the entry isn't in the trash anymore: put back or deleted for
+  /// good already.
   Future<int?> moveOut(Database db, String table, int id,
-      {required int? itemId, required Map<String, Object?> item}) {
+      {required int? itemId,
+      required Map<String, Object?> item,
+      List<Map<String, Object?>> alongWith = const []}) {
     return db.transaction((txn) async {
       final taken = await txn.delete(name,
           where: 'id = ? AND kind = ?', whereArgs: [id, kind.name]);
       if (taken == 0) return null;
-      if (itemId != null) {
-        final inUse = await txn.query(table,
-            columns: ['id'], where: 'id = ?', whereArgs: [itemId]);
-        if (inUse.isEmpty) return txn.insert(table, {...item, 'id': itemId});
+      final rows = [
+        {...item, 'id': itemId},
+        ...alongWith,
+      ];
+      var free = true;
+      for (final row in rows) {
+        final rowId = row['id'];
+        free = rowId != null &&
+            (await txn.query(table,
+                    columns: ['id'], where: 'id = ?', whereArgs: [rowId]))
+                .isEmpty;
+        if (!free) break;
       }
-      return txn.insert(table, item);
+      int? first;
+      for (final row in rows) {
+        final rowId =
+            await txn.insert(table, free ? row : ({...row}..remove('id')));
+        first ??= rowId;
+      }
+      return first;
     });
   }
 

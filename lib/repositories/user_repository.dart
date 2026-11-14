@@ -27,7 +27,8 @@ class UserRepository{
       'descLines',
       'notesTitleSize',
       'tasksTitleSize',
-      'tasksDescSize'
+      'tasksDescSize',
+      'tasksView',
     ]);
     List<UserProfile> items = [];
     if (maps.isNotEmpty) {

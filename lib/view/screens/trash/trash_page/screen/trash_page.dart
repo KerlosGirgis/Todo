@@ -9,7 +9,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
-import '../../../../../models/todo_item.dart';
+import '../../../../../models/task_tree.dart';
 import '../../../../../models/trashed.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/tasks_view_model.dart';
@@ -175,7 +175,7 @@ class _TrashPageState extends State<TrashPage> {
             ),
             if (_loaded)
               switch (_kind) {
-                TrashKind.task => _TrashList<TodoItem>(
+                TrashKind.task => _TrashList<TaskBranch>(
                     // A list of its own for each, so the cards rise in
                     // afresh.
                     key: const ValueKey(TrashKind.task),
@@ -222,7 +222,7 @@ class _TrashPageState extends State<TrashPage> {
 
   void _show(TrashKind kind) => setState(() => _kind = kind);
 
-  Future<void> _restoreTask(Trashed<TodoItem> entry) async {
+  Future<void> _restoreTask(Trashed<TaskBranch> entry) async {
     final tasks = Provider.of<TasksViewModel>(context, listen: false);
     _showResult(await tasks.restoreFromTrash(entry));
   }
@@ -232,14 +232,21 @@ class _TrashPageState extends State<TrashPage> {
     _showResult(await notes.restoreFromTrash(entry));
   }
 
-  /// Deletes [entry]'s task for good, once the user says to.
-  Future<void> _deleteTask(Trashed<TodoItem> entry) async {
+  /// Deletes [entry]'s task for good, with the tasks in it, once the user
+  /// says to.
+  Future<void> _deleteTask(Trashed<TaskBranch> entry) async {
     final tasks = Provider.of<TasksViewModel>(context, listen: false);
+    final title = entry.item.task.title;
     final confirmed = await confirmDeleteForever(
       context,
       title: "Delete Forever?",
-      message: "“${entry.item.title}” will be deleted for good. This can't "
-          "be undone.",
+      message: switch (entry.item.subtasks.length) {
+        0 => "“$title” will be deleted for good. This can't be undone.",
+        1 => "“$title” and its subtask will be deleted for good. This "
+            "can't be undone.",
+        final count => "“$title” and its $count subtasks will be deleted "
+            "for good. This can't be undone.",
+      },
     );
     if (confirmed) _showResult(await tasks.deleteForever(entry));
   }

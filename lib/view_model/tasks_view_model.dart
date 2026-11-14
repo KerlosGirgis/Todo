@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/services/file_service.dart';
@@ -12,6 +13,7 @@ import '../models/app_lock.dart';
 import '../models/clock_time.dart';
 import '../models/daily_progress.dart';
 import '../models/task_filters.dart';
+import '../models/task_tree.dart';
 import '../models/todo_item.dart';
 import '../models/trashed.dart';
 import '../services/authentication_service.dart';
@@ -80,8 +82,19 @@ class TasksViewModel with ChangeNotifier {
   List<TodoItem> _allTasks = [];
   List<TodoItem> _items = [];
 
+  /// Every task, each in the task it's a subtask of.
+  TaskTree _tree = TaskTree.empty;
+
   /// The tasks the filter lets through.
+  TaskTree _shown = TaskTree.empty;
+
+  /// The tasks the filter lets through, each ahead of its subtasks.
   List<TodoItem> get items => UnmodifiableListView(_items);
+
+  /// The tasks the filter lets through, each in the task it's a subtask
+  /// of, or in the nearest of the tasks that one's in that the filter lets
+  /// through, or on its own when it lets none of them through.
+  TaskTree get tree => _shown;
 
   TaskFilter _currentFilter = const AllTasksFilter();
   TaskFilter get currentFilter => _currentFilter;
@@ -89,11 +102,11 @@ class TasksViewModel with ChangeNotifier {
   int get unfinishedTasksCount =>
       _allTasks.where((task) => !task.done).length;
 
-  List<Trashed<TodoItem>> _trash = [];
+  List<Trashed<TaskBranch>> _trash = [];
 
-  /// The tasks in the trash, the last deleted first, once [getTrash] has
-  /// read them in.
-  List<Trashed<TodoItem>> get trash => UnmodifiableListView(_trash);
+  /// The tasks in the trash, each with the tasks in it, the last deleted
+  /// first, once [getTrash] has read them in.
+  List<Trashed<TaskBranch>> get trash => UnmodifiableListView(_trash);
 
   /// Why the filter lets no task through, or null while it lets some.
   EmptyTasksReason? get emptyReason {
@@ -164,7 +177,12 @@ class TasksViewModel with ChangeNotifier {
   /// Lists [tasks] as they stand on [today].
   void _setDay(DateTime today, List<TodoItem> tasks) {
     _day = today;
-    _allTasks = [for (final task in tasks) task.asOf(today)];
+    _setTasks([for (final task in tasks) task.asOf(today)]);
+  }
+
+  /// Lists [tasks], as they stand today.
+  void _setTasks(List<TodoItem> tasks) {
+    _allTasks = tasks;
     _applyFilter();
   }
 
@@ -182,43 +200,156 @@ class TasksViewModel with ChangeNotifier {
   }
 
   void _applyFilter() {
-    _items = _currentFilter.apply(_allTasks);
+    _tree = TaskTree(_allTasks);
+    _shown = _currentFilter is AllTasksFilter
+        ? _tree
+        : _tree.where(_currentFilter.shows);
+    _items = _shown.tasks;
     notifyListeners();
   }
 
+  /// Moves the task at [oldIndex] among the [tree]'s tasks, as a list has
+  /// them, to [newIndex], with the tasks in it. It lines up with the task
+  /// then below it, going into the task that one's in, ahead of it; with
+  /// none below it, it goes last, as a task of its own. Tasks that are
+  /// folded away don't count: one dropped between the same two tasks on
+  /// show as it was picked up from stays where it is.
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
-    if (oldIndex == newIndex) return;
-
-    final taskToMove = _items[oldIndex];
-
-    _items.removeAt(oldIndex);
-    _items.insert(newIndex, taskToMove);
-    notifyListeners();
-
-    final oldMasterIndex = _allTasks.indexOf(taskToMove);
-    if (oldMasterIndex != -1) {
-      _allTasks.removeAt(oldMasterIndex);
-      int insertAt;
-      if (newIndex + 1 < _items.length) {
-        final nextTask = _items[newIndex + 1];
-        insertAt = _allTasks.indexOf(nextTask);
-      } else if (newIndex > 0) {
-        final prevTask = _items[newIndex - 1];
-        insertAt = _allTasks.indexOf(prevTask) + 1;
-      } else {
-        insertAt = _allTasks.length;
-      }
-      _allTasks.insert(insertAt == -1 ? _allTasks.length : insertAt, taskToMove);
+    final nodes = _shown.nodes;
+    if (oldIndex == newIndex || oldIndex < 0 || oldIndex >= nodes.length) {
+      return;
     }
+    final moved = nodes[oldIndex];
+    // The tasks it could be next to: not the ones that go with it, nor ones
+    // folded away, which aren't where it was dropped.
+    bool beside(TaskNode node) =>
+        !node.isOrIsIn(moved) &&
+        !node.ancestors.any((each) => each.task.folded);
+    final rest = [...nodes]..removeAt(oldIndex);
+    final above = rest.take(newIndex).where(beside).lastOrNull;
+    final below = rest.skip(newIndex).where(beside).firstOrNull;
+    if (above == nodes.take(oldIndex).where(beside).lastOrNull &&
+        below == nodes.skip(oldIndex).where(beside).firstOrNull) {
+      return;
+    }
+    if (below == null) {
+      await moveInto(moved.task, null);
+    } else {
+      await moveBeside(moved.task, below.task, after: false);
+    }
+  }
 
+  /// Makes [task] a subtask of [parent], the last one, or a task of its own
+  /// for null, the last of those. The tasks in it go with it. Null when
+  /// there's nothing to say: it's moved, or was there already.
+  Future<Result?> moveInto(TodoItem task, TodoItem? parent) =>
+      _move(task, parent: parent);
+
+  /// Moves [task] next to [sibling], into the task that one's in: ahead of
+  /// it, or right [after] it. The tasks in it go with it. Null when there's
+  /// nothing to say.
+  Future<Result?> moveBeside(TodoItem task, TodoItem sibling,
+      {required bool after}) async {
+    final node = _tree.nodeOf(_current(task));
+    final beside = _tree.nodeOf(_current(sibling));
+    if (node == null || beside == null) return _gone;
+    if (identical(node, beside)) return null;
+    var before = beside;
+    if (after) {
+      final siblings = beside.parent?.children ?? _tree.roots;
+      final next = siblings
+          .skip(siblings.indexOf(beside) + 1)
+          .where((each) => !identical(each, node))
+          .firstOrNull;
+      if (next == null) return _move(task, parent: beside.parent?.task);
+      before = next;
+    }
+    return _move(task, parent: beside.parent?.task, before: before.task);
+  }
+
+  static const _gone = Info("That task isn't on the list anymore");
+
+  Future<Result?> _move(TodoItem task,
+      {required TodoItem? parent, TodoItem? before}) async {
+    final node = _tree.nodeOf(_current(task));
+    final into = parent == null ? null : _tree.nodeOf(_current(parent));
+    if (node == null || (parent != null && into == null)) return _gone;
+    if (into != null && into.isOrIsIn(node)) {
+      return const Info("A task can't go inside itself");
+    }
+    // Its subtasks find it by its uuid.
+    if (into != null && into.task.uuid.isEmpty) {
+      return const Failure("Couldn't move the task");
+    }
+    var tasks = _tree.moving(node,
+        parent: into,
+        before: before == null ? null : _tree.nodeOf(_current(before)));
+    if (tasks == null) return null;
+    if (into != null && into.task.folded) {
+      // Unfolded, so the task shows where it's gone.
+      tasks = [
+        for (final each in tasks)
+          identical(each, into.task) ? each.copyWith(folded: false) : each,
+      ];
+    }
+    tasks = _settled(tasks);
+    // There straight away, as that's where it was dropped.
+    _setTasks(tasks);
+    Result? result;
     try {
-      await _tasksRepository.refreshAllItems(_allTasks);
+      await _tasksRepository.refreshAllItems(tasks);
     } catch (e) {
       // The order stays as it was in the database.
+      result = const Failure("Couldn't move the task");
     }
     // Rewriting the table gives every task a new id, so the tasks are read
     // back in: the ids held before would now point at other tasks.
     await get();
+    return result;
+  }
+
+  /// [tasks] with none of them done while a task in it isn't.
+  List<TodoItem> _settled(List<TodoItem> tasks) {
+    final ahead = {
+      for (final node in TaskTree(tasks).doneAheadOfSubtasks) node.task,
+    };
+    if (ahead.isEmpty) return tasks;
+    return [
+      for (final task in tasks)
+        ahead.contains(task) ? task.marked(done: false, today: today) : task,
+    ];
+  }
+
+  /// Marks not done any task that's done while a task in it isn't, as one
+  /// with a task still to do added to it, or put back in it.
+  Future<void> _settle() async {
+    final ahead = _tree.doneAheadOfSubtasks;
+    if (ahead.isEmpty) return;
+    try {
+      await _tasksRepository.updateItems([
+        for (final node in ahead) node.task.marked(done: false, today: today),
+      ]);
+    } catch (e) {
+      // They stay done.
+    }
+    await get();
+  }
+
+  /// Folds [task]'s subtasks away, on the list and on the map, or brings
+  /// them back out.
+  Future<void> setFolded(TodoItem task, bool folded) async {
+    task = _current(task);
+    if (task.folded == folded) return;
+    final changed = task.copyWith(folded: folded);
+    // Straight away, as it's what was tapped.
+    _setTasks([
+      for (final each in _allTasks) identical(each, task) ? changed : each,
+    ]);
+    try {
+      await _tasksRepository.updateItem(changed);
+    } catch (e) {
+      await get();
+    }
   }
 
   /// [task] as the tasks are now: found by its uuid, which outlasts a
@@ -230,16 +361,23 @@ class TasksViewModel with ChangeNotifier {
   }
 
   /// A form for [task], or for a new task without one.
-  TaskDraft draft([TodoItem? task]) => TaskDraft._(task, _now);
+  TaskDraft draft([TodoItem? task]) => TaskDraft._(task, _now, _tree,
+      task == null ? null : _tree.nodeOf(task)?.parent?.task);
+
+  /// A form for a new subtask of [parent].
+  TaskDraft subtaskDraft(TodoItem parent) =>
+      TaskDraft._(null, _now, _tree, _current(parent));
 
   /// Adds the task [draft] has, or saves the changes to the one it's for,
-  /// then sets its reminder.
+  /// in the task the draft has it in, then sets its reminder.
   Future<Result> save(TaskDraft draft) async {
     // All of it now, as the form may close before the task is saved.
     final task = draft.task;
     final title = draft.title.trim();
     final desc = draft.description.trim();
     final (day, time, reminder) = (draft.day, draft.time, draft.reminder);
+    final parent = draft.parent;
+    final moved = draft.moved;
     if (title.isEmpty) return Info("Give the task a title");
     if (task == null) {
       var added = TodoItem(
@@ -248,17 +386,22 @@ class TasksViewModel with ChangeNotifier {
         day: day,
         time: time,
         uuid: const UuidV4().generate(),
+        parent: parent?.uuid,
       );
       added = added.copyWith(id: await _tasksRepository.insertItem(added));
       await get();
-      return switch (reminder) {
+      // Unfolded, so the new task shows.
+      if (parent != null) await setFolded(parent, false);
+      final result = await switch (reminder) {
         Reminder.once => _remindOnce(added),
         // Its day goes, as a daily task has none.
         Reminder.daily => _remindDaily(added),
-        Reminder.none => Info("Task Added"),
+        Reminder.none => Future.value(Info("Task Added")),
       };
+      await _settle();
+      return result;
     }
-    final updated = TodoItem(
+    var updated = TodoItem(
       title: title,
       desc: desc,
       id: task.id,
@@ -268,43 +411,59 @@ class TasksViewModel with ChangeNotifier {
       uuid: task.uuid,
       reminder: reminder,
       progress: _progressAs(task, reminder),
+      parent: task.parent,
+      folded: task.folded,
     );
     await _tasksRepository.updateItem(updated);
     await get();
+    if (moved) {
+      final result = await moveInto(updated, parent);
+      if (result != null) return result;
+      // With the id it has now, as moving it gave every task a new one.
+      updated = _current(updated);
+    }
+    final Result result;
     switch (updated.reminder) {
       case Reminder.once:
         await _cancelReminder(updated);
-        return await _remindOnce(updated);
+        result = await _remindOnce(updated);
       case Reminder.daily:
         await _cancelReminder(updated);
-        return await _remindDaily(updated);
+        result = await _remindDaily(updated);
       case Reminder.none:
         // In case the reminder was just turned off.
         await _notificationService.cancelNotification(updated.uuid.hashCode);
-        return Info("Task Updated");
+        result = Info("Task Updated");
     }
+    await _settle();
+    return result;
   }
 
-  /// Moves [task] to the trash, where it waits to be put back or deleted
-  /// for good, and turns its reminder off. Gives the entry it's in the trash
-  /// as, which puts it back, or null if it couldn't be moved, which leaves
-  /// it on the list.
-  Future<Trashed<TodoItem>?> delete(TodoItem task) async {
+  /// Moves [task] to the trash, with the tasks in it, where they wait to be
+  /// put back or deleted for good, and turns their reminders off. Gives the
+  /// entry they're in the trash as, which puts them back, or null if they
+  /// couldn't be moved, which leaves them on the list.
+  Future<Trashed<TaskBranch>?> delete(TodoItem task) async {
     task = _current(task);
+    final branch = _tree.nodeOf(task)?.branch ?? TaskBranch(task);
+    final going = branch.all.toSet();
     // Off the list straight away, as its card has been swiped away.
-    _items.removeWhere((each) => each.uuid == task.uuid && each.id == task.id);
-    notifyListeners();
-    final Trashed<TodoItem> trashed;
+    _setTasks([
+      for (final each in _allTasks)
+        if (!going.contains(each)) each,
+    ]);
+    final Trashed<TaskBranch> trashed;
     try {
-      trashed = await _tasksRepository.moveToTrash(task, deletedAt: _now());
+      trashed = await _tasksRepository.moveToTrash(branch, deletedAt: _now());
     } catch (e) {
-      // Back on the list, as it's still there.
+      // Back on the list, as they're still there.
       await get();
       return null;
     }
-    if (task.reminder != Reminder.none) {
+    for (final each in branch.all) {
+      if (each.reminder == Reminder.none) continue;
       try {
-        await _notificationService.cancelNotification(task.uuid.hashCode);
+        await _notificationService.cancelNotification(each.uuid.hashCode);
       } catch (e) {
         // It's in the trash all the same.
       }
@@ -320,27 +479,32 @@ class TasksViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Puts the task [entry] holds back on the list, where it was when it
-  /// can, with its reminder, if that's still to come.
-  Future<Result> restoreFromTrash(Trashed<TodoItem> entry) async {
-    final TodoItem? task;
+  /// Puts the task [entry] holds back on the list, with the tasks in it,
+  /// where they were when they can be, with their reminders, if those are
+  /// still to come. In the task it was a subtask of, if that's on the list.
+  Future<Result> restoreFromTrash(Trashed<TaskBranch> entry) async {
+    final TaskBranch? branch;
     try {
-      task = await _putBack(entry, await _uuidsInUse());
+      branch = await _putBack(entry, await _uuidsInUse());
     } catch (e) {
       return Failure("Couldn't restore the task");
     }
     await getTrash();
     await get();
-    if (task == null) return Info("That task isn't in the Trash anymore");
-    if (!await _remindAgain(task)) {
-      return Failure("Task restored, but its reminder couldn't be set");
+    if (branch == null) return Info("That task isn't in the Trash anymore");
+    final reminded = await _remindAgain(branch.all);
+    await _settle();
+    if (!reminded) {
+      return Failure(branch.subtasks.isEmpty
+          ? "Task restored, but its reminder couldn't be set"
+          : "Task restored, but not every reminder could be set");
     }
     return Success("Task Restored");
   }
 
   /// Puts every task in the trash back on the list, with their reminders.
   Future<Result> restoreAllFromTrash() async {
-    final restored = <TodoItem>[];
+    final restored = <TaskBranch>[];
     var allBack = true;
     try {
       final uuids = await _uuidsInUse();
@@ -348,8 +512,8 @@ class TasksViewModel with ChangeNotifier {
       // place it had.
       for (final entry in (await _tasksRepository.getTrash()).reversed) {
         try {
-          if (await _putBack(entry, uuids) case final task?) {
-            restored.add(task);
+          if (await _putBack(entry, uuids) case final branch?) {
+            restored.add(branch);
           }
         } catch (e) {
           allBack = false;
@@ -360,10 +524,10 @@ class TasksViewModel with ChangeNotifier {
     }
     await getTrash();
     await get();
-    var remindersSet = true;
-    for (final task in restored) {
-      if (!await _remindAgain(task)) remindersSet = false;
-    }
+    final remindersSet = await _remindAgain([
+      for (final branch in restored) ...branch.all,
+    ]);
+    await _settle();
     if (!allBack) {
       return Failure(restored.isEmpty
           ? "Couldn't restore the tasks"
@@ -377,8 +541,8 @@ class TasksViewModel with ChangeNotifier {
         : "${restored.length} Tasks Restored");
   }
 
-  /// Deletes the task [entry] holds for good.
-  Future<Result> deleteForever(Trashed<TodoItem> entry) async {
+  /// Deletes the task [entry] holds for good, with the tasks in it.
+  Future<Result> deleteForever(Trashed<TaskBranch> entry) async {
     try {
       await _tasksRepository.deleteFromTrash([entry.id]);
     } catch (e) {
@@ -408,58 +572,131 @@ class TasksViewModel with ChangeNotifier {
   Future<Set<String>> _uuidsInUse() async =>
       {for (final task in await _tasksRepository.getItems()) task.uuid};
 
-  /// Puts [entry]'s task back on the list, under a new uuid if a task on
-  /// the list has its own, [uuids] being theirs: one restored from a backup
-  /// since, say. Its reminder goes by its uuid, so they can't share one. The
-  /// task as it's back, or null if it isn't in the trash anymore.
-  Future<TodoItem?> _putBack(Trashed<TodoItem> entry, Set<String> uuids) async {
-    var task = entry.item;
-    if (uuids.contains(task.uuid)) {
-      task = task.copyWith(uuid: const UuidV4().generate());
+  /// Puts [entry]'s tasks back on the list, any of them under a new uuid if
+  /// a task on the list has its own, [uuids] being theirs: one restored from
+  /// a backup since, say. A task's reminder goes by its uuid, so they can't
+  /// share one. The tasks as they're back, or null if they aren't in the
+  /// trash anymore.
+  Future<TaskBranch?> _putBack(
+      Trashed<TaskBranch> entry, Set<String> uuids) async {
+    final renamed = <String, String>{};
+    // A task ahead of its subtasks, which follow it to its new uuid.
+    TodoItem own(TodoItem task) {
+      if (renamed[task.parent] case final parent?) task = task.under(parent);
+      if (!uuids.contains(task.uuid)) return task;
+      final uuid = const UuidV4().generate();
+      renamed[task.uuid] = uuid;
+      return task.copyWith(uuid: uuid);
     }
-    final id = await _tasksRepository.restoreFromTrash(entry.id, task);
+
+    final task = own(entry.item.task);
+    final branch = TaskBranch(
+        task, [for (final subtask in entry.item.subtasks) own(subtask)]);
+    final id = await _tasksRepository.restoreFromTrash(entry.id, branch);
     if (id == null) return null;
-    uuids.add(task.uuid);
-    return task.copyWith(id: id);
+    uuids.addAll(branch.all.map((each) => each.uuid));
+    return TaskBranch(task.copyWith(id: id), branch.subtasks);
   }
 
-  /// Sets [task]'s reminder again, as it's put back from the trash, if it's
-  /// still to come. Whether it could be.
-  Future<bool> _remindAgain(TodoItem task) async {
-    try {
-      await _scheduleReminder(task);
-      return true;
-    } catch (e) {
-      return false;
+  /// Sets the reminders of [tasks] again, as they're put back from the
+  /// trash, or as they were, if they're still to come. Whether every one
+  /// could be.
+  Future<bool> _remindAgain(Iterable<TodoItem> tasks) async {
+    var allSet = true;
+    for (final task in tasks) {
+      try {
+        await _scheduleReminder(task);
+      } catch (e) {
+        // The others are set all the same.
+        allSet = false;
+      }
     }
+    return allSet;
   }
 
   /// Marks [task] done, which turns its reminder off, or not done again. A
   /// daily task is done for today only, and keeps reminding the user every
   /// day.
+  ///
+  /// A task that's done has nothing left to do in it, so its subtasks are
+  /// done with it, and the task it's in is done once its last subtask is;
+  /// one that isn't done again leaves the tasks it's in still to do. When
+  /// other tasks change with it, the result is an [Undoable], which puts
+  /// them all back.
   Future<Result> toggleDone(TodoItem task) async {
     task = _current(task);
-    if (task.isDaily) {
-      final done = !task.done;
-      await _tasksRepository.updateItem(task.copyWith(
-        done: done,
-        progress: task.progress.withDay(today, done: done),
-      ));
-      await get();
-      return done ? Success("Done for today") : Info("Task undone");
+    final done = !task.done;
+    final node = _tree.nodeOf(task);
+    final nodes =
+        node == null ? const <TaskNode>[] : _tree.marking(node, done: done);
+    final changing =
+        node == null ? [task] : [for (final each in nodes) each.task];
+    for (final each in changing) {
+      if (!done || each.isDaily || each.reminder == Reminder.none) continue;
+      try {
+        await _notificationService.cancelNotification(each.uuid.hashCode);
+      } catch (e) {
+        // It's done all the same.
+      }
     }
-    if (task.done) {
-      await _tasksRepository.updateItem(task.copyWith(done: false));
-      await get();
-      return Info("Task undone");
-    }
-    if (task.reminder != Reminder.none) {
-      await _notificationService.cancelNotification(task.uuid.hashCode);
-    }
-    await _tasksRepository
-        .updateItem(task.copyWith(done: true, reminder: Reminder.none));
+    await _tasksRepository.updateItems([
+      for (final each in changing) each.marked(done: done, today: today),
+    ]);
     await get();
-    return Success("Task done");
+    final said =
+        done ? (task.isDaily ? "Done for today" : "Task done") : "Task undone";
+    if (node == null || changing.length < 2) {
+      return done ? Success(said) : Info(said);
+    }
+    final inIt = nodes.where((each) => each != node && each.isOrIsIn(node));
+    final around = nodes.where((each) => !each.isOrIsIn(node)).toList();
+    final String message;
+    if (inIt.isNotEmpty) {
+      // All of its subtasks, or the ones that were still to do.
+      final count = inIt.length;
+      final last = count < node.subtaskCount ? "last " : "";
+      message = count == 1
+          ? "$said, with its ${last}subtask"
+          : "$said, with its $last$count subtasks";
+    } else if (done) {
+      message = "$said. That finishes ${_named(around.first.task)}";
+    } else {
+      message = around.length == 1
+          ? "$said, and ${_named(around.first.task)} with it"
+          : "$said, and the ${around.length} tasks it's in";
+    }
+    return Undoable(message, undo: () => _markAs(changing));
+  }
+
+  /// [task]'s title in quotes, cut short if it's long, to name it in a
+  /// message.
+  static String _named(TodoItem task) {
+    final title = task.title.characters;
+    return title.length > 24 ? "“${title.take(23)}…”" : "“$title”";
+  }
+
+  /// Marks each of [tasks] done or not as it is here, as it was before a
+  /// change that's being taken back, with the reminder it had then.
+  Future<Result> _markAs(List<TodoItem> tasks) async {
+    final List<TodoItem> restored;
+    try {
+      await get();
+      restored = [
+        for (final was in tasks)
+          // Not one that's been deleted since.
+          if (_tree.nodeOf(was)?.task case final now?)
+            now.copyWith(
+                done: was.done, reminder: was.reminder, progress: was.progress),
+      ];
+      await _tasksRepository.updateItems(restored);
+      await get();
+    } catch (e) {
+      return Failure("Couldn't undo that");
+    }
+    if (!await _remindAgain(restored)) {
+      return Failure("Undone, but not every reminder could be set");
+    }
+    return Success("Undone");
   }
 
   /// Reminds the user of [task] once, on its day at its time, or turns its
@@ -550,7 +787,9 @@ class TasksViewModel with ChangeNotifier {
         return Failure("Restore failed. Data rolled back safely.");
       }
       await get();
-      return await _setRestoredReminders(newTasks, replaced: overwrite);
+      final result = await _setRestoredReminders(newTasks, replaced: overwrite);
+      await _settle();
+      return result;
     } on WrongBackupKindException {
       return Failure("That's a backup of notes, not tasks");
     } catch (e) {
@@ -732,16 +971,24 @@ DateTime _dateOf(DateTime time) => DateTime(time.year, time.month, time.day);
 /// A task as its form has it, being added or changed, with the form's
 /// rules: a time on its own is for today, and a daily task has no day.
 class TaskDraft with ChangeNotifier {
-  TaskDraft._(this.task, this._now)
+  TaskDraft._(this.task, this._now, this._tree, TodoItem? parent)
       : _title = task?.title ?? "",
         _description = task?.desc ?? "",
         _day = task?.day,
         _time = task?.time,
-        _reminder = task?.reminder ?? Reminder.none;
+        _reminder = task?.reminder ?? Reminder.none,
+        _was = parent,
+        _parent = parent;
 
   /// The task being changed, or null for a new one.
   final TodoItem? task;
   final DateTime Function() _now;
+
+  /// Every task, as the form opened.
+  final TaskTree _tree;
+
+  /// The task it was a subtask of as the form opened.
+  final TodoItem? _was;
 
   bool get adding => task == null;
 
@@ -755,6 +1002,24 @@ class TaskDraft with ChangeNotifier {
   ClockTime? get time => _time;
   Reminder _reminder;
   Reminder get reminder => _reminder;
+
+  /// The task it's a subtask of, or null for a task of its own.
+  TodoItem? get parent => _parent;
+  TodoItem? _parent;
+
+  /// Whether the task is to go into another task than the one it's in, or
+  /// out of it.
+  bool get moved => !adding && _parent?.uuid != _was?.uuid;
+
+  /// The tasks it can be a subtask of, each ahead of its own subtasks:
+  /// every task but itself and the ones in it.
+  List<TaskNode> get places {
+    final own = task == null ? null : _tree.nodeOf(task!);
+    return [
+      for (final node in _tree.nodes)
+        if (own == null || !node.isOrIsIn(own)) node,
+    ];
+  }
 
   /// Whether there's a title to save the task with.
   bool get canSave => _title.trim().isNotEmpty;
@@ -784,6 +1049,12 @@ class TaskDraft with ChangeNotifier {
       final now = _now();
       _day = DateTime(now.year, now.month, now.day);
     }
+    notifyListeners();
+  }
+
+  /// Makes the task a subtask of [parent], or a task of its own with null.
+  void setParent(TodoItem? parent) {
+    _parent = parent;
     notifyListeners();
   }
 

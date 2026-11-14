@@ -23,6 +23,16 @@ class Success extends Result {
   }
 }
 
+/// A [Success] that changed more than was asked of it, as marking a task
+/// done marks its subtasks done too, so it comes with a way to take it all
+/// back.
+class Undoable extends Success {
+  const Undoable(super.message, {required this.undo});
+
+  /// Puts things back as they were, and says how that went.
+  final Future<Result> Function() undo;
+}
+
 class Failure extends Result {
   final String message;
 

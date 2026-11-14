@@ -23,6 +23,11 @@ enum TourGesture {
   /// A swipe to the left that sends the copy away, as a card is swiped off a
   /// list, uncovering what's behind it, after which it comes back.
   swipe,
+
+  /// A swipe to the right, part of the way, that uncovers what's behind the
+  /// copy, which then springs back: as a card is swiped for something to be
+  /// done with it, rather than to it.
+  pull,
 }
 
 /// How far a [TourDemo] has got through its gestures, for its copy to show
@@ -377,7 +382,10 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
         !box.hasSize) {
       return null;
     }
-    return box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
+    // As it's drawn, which may be smaller or bigger than it's laid out, as
+    // on a map that's zoomed.
+    return MatrixUtils.transformRect(
+        box.getTransformTo(overlay), Offset.zero & box.size);
   }
 
   /// Where the finger touches [demo]'s copy, from the copy's top left corner
@@ -751,6 +759,10 @@ enum _Move {
   /// The copy comes back, as the demo starts over.
   restore,
 
+  /// The finger lets go mid-swipe, and the copy goes back where it was,
+  /// which the copy acts on.
+  springBack,
+
   /// The finger leaves.
   leave,
 }
@@ -793,6 +805,13 @@ List<_Beat> _beatsOf(List<TourGesture> gestures) => [
               _Beat(_Move.rest, 650),
               _Beat(_Move.restore, 560),
               _Beat(_Move.rest, 300),
+            ],
+          TourGesture.pull => const [
+              _Beat(_Move.press, 120),
+              _Beat(_Move.carry, 520, by: Offset(0.36, 0)),
+              _Beat(_Move.rest, 320),
+              _Beat(_Move.springBack, 420),
+              _Beat(_Move.rest, 450),
             ],
         },
       ],
@@ -920,6 +939,15 @@ void _act(_Beat beat, double t, _Frame frame, Size size) {
         ..moved = Offset.zero
         ..behind = 1 - Curves.easeOut.transform(part(0, 0.45))
         ..shown = Curves.easeOut.transform(part(0.45, 1));
+    case _Move.springBack:
+      if (t > 0) frame.acted++;
+      frame
+        ..moved = Offset.lerp(
+            frame.moved, Offset.zero, Curves.easeOutCubic.transform(t))!
+        // Covered again once the copy is back over it.
+        ..behind = t < 1 ? 1 : 0
+        ..down = 1 - Curves.easeOut.transform(part(0, 0.4))
+        ..pressed = 0;
     case _Move.leave:
       frame
         ..finger *= 1 - Curves.easeIn.transform(t)

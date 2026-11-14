@@ -17,10 +17,13 @@ class TodoItem {
     this.time,
     this.reminder = Reminder.none,
     DailyProgress? progress,
+    String? parent,
+    this.folded = false,
   })  : day = day == null || reminder == Reminder.daily
             ? null
             : DateTime(day.year, day.month, day.day),
-        progress = progress ?? DailyProgress.none;
+        progress = progress ?? DailyProgress.none,
+        parent = parent == null || parent.isEmpty ? null : parent;
 
   final int? id;
 
@@ -43,6 +46,13 @@ class TodoItem {
   /// task keeps them when it stops being daily.
   final DailyProgress progress;
 
+  /// The [uuid] of the task this one is a subtask of, or null for a task of
+  /// its own. One whose task has gone counts as a task of its own too.
+  final String? parent;
+
+  /// Whether its subtasks are folded away, on the list and on the map.
+  final bool folded;
+
   /// Whether the task is for every day, done or not each day afresh: one
   /// that reminds the user daily.
   bool get isDaily => reminder == Reminder.daily;
@@ -51,6 +61,17 @@ class TodoItem {
   /// done that day.
   TodoItem asOf(DateTime today) =>
       isDaily ? copyWith(done: progress.isDoneOn(today)) : this;
+
+  /// The task marked done, or not done again, on [today]. A daily task is
+  /// done for that day only, and keeps its reminder; any other is done for
+  /// good, which turns its reminder off.
+  TodoItem marked({required bool done, required DateTime today}) => isDaily
+      ? copyWith(done: done, progress: progress.withDay(today, done: done))
+      : copyWith(done: done, reminder: done ? Reminder.none : null);
+
+  /// The task as a subtask of the one with the uuid [parent], or as a task
+  /// of its own for null.
+  TodoItem under(String? parent) => _copy(parent: parent);
 
   /// When the task is due: at its time on its day, or as its day ends when
   /// it has no time. Null when it has no day.
@@ -69,6 +90,28 @@ class TodoItem {
     bool? done,
     Reminder? reminder,
     DailyProgress? progress,
+    bool? folded,
+  }) =>
+      _copy(
+        id: id,
+        uuid: uuid,
+        done: done,
+        reminder: reminder,
+        progress: progress,
+        parent: parent,
+        folded: folded,
+      );
+
+  /// A copy with what's given in place of its own, and [parent] whatever it
+  /// is: null takes the task out of the one it's in.
+  TodoItem _copy({
+    int? id,
+    String? uuid,
+    bool? done,
+    Reminder? reminder,
+    DailyProgress? progress,
+    required String? parent,
+    bool? folded,
   }) {
     return TodoItem(
       id: id ?? this.id,
@@ -80,6 +123,8 @@ class TodoItem {
       time: time,
       reminder: reminder ?? this.reminder,
       progress: progress ?? this.progress,
+      parent: parent,
+      folded: folded ?? this.folded,
     );
   }
 
@@ -97,11 +142,15 @@ class TodoItem {
       time: ClockTime.tryParse(map['time'] as String? ?? ""),
       reminder: Reminder.values.elementAtOrNull(reminder) ?? Reminder.none,
       progress: DailyProgress.fromMap(map),
+      parent: map['parent'] as String?,
+      folded: map['folded'] == 1,
     );
   }
 
   /// The day as "2026-05-13", or empty without one; the time as "9:30 PM",
-  /// or empty; then the days of a daily task.
+  /// or empty; then the days of a daily task, the uuid of the task it's a
+  /// subtask of, or empty for a task of its own, and whether its subtasks
+  /// are folded away.
   Map<String, Object> toMap() {
     final day = this.day;
     return {
@@ -113,6 +162,8 @@ class TodoItem {
       'uuid': uuid,
       'notification': reminder.index,
       ...progress.toMap(),
+      'parent': parent ?? "",
+      'folded': folded ? 1 : 0,
     };
   }
 }

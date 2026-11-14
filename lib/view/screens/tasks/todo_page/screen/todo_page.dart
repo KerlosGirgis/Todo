@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
@@ -12,10 +13,12 @@ import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/task_filters.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../models/trashed.dart';
+import '../../../../../models/user_profile.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
+import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
@@ -27,17 +30,16 @@ import '../../../profile/profile_page/screen/profile_page.dart';
 import '../../../trash/trash_page/screen/trash_page.dart';
 import '../widgets/empty_tasks.dart';
 import '../widgets/form_dialog.dart';
-import '../widgets/task_card.dart';
 import '../widgets/task_dialog.dart';
 import '../widgets/task_filter_bar.dart';
+import '../widgets/task_list.dart';
+import '../widgets/task_map/map_tour.dart';
+import '../widgets/task_map/task_map.dart';
 import '../widgets/tasks_overwrite_dialog.dart';
 import '../widgets/tasks_summary_card.dart';
 import '../widgets/todo_tour.dart';
 
 const _title = "ToDo";
-
-/// The gap between cards.
-const _cardGap = 12.0;
 
 /// The room above the list's first card.
 const _listTop = 20.0;
@@ -69,21 +71,33 @@ class _TodoPageState extends State<TodoPage> {
   /// the filter when the page opens, and none when only the list changes.
   int _listDelay = 2;
 
-  /// The page's tour, which shows once, as the page first opens.
+  /// The page's tours, each of which shows once: the list's as the page
+  /// first opens on the list, and the map's as it first shows the map.
   final _tour = TourController();
   Timer? _tourStart;
 
-  /// Whether the tour is on, or about to be, when the first card has
+  /// Whether a tour is on, or about to be, when the list's first card has
   /// [_firstCardKey], for the tour to find it by. It's only there then, as a
   /// global key moves a card's state along with it when the cards are
   /// reordered.
   bool _touring = false;
 
-  /// What the tour points at.
+  /// What the tours point at: on the list, then on the map.
   final _headerKey = GlobalKey();
   final _firstCardKey = GlobalKey();
   final _buttonsKey = GlobalKey();
   final _menuKey = GlobalKey();
+  final _viewKey = GlobalKey();
+  final _hubKey = GlobalKey();
+  final _nodeKey = GlobalKey();
+  final _fitKey = GlobalKey();
+
+  /// How tall the bar over the map is, once it's been laid out: the map is
+  /// fitted to the room under it.
+  double? _mapBarHeight;
+
+  /// The page's route, whose tour waits while another page is over it.
+  ModalRoute<Object?>? _route;
 
   /// Which tours are due, which says when the user asks for them again.
   late final TourViewModel _tours;
@@ -101,25 +115,28 @@ class _TodoPageState extends State<TodoPage> {
           Provider.of<TasksViewModel>(context, listen: false).checkForNewDay,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final tourDue = _tours.isDue(PageTour.tasks);
-      var touring = false;
       try {
         await Provider.of<TasksViewModel>(context, listen: false).get();
-        touring = await tourDue;
       } finally {
-        if (mounted) {
-          setState(() {
-            _loaded = true;
-            _touring = touring;
-          });
-        }
+        if (mounted) setState(() => _loaded = true);
       }
-      if (touring && mounted) _tourStart = Timer(_tourDelay, _startTour);
+      _tourIfDue();
     });
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route == _route) return;
+    _route?.secondaryAnimation?.removeStatusListener(_uncovered);
+    _route = route;
+    route?.secondaryAnimation?.addStatusListener(_uncovered);
+  }
+
+  @override
   void dispose() {
+    _route?.secondaryAnimation?.removeStatusListener(_uncovered);
     _lifecycle.dispose();
     _tours.removeListener(_toursReplayed);
     _tourStart?.cancel();
@@ -130,33 +147,88 @@ class _TodoPageState extends State<TodoPage> {
     super.dispose();
   }
 
-  /// Shows the user how the page works: on the first card, or on an example
-  /// one when there are no tasks.
+  /// How the page shows the tasks now, and the tour that goes with it.
+  TasksView get _view =>
+      Provider.of<UserViewModel>(context, listen: false).user.tasksView;
+  PageTour get _pageTour =>
+      _view == TasksView.map ? PageTour.map : PageTour.tasks;
+
   /// Shows the tour again once the user asks for the tips again in the
   /// settings, as they come back from them.
-  Future<void> _toursReplayed() async {
-    if (_touring || !await _tours.isDue(PageTour.tasks) || !mounted) return;
-    setState(() => _touring = true);
-    _tourStart?.cancel();
-    _tourStart = Timer(_tourDelay, _startTour);
+  void _toursReplayed() => _tourIfDue();
+
+  /// As the page comes back from under another, such as the settings, where
+  /// the list may have been changed for the map.
+  void _uncovered(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed) _tourIfDue();
   }
 
-  void _startTour() {
-    final tasks = Provider.of<TasksViewModel>(context, listen: false).items;
+  /// Shows the user how the list works, or the map, whichever the page is
+  /// showing, once it has settled, if they haven't been shown yet.
+  Future<void> _tourIfDue() async {
+    final tour = _pageTour;
+    if (_touring || !_loaded || !await _tours.isDue(tour) || !mounted) return;
+    // Not for a view that's been switched away from meanwhile, nor under
+    // another page.
+    if (_touring || tour != _pageTour || !(_route?.isCurrent ?? true)) return;
+    setState(() => _touring = true);
+    _tourStart?.cancel();
+    _tourStart = Timer(_tourDelay, () => _startTour(tour));
+  }
+
+  /// Starts [tour]: the list's, on its first card, or on an example one when
+  /// there are no tasks, or the map's.
+  void _startTour(PageTour tour) {
+    if (tour != _pageTour) {
+      setState(() => _touring = false);
+      return;
+    }
+    final first = Provider.of<TasksViewModel>(context, listen: false)
+        .tree
+        .nodes
+        .firstOrNull;
     _tour.start(
-      todoTour(
-        task: tasks.firstOrNull,
-        card: _firstCardKey,
-        header: _headerKey,
-        gap: _listTop,
-        buttons: _buttonsKey,
-        menu: _menuKey,
-      ),
+      switch (tour) {
+        PageTour.map => mapTour(
+            hub: _hubKey,
+            node: _nodeKey,
+            fit: _fitKey,
+            view: _viewKey,
+          ),
+        _ => todoTour(
+            task: first?.task,
+            subtasks: first == null || first.subtaskCount == 0
+                ? null
+                : (done: first.doneSubtaskCount, total: first.subtaskCount),
+            card: _firstCardKey,
+            header: _headerKey,
+            gap: _listTop,
+            buttons: _buttonsKey,
+            menu: _menuKey,
+            view: _viewKey,
+          ),
+      },
       onEnd: () {
         setState(() => _touring = false);
-        _tours.finish(PageTour.tasks);
+        _tours.finish(tour);
       },
     );
+  }
+
+  /// Shows the tasks as a map instead of a list, or the other way round,
+  /// and from now on.
+  Future<void> _switchView() async {
+    final user = Provider.of<UserViewModel>(context, listen: false);
+    // A tour that was about to start is for the view being left.
+    _tourStart?.cancel();
+    setState(() {
+      _touring = false;
+      // The list opens afresh, under its summary and its filter.
+      _listDelay = 2;
+    });
+    await user.setTasksView(
+        user.user.tasksView == TasksView.list ? TasksView.map : TasksView.list);
+    if (mounted) _tourIfDue();
   }
 
   @override
@@ -167,6 +239,8 @@ class _TodoPageState extends State<TodoPage> {
     final twoPanes =
         MediaQuery.orientationOf(context) == Orientation.landscape &&
             MediaQuery.sizeOf(context).aspectRatio >= 1.5;
+    final view =
+        context.select<UserViewModel, TasksView>((user) => user.user.tasksView);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // There's no app bar to pick the status bar's icons, so they're set here.
       value: SystemUiOverlayStyle(
@@ -190,9 +264,77 @@ class _TodoPageState extends State<TodoPage> {
               onAdd: _addTask,
             ),
           ),
-          body: twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
+          body: switch (view) {
+            TasksView.map => _buildMap(context),
+            TasksView.list =>
+              twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
+          },
         ),
       ),
+    );
+  }
+
+  /// The button that switches between the list and the map, at the start
+  /// of the bar.
+  Widget _viewSwitch(TasksView view) {
+    return Padding(
+      padding: EdgeInsets.only(left: MediaQuery.paddingOf(context).left),
+      child: KeyedSubtree(
+        key: _viewKey,
+        child: GlassIconButton(
+          icon: view == TasksView.list
+              ? Icons.hub_rounded
+              : Icons.view_agenda_rounded,
+          iconSize: 21,
+          tooltip: view == TasksView.list ? "Show as Map" : "Show as List",
+          onPressed: _switchView,
+        ),
+      ),
+    );
+  }
+
+  /// The tasks as a map that fills the page, under a bar of its own with
+  /// the filters on it: the map doesn't scroll, so there's no header for
+  /// them to scroll away with.
+  Widget _buildMap(BuildContext context) {
+    final padding = MediaQuery.paddingOf(context);
+    final barHeight = _mapBarHeight;
+    return Stack(
+      children: [
+        // Once the bar says how much room it leaves.
+        if (_loaded && barHeight != null)
+          Positioned.fill(
+            child: _TaskMapPane(
+              insets: EdgeInsets.fromLTRB(
+                  padding.left, barHeight, padding.right, padding.bottom),
+              onEdit: _editTask,
+              onAddSubtask: _addSubtask,
+              hubKey: _hubKey,
+              nodeKey: _nodeKey,
+              fitKey: _fitKey,
+            ),
+          ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _MeasuredHeight(
+            onChange: (height) {
+              if (mounted && height != _mapBarHeight) {
+                setState(() => _mapBarHeight = height);
+              }
+            },
+            child: _MapBar(
+              leading: _viewSwitch(TasksView.map),
+              trailing: _BarActions(items: _menuItems(), menuKey: _menuKey),
+              // Once there are tasks to say whether there's anything to
+              // filter.
+              filters: _loaded,
+              onFilterChanged: _changeFilter,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -209,6 +351,7 @@ class _TodoPageState extends State<TodoPage> {
             title: _title,
             topInset: padding.top,
             controller: _scrollController,
+            leading: _viewSwitch(TasksView.list),
             trailing: _BarActions(items: _menuItems(), menuKey: _menuKey),
             titleRevealOffset: _TodoHeader.scrolledAway,
           ),
@@ -232,6 +375,7 @@ class _TodoPageState extends State<TodoPage> {
                 PageActionButtons.height + 24 + padding.bottom),
             listDelay: _listDelay,
             onEdit: _editTask,
+            onAddSubtask: _addSubtask,
             firstCardKey: _touring ? _firstCardKey : null,
           ),
       ],
@@ -253,6 +397,7 @@ class _TodoPageState extends State<TodoPage> {
                   title: _title,
                   topInset: padding.top,
                   controller: _overviewPaneScrollController,
+                  leading: _viewSwitch(TasksView.list),
                   titleRevealOffset: _TodoHeader.scrolledAway,
                 ),
               ),
@@ -294,6 +439,7 @@ class _TodoPageState extends State<TodoPage> {
                       PageActionButtons.height + 24 + padding.bottom),
                   listDelay: _listDelay,
                   onEdit: _editTask,
+                  onAddSubtask: _addSubtask,
                   firstCardKey: _touring ? _firstCardKey : null,
                 ),
             ],
@@ -349,6 +495,9 @@ class _TodoPageState extends State<TodoPage> {
   void _editTask(TodoItem task) =>
       showFormDialog<void>(context, TaskDialog(task: task));
 
+  void _addSubtask(TodoItem parent) =>
+      showFormDialog<void>(context, TaskDialog(parent: parent));
+
   void _openNotes() {
     Navigator.pushReplacement(
       context,
@@ -385,25 +534,174 @@ class _TodoPageState extends State<TodoPage> {
 }
 
 /// Shows how [result] went, if there's a result to show: none when the user
-/// cancels.
-void _showResult(Result? result) => result?.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
+/// cancels. One that changed more than was asked of it comes with an Undo
+/// that takes it all back.
+void _showResult(Result? result) {
+  if (result case Undoable(:final message, :final undo)) {
+    FeedbackToast.undoable(
+      message,
+      onUndo: () => undo().then(FeedbackToast.undone),
     );
+    return;
+  }
+  result?.when(
+    onSuccess: FeedbackToast.success,
+    onFailure: FeedbackToast.error,
+    onInfo: FeedbackToast.info,
+  );
+}
 
-/// Moves [task] to the trash, as its card has been swiped away, and says so
-/// with an Undo that puts it back where it was.
+/// Moves [task] to the trash, with the tasks in it, as its card has been
+/// swiped away, and says so with an Undo that puts them back where they
+/// were.
 Future<void> _moveToTrash(TasksViewModel tasks, TodoItem task) async {
   final trashed = await tasks.delete(task);
   if (trashed == null) {
     FeedbackToast.error("Couldn't delete the task");
     return;
   }
+  final subtasks = trashed.item.subtasks.length;
   FeedbackToast.deleted(
-    "Task moved to Trash",
+    switch (subtasks) {
+      0 => "Task moved to Trash",
+      1 => "Task and its subtask moved to Trash",
+      _ => "Task and its $subtasks subtasks moved to Trash",
+    },
     onUndo: () => tasks.restoreFromTrash(trashed).then(FeedbackToast.undone),
   );
+}
+
+/// The bar over the map: the page's title between the switch back to the
+/// list and the menu, and, under them, the filters, with how many tasks
+/// each lets through. Hidden, as on the list, while there are no tasks,
+/// unless a filter other than All is still on, so it can be turned off.
+class _MapBar extends StatelessWidget {
+  const _MapBar({
+    required this.leading,
+    required this.trailing,
+    required this.filters,
+    required this.onFilterChanged,
+  });
+
+  final Widget leading;
+  final Widget trailing;
+
+  /// Whether the filters can show yet.
+  final bool filters;
+  final ValueChanged<TaskFilter> onFilterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final padding = MediaQuery.paddingOf(context);
+    // As wide as the list's cards, and clear of a camera cutout.
+    final gutter = math.max(16.0, (MediaQuery.sizeOf(context).width - 640) / 2);
+    final (total, filtered) =
+        context.select<TasksViewModel, (int, bool)>((tasks) => (
+              tasks.finishedTasksCount + tasks.unfinishedTasksCount,
+              tasks.currentFilter is! AllTasksFilter,
+            ));
+    return TitleBar(
+      title: _title,
+      topInset: padding.top,
+      leading: leading,
+      trailing: trailing,
+      bottom: !filters || (total == 0 && !filtered)
+          ? null
+          : Padding(
+              padding: EdgeInsets.fromLTRB(math.max(gutter, 16 + padding.left),
+                  2, math.max(gutter, 16 + padding.right), 10),
+              child: TaskFilterBar(onChanged: onFilterChanged),
+            ),
+    );
+  }
+}
+
+/// Tells [onChange] how tall its child is once it's laid out, and again
+/// whenever that changes.
+class _MeasuredHeight extends SingleChildRenderObjectWidget {
+  const _MeasuredHeight({required this.onChange, super.child});
+
+  final ValueChanged<double> onChange;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderMeasuredHeight(onChange);
+
+  @override
+  void updateRenderObject(
+          BuildContext context, _RenderMeasuredHeight renderObject) =>
+      renderObject.onChange = onChange;
+}
+
+class _RenderMeasuredHeight extends RenderProxyBox {
+  _RenderMeasuredHeight(this.onChange);
+
+  ValueChanged<double> onChange;
+  double? _told;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final height = size.height;
+    if (height == _told) return;
+    _told = height;
+    // After the frame, as it's the page that's told, which is being laid
+    // out now.
+    WidgetsBinding.instance.addPostFrameCallback((_) => onChange(height));
+  }
+}
+
+/// The tasks the filter lets through as a map, or what to show instead when
+/// there are none.
+class _TaskMapPane extends StatelessWidget {
+  const _TaskMapPane({
+    required this.insets,
+    required this.onEdit,
+    required this.onAddSubtask,
+    required this.hubKey,
+    required this.nodeKey,
+    required this.fitKey,
+  });
+
+  /// How much of the map the page's bar covers, and the edges of the screen
+  /// it's to keep clear of.
+  final EdgeInsets insets;
+
+  /// Opens the editor for the task.
+  final ValueChanged<TodoItem> onEdit;
+
+  /// Opens the form for a new subtask of the task.
+  final ValueChanged<TodoItem> onAddSubtask;
+
+  /// What the map's tour points at.
+  final GlobalKey hubKey;
+  final GlobalKey nodeKey;
+  final GlobalKey fitKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final tasks = context.watch<TasksViewModel>();
+    if (tasks.emptyReason case final reason?) {
+      // Centred in the room the bar and the buttons leave, as on the list.
+      return Padding(
+        padding: EdgeInsets.only(
+            top: insets.top,
+            bottom: PageActionButtons.height + 24 + insets.bottom),
+        child: RiseIn(key: ValueKey(reason), child: EmptyTasks(reason: reason)),
+      );
+    }
+    return TaskMap(
+      tasks: tasks,
+      insets: insets,
+      onEdit: onEdit,
+      onAddSubtask: onAddSubtask,
+      onDelete: (task) => _moveToTrash(tasks, task),
+      onResult: _showResult,
+      hubKey: hubKey,
+      nodeKey: nodeKey,
+      fitKey: fitKey,
+    );
+  }
 }
 
 /// The menu of the tasks' less frequent actions, and the avatar, at the end
@@ -514,6 +812,7 @@ class _TaskListSliver extends StatelessWidget {
     required this.padding,
     required this.listDelay,
     required this.onEdit,
+    required this.onAddSubtask,
     required this.firstCardKey,
   });
 
@@ -525,6 +824,9 @@ class _TaskListSliver extends StatelessWidget {
 
   /// Opens the editor for the task.
   final ValueChanged<TodoItem> onEdit;
+
+  /// Opens the form for a new subtask of the task.
+  final ValueChanged<TodoItem> onAddSubtask;
 
   /// The key for the first card, if it's to have one.
   final GlobalKey? firstCardKey;
@@ -547,181 +849,15 @@ class _TaskListSliver extends StatelessWidget {
     return SliverPadding(
       padding: padding,
       // A new list for each filter, so the cards rise in afresh.
-      sliver: _ReorderableTaskList(
+      sliver: TaskList(
         key: ValueKey(tasks.currentFilter.runtimeType),
         tasks: tasks,
         listDelay: listDelay,
         onEdit: onEdit,
+        onAddSubtask: onAddSubtask,
+        onDelete: (task) => _moveToTrash(tasks, task),
+        onResult: _showResult,
         firstCardKey: firstCardKey,
-      ),
-    );
-  }
-}
-
-class _ReorderableTaskList extends StatefulWidget {
-  const _ReorderableTaskList({
-    super.key,
-    required this.tasks,
-    required this.listDelay,
-    required this.onEdit,
-    required this.firstCardKey,
-  });
-
-  final TasksViewModel tasks;
-  final int listDelay;
-  final ValueChanged<TodoItem> onEdit;
-  final GlobalKey? firstCardKey;
-
-  @override
-  State<_ReorderableTaskList> createState() => _ReorderableTaskListState();
-}
-
-class _ReorderableTaskListState extends State<_ReorderableTaskList> {
-  /// Whether the list is being laid out for the first time, when the cards in
-  /// view rise in one after another.
-  bool _opening = true;
-
-  /// The tasks listed at the last build, so a task added since can rise in
-  /// by itself.
-  Set<String> _listed = {};
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _opening = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tasks = widget.tasks;
-    final items = tasks.items;
-    // Keyed by uuid, as ids change whenever the list is reordered, with a
-    // count to tell apart any tasks that share one.
-    final occurrences = <String, int>{};
-    final keys = [
-      for (final task in items)
-        switch (occurrences.update(task.uuid, (count) => count + 1,
-            ifAbsent: () => 0)) {
-          0 => task.uuid,
-          final count => "${task.uuid}#$count",
-        },
-    ];
-    final listed = keys.toSet();
-    final added = _opening ? const <String>{} : listed.difference(_listed);
-    _listed = listed;
-    final (titleScale, descriptionScale, descriptionLines) =
-        context.select<UserViewModel, (double, double, int)>((user) => (
-              user.user.tasksTitleSize,
-              user.user.tasksDescSize,
-              user.user.descLines,
-            ));
-
-    TaskCard card(TodoItem task, {bool interactive = true}) {
-      return TaskCard(
-        task: task,
-        titleScale: titleScale,
-        descriptionScale: descriptionScale,
-        descriptionLines: descriptionLines,
-        onToggle: !interactive
-            ? null
-            : () => tasks.toggleDone(task).then(_showResult),
-        onEdit: !interactive ? null : () => widget.onEdit(task),
-        onReminder: !interactive
-            ? null
-            : () => tasks.toggleReminder(task).then(_showResult),
-        // Only while it has no reminder: the bell's tap turns one off.
-        onDailyReminder: !interactive || task.reminder != Reminder.none
-            ? null
-            : () => tasks.remindDaily(task).then(_showResult),
-      );
-    }
-
-    return SliverReorderableList(
-      itemCount: items.length,
-      onReorderStart: (_) => HapticFeedback.mediumImpact(),
-      onReorderItem: tasks.syncAfterReorder,
-      // The card being dragged is drawn again, without its entrance or its
-      // swipe, which would start over in the drag's overlay.
-      proxyDecorator: (child, index, animation) => _LiftedCard(
-        animation: animation,
-        child: card(items[index], interactive: false),
-      ),
-      itemBuilder: (context, index) {
-        final task = items[index];
-        final key = keys[index];
-        return ReorderableDelayedDragStartListener(
-          key: ValueKey(key),
-          index: index,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: _cardGap),
-            child: RiseIn(
-              animate: _opening || added.contains(key),
-              delay: _opening
-                  ? RiseIn.stagger * (widget.listDelay + math.min(index, 8))
-                  : Duration.zero,
-              child: Dismissible(
-                key: ValueKey(key),
-                background: const TaskDeleteBackground(
-                    alignment: AlignmentDirectional.centerStart),
-                secondaryBackground: const TaskDeleteBackground(
-                    alignment: AlignmentDirectional.centerEnd),
-                onDismissed: (direction) => _moveToTrash(tasks, task),
-                child: KeyedSubtree(
-                  key: index == 0 ? widget.firstCardKey : null,
-                  child: card(task),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// A card picked up to be reordered: it grows a little and casts a deeper
-/// shadow, then settles back as it's dropped.
-class _LiftedCard extends StatelessWidget {
-  const _LiftedCard({required this.animation, required this.child});
-
-  final Animation<double> animation;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        final lift = Curves.easeOutCubic.transform(animation.value);
-        return Transform.scale(
-          scale: 1 + 0.03 * lift,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                bottom: _cardGap,
-                child: DecoratedBox(
-                  decoration: ShapeDecoration(
-                    shape: TaskCard.shape,
-                    shadows: [
-                      BoxShadow(
-                        color: Colors.black.withValues(
-                            alpha: (isDarkTheme ? 0.5 : 0.18) * lift),
-                        blurRadius: 32,
-                        offset: const Offset(0, 14),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              child!,
-            ],
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: _cardGap),
-        child: child,
       ),
     );
   }

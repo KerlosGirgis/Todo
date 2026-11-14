@@ -1,25 +1,25 @@
 import 'todo_item.dart';
 
+/// Which tasks a page shows.
 abstract class TaskFilter {
-  List<TodoItem> apply(List<TodoItem> tasks);
+  /// Whether [task] is one of them.
+  bool shows(TodoItem task);
 }
 
 class AllTasksFilter implements TaskFilter {
   const AllTasksFilter();
   @override
-  List<TodoItem> apply(List<TodoItem> tasks) => List.from(tasks);
+  bool shows(TodoItem task) => true;
 }
 
 class DoneTasksFilter implements TaskFilter {
   const DoneTasksFilter();
   @override
-  List<TodoItem> apply(List<TodoItem> tasks) =>
-      tasks.where((task) => task.done).toList();
+  bool shows(TodoItem task) => task.done;
 }
 
 class UndoneTasksFilter implements TaskFilter {
   const UndoneTasksFilter();
   @override
-  List<TodoItem> apply(List<TodoItem> tasks) =>
-      tasks.where((task) => !task.done).toList();
+  bool shows(TodoItem task) => !task.done;
 }

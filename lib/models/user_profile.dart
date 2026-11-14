@@ -3,6 +3,11 @@ import 'avatar.dart';
 /// The page the app opens on. Kept as its index: 0 or 1.
 enum StartPage { tasks, notes }
 
+/// How the to-do page shows the tasks: as a list, each task's subtasks
+/// under it, or as a map that branches out from task to subtask. Kept as
+/// its index: 0 or 1.
+enum TasksView { list, map }
+
 class UserProfile {
   const UserProfile({
     this.id,
@@ -22,6 +27,7 @@ class UserProfile {
     required this.tasksTitleSize,
     required this.tasksDescSize,
     required this.notesTitleSize,
+    this.tasksView = TasksView.list,
   });
 
   final int? id;
@@ -55,6 +61,9 @@ class UserProfile {
   /// it all.
   final int descLines;
 
+  /// Whether the to-do page lists the tasks, or maps them.
+  final TasksView tasksView;
+
   UserProfile copyWith({
     String? name,
     Avatar? avatar,
@@ -72,6 +81,7 @@ class UserProfile {
     double? tasksTitleSize,
     double? tasksDescSize,
     double? notesTitleSize,
+    TasksView? tasksView,
   }) {
     return UserProfile(
       id: id,
@@ -91,6 +101,7 @@ class UserProfile {
       tasksTitleSize: tasksTitleSize ?? this.tasksTitleSize,
       tasksDescSize: tasksDescSize ?? this.tasksDescSize,
       notesTitleSize: notesTitleSize ?? this.notesTitleSize,
+      tasksView: tasksView ?? this.tasksView,
     );
   }
 
@@ -117,6 +128,9 @@ class UserProfile {
       tasksTitleSize: size('tasksTitleSize'),
       tasksDescSize: size('tasksDescSize'),
       notesTitleSize: size('notesTitleSize'),
+      tasksView:
+          TasksView.values.elementAtOrNull(map['tasksView'] as int? ?? 0) ??
+              TasksView.list,
     );
   }
 
@@ -138,6 +152,7 @@ class UserProfile {
       'tasksTitleSize': tasksTitleSize,
       'tasksDescSize': tasksDescSize,
       'notesTitleSize': notesTitleSize,
+      'tasksView': tasksView.index,
     };
   }
 }

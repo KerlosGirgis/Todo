@@ -27,7 +27,8 @@ Color _orange(bool isDarkTheme) =>
 /// A task on the to-do page, on the same surface as the profile page's
 /// cards: a round check that fills in once it's done, its title and
 /// description, when it's due, and a bell for its reminder. A daily task's
-/// also shows how its last seven days went, and its streak.
+/// also shows how its last seven days went, and its streak, and one with
+/// subtasks how many of them are done.
 class TaskCard extends StatefulWidget {
   const TaskCard({
     super.key,
@@ -35,10 +36,12 @@ class TaskCard extends StatefulWidget {
     required this.titleScale,
     required this.descriptionScale,
     required this.descriptionLines,
+    this.subtasks,
     this.onToggle,
     this.onEdit,
     this.onReminder,
     this.onDailyReminder,
+    this.onFold,
     this.checkKey,
     this.titleKey,
     this.bellKey,
@@ -50,6 +53,10 @@ class TaskCard extends StatefulWidget {
   );
 
   final TodoItem task;
+
+  /// How many tasks are in this one, however deep, and how many of them are
+  /// done. Null for a task with none.
+  final ({int done, int total})? subtasks;
 
   /// The user's text sizes, as multiples of the default ones.
   final double titleScale;
@@ -72,6 +79,10 @@ class TaskCard extends StatefulWidget {
 
   /// Turns a daily reminder on, on a long press of the bell.
   final VoidCallback? onDailyReminder;
+
+  /// Folds the task's subtasks away, or brings them back out, on a tap of
+  /// their count. Null when there are none on show to fold.
+  final VoidCallback? onFold;
 
   /// Keys for the check, the title and the bell, so that a tour can point at
   /// them on a copy of the card.
@@ -177,8 +188,10 @@ class _TaskCardState extends State<TaskCard> {
     // Today as the card has it, which is how the tour can check it off.
     final progress = task.progress.withDay(now, done: task.done);
     final chips = _chips(context, doneness, now, progress);
+    final subtasks = widget.subtasks;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 6, 14),
+      // Less under the subtasks' row, which has room of its own to tap.
+      padding: EdgeInsets.fromLTRB(14, 12, 6, subtasks == null ? 14 : 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -256,6 +269,17 @@ class _TaskCardState extends State<TaskCard> {
                 ),
               ),
             ),
+          if (subtasks != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(_textInset - 8, 4, 4, 0),
+              child: _SubtasksRow(
+                done: subtasks.done,
+                total: subtasks.total,
+                folded: task.folded,
+                strength: lerpDouble(1, 0.5, doneness)!,
+                onTap: widget.onFold,
+              ),
+            ),
         ],
       ),
     );
@@ -302,7 +326,7 @@ class _TaskCardState extends State<TaskCard> {
     final strength = lerpDouble(1, 0.5, doneness)!;
     final streak = progress.streak(now);
     final orange = _orange(isDarkTheme);
-    final when = _whenLabel(task, now);
+    final when = taskWhenLabel(task, now);
     // Red once it's overdue, as in Reminders, until it's done.
     final overdue = task.isPastDue(now) ? 1 - doneness : 0.0;
     final red = _systemRed(isDarkTheme);
@@ -513,6 +537,152 @@ class _DayDotPainter extends CustomPainter {
       oldDelegate.ring != ring || oldDelegate.fill != fill;
 }
 
+/// How many of a task's subtasks are done, as a line at the foot of its
+/// card: a chevron that turns as they're folded away, the count, and a bar
+/// that fills up with it. A tap on it folds them away, or brings them back.
+class _SubtasksRow extends StatelessWidget {
+  const _SubtasksRow({
+    required this.done,
+    required this.total,
+    required this.folded,
+    required this.strength,
+    required this.onTap,
+  });
+
+  final int done;
+  final int total;
+  final bool folded;
+
+  /// How strongly it's drawn: less on a done task's card, as the rest of it.
+  final double strength;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    final accent = context.colors.moreLess;
+    final color = accent.withValues(alpha: strength);
+    final things = total == 1 ? "subtask" : "subtasks";
+    final label = done == 0 ? "$total $things" : "$done of $total $things";
+    final onTap = this.onTap;
+    return Semantics(
+      button: onTap != null,
+      label: "$label${done == 0 ? "" : " done"}",
+      hint: onTap == null
+          ? null
+          : (folded ? "Shows the subtasks" : "Folds the subtasks away"),
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                onTap();
+              },
+        customBorder: const StadiumBorder(),
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: accent.withValues(alpha: 0.12),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
+          child: Row(
+            children: [
+              if (onTap != null)
+                AnimatedRotation(
+                  turns: folded ? -0.25 : 0,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  child:
+                      Icon(Icons.expand_more_rounded, size: 20, color: color),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child:
+                      Icon(Icons.account_tree_rounded, size: 14, color: color),
+                ),
+              const SizedBox(width: 2),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.1,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Fills up as the subtasks get done.
+              SizedBox(
+                width: 44,
+                height: 4,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: total == 0 ? 0.0 : done / total),
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) => CustomPaint(
+                    painter: _BarPainter(
+                      progress: value,
+                      track: context.colors.wB
+                          .withValues(alpha: isDarkTheme ? 0.14 : 0.09),
+                      strength: strength,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A thin, round-ended bar that fills with the app's blues.
+class _BarPainter extends CustomPainter {
+  const _BarPainter({
+    required this.progress,
+    required this.track,
+    required this.strength,
+  });
+
+  final double progress;
+  final Color track;
+  final double strength;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final radius = Radius.circular(size.height / 2);
+    final bar = Offset.zero & size;
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(bar, radius), Paint()..color = track);
+    if (progress <= 0) return;
+    // Never shorter than a dot.
+    final filled = Rect.fromLTWH(
+        0, 0, math.max(size.height, size.width * progress), size.height);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(filled, radius),
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            _accent.withValues(alpha: strength),
+            _highlight.withValues(alpha: strength),
+          ],
+        ).createShader(bar),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BarPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.track != track ||
+      oldDelegate.strength != strength;
+}
+
 /// What a [TaskCard] uncovers as it's swiped away: the red of a delete
 /// action, the same shape as the card, with the action's icon and name
 /// where the swipe started.
@@ -524,23 +694,73 @@ class TaskDeleteBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    return _SwipeBackground(
+      alignment: alignment,
+      color: _systemRed(isDarkTheme),
+      icon: Icons.delete_rounded,
+      label: "Delete",
+    );
+  }
+}
+
+/// What a [TaskCard] uncovers as it's swiped the other way, to add a
+/// subtask to it: the app's blues, with the action's icon and name where
+/// the swipe started.
+class TaskSubtaskBackground extends StatelessWidget {
+  const TaskSubtaskBackground({super.key, required this.alignment});
+
+  final AlignmentGeometry alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SwipeBackground(
+      alignment: alignment,
+      gradient: LinearGradient(
+        colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+      ),
+      icon: Icons.subdirectory_arrow_right_rounded,
+      label: "Subtask",
+    );
+  }
+}
+
+/// A swipe's action, behind the card: its colour in the card's shape, with
+/// its icon and name at [alignment].
+class _SwipeBackground extends StatelessWidget {
+  const _SwipeBackground({
+    required this.alignment,
+    this.color,
+    this.gradient,
+    required this.icon,
+    required this.label,
+  });
+
+  final AlignmentGeometry alignment;
+  final Color? color;
+  final Gradient? gradient;
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: ShapeDecoration(
         shape: TaskCard.shape,
-        color: _systemRed(isDarkTheme),
+        color: color,
+        gradient: gradient,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Align(
           alignment: alignment,
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.delete_rounded, size: 22, color: Colors.white),
-              SizedBox(width: 6),
+              Icon(icon, size: 22, color: Colors.white),
+              const SizedBox(width: 6),
               Text(
-                "Delete",
-                style: TextStyle(
+                label,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -554,9 +774,10 @@ class TaskDeleteBackground extends StatelessWidget {
   }
 }
 
-/// "Today, 9:30 AM", "Tomorrow", "Fri, Oct 24" or "Jan 3, 2027, 9:30 AM",
-/// or null when the task has neither a date nor a time.
-String? _whenLabel(TodoItem task, DateTime now) {
+/// When [task] is for, as of [now]: "Today, 9:30 AM", "Tomorrow", "Fri, Oct
+/// 24" or "Jan 3, 2027, 9:30 AM", or null when it has neither a date nor a
+/// time.
+String? taskWhenLabel(TodoItem task, DateTime now) {
   final day = task.day;
   final time = task.time;
   final parts = [

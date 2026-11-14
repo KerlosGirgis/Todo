@@ -21,6 +21,7 @@ void main() {
     'tasksTitleSize': 1.0,
     'tasksDescSize': 0.875,
     'notesTitleSize': 1.0,
+    'tasksView': 1,
   };
 
   test('reads the switches as bools', () {
@@ -43,6 +44,17 @@ void main() {
     expect(
         UserProfile.fromMap({...stored, 'notesTextSize': 1}).notesTextSize,
         1.0);
+  });
+
+  test('lists the tasks unless it says to map them', () {
+    expect(UserProfile.fromMap(stored).tasksView, TasksView.map);
+    expect(UserProfile.fromMap({...stored, 'tasksView': 0}).tasksView,
+        TasksView.list);
+    // From before there was a map, or with a view from a newer version.
+    expect(UserProfile.fromMap({...stored}..remove('tasksView')).tasksView,
+        TasksView.list);
+    expect(UserProfile.fromMap({...stored, 'tasksView': 7}).tasksView,
+        TasksView.list);
   });
 
   test('opens on the notes for any start page but the first', () {

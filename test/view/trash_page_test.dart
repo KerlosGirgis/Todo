@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/models/note.dart';
+import 'package:todo/models/task_tree.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/trashed.dart';
 import 'package:todo/view/screens/trash/trash_page/screen/trash_page.dart';
@@ -45,7 +46,8 @@ void main() {
   /// Puts [task] in the trash, as deleted at [deletedAt].
   Future<void> trashTask(TodoItem task, DateTime deletedAt) async {
     final id = await taskRows.insertItem(task);
-    await taskRows.moveToTrash(task.copyWith(id: id), deletedAt: deletedAt);
+    await taskRows.moveToTrash(TaskBranch(task.copyWith(id: id)),
+        deletedAt: deletedAt);
   }
 
   /// Puts [note] in the trash, as deleted at [deletedAt].

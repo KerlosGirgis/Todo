@@ -15,7 +15,7 @@ class DatabaseService {
   String? get key => _key;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 8;
+  static const int _databaseVersion = 9;
 
   /// Opens the database with [key], which the App Lock's password unlocked,
   /// or else with the key kept as it is, or a new one for a new database.
@@ -53,7 +53,9 @@ class DatabaseService {
       uuid TEXT,
       notification INTEGER,
       since TEXT,
-      doneDays TEXT
+      doneDays TEXT,
+      parent TEXT,
+      folded INTEGER
     )
     ''');
     await db.execute('''
@@ -74,7 +76,8 @@ class DatabaseService {
       descLines INTEGER,
       notesTitleSize REAL,
       tasksTitleSize REAL,
-      tasksDescSize REAL
+      tasksDescSize REAL,
+      tasksView INTEGER DEFAULT 0
     )
     ''');
     await db.execute('''
@@ -155,7 +158,31 @@ class DatabaseService {
       // version back.
       await db.execute(_createTrash);
     }
+    if (oldVersion < 9) {
+      // A task's parent is the uuid of the task it's a subtask of, which a
+      // reorder doesn't change, as it does the ids. The tasks there are
+      // have none: they're all tasks of their own.
+      final tasks = await _columns(db, 'ToDo');
+      if (!tasks.contains('parent')) {
+        await db.execute('ALTER TABLE ToDo ADD COLUMN parent TEXT');
+      }
+      if (!tasks.contains('folded')) {
+        await db.execute('ALTER TABLE ToDo ADD COLUMN folded INTEGER');
+      }
+      if (!(await _columns(db, 'User')).contains('tasksView')) {
+        await db
+            .execute('ALTER TABLE User ADD COLUMN tasksView INTEGER DEFAULT 0');
+      }
+    }
   }
+
+  /// The names of [table]'s columns. Ones a newer version added may be
+  /// there already: an older build that opens the database puts its version
+  /// back, but leaves the columns.
+  static Future<Set<Object?>> _columns(Database db, String table) async => {
+        for (final column in await db.rawQuery('PRAGMA table_info($table)'))
+          column['name'],
+      };
 
   static Database get db => _db!;
 }

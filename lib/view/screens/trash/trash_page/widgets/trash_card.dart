@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../models/note.dart';
-import '../../../../../models/todo_item.dart';
+import '../../../../../models/task_tree.dart';
 import '../../../../../models/trashed.dart';
 import '../../../../widgets/check_circle.dart';
 import '../../../notes/notes_page/widgets/note_card.dart';
@@ -15,8 +15,8 @@ Color _systemRed(bool isDarkTheme) =>
     isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
 
 /// A task in the trash: its check and title as its card had them, the start
-/// of its description, when it was deleted, and buttons that put it back or
-/// delete it for good.
+/// of its description, how many subtasks are there with it, when it was
+/// deleted, and buttons that put it back or delete it for good.
 class TrashTaskCard extends StatelessWidget {
   const TrashTaskCard({
     super.key,
@@ -25,18 +25,25 @@ class TrashTaskCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  final Trashed<TodoItem> entry;
+  /// The task's entry, with the tasks in it.
+  final Trashed<TaskBranch> entry;
   final VoidCallback onRestore;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    final task = entry.item;
+    final task = entry.item.task;
+    final subtasks = entry.item.subtasks.length;
     return _TrashCard(
       leading: CheckCircle(doneness: task.done ? 1 : 0),
       title: task.title,
       done: task.done,
       detail: task.desc.isEmpty ? null : Text(_firstLine(task.desc)),
+      extra: switch (subtasks) {
+        0 => null,
+        1 => "1 subtask",
+        _ => "$subtasks subtasks",
+      },
       deletedAt: entry.deletedAt,
       onRestore: onRestore,
       onDelete: onDelete,
@@ -112,13 +119,15 @@ String deletedLabel(DateTime deletedAt, DateTime now) {
 
 /// What the trash's cards share: the to-do page's card surface, with
 /// [leading] beside the [title], struck through when [done], the [detail]
-/// and when it was deleted under it, and the buttons at the end.
+/// and when it was deleted under it, after what [extra] is there with it,
+/// and the buttons at the end.
 class _TrashCard extends StatelessWidget {
   const _TrashCard({
     required this.leading,
     required this.title,
     this.done = false,
     this.detail,
+    this.extra,
     required this.deletedAt,
     required this.onRestore,
     required this.onDelete,
@@ -128,6 +137,7 @@ class _TrashCard extends StatelessWidget {
   final String title;
   final bool done;
   final Widget? detail;
+  final String? extra;
   final DateTime deletedAt;
   final VoidCallback onRestore;
   final VoidCallback onDelete;
@@ -137,6 +147,7 @@ class _TrashCard extends StatelessWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
     final detail = this.detail;
+    final deleted = deletedLabel(deletedAt, DateTime.now());
     return DecoratedBox(
       decoration: ShapeDecoration(
         shape: TaskCard.shape,
@@ -217,7 +228,7 @@ class _TrashCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        deletedLabel(deletedAt, DateTime.now()),
+                        extra == null ? deleted : "$extra · $deleted",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

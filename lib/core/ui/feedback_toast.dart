@@ -5,7 +5,7 @@ import 'package:toastification/toastification.dart';
 import '../result.dart';
 
 class FeedbackToast {
-  /// The toast with the last deletion's Undo, which the next one replaces.
+  /// The last toast with an Undo, which the next one replaces.
   static ToastificationItem? _undoToast;
 
   static void success(String message) {
@@ -24,10 +24,21 @@ class FeedbackToast {
   }
 
   /// Shows [message], about something just moved to the trash, with an Undo
-  /// button that puts it back with [onUndo]. It stays up a little longer
-  /// than the others, to give the user time to take it back. Only the last
-  /// deletion's shows: the next one replaces it, as the trash has the rest.
-  static void deleted(String message, {required VoidCallback onUndo}) {
+  /// button that puts it back with [onUndo]. Only the last deletion's shows:
+  /// the next one replaces it, as the trash has the rest.
+  static void deleted(String message, {required VoidCallback onUndo}) =>
+      undoable(message, onUndo: onUndo, icon: Icons.delete_rounded);
+
+  /// Shows [message], about something that changed more than the one thing
+  /// asked for, such as a task done along with its subtasks, with an Undo
+  /// button that takes it back with [onUndo]. It stays up a little longer
+  /// than the others, to give the user time to. Only the last one shows: the
+  /// next replaces it.
+  static void undoable(
+    String message, {
+    required VoidCallback onUndo,
+    IconData icon = Icons.task_alt_rounded,
+  }) {
     if (_undoToast case final previous?) toastification.dismiss(previous);
     late final ToastificationItem toast;
     toast = toastification.show(
@@ -50,8 +61,7 @@ class FeedbackToast {
           ),
         ],
       ),
-      type: ToastificationType.custom(
-          "deleted", Color(0xff1E1E1E), Icons.delete_rounded),
+      type: ToastificationType.custom("undoable", Color(0xff1E1E1E), icon),
       autoCloseDuration: const Duration(seconds: 5),
       dragToClose: true,
       style: ToastificationStyle.fillColored,

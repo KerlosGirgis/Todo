@@ -1,4 +1,5 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import '../models/task_tree.dart';
 import '../models/todo_item.dart';
 import '../models/trashed.dart';
 import '../services/database_service.dart';
@@ -26,6 +27,8 @@ class TasksRepository{
       'notification',
       'since',
       'doneDays',
+      'parent',
+      'folded',
     ]);
     List<TodoItem> items = [];
     if (maps.isNotEmpty) {
@@ -45,6 +48,19 @@ class TasksRepository{
         .update('ToDo', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
   }
 
+  /// Saves each of [items] over the row with its id, all of them or, if that
+  /// fails, none.
+  Future<void> updateItems(Iterable<TodoItem> items) async {
+    await db.transaction((txn) async {
+      for (final item in items) {
+        await txn.update('ToDo', item.toMap(),
+            where: 'id = ?', whereArgs: [item.id]);
+      }
+    });
+  }
+
+  /// Lists the tasks as [items] has them, in its order. Every one of them
+  /// gets a new id.
   Future<void> refreshAllItems(List<TodoItem> items) async {
     await db.transaction((txn) async {
       await txn.delete('ToDo');
@@ -67,23 +83,35 @@ class TasksRepository{
     });
   }
 
-  /// Moves [item] to the trash, as it was at [deletedAt], and gives the
-  /// entry it's there as.
-  Future<Trashed<TodoItem>> moveToTrash(TodoItem item,
+  /// Moves [branch], a task with the tasks in it, to the trash, as they
+  /// were at [deletedAt], and gives the entry they're there as.
+  Future<Trashed<TaskBranch>> moveToTrash(TaskBranch branch,
       {required DateTime deletedAt}) async {
     final id = await _trash.moveIn(db, 'ToDo',
-        itemId: item.id, item: item.toMap(), deletedAt: deletedAt);
-    return Trashed(id: id, item: item, deletedAt: deletedAt);
+        itemId: branch.task.id,
+        alongWith: [for (final subtask in branch.subtasks) subtask.id],
+        item: branch.toMap(),
+        deletedAt: deletedAt);
+    return Trashed(id: id, item: branch, deletedAt: deletedAt);
   }
 
-  /// The tasks in the trash, the last deleted first.
-  Future<List<Trashed<TodoItem>>> getTrash() => _trash.read(db, TodoItem.fromMap);
+  /// The tasks in the trash, each with the tasks in it, the last deleted
+  /// first.
+  Future<List<Trashed<TaskBranch>>> getTrash() =>
+      _trash.read(db, TaskBranch.fromMap);
 
-  /// Takes the trash's entry [id] out of it, and puts [item] back on the
-  /// list, where it was if no task has its id now. Its id there, or null
-  /// when the entry isn't in the trash anymore.
-  Future<int?> restoreFromTrash(int id, TodoItem item) =>
-      _trash.moveOut(db, 'ToDo', id, itemId: item.id, item: item.toMap());
+  /// Takes the trash's entry [id] out of it, and puts [branch] back on the
+  /// list: its task and the tasks in it, where they were if no task has any
+  /// of their ids now. Its task's id there, or null when the entry isn't in
+  /// the trash anymore.
+  Future<int?> restoreFromTrash(int id, TaskBranch branch) =>
+      _trash.moveOut(db, 'ToDo', id,
+          itemId: branch.task.id,
+          item: branch.task.toMap(),
+          alongWith: [
+            for (final subtask in branch.subtasks)
+              {...subtask.toMap(), 'id': subtask.id},
+          ]);
 
   /// Deletes the trash's entries [ids] for good.
   Future<void> deleteFromTrash(Iterable<int> ids) => _trash.delete(db, ids);

@@ -8,16 +8,19 @@ import '../../../../widgets/tour.dart';
 import 'task_card.dart';
 
 /// The to-do page's tour: how a task's card works, acted out on a copy of
-/// [task], the first card, whose key is [card], or, with no tasks, on an
-/// example where the first card would be, [gap] under [header]; then what
-/// the page's [buttons] and [menu] are for.
+/// [task], the first card, whose key is [card], with its count of
+/// [subtasks], or, with no tasks, on an example where the first card would
+/// be, [gap] under [header]; then what the page's [buttons], its [menu] and
+/// its [view] switch are for.
 List<TourStep> todoTour({
   required TodoItem? task,
+  ({int done, int total})? subtasks,
   required GlobalKey card,
   required GlobalKey header,
   required double gap,
   required GlobalKey buttons,
   required GlobalKey menu,
+  required GlobalKey view,
 }) {
   final shown = task ?? _example();
   final target = task == null ? header : card;
@@ -44,6 +47,7 @@ List<TourStep> todoTour({
         behind: behind,
         builder: (context, pose) => _TourTaskCard(
           task: taskAt?.call(pose) ?? shown,
+          subtasks: subtasks,
           checkKey: check,
           titleKey: title,
           bellKey: bell,
@@ -76,17 +80,33 @@ List<TourStep> todoTour({
     ),
     TourStep(
       target: target,
+      icon: Icons.subdirectory_arrow_right_rounded,
+      title: "Break a Task Down",
+      message: "Swipe a task right to add a subtask to it. Subtasks can "
+          "have subtasks of their own, and a task is done once they all "
+          "are.",
+      demo: demo(
+        [TourGesture.pull],
+        touchAlignment: const Alignment(-0.5, 0),
+        behind: const TaskSubtaskBackground(
+            alignment: AlignmentDirectional.centerStart),
+      ),
+    ),
+    TourStep(
+      target: target,
       icon: Icons.swap_vert_rounded,
       title: "Move a Task",
       message: "Press and hold anywhere else on a task, then drag it to "
-          "where it belongs.",
+          "where it belongs. It lines up with the task under it, and its "
+          "subtasks go with it.",
       demo: demo([TourGesture.drag], touch: check),
     ),
     TourStep(
       target: target,
       icon: Icons.delete_rounded,
       title: "Delete a Task",
-      message: "Swipe a task left or right to move it to the Trash.",
+      message: "Swipe a task left to move it to the Trash, along with its "
+          "subtasks.",
       demo: demo(
         [TourGesture.swipe],
         touchAlignment: const Alignment(0.6, 0),
@@ -127,6 +147,14 @@ List<TourStep> todoTour({
           "Trash, or open Settings, from this menu.",
       radius: 19,
     ),
+    TourStep(
+      target: view,
+      icon: Icons.hub_rounded,
+      title: "See Them as a Map",
+      message: "Switch to a map of your tasks, where each one branches out "
+          "into its subtasks, and back to this list.",
+      radius: 19,
+    ),
   ];
 }
 
@@ -157,12 +185,14 @@ TodoItem _example() {
 class _TourTaskCard extends StatelessWidget {
   const _TourTaskCard({
     required this.task,
+    required this.subtasks,
     required this.checkKey,
     required this.titleKey,
     required this.bellKey,
   });
 
   final TodoItem task;
+  final ({int done, int total})? subtasks;
   final GlobalKey checkKey;
   final GlobalKey titleKey;
   final GlobalKey bellKey;
@@ -180,6 +210,7 @@ class _TourTaskCard extends StatelessWidget {
       titleScale: titleScale,
       descriptionScale: descriptionScale,
       descriptionLines: descriptionLines,
+      subtasks: subtasks,
       checkKey: checkKey,
       titleKey: titleKey,
       bellKey: bellKey,
