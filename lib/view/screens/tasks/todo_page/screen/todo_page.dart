@@ -18,7 +18,6 @@ import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
-import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
@@ -87,7 +86,6 @@ class _TodoPageState extends State<TodoPage> {
   final _firstCardKey = GlobalKey();
   final _buttonsKey = GlobalKey();
   final _menuKey = GlobalKey();
-  final _viewKey = GlobalKey();
   final _hubKey = GlobalKey();
   final _nodeKey = GlobalKey();
   final _fitKey = GlobalKey();
@@ -193,7 +191,7 @@ class _TodoPageState extends State<TodoPage> {
             hub: _hubKey,
             node: _nodeKey,
             fit: _fitKey,
-            view: _viewKey,
+            menu: _menuKey,
           ),
         _ => todoTour(
             task: first?.task,
@@ -205,7 +203,6 @@ class _TodoPageState extends State<TodoPage> {
             gap: _listTop,
             buttons: _buttonsKey,
             menu: _menuKey,
-            view: _viewKey,
           ),
       },
       onEnd: () {
@@ -274,25 +271,6 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
-  /// The button that switches between the list and the map, at the start
-  /// of the bar.
-  Widget _viewSwitch(TasksView view) {
-    return Padding(
-      padding: EdgeInsets.only(left: MediaQuery.paddingOf(context).left),
-      child: KeyedSubtree(
-        key: _viewKey,
-        child: GlassIconButton(
-          icon: view == TasksView.list
-              ? Icons.hub_rounded
-              : Icons.view_agenda_rounded,
-          iconSize: 21,
-          tooltip: view == TasksView.list ? "Show as Map" : "Show as List",
-          onPressed: _switchView,
-        ),
-      ),
-    );
-  }
-
   /// The tasks as a map that fills the page, under a bar of its own with
   /// the filters on it: the map doesn't scroll, so there's no header for
   /// them to scroll away with.
@@ -325,8 +303,8 @@ class _TodoPageState extends State<TodoPage> {
               }
             },
             child: _MapBar(
-              leading: _viewSwitch(TasksView.map),
-              trailing: _BarActions(items: _menuItems(), menuKey: _menuKey),
+              trailing: _BarActions(
+                  items: _menuItems(TasksView.map), menuKey: _menuKey),
               // Once there are tasks to say whether there's anything to
               // filter.
               filters: _loaded,
@@ -351,8 +329,8 @@ class _TodoPageState extends State<TodoPage> {
             title: _title,
             topInset: padding.top,
             controller: _scrollController,
-            leading: _viewSwitch(TasksView.list),
-            trailing: _BarActions(items: _menuItems(), menuKey: _menuKey),
+            trailing: _BarActions(
+                items: _menuItems(TasksView.list), menuKey: _menuKey),
             titleRevealOffset: _TodoHeader.scrolledAway,
           ),
         ),
@@ -397,7 +375,6 @@ class _TodoPageState extends State<TodoPage> {
                   title: _title,
                   topInset: padding.top,
                   controller: _overviewPaneScrollController,
-                  leading: _viewSwitch(TasksView.list),
                   titleRevealOffset: _TodoHeader.scrolledAway,
                 ),
               ),
@@ -430,7 +407,8 @@ class _TodoPageState extends State<TodoPage> {
                   title: "",
                   topInset: padding.top,
                   controller: _listPaneScrollController,
-                  trailing: _BarActions(items: _menuItems(), menuKey: _menuKey),
+                  trailing: _BarActions(
+                      items: _menuItems(TasksView.list), menuKey: _menuKey),
                 ),
               ),
               if (_loaded)
@@ -449,7 +427,16 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
-  List<GlassMenuItem> _menuItems() => [
+  /// The menu's items: first the switch to the map, or back to the list
+  /// from [view], then the tasks' less frequent actions.
+  List<GlassMenuItem> _menuItems(TasksView view) => [
+        GlassMenuItem(
+          icon: view == TasksView.list
+              ? Icons.hub_rounded
+              : Icons.view_agenda_rounded,
+          tooltip: view == TasksView.list ? "Show as Map" : "Show as List",
+          onPressed: _switchView,
+        ),
         GlassMenuItem(
           icon: Icons.settings_backup_restore_rounded,
           tooltip: "Restore Backup",
@@ -571,19 +558,17 @@ Future<void> _moveToTrash(TasksViewModel tasks, TodoItem task) async {
   );
 }
 
-/// The bar over the map: the page's title between the switch back to the
-/// list and the menu, and, under them, the filters, with how many tasks
-/// each lets through. Hidden, as on the list, while there are no tasks,
-/// unless a filter other than All is still on, so it can be turned off.
+/// The bar over the map: the page's title and the menu, and, under them,
+/// the filters, with how many tasks each lets through. Hidden, as on the
+/// list, while there are no tasks, unless a filter other than All is still
+/// on, so it can be turned off.
 class _MapBar extends StatelessWidget {
   const _MapBar({
-    required this.leading,
     required this.trailing,
     required this.filters,
     required this.onFilterChanged,
   });
 
-  final Widget leading;
   final Widget trailing;
 
   /// Whether the filters can show yet.
@@ -603,7 +588,6 @@ class _MapBar extends StatelessWidget {
     return TitleBar(
       title: _title,
       topInset: padding.top,
-      leading: leading,
       trailing: trailing,
       bottom: !filters || (total == 0 && !filtered)
           ? null
@@ -704,8 +688,8 @@ class _TaskMapPane extends StatelessWidget {
   }
 }
 
-/// The menu of the tasks' less frequent actions, and the avatar, at the end
-/// of the bar.
+/// The menu, with the switch between the list and the map and the tasks'
+/// less frequent actions, and the avatar, at the end of the bar.
 class _BarActions extends StatelessWidget {
   const _BarActions({required this.items, required this.menuKey});
 

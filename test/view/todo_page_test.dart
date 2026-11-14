@@ -97,6 +97,16 @@ class TodoPageHarness {
     tasks.dispose();
   }
 
+  /// Opens the menu at the end of the bar, then picks its item with
+  /// [tooltip].
+  Future<void> choose(WidgetTester tester, String tooltip) async {
+    // Only on view once the menu is open.
+    expect(find.byTooltip(tooltip).hitTestable(), findsNothing);
+    await tester.tap(find.byTooltip("Menu"));
+    await wait(tester);
+    await tester.tap(find.byTooltip(tooltip));
+  }
+
   /// The tasks as an outline: each task's title, two spaces in for each
   /// task it's inside of.
   String get outline => [
@@ -311,18 +321,18 @@ Trip
     await page.close(tester);
   });
 
-  testWidgets("the switch shows the tasks as a map, and as a list again",
+  testWidgets("the menu shows the tasks as a map, and as a list again",
       (tester) async {
     await page.open(tester, plans());
     expect(find.byType(MapHub), findsNothing);
-    await tester.tap(find.byTooltip("Show as Map"));
+    await page.choose(tester, "Show as Map");
     await page.wait(tester, const Duration(seconds: 2));
     expect(find.byType(MapHub), findsOneWidget);
     expect(find.byType(TaskCard), findsNothing);
     expect(find.text("Flights"), findsOneWidget);
     expect(page.user.user.tasksView, TasksView.map);
 
-    await tester.tap(find.byTooltip("Show as List"));
+    await page.choose(tester, "Show as List");
     await page.wait(tester, const Duration(seconds: 2));
     expect(find.byType(MapHub), findsNothing);
     expect(find.byType(TaskCard), findsNWidgets(6));
@@ -337,19 +347,62 @@ Trip
     await tester.tap(find.text("Skip"));
     await page.wait(tester);
 
-    await tester.tap(find.byTooltip("Show as Map"));
+    await page.choose(tester, "Show as Map");
     await page.wait(tester, const Duration(seconds: 3));
     expect(find.text("Your Tasks as a Map"), findsOneWidget);
     await tester.tap(find.text("Skip"));
     await page.wait(tester);
 
     // Neither shows again.
-    await tester.tap(find.byTooltip("Show as List"));
+    await page.choose(tester, "Show as List");
     await page.wait(tester, const Duration(seconds: 3));
     expect(find.text("Check Off a Task"), findsNothing);
     final seen = await SharedPreferences.getInstance();
     expect(seen.getInt('tour.tasks'), PageTour.tasks.version);
     expect(seen.getInt('tour.map'), PageTour.map.version);
+    await page.close(tester);
+  });
+
+  testWidgets("each view's tour ends on the menu, where the other view is",
+      (tester) async {
+    await page.open(tester, plans(), due: {PageTour.tasks, PageTour.map});
+    await page.wait(tester, const Duration(seconds: 2));
+    // To the last step, with none skipped for want of something to point at.
+    for (final title in [
+      "Check Off a Task",
+      "Edit a Task",
+      "Break a Task Down",
+      "Move a Task",
+      "Delete a Task",
+      "Get Reminded",
+      "Add a Task",
+      "More Options",
+    ]) {
+      expect(find.text(title), findsOneWidget);
+      await tester.tap(find.text("Next"));
+      await page.wait(tester);
+    }
+    expect(find.text("See Them as a Map"), findsOneWidget);
+    expect(find.textContaining("Open this menu to switch to a map"),
+        findsOneWidget);
+    await tester.tap(find.text("Done"));
+    await page.wait(tester);
+
+    await page.choose(tester, "Show as Map");
+    await page.wait(tester, const Duration(seconds: 3));
+    for (final title in [
+      "Your Tasks as a Map",
+      "Work on a Task",
+      "Move a Task",
+      "See It All",
+    ]) {
+      expect(find.text(title), findsOneWidget);
+      await tester.tap(find.text("Next"));
+      await page.wait(tester);
+    }
+    expect(find.text("Back to the List"), findsOneWidget);
+    await tester.tap(find.text("Done"));
+    await page.wait(tester);
     await page.close(tester);
   });
 }

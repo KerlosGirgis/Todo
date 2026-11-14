@@ -5,12 +5,13 @@ import 'map_layout.dart';
 
 /// The map's tour: what the map is, around its centre, whose key is [hub];
 /// how a task on it works, on the first one, [node], when there is one;
-/// then what the [fit] button and the [view] switch are for.
+/// then what the [fit] button is for, and that the switch back to the list
+/// is in the [menu].
 List<TourStep> mapTour({
   required GlobalKey hub,
   required GlobalKey node,
   required GlobalKey fit,
-  required GlobalKey view,
+  required GlobalKey menu,
 }) {
   return [
     TourStep(
@@ -50,11 +51,11 @@ List<TourStep> mapTour({
       radius: 19,
     ),
     TourStep(
-      target: view,
+      target: menu,
       icon: Icons.view_agenda_rounded,
       title: "Back to the List",
-      message: "Switch between the map and the list here. They show the "
-          "same tasks.",
+      message: "Switch between the map and the list from this menu. They "
+          "show the same tasks.",
       radius: 19,
     ),
   ];

@@ -10,8 +10,8 @@ import 'task_card.dart';
 /// The to-do page's tour: how a task's card works, acted out on a copy of
 /// [task], the first card, whose key is [card], with its count of
 /// [subtasks], or, with no tasks, on an example where the first card would
-/// be, [gap] under [header]; then what the page's [buttons], its [menu] and
-/// its [view] switch are for.
+/// be, [gap] under [header]; then what the page's [buttons] and its [menu]
+/// are for, and that the switch to the map is in the menu.
 List<TourStep> todoTour({
   required TodoItem? task,
   ({int done, int total})? subtasks,
@@ -20,7 +20,6 @@ List<TourStep> todoTour({
   required double gap,
   required GlobalKey buttons,
   required GlobalKey menu,
-  required GlobalKey view,
 }) {
   final shown = task ?? _example();
   final target = task == null ? header : card;
@@ -148,11 +147,11 @@ List<TourStep> todoTour({
       radius: 19,
     ),
     TourStep(
-      target: view,
+      target: menu,
       icon: Icons.hub_rounded,
       title: "See Them as a Map",
-      message: "Switch to a map of your tasks, where each one branches out "
-          "into its subtasks, and back to this list.",
+      message: "Open this menu to switch to a map of your tasks, where each "
+          "one branches out into its subtasks, and back to this list.",
       radius: 19,
     ),
   ];
