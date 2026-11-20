@@ -167,6 +167,54 @@ shop
     });
   });
 
+  group('a sorted tree', () {
+    /// By uuid, backwards.
+    int backwards(TodoItem a, TodoItem b) => b.uuid.compareTo(a.uuid);
+
+    test('sorts each task among the tasks next to it, subtasks under it', () {
+      final tree = TaskTree([
+        task("a"),
+        task("a1", parent: "a"),
+        task("a2", parent: "a"),
+        task("a2x", parent: "a2"),
+        task("a2y", parent: "a2"),
+        task("b"),
+        task("b1", parent: "b"),
+      ]);
+      final sorted = tree.sorted(backwards);
+      expect(outline(sorted), "b\n  b1\na\n  a2\n    a2y\n    a2x\n  a1");
+      expect(sorted["a2y"]!.parent!.task.uuid, "a2");
+      expect(sorted["a2y"]!.depth, 2);
+      // The tree it came from is as it was.
+      expect(outline(tree), "a\n  a1\n  a2\n    a2x\n    a2y\nb\n  b1");
+    });
+
+    test('keeps tasks it ranks alike in their order', () {
+      final tree = TaskTree([
+        task("c"),
+        task("a"),
+        task("b"),
+        task("a2"),
+        task("c2"),
+      ]);
+      // Only the first letter counts.
+      final sorted = tree.sorted((a, b) => a.uuid[0].compareTo(b.uuid[0]));
+      expect(outline(sorted), "a\na2\nb\nc\nc2");
+    });
+
+    test('still counts every task in a task, done or not', () {
+      final tree = TaskTree([
+        task("trip"),
+        task("book", parent: "trip", done: true),
+        task("pack", parent: "trip"),
+      ]).where((each) => !each.done).sorted(backwards);
+      expect(tree["trip"]!.children, hasLength(1));
+      expect(tree["trip"]!.subtaskCount, 2);
+      expect(tree["trip"]!.doneSubtaskCount, 1);
+      expect(tree.nodeOf(tree.tasks.last)!.task.uuid, "pack");
+    });
+  });
+
   group('marking a task done', () {
     List<String> marking(List<TodoItem> tasks, String uuid,
         {required bool done}) {

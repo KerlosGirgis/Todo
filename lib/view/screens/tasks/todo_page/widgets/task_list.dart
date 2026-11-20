@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
+import '../../../../../models/task_sort.dart';
 import '../../../../../models/task_tree.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/tasks_view_model.dart';
@@ -25,9 +26,13 @@ double _indentOf(int depth) => math.min(
     136, depth <= 4 ? depth * _indent : 4 * _indent + (depth - 4) * 8.0);
 const _indent = 22.0;
 
+/// Why a card can't be picked up while the tasks are sorted by due date.
+const _sortedByDate = Info("To move tasks by hand, sort them by Custom");
+
 /// The tasks as cards, each task's subtasks under it, a step in from it. A
 /// task's subtasks fold away under it, and go with it when it's dragged to
-/// another place or swiped away.
+/// another place or swiped away. Tasks are dragged only in the user's own
+/// order: sorted by due date, a card that's pressed and held says so.
 class TaskList extends StatefulWidget {
   const TaskList({
     super.key,
@@ -182,6 +187,7 @@ class _TaskListState extends State<TaskList> {
               user.user.tasksDescSize,
               user.user.descLines,
             ));
+    final byHand = tasks.sort == TaskSort.custom;
 
     TaskCard card(TaskNode node, {bool interactive = true}) {
       final task = node.task;
@@ -238,44 +244,56 @@ class _TaskListState extends State<TaskList> {
         return ReorderableDelayedDragStartListener(
           key: ValueKey(key),
           index: index,
-          child: _Foldable(
-            shown: !hidden[index],
-            // A task added since the list opened makes room for itself.
-            unfolds: added.contains(key),
-            child: _Indented(
-              depth: node.depth,
-              child: RiseIn(
-                animate: _opening || added.contains(key),
-                delay: _opening
-                    ? RiseIn.stagger *
-                        (widget.listDelay + math.min(position[index], 8))
-                    : Duration.zero,
-                child: Dismissible(
-                  key: ValueKey(key),
-                  // A shorter swipe for a subtask, as nothing goes away.
-                  dismissThresholds: const {
-                    DismissDirection.startToEnd: 0.25,
+          enabled: byHand,
+          child: GestureDetector(
+            // Where a press and hold would pick the card up, if the tasks
+            // were in the user's own order. Holding its title edits it, as
+            // ever.
+            onLongPress: byHand
+                ? null
+                : () {
+                    HapticFeedback.selectionClick();
+                    widget.onResult(_sortedByDate);
                   },
-                  background: const TaskSubtaskBackground(
-                      alignment: AlignmentDirectional.centerStart),
-                  secondaryBackground: const TaskDeleteBackground(
-                      alignment: AlignmentDirectional.centerEnd),
-                  confirmDismiss: (direction) async {
-                    if (direction == DismissDirection.startToEnd) {
-                      // The card stays, and gets a subtask.
-                      widget.onAddSubtask(task);
-                      return false;
-                    }
-                    _carry(key);
-                    return true;
-                  },
-                  onDismissed: (direction) {
-                    _putDown();
-                    widget.onDelete(task);
-                  },
-                  child: KeyedSubtree(
-                    key: index == 0 ? widget.firstCardKey : null,
-                    child: card(node),
+            child: _Foldable(
+              shown: !hidden[index],
+              // A task added since the list opened makes room for itself.
+              unfolds: added.contains(key),
+              child: _Indented(
+                depth: node.depth,
+                child: RiseIn(
+                  animate: _opening || added.contains(key),
+                  delay: _opening
+                      ? RiseIn.stagger *
+                          (widget.listDelay + math.min(position[index], 8))
+                      : Duration.zero,
+                  child: Dismissible(
+                    key: ValueKey(key),
+                    // A shorter swipe for a subtask, as nothing goes away.
+                    dismissThresholds: const {
+                      DismissDirection.startToEnd: 0.25,
+                    },
+                    background: const TaskSubtaskBackground(
+                        alignment: AlignmentDirectional.centerStart),
+                    secondaryBackground: const TaskDeleteBackground(
+                        alignment: AlignmentDirectional.centerEnd),
+                    confirmDismiss: (direction) async {
+                      if (direction == DismissDirection.startToEnd) {
+                        // The card stays, and gets a subtask.
+                        widget.onAddSubtask(task);
+                        return false;
+                      }
+                      _carry(key);
+                      return true;
+                    },
+                    onDismissed: (direction) {
+                      _putDown();
+                      widget.onDelete(task);
+                    },
+                    child: KeyedSubtree(
+                      key: index == 0 ? widget.firstCardKey : null,
+                      child: card(node),
+                    ),
                   ),
                 ),
               ),

@@ -24,10 +24,40 @@ class EmptyTasks extends StatelessWidget {
       height: 1.35,
       letterSpacing: -0.15,
     );
-    final (icon, title) = switch (reason) {
-      EmptyTasksReason.noTasks => (Icons.checklist_rounded, "No Tasks"),
-      EmptyTasksReason.noneDone => (Icons.task_alt_rounded, "Nothing Done Yet"),
-      EmptyTasksReason.allDone => (Icons.celebration_rounded, "All Caught Up"),
+    // No message for no tasks at all: it's a line with the add button's
+    // icon in it.
+    final (icon, title, message) = switch (reason) {
+      EmptyTasksReason.noTasks => (Icons.checklist_rounded, "No Tasks", null),
+      EmptyTasksReason.noneDone => (
+          Icons.task_alt_rounded,
+          "Nothing Done Yet",
+          "Tasks you check off will show up here.",
+        ),
+      EmptyTasksReason.allDone => (
+          Icons.celebration_rounded,
+          "All Caught Up",
+          "Every task is checked off. Enjoy the free time!",
+        ),
+      EmptyTasksReason.noneDaily => (
+          Icons.today_rounded,
+          "No Daily Tasks",
+          "Tasks that repeat every day will show up here.",
+        ),
+      EmptyTasksReason.noneWeekly => (
+          Icons.date_range_rounded,
+          "No Weekly Tasks",
+          "Tasks that repeat every week will show up here.",
+        ),
+      EmptyTasksReason.noneMonthly => (
+          Icons.calendar_month_rounded,
+          "No Monthly Tasks",
+          "Tasks that repeat every month will show up here.",
+        ),
+      EmptyTasksReason.noneOnce => (
+          Icons.looks_one_outlined,
+          "No One-Time Tasks",
+          "Tasks that don't repeat will show up here.",
+        ),
     };
     return Center(
       child: Padding(
@@ -56,36 +86,27 @@ class EmptyTasks extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            switch (reason) {
-              EmptyTasksReason.noTasks => Text.rich(
-                  TextSpan(
-                    children: [
-                      const TextSpan(text: "Tap "),
-                      WidgetSpan(
-                        alignment: PlaceholderAlignment.middle,
-                        child: Icon(
-                          Icons.add_rounded,
-                          size: 19,
-                          color: context.colors.moreLess,
-                        ),
+            if (message != null)
+              Text(message, textAlign: TextAlign.center, style: secondary)
+            else
+              Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: "Tap "),
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: Icon(
+                        Icons.add_rounded,
+                        size: 19,
+                        color: context.colors.moreLess,
                       ),
-                      const TextSpan(text: " to add your first task."),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                  style: secondary,
+                    ),
+                    const TextSpan(text: " to add your first task."),
+                  ],
                 ),
-              EmptyTasksReason.noneDone => Text(
-                  "Tasks you check off will show up here.",
-                  textAlign: TextAlign.center,
-                  style: secondary,
-                ),
-              EmptyTasksReason.allDone => Text(
-                  "Every task is checked off. Enjoy the free time!",
-                  textAlign: TextAlign.center,
-                  style: secondary,
-                ),
-            },
+                textAlign: TextAlign.center,
+                style: secondary,
+              ),
           ],
         ),
       ),

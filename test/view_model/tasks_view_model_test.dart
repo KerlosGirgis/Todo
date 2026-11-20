@@ -10,6 +10,8 @@ import 'package:todo/models/recurrence.dart';
 import 'package:todo/models/reminder_plan.dart';
 import 'package:todo/models/repeat_progress.dart';
 import 'package:todo/models/task_filters.dart';
+import 'package:todo/models/task_listing.dart';
+import 'package:todo/models/task_sort.dart';
 import 'package:todo/models/task_tree.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/trashed.dart';
@@ -37,6 +39,20 @@ class FakeTasksRepository extends TasksRepository {
 
   @override
   Future<List<TodoItem>> getItems() async => List.of(rows);
+
+  /// How the tasks were last listed, as its table keeps it, and whether
+  /// keeping it fails, as when the disk is full.
+  TaskListing? listing;
+  bool failListing = false;
+
+  @override
+  Future<TaskListing?> getListing() async => listing;
+
+  @override
+  Future<void> saveListing(TaskListing listing) async {
+    if (failListing) throw StateError("Disk full");
+    this.listing = listing;
+  }
 
   @override
   Future<void> deleteItem(int id) async =>
@@ -1194,14 +1210,14 @@ Shop
     test('are filtered with their tasks, each kept where it belongs', () async {
       await plan();
       await tasks.toggleDone(task("Book"));
-      tasks.setFilter(const UndoneTasksFilter());
+      tasks.setFilter(TaskFilter.undone);
       expect(outline(), "Trip\n  Pack\nShop\n  Milk");
       // How far along a task is counts the ones the filter hides too.
       final trip = tasks.tree.nodeOf(task("Trip"))!;
       expect((trip.doneSubtaskCount, trip.subtaskCount), (3, 4));
-      tasks.setFilter(const DoneTasksFilter());
+      tasks.setFilter(TaskFilter.done);
       expect(outline(), "Book\n  Flights\n  Hotel");
-      tasks.setFilter(const AllTasksFilter());
+      tasks.setFilter(TaskFilter.all);
       expect(outline().split("\n"), hasLength(7));
     });
 
@@ -1530,12 +1546,223 @@ Shop
       expect(tasks.emptyReason, EmptyTasksReason.noTasks);
       await add("Call");
       expect(tasks.emptyReason, isNull);
-      tasks.setFilter(const DoneTasksFilter());
+      tasks.setFilter(TaskFilter.done);
       expect(tasks.emptyReason, EmptyTasksReason.noneDone);
       await tasks.toggleDone(repository.rows.single);
       await tasks.get();
-      tasks.setFilter(const UndoneTasksFilter());
+      tasks.setFilter(TaskFilter.undone);
       expect(tasks.emptyReason, EmptyTasksReason.allDone);
+      tasks.setFilter(TaskFilter.daily);
+      expect(tasks.emptyReason, EmptyTasksReason.noneDaily);
+      tasks.setFilter(TaskFilter.weekly);
+      expect(tasks.emptyReason, EmptyTasksReason.noneWeekly);
+      tasks.setFilter(TaskFilter.monthly);
+      expect(tasks.emptyReason, EmptyTasksReason.noneMonthly);
+      tasks.setFilter(TaskFilter.once);
+      expect(tasks.emptyReason, isNull);
+    });
+
+    test('says when every task repeats, for the Once filter', () async {
+      await add("Stretch",
+          time: const ClockTime(7, 0), reminder: Reminder.daily);
+      tasks.setFilter(TaskFilter.once);
+      expect(tasks.emptyReason, EmptyTasksReason.noneOnce);
+    });
+  });
+
+  group('sorting and filtering', () {
+    /// Puts [rows] in the table, then reads them in.
+    Future<void> seed(List<TodoItem> rows) async {
+      for (final row in rows) {
+        await repository.insertItem(row);
+      }
+      await tasks.get();
+    }
+
+    List<String> titles() => [for (final task in tasks.items) task.title];
+
+    /// The tasks on show as an outline: each task's title, two spaces in
+    /// for each task it's inside of.
+    String outline() => [
+          for (final node in tasks.tree.nodes)
+            "${"  " * node.depth}${node.task.title}",
+        ].join("\n");
+
+    TodoItem on(String title, int? day,
+            {ClockTime? time, String? parent, bool done = false}) =>
+        TodoItem(
+          uuid: title.toLowerCase(),
+          title: title,
+          day: day == null ? null : DateTime(2026, 5, day),
+          time: time,
+          parent: parent,
+          done: done,
+        );
+
+    /// Since the start of the month, at 6 PM.
+    TodoItem repeating(String title, Reminder reminder,
+            {Set<int> weekdays = const {}, int? monthDay}) =>
+        TodoItem(
+          uuid: title.toLowerCase(),
+          title: title,
+          time: const ClockTime(18, 0),
+          reminder: reminder,
+          weekdays: weekdays,
+          monthDay: monthDay,
+          progress: RepeatProgress(since: DateTime(2026, 5, 1)),
+        );
+
+    test('start with every task, in the user\'s own order', () async {
+      await tasks.get();
+      expect(tasks.filter, TaskFilter.all);
+      expect(tasks.sort, TaskSort.custom);
+      expect(tasks.sortDirection, SortDirection.ascending);
+      // Nothing's kept until they're changed.
+      expect(repository.listing, isNull);
+    });
+
+    test('are kept, and the next start lists the tasks by them', () async {
+      await seed([
+        on("Later", 20),
+        on("Done", 13, done: true),
+        on("Sooner", 14),
+      ]);
+      await tasks.setFilter(TaskFilter.undone);
+      await tasks.setSort(TaskSort.dueDate,
+          direction: SortDirection.descending);
+      const kept = TaskListing(
+        filter: TaskFilter.undone,
+        sort: TaskSort.dueDate,
+        direction: SortDirection.descending,
+      );
+      expect(repository.listing, kept);
+
+      final next = TasksViewModel(
+        repository: repository,
+        notificationService: notifications,
+        lockService: lock,
+        clock: () => time,
+      );
+      addTearDown(next.dispose);
+      await next.get();
+      expect((next.filter, next.sort, next.sortDirection),
+          (TaskFilter.undone, TaskSort.dueDate, SortDirection.descending));
+      expect([for (final task in next.items) task.title], ["Later", "Sooner"]);
+    });
+
+    test('hold until the app closes when they can\'t be kept', () async {
+      await seed([on("Later", 20), on("Sooner", 14)]);
+      repository.failListing = true;
+      await tasks.setSort(TaskSort.dueDate);
+      expect(titles(), ["Sooner", "Later"]);
+      expect(repository.listing, isNull);
+    });
+
+    test('filter by how often the tasks come round, counting each', () async {
+      await seed([
+        on("Call", null, done: true),
+        on("Dentist", 20, time: const ClockTime(9, 0)),
+        repeating("Stretch", Reminder.daily),
+        repeating("Gym", Reminder.weekly, weekdays: {DateTime.monday}),
+        repeating("Rent", Reminder.monthly, monthDay: 1),
+      ]);
+      expect({
+        for (final filter in TaskFilter.values) filter: tasks.countOf(filter),
+      }, {
+        TaskFilter.all: 5,
+        TaskFilter.done: 1,
+        TaskFilter.undone: 4,
+        TaskFilter.daily: 1,
+        TaskFilter.weekly: 1,
+        TaskFilter.monthly: 1,
+        TaskFilter.once: 2,
+      });
+      tasks.setFilter(TaskFilter.daily);
+      expect(titles(), ["Stretch"]);
+      tasks.setFilter(TaskFilter.weekly);
+      expect(titles(), ["Gym"]);
+      tasks.setFilter(TaskFilter.monthly);
+      expect(titles(), ["Rent"]);
+      tasks.setFilter(TaskFilter.once);
+      expect(titles(), ["Call", "Dentist"]);
+      // The counts don't go by the filter.
+      expect(tasks.countOf(TaskFilter.all), 5);
+    });
+
+    test(
+        'sort by due date, each task among the ones next to it, '
+        'and those without a day last', () async {
+      await seed([
+        on("Trip", 20),
+        on("Pack", 19, parent: "trip"),
+        on("Book", 14, parent: "trip"),
+        on("Visa", null, parent: "trip"),
+        on("Shop", null),
+        on("Milk", 13, time: const ClockTime(8, 0), parent: "shop"),
+        on("Call", 13, time: const ClockTime(17, 0)),
+      ]);
+      const custom = "Trip\n  Pack\n  Book\n  Visa\nShop\n  Milk\nCall";
+      expect(outline(), custom);
+
+      tasks.setSort(TaskSort.dueDate);
+      expect(outline(), "Call\nTrip\n  Book\n  Pack\n  Visa\nShop\n  Milk");
+      tasks.setSort(TaskSort.dueDate, direction: SortDirection.descending);
+      expect(outline(), "Trip\n  Pack\n  Book\n  Visa\nCall\nShop\n  Milk");
+      expect(tasks.items.first.title, "Trip");
+
+      // With a filter as well.
+      await tasks.toggleDone(task("Pack"));
+      tasks.setFilter(TaskFilter.undone);
+      expect(outline(), "Trip\n  Book\n  Visa\nCall\nShop\n  Milk");
+
+      tasks.setFilter(TaskFilter.all);
+      tasks.setSort(TaskSort.custom);
+      expect(outline(), custom);
+      // The table keeps the user's own order all along.
+      expect(repository.rows.map((row) => row.title),
+          ["Trip", "Pack", "Book", "Visa", "Shop", "Milk", "Call"]);
+    });
+
+    test('keep which way they were sorted, for the next time', () async {
+      await seed([on("Later", 20), on("Sooner", 14)]);
+      tasks.setSort(TaskSort.dueDate, direction: SortDirection.descending);
+      tasks.setSort(TaskSort.custom);
+      expect(tasks.sortDirection, SortDirection.descending);
+      expect(titles(), ["Later", "Sooner"]);
+      tasks.setSort(TaskSort.dueDate);
+      expect(tasks.sortDirection, SortDirection.descending);
+      expect(titles(), ["Later", "Sooner"]);
+      tasks.setSort(TaskSort.dueDate, direction: SortDirection.ascending);
+      expect(titles(), ["Sooner", "Later"]);
+    });
+
+    test('go by the time that stands for a repeating task, day by day',
+        () async {
+      await seed([
+        on("Dentist", 12, time: const ClockTime(9, 0)),
+        // Monday the 11th stands for it, until the 18th.
+        repeating("Gym", Reminder.weekly, weekdays: {DateTime.monday}),
+      ]);
+      tasks.setSort(TaskSort.dueDate);
+      expect(titles(), ["Gym", "Dentist"]);
+      time = DateTime(2026, 5, 18, 12);
+      tasks.checkForNewDay();
+      expect(titles(), ["Dentist", "Gym"]);
+    });
+
+    test("can't be reordered by hand while they're sorted by due date",
+        () async {
+      await seed([on("Later", 20), on("Sooner", 14), on("Someday", null)]);
+      tasks.setSort(TaskSort.dueDate);
+      expect(titles(), ["Sooner", "Later", "Someday"]);
+      await tasks.syncAfterReorder(0, 3);
+      expect(titles(), ["Sooner", "Later", "Someday"]);
+      expect(repository.rows.map((row) => row.title),
+          ["Later", "Sooner", "Someday"]);
+
+      tasks.setSort(TaskSort.custom);
+      await tasks.syncAfterReorder(0, 3);
+      expect(titles(), ["Sooner", "Someday", "Later"]);
     });
   });
 
@@ -1617,7 +1844,8 @@ Shop
     });
 
     test("a daily task put back keeps its days, and reminds again", () async {
-      await add("Stretch", time: const ClockTime(7, 0), reminder: Reminder.daily);
+      await add("Stretch",
+          time: const ClockTime(7, 0), reminder: Reminder.daily);
       await tasks.toggleDone(task("Stretch"));
       final trashed = await tasks.delete(task("Stretch"));
       expect(notifications.daily, isEmpty);

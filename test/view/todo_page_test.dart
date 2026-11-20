@@ -5,12 +5,18 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 import 'package:todo/core/theme/app_theme.dart';
+import 'package:todo/models/clock_time.dart';
+import 'package:todo/models/task_filters.dart';
+import 'package:todo/models/task_listing.dart';
+import 'package:todo/models/task_sort.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/tour_service.dart';
 import 'package:todo/view/screens/tasks/todo_page/screen/todo_page.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/task_card.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/task_map/map_node.dart';
+import 'package:todo/view/screens/tasks/todo_page/widgets/tasks_summary_card.dart';
+import 'package:todo/view/widgets/glass_popover.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/tour_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
@@ -36,14 +42,16 @@ class TodoPageHarness {
     }
   }
 
-  /// Opens the page on [seed], as a list or a map, on a phone of [size].
-  /// Every tour counts as seen, unless some are [due].
+  /// Opens the page on [seed], as a list or a map, on a phone of [size],
+  /// with the tasks listed as [listing] if it was kept from before. Every
+  /// tour counts as seen, unless some are [due].
   Future<void> open(
     WidgetTester tester,
     List<TodoItem> seed, {
     TasksView view = TasksView.list,
     Size size = const Size(412, 915),
     Set<PageTour> due = const {},
+    TaskListing? listing,
   }) async {
     tester.view.physicalSize = size * 2;
     tester.view.devicePixelRatio = 2;
@@ -53,7 +61,7 @@ class TodoPageHarness {
       for (final tour in PageTour.values)
         if (!due.contains(tour)) 'tour.${tour.name}': tour.version,
     });
-    rows = FakeTasksRepository();
+    rows = FakeTasksRepository()..listing = listing;
     for (final task in seed) {
       await rows.insertItem(task);
     }
@@ -106,6 +114,26 @@ class TodoPageHarness {
     await wait(tester);
     await tester.tap(find.byTooltip(tooltip));
   }
+
+  /// The choice called [label] in the sort's or the filter's panel, while
+  /// it's open.
+  Finder choice(String label) => find.descendant(
+      of: find.byType(GlassPopoverOption), matching: find.text(label));
+
+  /// Opens the panel of the bar's button with [tooltip], Sort or Filter,
+  /// then picks [label] in it.
+  Future<void> pick(WidgetTester tester, String tooltip, String label) async {
+    await tester.tap(find.byTooltip(tooltip));
+    await wait(tester);
+    await tester.tap(choice(label));
+    await wait(tester);
+  }
+
+  /// The titles of the list's cards, from the top down.
+  List<String> cards(WidgetTester tester) => [
+        for (final card in tester.widgetList<TaskCard>(find.byType(TaskCard)))
+          card.task.title,
+      ];
 
   /// The tasks as an outline: each task's title, two spaces in for each
   /// task it's inside of.
@@ -358,6 +386,246 @@ Trip
     await page.close(tester);
   });
 
+  group("sort and filter", () {
+    /// Tasks for days in January 2030, so none is overdue.
+    TodoItem due(String title, int? day) => TodoItem(
+          uuid: title,
+          title: title,
+          day: day == null ? null : DateTime(2030, 1, day),
+        );
+
+    testWidgets("sit in the bottom left corner, across from the page's buttons",
+        (tester) async {
+      await page.open(tester, plans());
+      final sort = tester.getRect(find.byTooltip("Sort"));
+      final filter = tester.getRect(find.byTooltip("Filter"));
+      final add = tester.getRect(find.byTooltip("Add Task"));
+      expect(sort.left, 16);
+      expect(sort.right, lessThanOrEqualTo(filter.left));
+      // On the same line as the add button.
+      expect(filter.bottom, closeTo(add.bottom, 0.5));
+      // Under the title, the summary, then straight to the first card, with
+      // no filter bar between them.
+      expect(
+          tester.getTopLeft(card("Trip")).dy -
+              tester.getBottomLeft(find.byType(TasksSummaryCard)).dy,
+          closeTo(20, 0.5));
+      await page.close(tester);
+    });
+
+    testWidgets("the filter shows only the tasks picked, with their counts",
+        (tester) async {
+      await page.open(tester, [
+        ...plans(),
+        TodoItem(
+            uuid: "stretch",
+            title: "Stretch",
+            time: const ClockTime(7, 0),
+            reminder: Reminder.daily),
+      ]);
+      expect(find.byIcon(Icons.filter_alt_outlined), findsOneWidget);
+      await tester.tap(find.byTooltip("Filter"));
+      await page.wait(tester);
+      expect(find.text("SHOW"), findsOneWidget);
+      int countOf(String label) => int.parse(tester
+          .widget<Text>(find.descendant(
+              of: find.ancestor(
+                  of: page.choice(label),
+                  matching: find.byType(GlassPopoverOption)),
+              matching: find.byWidgetPredicate((widget) =>
+                  widget is Text && int.tryParse(widget.data ?? "") != null)))
+          .data!);
+      expect({
+        for (final label in [
+          "All",
+          "Done",
+          "Undone",
+          "Daily",
+          "Weekly",
+          "Monthly",
+          "Once",
+        ])
+          label: countOf(label),
+      }, {
+        "All": 7,
+        "Done": 0,
+        "Undone": 7,
+        "Daily": 1,
+        "Weekly": 0,
+        "Monthly": 0,
+        "Once": 6,
+      });
+
+      await tester.tap(page.choice("Daily"));
+      await page.wait(tester);
+      expect(find.text("SHOW"), findsNothing);
+      expect(page.cards(tester), ["Stretch"]);
+      expect(page.tasks.filter, TaskFilter.daily);
+      // For the next time the app opens, too.
+      expect(page.rows.listing?.filter, TaskFilter.daily);
+      // The button says a filter is on.
+      expect(find.byIcon(Icons.filter_alt_rounded), findsOneWidget);
+
+      await page.pick(tester, "Filter", "Weekly");
+      expect(find.text("No Weekly Tasks"), findsOneWidget);
+      expect(find.byType(TaskCard), findsNothing);
+
+      await page.pick(tester, "Filter", "All");
+      expect(page.cards(tester), hasLength(7));
+      expect(find.byIcon(Icons.filter_alt_outlined), findsOneWidget);
+      await page.close(tester);
+    });
+
+    testWidgets("the sort puts the tasks by due date, either way, and back",
+        (tester) async {
+      await page.open(tester, [
+        due("Later", 20),
+        due("Sooner", 10),
+        due("Someday", null),
+        due("Soonest", 5),
+      ]);
+      const custom = ["Later", "Sooner", "Someday", "Soonest"];
+      expect(page.cards(tester), custom);
+      await page.pick(tester, "Sort", "Due Date");
+      expect(page.cards(tester), ["Soonest", "Sooner", "Later", "Someday"]);
+      expect(page.tasks.sort, TaskSort.dueDate);
+
+      // Which way, once it's by due date.
+      await page.pick(tester, "Sort", "Latest First");
+      expect(page.cards(tester), ["Later", "Sooner", "Soonest", "Someday"]);
+      expect(page.tasks.sortDirection, SortDirection.descending);
+      expect(
+          page.rows.listing,
+          const TaskListing(
+              sort: TaskSort.dueDate, direction: SortDirection.descending));
+
+      await page.pick(tester, "Sort", "Custom");
+      expect(page.cards(tester), custom);
+      await tester.tap(find.byTooltip("Sort"));
+      await page.wait(tester);
+      expect(page.choice("Due Date"), findsOneWidget);
+      expect(page.choice("Latest First"), findsNothing);
+      await page.close(tester);
+    });
+
+    testWidgets("sorted by due date, a card held says how to move it instead",
+        (tester) async {
+      await page.open(tester, plans());
+      await page.pick(tester, "Sort", "Due Date");
+      final gesture = await tester.startGesture(handle(tester, "Shop"));
+      await page.wait(tester, const Duration(milliseconds: 700));
+      for (var step = 0; step < 8; step++) {
+        await gesture.moveBy(const Offset(0, -30));
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await gesture.up();
+      await page.wait(tester);
+      expect(find.text("To move tasks by hand, sort them by Custom"),
+          findsOneWidget);
+      expect(page.outline, startsWith("Trip\n  Book\n    Flights\n  Pack"));
+      // Holding a title still edits its task.
+      await tester.longPress(find.text("Pack"));
+      await page.wait(tester);
+      expect(find.text("Edit Task"), findsOneWidget);
+      await tester.tap(find.text("Cancel"));
+      await page.close(tester);
+    });
+
+    testWidgets(
+        "a panel closes on a touch anywhere else, which does nothing else, "
+        "and on Back", (tester) async {
+      await page.open(tester, plans());
+      await tester.tap(find.byTooltip("Filter"));
+      await page.wait(tester);
+      expect(find.text("SHOW"), findsOneWidget);
+      await tester.tapAt(tester.getCenter(find.text("Milk")));
+      await page.wait(tester);
+      expect(find.text("SHOW"), findsNothing);
+      expect(page.task("Milk").done, isFalse);
+
+      await tester.tap(find.byTooltip("Sort"));
+      await page.wait(tester);
+      expect(find.text("SORT BY"), findsOneWidget);
+      expect(await tester.binding.handlePopRoute(), isTrue);
+      await page.wait(tester);
+      expect(find.text("SORT BY"), findsNothing);
+      expect(find.byType(TodoPage), findsOneWidget);
+      await page.close(tester);
+    });
+
+    testWidgets("a screen reader gets to the panel on the map as well",
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      await page.open(tester, plans());
+      await page.choose(tester, "Show as Map");
+      await page.wait(tester, const Duration(seconds: 2));
+      await tester.tap(find.byTooltip("Filter"));
+      await page.wait(tester);
+      // As a screen reader goes through the page, which leaves out what
+      // isn't in its order.
+      final read = [
+        for (final node in tester.semantics.simulatedAccessibilityTraversal())
+          node.label,
+      ];
+      expect(read, contains("SHOW"));
+      // Only the panel says it: the filter's on All.
+      expect(read.where((label) => label.startsWith("Undone")), hasLength(1));
+      await page.close(tester);
+      semantics.dispose();
+    });
+
+    testWidgets("open as they were left, which the database keeps",
+        (tester) async {
+      await page.open(
+        tester,
+        [
+          due("Later", 20),
+          due("Done early", 3).copyWith(done: true),
+          due("Sooner", 10),
+        ],
+        listing: const TaskListing(
+            filter: TaskFilter.undone, sort: TaskSort.dueDate),
+      );
+      expect(page.cards(tester), ["Sooner", "Later"]);
+      // Both buttons say they're on.
+      expect(find.byIcon(Icons.filter_alt_rounded), findsOneWidget);
+      await tester.tap(find.byTooltip("Sort"));
+      await page.wait(tester);
+      expect(
+          tester
+              .widget<GlassPopoverOption>(find.ancestor(
+                  of: page.choice("Due Date"),
+                  matching: find.byType(GlassPopoverOption)))
+              .selected,
+          isTrue);
+      await page.close(tester);
+    });
+
+    testWidgets("aren't there without tasks", (tester) async {
+      await page.open(tester, const []);
+      expect(find.text("No Tasks"), findsOneWidget);
+      expect(find.byTooltip("Filter"), findsNothing);
+      expect(find.byTooltip("Sort"), findsNothing);
+      await page.close(tester);
+    });
+
+    testWidgets("stay while a filter is on, so it can be turned off",
+        (tester) async {
+      await page
+          .open(tester, [TodoItem(uuid: "only", title: "Only", done: true)]);
+      await page.pick(tester, "Filter", "Done");
+      await tester.drag(find.text("Only"), const Offset(-300, 0));
+      await page.wait(tester);
+      expect(find.text("No Tasks"), findsOneWidget);
+      expect(find.byTooltip("Filter"), findsOneWidget);
+      // Once the toast that says it's in the trash, over them, has gone.
+      await page.wait(tester, const Duration(seconds: 6));
+      await page.pick(tester, "Filter", "All");
+      expect(find.byTooltip("Filter"), findsNothing);
+      await page.close(tester);
+    });
+  });
+
   testWidgets("each view's tour shows the first time it's on", (tester) async {
     await page.open(tester, plans(), due: {PageTour.tasks, PageTour.map});
     await page.wait(tester, const Duration(seconds: 2));
@@ -394,6 +662,7 @@ Trip
       "Delete a Task",
       "Get Reminded",
       "Add a Task",
+      "Sort and Filter",
       "More Options",
     ]) {
       expect(find.text(title), findsOneWidget);
@@ -414,6 +683,7 @@ Trip
       "Move a Task",
       "See It All",
       "Go Full Screen",
+      "Sort and Filter",
     ]) {
       expect(find.text(title), findsOneWidget);
       await tester.tap(find.text("Next"));

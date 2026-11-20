@@ -5,13 +5,14 @@ import 'map_layout.dart';
 
 /// The map's tour: what the map is, around its centre, whose key is [hub];
 /// how a task on it works, on the first one, [node], when there is one;
-/// then what the [fit] and [fullScreen] buttons are for, and that the
-/// switch back to the list is in the [menu].
+/// then what the [fit], [fullScreen] and [sortFilter] buttons are for, and
+/// that the switch back to the list is in the [menu].
 List<TourStep> mapTour({
   required GlobalKey hub,
   required GlobalKey node,
   required GlobalKey fit,
   required GlobalKey fullScreen,
+  required GlobalKey sortFilter,
   required GlobalKey menu,
 }) {
   return [
@@ -57,6 +58,15 @@ List<TourStep> mapTour({
       title: "Go Full Screen",
       message: "Need more room? This gives the map the whole screen. Tap it "
           "again, or go back, to leave full screen.",
+      radius: 19,
+    ),
+    TourStep(
+      target: sortFilter,
+      icon: Icons.filter_alt_rounded,
+      title: "Sort and Filter",
+      message: "Pick which tasks the map shows, such as just the undone or "
+          "the weekly ones, and sort them by due date. The list goes by "
+          "the same choices.",
       radius: 19,
     ),
     TourStep(

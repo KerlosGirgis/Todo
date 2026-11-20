@@ -220,6 +220,35 @@ class TaskTree {
     return TaskTree._(roots);
   }
 
+  /// The same tasks, each among the tasks it's next to in the order
+  /// [compare] puts them in: the tasks of their own among themselves, and
+  /// each task's subtasks among themselves, under it. Tasks it ranks alike
+  /// stay in the order they were in.
+  TaskTree sorted(Comparator<TodoItem> compare) {
+    List<TaskNode> inOrder(List<TaskNode> nodes) {
+      final indexed = nodes.indexed.toList()
+        ..sort((a, b) {
+          final order = compare(a.$2.task, b.$2.task);
+          return order != 0 ? order : a.$1.compareTo(b.$1);
+        });
+      return [for (final (_, node) in indexed) node];
+    }
+
+    TaskNode copy(TaskNode node, TaskNode? parent) {
+      final sorted = TaskNode._(node.task, node.key)
+        .._parent = parent
+        .._depth = node._depth
+        .._subtasks = node._subtasks
+        .._subtasksDone = node._subtasksDone;
+      for (final child in inOrder(node._children)) {
+        sorted._children.add(copy(child, sorted));
+      }
+      return sorted;
+    }
+
+    return TaskTree._([for (final root in inOrder(roots)) copy(root, null)]);
+  }
+
   /// The tasks that marking [node] done, or not done again, changes, [node]
   /// first:
   ///

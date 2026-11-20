@@ -15,7 +15,7 @@ class DatabaseService {
   String? get key => _key;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 10;
+  static const int _databaseVersion = 11;
 
   /// Opens the database with [key], which the App Lock's password unlocked,
   /// or else with the key kept as it is, or a new one for a new database.
@@ -95,6 +95,7 @@ class DatabaseService {
     )
     ''');
     await db.execute(_createTrash);
+    await db.execute(_createTaskListing);
   }
 
   /// The trash, where deleted tasks and notes wait until they're put back or
@@ -112,6 +113,19 @@ class DatabaseService {
       deletedAt TEXT
     )
     ''';
+
+  /// How the to-do page lists the tasks, as the user last chose: one row,
+  /// its id 1, with the indexes of the filter, the sort and the sort's
+  /// direction. None until they're first changed.
+  static const _createTaskListing = '''
+    CREATE TABLE IF NOT EXISTS TaskListing(
+      id INTEGER PRIMARY KEY,
+      taskFilter INTEGER,
+      taskSort INTEGER,
+      sortDirection INTEGER
+    )
+    ''';
+
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE User ADD COLUMN notesTextSize REAL DEFAULT 1');
@@ -192,6 +206,11 @@ class DatabaseService {
           await db.execute('ALTER TABLE ToDo ADD COLUMN $column $type');
         }
       }
+    }
+    if (oldVersion < 11) {
+      // It may be there already, from before an older build put the
+      // version back.
+      await db.execute(_createTaskListing);
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/task_map/map_node.dart';
+import 'package:todo/view/widgets/large_title.dart';
 import 'package:todo/view_model/tour_view_model.dart';
 
 import 'todo_page_test.dart' show TodoPageHarness, plans;
@@ -223,22 +224,85 @@ Shop""");
     await page.close(tester);
   });
 
-  testWidgets("the filters over the map pick which tasks it shows",
-      (tester) async {
+  testWidgets(
+      "the bar over the map is one row, and sort and filter are in the "
+      "corner, under the map's buttons", (tester) async {
+    await page.open(tester, plans(), view: TasksView.map);
+    expect(tester.getSize(find.byType(TitleBar)).height, TitleBar.height);
+    // The map starts under it.
+    expect(rectOf(tester, "Trip").top, greaterThan(TitleBar.height));
+    final sort = tester.getRect(find.byTooltip("Sort"));
+    final fit = tester.getRect(find.byTooltip("Show Whole Map"));
+    final full = tester.getRect(find.byTooltip("Full Screen"));
+    expect(sort.left, fit.left);
+    // As far apart as the map's own buttons are.
+    expect(sort.top - fit.bottom, closeTo(fit.top - full.bottom, 0.5));
+    expect(tester.getRect(find.byTooltip("Filter")).bottom,
+        closeTo(tester.getRect(find.byTooltip("Add Task")).bottom, 0.5));
+    await page.close(tester);
+  });
+
+  testWidgets("the filter picks which tasks the map shows", (tester) async {
     await page.open(tester, plans(), view: TasksView.map);
     await tester.tap(find.descendant(
         of: node("Book"), matching: find.bySemanticsLabel("Done")));
-    await page.wait(tester);
-    await tester.tap(find.textContaining("Undone"));
+    // Once the toast that offers to undo it, over the buttons, has gone.
+    await page.wait(tester, const Duration(seconds: 6));
+    await page.pick(tester, "Filter", "Undone");
     await page.wait(tester);
     expect(find.text("Book"), findsNothing);
     expect(find.text("Flights"), findsNothing);
     expect(find.text("Pack"), findsOneWidget);
-    await tester.tap(find.textContaining("Done").first);
+    await page.pick(tester, "Filter", "Done");
     await page.wait(tester);
     expect(find.text("Flights"), findsOneWidget);
     expect(find.text("Pack"), findsNothing);
+    await page.pick(tester, "Filter", "Once");
+    await page.wait(tester);
+    expect(find.byType(MapNodeCard), findsNWidgets(6));
+    await page.pick(tester, "Filter", "Monthly");
+    expect(find.text("No Monthly Tasks"), findsOneWidget);
+    expect(find.byType(MapHub), findsNothing);
     expect(tester.takeException(), isNull);
+    await page.close(tester);
+  });
+
+  testWidgets("the sort puts each task's subtasks by due date on the map",
+      (tester) async {
+    TodoItem due(String uuid, int day, [String? parent]) => TodoItem(
+        uuid: uuid, title: uuid, parent: parent, day: DateTime(2030, 1, day));
+    await page.open(
+        tester,
+        [
+          due("Trip", 9),
+          due("Pack", 8, "Trip"),
+          due("Book", 2, "Trip"),
+          due("Shop", 3),
+        ],
+        view: TasksView.map);
+    expect(rectOf(tester, "Pack").top, lessThan(rectOf(tester, "Book").top));
+    await page.pick(tester, "Sort", "Due Date");
+    await page.wait(tester);
+    expect(rectOf(tester, "Book").top, lessThan(rectOf(tester, "Pack").top));
+    expect(rectOf(tester, "Shop").top, lessThan(rectOf(tester, "Trip").top));
+    await page.close(tester);
+  });
+
+  testWidgets(
+      "sorted by due date, a task dropped on the edge of another goes "
+      "into it, as its date says where", (tester) async {
+    await page.open(tester, plans(), view: TasksView.map);
+    await page.pick(tester, "Sort", "Due Date");
+    await page.wait(tester);
+    final book = rectOf(tester, "Book");
+    await dragNode(tester, "Milk", book.topCenter + const Offset(0, 2));
+    expect(page.outline, """
+Trip
+  Book
+    Flights
+    Milk
+  Pack
+Shop""");
     await page.close(tester);
   });
 
@@ -276,7 +340,6 @@ Shop""");
     /// full screen.
     final aroundTheMap = {
       "the title": find.text("ToDo"),
-      "the filters": find.textContaining("Undone"),
       "the menu": find.byTooltip("Menu"),
       "the switch to the notes": find.byTooltip("Notes"),
       "the add button": find.byTooltip("Add Task"),
@@ -297,6 +360,8 @@ Shop""");
       // The map stays where it was on the screen, and works as before.
       expect(rectOf(tester, "Trip"), trip);
       expect(find.byTooltip("Show Whole Map").hitTestable(), findsOneWidget);
+      // So do the sort and filter, under it.
+      expect(find.byTooltip("Filter").hitTestable(), findsOneWidget);
       await tester.tap(find.text("Pack"));
       await page.wait(tester);
       expect(find.byTooltip("Add Subtask"), findsOneWidget);

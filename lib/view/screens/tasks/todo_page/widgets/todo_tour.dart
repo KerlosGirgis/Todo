@@ -10,8 +10,9 @@ import 'task_card.dart';
 /// The to-do page's tour: how a task's card works, acted out on a copy of
 /// [task], the first card, whose key is [card], with its count of
 /// [subtasks], or, with no tasks, on an example where the first card would
-/// be, [gap] under [header]; then what the page's [buttons] and its [menu]
-/// are for, and that the switch to the map is in the menu.
+/// be, [gap] under [header]; then what the page's [buttons], its
+/// [sortFilter] buttons and its [menu] are for, and that the switch to the
+/// map is in the menu.
 List<TourStep> todoTour({
   required TodoItem? task,
   ({int done, int total})? subtasks,
@@ -19,6 +20,7 @@ List<TourStep> todoTour({
   required GlobalKey header,
   required double gap,
   required GlobalKey buttons,
+  required GlobalKey sortFilter,
   required GlobalKey menu,
 }) {
   final shown = task ?? _example();
@@ -137,6 +139,15 @@ List<TourStep> todoTour({
           "notes.",
       radius: 20,
       padding: 8,
+    ),
+    TourStep(
+      target: sortFilter,
+      icon: Icons.filter_alt_rounded,
+      title: "Sort and Filter",
+      message: "Sort your tasks by due date, or show just some of them: "
+          "the done or undone ones, or the daily, weekly, monthly or "
+          "one-time ones.",
+      radius: 19,
     ),
     TourStep(
       target: menu,

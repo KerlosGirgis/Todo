@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../../core/result.dart';
+import '../../../../../../models/task_sort.dart';
 import '../../../../../../models/task_tree.dart';
 import '../../../../../../models/todo_item.dart';
 import '../../../../../../view_model/tasks_view_model.dart';
@@ -26,7 +27,7 @@ import 'map_toolbar.dart';
 /// reminder and delete it. The knob at a task's far side folds its subtasks
 /// away. A task that's pressed and held is picked up, with its subtasks, to
 /// be dropped on the task it's to go into, or just above or below the one
-/// it's to go next to.
+/// it's to go next to, while the tasks are in the user's own order.
 ///
 /// The buttons in the corner fit the whole map to the screen and, with
 /// [onFullScreen], give the map the whole screen.
@@ -41,6 +42,7 @@ class TaskMap extends StatefulWidget {
     required this.onResult,
     this.fullScreen = false,
     this.onFullScreen,
+    this.belowButtons = 0,
     this.hubKey,
     this.nodeKey,
     this.fitKey,
@@ -74,6 +76,10 @@ class TaskMap extends StatefulWidget {
   /// back, from a button over the one that fits the map to the screen.
   /// Without it, there's no such button.
   final ValueChanged<bool>? onFullScreen;
+
+  /// The room to leave under the buttons in the corner, for the page's own
+  /// buttons there.
+  final double belowButtons;
 
   /// Keys for the centre, the first task and the buttons that fit the map
   /// to the screen and give it the whole screen, so that a tour can point
@@ -559,11 +565,13 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
 
   /// Where a task dropped at [point] would go: into the centre, as a task
   /// of its own; into the task it's over the middle of; or next to the one
-  /// it's over the top or bottom of.
+  /// it's over the top or bottom of. Only into one while the tasks are
+  /// sorted by due date, which says where it goes among the others.
   _Drop? _dropAt(Offset point, _Carried carried) {
     if ((point - _layout.hub).distance <= MapLayout.hubRadius + 12) {
       return const _Drop(null, _Where.into);
     }
+    final byHand = widget.tasks.sort == TaskSort.custom;
     _Drop? nearest;
     var distance = double.infinity;
     for (final MapEntry(:key, value: place) in _layout.places.entries) {
@@ -576,11 +584,13 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
       final part = (point.dy - rect.top) / rect.height;
       nearest = _Drop(
         key,
-        part < 0.28
-            ? _Where.before
-            : part > 0.72
-                ? _Where.after
-                : _Where.into,
+        !byHand
+            ? _Where.into
+            : part < 0.28
+                ? _Where.before
+                : part > 0.72
+                    ? _Where.after
+                    : _Where.into,
       );
     }
     return nearest;
@@ -713,7 +723,7 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
             ),
             PositionedDirectional(
               start: 16 + padding.left,
-              bottom: 16 + padding.bottom,
+              bottom: 16 + padding.bottom + widget.belowButtons,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

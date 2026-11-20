@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
@@ -11,6 +10,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/task_filters.dart';
+import '../../../../../models/task_sort.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../models/trashed.dart';
 import '../../../../../models/user_profile.dart';
@@ -29,8 +29,8 @@ import '../../../profile/profile_page/screen/profile_page.dart';
 import '../../../trash/trash_page/screen/trash_page.dart';
 import '../widgets/empty_tasks.dart';
 import '../widgets/form_dialog.dart';
+import '../widgets/sort_filter_buttons.dart';
 import '../widgets/task_dialog.dart';
-import '../widgets/task_filter_bar.dart';
 import '../widgets/task_list.dart';
 import '../widgets/task_map/map_tour.dart';
 import '../widgets/task_map/task_map.dart';
@@ -66,9 +66,9 @@ class _TodoPageState extends State<TodoPage> {
   /// the title, rather than a "No Tasks" that flashes up first.
   bool _loaded = false;
 
-  /// How many sections rise in ahead of the list's cards: the summary and
-  /// the filter when the page opens, and none when only the list changes.
-  int _listDelay = 2;
+  /// How many sections rise in ahead of the list's cards: the summary when
+  /// the page opens, and none when only the list changes.
+  int _listDelay = 1;
 
   /// The page's tours, each of which shows once: the list's as the page
   /// first opens on the list, and the map's as it first shows the map.
@@ -81,19 +81,16 @@ class _TodoPageState extends State<TodoPage> {
   /// reordered.
   bool _touring = false;
 
-  /// What the tours point at: on the list, then on the map.
+  /// What the tours point at: on the list, on the map, then on both.
   final _headerKey = GlobalKey();
   final _firstCardKey = GlobalKey();
   final _buttonsKey = GlobalKey();
-  final _menuKey = GlobalKey();
   final _hubKey = GlobalKey();
   final _nodeKey = GlobalKey();
   final _fitKey = GlobalKey();
   final _fullScreenKey = GlobalKey();
-
-  /// How tall the bar over the map is, once it's been laid out: the map is
-  /// fitted to the room under it.
-  double? _mapBarHeight;
+  final _sortFilterKey = GlobalKey();
+  final _menuKey = GlobalKey();
 
   /// Whether the map has the whole screen: the page's bar and buttons are
   /// out of the way, and so are the phone's status and navigation bars.
@@ -225,6 +222,7 @@ class _TodoPageState extends State<TodoPage> {
             node: _nodeKey,
             fit: _fitKey,
             fullScreen: _fullScreenKey,
+            sortFilter: _sortFilterKey,
             menu: _menuKey,
           ),
         _ => todoTour(
@@ -236,6 +234,7 @@ class _TodoPageState extends State<TodoPage> {
             header: _headerKey,
             gap: _listTop,
             buttons: _buttonsKey,
+            sortFilter: _sortFilterKey,
             menu: _menuKey,
           ),
       },
@@ -253,8 +252,8 @@ class _TodoPageState extends State<TodoPage> {
     _tourStart?.cancel();
     setState(() {
       _touring = false;
-      // The list opens afresh, under its summary and its filter.
-      _listDelay = 2;
+      // The list opens afresh, under its summary.
+      _listDelay = 1;
     });
     Provider.of<UserViewModel>(context, listen: false)
         .showTasksAs(_view == TasksView.list ? TasksView.map : TasksView.list);
@@ -305,6 +304,7 @@ class _TodoPageState extends State<TodoPage> {
     final view =
         context.select<UserViewModel, TasksView>((user) => user.shownTasksView);
     final fullScreen = _fullScreen && view == TasksView.map;
+    final padding = MediaQuery.paddingOf(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // There's no app bar to pick the status bar's icons, so they're set here.
       value: SystemUiOverlayStyle(
@@ -338,32 +338,50 @@ class _TodoPageState extends State<TodoPage> {
                 ),
               ),
             ),
-            body: switch (view) {
-              TasksView.map => _buildMap(context, fullScreen: fullScreen),
-              TasksView.list =>
-                twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
-            },
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: switch (view) {
+                    TasksView.map => _buildMap(context, fullScreen: fullScreen),
+                    TasksView.list => twoPanes
+                        ? _buildTwoPanes(context)
+                        : _buildOnePane(context),
+                  },
+                ),
+                // In the corner across from the page's buttons, on the same
+                // line as the add button, and under the map's own buttons.
+                // It stays as the map takes the whole screen, with those.
+                PositionedDirectional(
+                  start: 16 + padding.left,
+                  bottom: 16 + padding.bottom,
+                  child: _SortFilterSlot(
+                    loaded: _loaded,
+                    buttonsKey: _sortFilterKey,
+                    onSort: _changeSort,
+                    onFilter: _changeFilter,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// The tasks as a map that fills the page, under a bar of its own with
-  /// the filters on it: the map doesn't scroll, so there's no header for
-  /// them to scroll away with. In [fullScreen], the bar is out of the way.
+  /// The tasks as a map that fills the page, under a bar of its own, as the
+  /// map doesn't scroll: the page's title and its menu. In [fullScreen], the
+  /// bar is out of the way.
   Widget _buildMap(BuildContext context, {required bool fullScreen}) {
     final padding = MediaQuery.paddingOf(context);
-    final barHeight = _mapBarHeight;
     return Stack(
       children: [
-        // Once the bar says how much room it leaves.
-        if (_loaded && barHeight != null)
+        if (_loaded)
           Positioned.fill(
             child: _TaskMapPane(
               insets: EdgeInsets.fromLTRB(
                   padding.left,
-                  fullScreen ? padding.top : barHeight,
+                  padding.top + (fullScreen ? 0 : TitleBar.height),
                   padding.right,
                   padding.bottom),
               fullScreen: fullScreen,
@@ -380,23 +398,14 @@ class _TodoPageState extends State<TodoPage> {
           top: 0,
           left: 0,
           right: 0,
-          child: _MeasuredHeight(
-            onChange: (height) {
-              if (mounted && height != _mapBarHeight) {
-                setState(() => _mapBarHeight = height);
-              }
-            },
-            child: _SlideAway(
-              hidden: fullScreen,
-              away: const Offset(0, -1),
-              child: _MapBar(
-                trailing: _BarActions(
-                    items: _menuItems(TasksView.map), menuKey: _menuKey),
-                // Once there are tasks to say whether there's anything to
-                // filter.
-                filters: _loaded,
-                onFilterChanged: _changeFilter,
-              ),
+          child: _SlideAway(
+            hidden: fullScreen,
+            away: const Offset(0, -1),
+            child: TitleBar(
+              title: _title,
+              topInset: padding.top,
+              trailing: _BarActions(
+                  items: _menuItems(TasksView.map), menuKey: _menuKey),
             ),
           ),
         ),
@@ -430,7 +439,7 @@ class _TodoPageState extends State<TodoPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const RiseIn(child: _TodoHeader()),
-                if (_loaded) _Overview(onFilterChanged: _changeFilter),
+                if (_loaded) const _Overview(),
               ],
             ),
           ),
@@ -475,7 +484,7 @@ class _TodoPageState extends State<TodoPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const RiseIn(child: _TodoHeader()),
-                      if (_loaded) _Overview(onFilterChanged: _changeFilter),
+                      if (_loaded) const _Overview(),
                     ],
                   ),
                 ),
@@ -552,6 +561,13 @@ class _TodoPageState extends State<TodoPage> {
     // The cards rise in again for the new filter, straight away.
     setState(() => _listDelay = 0);
     Provider.of<TasksViewModel>(context, listen: false).setFilter(filter);
+  }
+
+  void _changeSort(TaskSort sort, SortDirection direction) {
+    // The cards rise in again in their new order, straight away.
+    setState(() => _listDelay = 0);
+    Provider.of<TasksViewModel>(context, listen: false)
+        .setSort(sort, direction: direction);
   }
 
   /// Backs the tasks up, once the App Lock lets the user through.
@@ -646,80 +662,45 @@ Future<void> _moveToTrash(TasksViewModel tasks, TodoItem task) async {
   );
 }
 
-/// The bar over the map: the page's title and the menu, and, under them,
-/// the filters, with how many tasks each lets through. Hidden, as on the
-/// list, while there are no tasks, unless a filter other than All is still
-/// on, so it can be turned off.
-class _MapBar extends StatelessWidget {
-  const _MapBar({
-    required this.trailing,
-    required this.filters,
-    required this.onFilterChanged,
+/// The sort and filter buttons, in the bottom left corner, over the list
+/// and the map alike. Not there until the tasks are read in, nor while
+/// there are none, unless a filter other than All is still on, so it can be
+/// turned off.
+class _SortFilterSlot extends StatelessWidget {
+  const _SortFilterSlot({
+    required this.loaded,
+    required this.buttonsKey,
+    required this.onSort,
+    required this.onFilter,
   });
 
-  final Widget trailing;
+  /// Whether the tasks have been read in.
+  final bool loaded;
 
-  /// Whether the filters can show yet.
-  final bool filters;
-  final ValueChanged<TaskFilter> onFilterChanged;
+  /// The key for the buttons, for the tours to find them by.
+  final GlobalKey buttonsKey;
+  final void Function(TaskSort sort, SortDirection direction) onSort;
+  final ValueChanged<TaskFilter> onFilter;
 
   @override
   Widget build(BuildContext context) {
-    final padding = MediaQuery.paddingOf(context);
-    // As wide as the list's cards, and clear of a camera cutout.
-    final gutter = math.max(16.0, (MediaQuery.sizeOf(context).width - 640) / 2);
-    final (total, filtered) =
-        context.select<TasksViewModel, (int, bool)>((tasks) => (
-              tasks.finishedTasksCount + tasks.unfinishedTasksCount,
-              tasks.currentFilter is! AllTasksFilter,
-            ));
-    return TitleBar(
-      title: _title,
-      topInset: padding.top,
-      trailing: trailing,
-      bottom: !filters || (total == 0 && !filtered)
-          ? null
-          : Padding(
-              padding: EdgeInsets.fromLTRB(math.max(gutter, 16 + padding.left),
-                  2, math.max(gutter, 16 + padding.right), 10),
-              child: TaskFilterBar(onChanged: onFilterChanged),
-            ),
+    final wanted = context.select<TasksViewModel, bool>((tasks) =>
+        tasks.filter != TaskFilter.all ||
+        tasks.finishedTasksCount + tasks.unfinishedTasksCount > 0);
+    if (!loaded || !wanted) return const SizedBox.shrink();
+    return KeyedSubtree(
+      key: buttonsKey,
+      // Fades in as they come.
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
+        builder: (context, shown, child) =>
+            Opacity(opacity: shown, child: child),
+        child: SortFilterButtons(onSort: onSort, onFilter: onFilter),
+      ),
     );
-  }
-}
-
-/// Tells [onChange] how tall its child is once it's laid out, and again
-/// whenever that changes.
-class _MeasuredHeight extends SingleChildRenderObjectWidget {
-  const _MeasuredHeight({required this.onChange, super.child});
-
-  final ValueChanged<double> onChange;
-
-  @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderMeasuredHeight(onChange);
-
-  @override
-  void updateRenderObject(
-          BuildContext context, _RenderMeasuredHeight renderObject) =>
-      renderObject.onChange = onChange;
-}
-
-class _RenderMeasuredHeight extends RenderProxyBox {
-  _RenderMeasuredHeight(this.onChange);
-
-  ValueChanged<double> onChange;
-  double? _told;
-
-  @override
-  void performLayout() {
-    super.performLayout();
-    final height = size.height;
-    if (height == _told) return;
-    _told = height;
-    // After the frame, as it's the page that's told, which is being laid
-    // out now.
-    WidgetsBinding.instance.addPostFrameCallback((_) => onChange(height));
   }
 }
 
@@ -823,6 +804,8 @@ class _TaskMapPane extends StatelessWidget {
       onResult: _showResult,
       fullScreen: fullScreen,
       onFullScreen: onFullScreen,
+      // Over the sort and filter buttons, as far apart as the map's own.
+      belowButtons: SortFilterButtons.height + 10,
       hubKey: hubKey,
       nodeKey: nodeKey,
       fitKey: fitKey,
@@ -896,38 +879,18 @@ class _TodoHeader extends StatelessWidget {
   }
 }
 
-/// The progress summary and the filters, under the title. Hidden while
-/// there are no tasks, unless a filter other than All is still on, so it
-/// can be turned off.
+/// The progress summary, under the title, while there are tasks.
 class _Overview extends StatelessWidget {
-  const _Overview({required this.onFilterChanged});
-
-  final ValueChanged<TaskFilter> onFilterChanged;
+  const _Overview();
 
   @override
   Widget build(BuildContext context) {
-    final (total, filtered) =
-        context.select<TasksViewModel, (int, bool)>((tasks) => (
-              tasks.finishedTasksCount + tasks.unfinishedTasksCount,
-              tasks.currentFilter is! AllTasksFilter,
-            ));
-    if (total == 0 && !filtered) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (total > 0)
-          const Padding(
-            padding: EdgeInsets.only(top: 18),
-            child: RiseIn(delay: RiseIn.stagger, child: TasksSummaryCard()),
-          ),
-        Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: RiseIn(
-            delay: RiseIn.stagger * 2,
-            child: TaskFilterBar(onChanged: onFilterChanged),
-          ),
-        ),
-      ],
+    final total = context.select<TasksViewModel, int>(
+        (tasks) => tasks.finishedTasksCount + tasks.unfinishedTasksCount);
+    if (total == 0) return const SizedBox.shrink();
+    return const Padding(
+      padding: EdgeInsets.only(top: 18),
+      child: RiseIn(delay: RiseIn.stagger, child: TasksSummaryCard()),
     );
   }
 }
@@ -975,9 +938,9 @@ class _TaskListSliver extends StatelessWidget {
     }
     return SliverPadding(
       padding: padding,
-      // A new list for each filter, so the cards rise in afresh.
+      // A new list for each filter and sort, so the cards rise in afresh.
       sliver: TaskList(
-        key: ValueKey(tasks.currentFilter.runtimeType),
+        key: ValueKey((tasks.filter, tasks.sort, tasks.sortDirection)),
         tasks: tasks,
         listDelay: listDelay,
         onEdit: onEdit,

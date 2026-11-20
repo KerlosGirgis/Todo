@@ -162,6 +162,57 @@ void main() {
       expect(TodoItem(uuid: "u", title: "t").isPastDue(DateTime(3000)),
           isFalse);
     });
+
+    group('is due as of a day', () {
+      // A Wednesday.
+      final today = DateTime(2026, 5, 13);
+
+      test('when it is due, if it is for a day', () {
+        final day = DateTime(2026, 5, 20);
+        TodoItem on(DateTime? day, [ClockTime? time]) =>
+            TodoItem(uuid: "u", title: "t", day: day, time: time);
+        expect(on(day, const ClockTime(9, 0)).dueAsOf(today),
+            DateTime(2026, 5, 20, 9));
+        // As its day ends, without a time.
+        expect(on(day).dueAsOf(today), DateTime(2026, 5, 21));
+        expect(on(null).dueAsOf(today), isNull);
+      });
+
+      test('at its time on the day that stands for it, if it repeats', () {
+        TodoItem repeating(Reminder reminder,
+                {Set<int> weekdays = const {}, int? monthDay}) =>
+            TodoItem(
+              uuid: "u",
+              title: "t",
+              time: const ClockTime(18, 0),
+              reminder: reminder,
+              weekdays: weekdays,
+              monthDay: monthDay,
+              progress: RepeatProgress(since: DateTime(2026, 5, 1)),
+            );
+        expect(repeating(Reminder.daily).dueAsOf(today),
+            DateTime(2026, 5, 13, 18));
+        // The Monday just gone stands for it until the next one.
+        expect(
+            repeating(Reminder.weekly, weekdays: {DateTime.monday})
+                .dueAsOf(today),
+            DateTime(2026, 5, 11, 18));
+        // Before its first time, that one.
+        expect(repeating(Reminder.monthly, monthDay: 20).dueAsOf(today),
+            DateTime(2026, 5, 20, 18));
+        // Not one that never comes round.
+        final ended = TodoItem(
+          uuid: "u",
+          title: "t",
+          time: const ClockTime(18, 0),
+          reminder: Reminder.monthly,
+          monthDay: 31,
+          until: DateTime(2026, 5, 2),
+          progress: RepeatProgress(since: DateTime(2026, 5, 1)),
+        );
+        expect(ended.dueAsOf(today), isNull);
+      });
+    });
   });
 
   group('weekly and monthly tasks', () {

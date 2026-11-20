@@ -15,6 +15,8 @@ import '../models/recurrence.dart';
 import '../models/reminder_plan.dart';
 import '../models/repeat_progress.dart';
 import '../models/task_filters.dart';
+import '../models/task_listing.dart';
+import '../models/task_sort.dart';
 import '../models/task_tree.dart';
 import '../models/todo_item.dart';
 import '../models/trashed.dart';
@@ -33,6 +35,18 @@ enum EmptyTasksReason {
 
   /// The Undone filter is on, and every task is done.
   allDone,
+
+  /// The Daily filter is on, and no task comes round every day.
+  noneDaily,
+
+  /// The Weekly filter is on, and no task comes round every week.
+  noneWeekly,
+
+  /// The Monthly filter is on, and no task comes round every month.
+  noneMonthly,
+
+  /// The Once filter is on, and every task repeats.
+  noneOnce,
 }
 
 /// How a task's reminder stands, as its form has it.
@@ -94,22 +108,39 @@ class TasksViewModel with ChangeNotifier {
   /// Every task, each in the task it's a subtask of.
   TaskTree _tree = TaskTree.empty;
 
-  /// The tasks the filter lets through.
+  /// The tasks the filter lets through, in the sort's order.
   TaskTree _shown = TaskTree.empty;
 
-  /// The tasks the filter lets through, each ahead of its subtasks.
+  /// The tasks the filter lets through, each ahead of its subtasks, in the
+  /// sort's order.
   List<TodoItem> get items => UnmodifiableListView(_items);
 
   /// The tasks the filter lets through, each in the task it's a subtask
   /// of, or in the nearest of the tasks that one's in that the filter lets
-  /// through, or on its own when it lets none of them through.
+  /// through, or on its own when it lets none of them through; each among
+  /// the tasks it's next to in the sort's order.
   TaskTree get tree => _shown;
 
-  TaskFilter _currentFilter = const AllTasksFilter();
-  TaskFilter get currentFilter => _currentFilter;
-  int get finishedTasksCount => _allTasks.where((task) => task.done).length;
-  int get unfinishedTasksCount =>
-      _allTasks.where((task) => !task.done).length;
+  /// Which tasks are listed, and what by, as the page's buttons last had
+  /// them, which the database keeps: read in with the tasks, the first time.
+  /// Until then, all of them, in the user's own order.
+  TaskListing _listing = const TaskListing();
+
+  /// Whether [_listing] is as the user last chose: read in, or chosen since.
+  bool _listingKnown = false;
+
+  TaskFilter get filter => _listing.filter;
+  TaskSort get sort => _listing.sort;
+
+  /// Which way the tasks are sorted, when they're sorted by due date. It's
+  /// kept while they aren't, for when they are again.
+  SortDirection get sortDirection => _listing.direction;
+
+  int get finishedTasksCount => countOf(TaskFilter.done);
+  int get unfinishedTasksCount => countOf(TaskFilter.undone);
+
+  /// How many tasks [filter] lets through, subtasks included.
+  int countOf(TaskFilter filter) => _allTasks.where(filter.shows).length;
 
   List<Trashed<TaskBranch>> _trash = [];
 
@@ -121,9 +152,16 @@ class TasksViewModel with ChangeNotifier {
   EmptyTasksReason? get emptyReason {
     if (_items.isNotEmpty) return null;
     if (_allTasks.isEmpty) return EmptyTasksReason.noTasks;
-    return _currentFilter is DoneTasksFilter
-        ? EmptyTasksReason.noneDone
-        : EmptyTasksReason.allDone;
+    return switch (filter) {
+      // All lets every task through.
+      TaskFilter.all => EmptyTasksReason.noTasks,
+      TaskFilter.done => EmptyTasksReason.noneDone,
+      TaskFilter.undone => EmptyTasksReason.allDone,
+      TaskFilter.daily => EmptyTasksReason.noneDaily,
+      TaskFilter.weekly => EmptyTasksReason.noneWeekly,
+      TaskFilter.monthly => EmptyTasksReason.noneMonthly,
+      TaskFilter.once => EmptyTasksReason.noneOnce,
+    };
   }
 
   final TasksRepository _tasksRepository;
@@ -146,6 +184,14 @@ class TasksViewModel with ChangeNotifier {
   Timer? _dayEnd;
 
   Future<void> get() async {
+    if (!_listingKnown) {
+      _listingKnown = true;
+      try {
+        _listing = await _tasksRepository.getListing() ?? _listing;
+      } catch (e) {
+        // Listed as usual, then.
+      }
+    }
     final today = _dateOf(_now());
     _setDay(today, await _tasksRepository.getItems());
     _awaitNewDay();
@@ -213,7 +259,7 @@ class TasksViewModel with ChangeNotifier {
   /// Lists [tasks], as they stand today.
   void _setTasks(List<TodoItem> tasks) {
     _allTasks = tasks;
-    _applyFilter();
+    _arrange();
   }
 
   void _awaitNewDay() {
@@ -223,17 +269,36 @@ class TasksViewModel with ChangeNotifier {
         checkForNewDay);
   }
 
-  /// Lists only the tasks [filter] lets through.
-  void setFilter(TaskFilter filter) {
-    _currentFilter = filter;
-    _applyFilter();
+  /// Lists only the tasks [filter] lets through, from now on and when the
+  /// app opens again.
+  Future<void> setFilter(TaskFilter filter) =>
+      _setListing(_listing.copyWith(filter: filter));
+
+  /// Lists the tasks by [sort], [direction] first if given, or else the way
+  /// they were last sorted, from now on and when the app opens again.
+  Future<void> setSort(TaskSort sort, {SortDirection? direction}) =>
+      _setListing(_listing.copyWith(sort: sort, direction: direction));
+
+  /// Lists the tasks as [listing] has it, straight away, then keeps it.
+  Future<void> _setListing(TaskListing listing) async {
+    _listingKnown = true;
+    if (listing == _listing) return;
+    _listing = listing;
+    _arrange();
+    try {
+      await _tasksRepository.saveListing(listing);
+    } catch (e) {
+      // It holds until the app closes all the same.
+    }
   }
 
-  void _applyFilter() {
+  void _arrange() {
     _tree = TaskTree(_allTasks);
-    _shown = _currentFilter is AllTasksFilter
-        ? _tree
-        : _tree.where(_currentFilter.shows);
+    final filter = this.filter;
+    var shown = filter == TaskFilter.all ? _tree : _tree.where(filter.shows);
+    final compare = sort.compare(today, sortDirection);
+    if (compare != null) shown = shown.sorted(compare);
+    _shown = shown;
     _items = _shown.tasks;
     notifyListeners();
   }
@@ -243,8 +308,10 @@ class TasksViewModel with ChangeNotifier {
   /// then below it, going into the task that one's in, ahead of it; with
   /// none below it, it goes last, as a task of its own. Tasks that are
   /// folded away don't count: one dropped between the same two tasks on
-  /// show as it was picked up from stays where it is.
+  /// show as it was picked up from stays where it is. Only in the user's
+  /// own order: sorted otherwise, a task's place isn't up to them.
   Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
+    if (sort != TaskSort.custom) return;
     final nodes = _shown.nodes;
     if (oldIndex == newIndex || oldIndex < 0 || oldIndex >= nodes.length) {
       return;

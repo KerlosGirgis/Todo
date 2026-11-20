@@ -1,4 +1,5 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import '../models/task_listing.dart';
 import '../models/task_tree.dart';
 import '../models/todo_item.dart';
 import '../models/trashed.dart';
@@ -10,6 +11,20 @@ class TasksRepository{
   Database get db => DatabaseService.db;
 
   static const _trash = TrashTable(TrashKind.task);
+
+  /// Which tasks were last listed, and in what order, or null if that's
+  /// never been changed.
+  Future<TaskListing?> getListing() async {
+    final rows = await db.query('TaskListing', where: 'id = ?', whereArgs: [1]);
+    return rows.isEmpty ? null : TaskListing.fromMap(rows.single);
+  }
+
+  /// Keeps [listing] as how the tasks are listed, for when the app opens
+  /// again.
+  Future<void> saveListing(TaskListing listing) async {
+    await db.insert('TaskListing', {'id': 1, ...listing.toMap()},
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
   Future<int> insertItem(TodoItem item) {
     return db.insert('ToDo', item.toMap());

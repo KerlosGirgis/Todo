@@ -163,8 +163,16 @@ class TodoItem {
 
   /// When the task is due: at its time on its day, or as its day ends when
   /// it has no time. Null when it has no day, as a repeating task has none.
-  DateTime? get due {
-    final day = this.day;
+  DateTime? get due => _dueOn(day);
+
+  /// When the task is due as of [today], which tasks are sorted by: as
+  /// [due] has it, or, for a repeating task, at its time on the day that
+  /// stands for it then, which is today for a daily task. Null for a task
+  /// without a day, and for a repeating one that never comes round.
+  DateTime? dueAsOf(DateTime today) =>
+      _dueOn(repeats ? occurrenceOn(today) : day);
+
+  DateTime? _dueOn(DateTime? day) {
     if (day == null) return null;
     return time?.on(day) ?? DateTime(day.year, day.month, day.day + 1);
   }
