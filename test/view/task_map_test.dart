@@ -225,18 +225,20 @@ Shop""");
   });
 
   testWidgets(
-      "the bar over the map is one row, and sort and filter are in the "
-      "corner, under the map's buttons", (tester) async {
+      "the bar over the map is one row, and in the corner the map's buttons "
+      "sit side by side over the sort and filter", (tester) async {
     await page.open(tester, plans(), view: TasksView.map);
     expect(tester.getSize(find.byType(TitleBar)).height, TitleBar.height);
     // The map starts under it.
     expect(rectOf(tester, "Trip").top, greaterThan(TitleBar.height));
-    final sort = tester.getRect(find.byTooltip("Sort"));
-    final fit = tester.getRect(find.byTooltip("Show Whole Map"));
     final full = tester.getRect(find.byTooltip("Full Screen"));
-    expect(sort.left, fit.left);
-    // As far apart as the map's own buttons are.
-    expect(sort.top - fit.bottom, closeTo(fit.top - full.bottom, 0.5));
+    final fit = tester.getRect(find.byTooltip("Show Whole Map"));
+    final sort = tester.getRect(find.byTooltip("Sort"));
+    // In a row, full screen first, lined up with the sort and filter.
+    expect(full.center.dy, fit.center.dy);
+    expect(full.left, sort.left);
+    // As far apart side by side as from the sort and filter under them.
+    expect(fit.left - full.right, closeTo(sort.top - fit.bottom, 0.5));
     expect(tester.getRect(find.byTooltip("Filter")).bottom,
         closeTo(tester.getRect(find.byTooltip("Add Task")).bottom, 0.5));
     await page.close(tester);

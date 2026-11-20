@@ -73,7 +73,7 @@ class TaskMap extends StatefulWidget {
   final bool fullScreen;
 
   /// Gives the map the whole screen, or gives the page its bar and buttons
-  /// back, from a button over the one that fits the map to the screen.
+  /// back, from a button beside the one that fits the map to the screen.
   /// Without it, there's no such button.
   final ValueChanged<bool>? onFullScreen;
 
@@ -724,14 +724,14 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
             PositionedDirectional(
               start: 16 + padding.left,
               bottom: 16 + padding.bottom + widget.belowButtons,
-              child: Column(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (widget.onFullScreen case final onFullScreen?) ...[
                     KeyedSubtree(
                       key: widget.fullScreenKey,
                       // Arrows rather than the corners of a screen, which
-                      // the button under it has.
+                      // the button beside it has.
                       child: GlassIconButton(
                         icon: widget.fullScreen
                             ? Icons.close_fullscreen_rounded
@@ -743,7 +743,7 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
                         onPressed: () => onFullScreen(!widget.fullScreen),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(width: 10),
                   ],
                   KeyedSubtree(
                     key: widget.fitKey,
