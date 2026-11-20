@@ -1,0 +1,100 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:toastification/toastification.dart';
+import 'package:todo/core/theme/app_theme.dart';
+import 'package:todo/services/tour_service.dart';
+import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
+import 'package:todo/view/screens/profile/profile_page/widgets/progress_card.dart';
+import 'package:todo/view/screens/profile/profile_page/widgets/settings_sections.dart';
+import 'package:todo/view_model/notes_view_model.dart';
+import 'package:todo/view_model/tasks_view_model.dart';
+import 'package:todo/view_model/tour_view_model.dart';
+import 'package:todo/view_model/user_view_model.dart';
+
+import '../view_model/notes_view_model_test.dart' as notes_test
+    show FakeAuth, FakeHomeWidget, FakeLock, FakeNotesRepository;
+import '../view_model/tasks_view_model_test.dart'
+    show FakeLock, FakeNotifications, FakeTasksRepository;
+import '../view_model/user_view_model_test.dart'
+    show FakeDatabase, FakeDevice, FakeHomeWidget, FakeUserRepository, newLock;
+
+void main() {
+  /// Lets [duration] go by a frame at a time, as it does on a phone, for
+  /// the animations in it: a single pump would draw only their first frame.
+  Future<void> wait(WidgetTester tester,
+      [Duration duration = const Duration(seconds: 1)]) async {
+    const frame = Duration(milliseconds: 50);
+    for (var waited = Duration.zero; waited < duration; waited += frame) {
+      await tester.pump(frame);
+    }
+  }
+
+  testWidgets(
+      "turned on its side, the settings stay one column, clear of the "
+      "camera", (tester) async {
+    tester.view.physicalSize = const Size(600, 360) * 2;
+    tester.view.devicePixelRatio = 2;
+    // The camera's cutout down the left side, as the phone is turned.
+    tester.view.padding = const FakeViewPadding(left: 45 * 2);
+    addTearDown(tester.view.reset);
+    FlutterSecureStorage.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({});
+    final user = UserViewModel(
+      repository: FakeUserRepository(),
+      homeWidgetService: FakeHomeWidget(),
+      lockService: newLock(),
+      deviceService: FakeDevice(),
+      databaseService: FakeDatabase(),
+    );
+    await user.get();
+    final tasks = TasksViewModel(
+      repository: FakeTasksRepository(),
+      notificationService: FakeNotifications(),
+      lockService: FakeLock(),
+    );
+    final notes = NotesViewModel(
+      repository: notes_test.FakeNotesRepository(),
+      authService: notes_test.FakeAuth(),
+      lockService: notes_test.FakeLock(),
+      homeWidgetService: notes_test.FakeHomeWidget(),
+    );
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: user),
+        ChangeNotifierProvider.value(value: tasks),
+        ChangeNotifierProvider.value(value: notes),
+        ChangeNotifierProvider(
+            create: (_) => TourViewModel(service: TourService())),
+      ],
+      child: ToastificationWrapper(
+        child: MaterialApp(
+          theme: AppTheme.getTheme(isDarkMode: false),
+          home: const ProfilePage(),
+        ),
+      ),
+    ));
+    // The counts are read in, and the sections rise into place.
+    await wait(tester, const Duration(seconds: 2));
+
+    // The profile is as wide as the screen lets it be, clear of the cutout.
+    final progress = tester.getRect(find.byType(ProgressCard));
+    expect(progress.left, 16 + 45);
+    expect(progress.right, 600 - 16);
+
+    // The settings come under it, as wide as it, not beside it.
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+    await wait(tester);
+    final appearance = tester.getRect(find.byType(AppearanceSection));
+    expect(appearance.top,
+        greaterThan(tester.getRect(find.byType(ProgressCard)).bottom));
+    expect(appearance.left, progress.left);
+    expect(appearance.right, progress.right);
+
+    await tester.pumpWidget(const SizedBox());
+    tasks.dispose();
+    notes.dispose();
+  });
+}

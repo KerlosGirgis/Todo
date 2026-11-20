@@ -26,11 +26,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfilePageState extends State<ProfilePage> {
-  // One per scroll view, as the two layouts briefly overlap when the screen
-  // turns, and a controller can't follow two scroll views at once.
   final _scrollController = ScrollController();
-  final _profilePaneScrollController = ScrollController();
-  final _settingsPaneScrollController = ScrollController();
 
   @override
   void initState() {
@@ -46,19 +42,12 @@ class ProfilePageState extends State<ProfilePage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _profilePaneScrollController.dispose();
-    _settingsPaneScrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    // Side by side when the screen is too short for one long column, as on a
-    // phone turned on its side.
-    final twoPanes =
-        MediaQuery.orientationOf(context) == Orientation.landscape &&
-            MediaQuery.sizeOf(context).aspectRatio >= 1.5;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // There's no app bar to pick the status bar's icons, so they're set here.
       value: SystemUiOverlayStyle(
@@ -70,18 +59,21 @@ class ProfilePageState extends State<ProfilePage> {
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: context.colors.pageBackground,
-        body: AnimationLimiter(
-          child: twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
-        ),
+        body: AnimationLimiter(child: _buildBody(context)),
       ),
     );
   }
 
-  Widget _buildOnePane(BuildContext context) {
+  /// The profile, then the settings under it, in one column, on a phone
+  /// turned on its side as well.
+  Widget _buildBody(BuildContext context) {
     const avatarSize = 148.0;
     final padding = MediaQuery.paddingOf(context);
-    // Keeps the cards a comfortable width on tablets.
-    final gutter = math.max(16.0, (MediaQuery.sizeOf(context).width - 600) / 2);
+    // Clear of a camera cutout on a phone turned on its side, and a
+    // comfortable width for the cards on wide screens.
+    final centred = (MediaQuery.sizeOf(context).width - 600) / 2;
+    final left = math.max(16 + padding.left, centred);
+    final right = math.max(16 + padding.right, centred);
     final name =
         context.select<UserViewModel, String>((user) => user.user.name);
     return Stack(
@@ -120,8 +112,7 @@ class ProfilePageState extends State<ProfilePage> {
               ),
             ),
             SliverPadding(
-              padding:
-                  EdgeInsets.fromLTRB(gutter, 8, gutter, 32 + padding.bottom),
+              padding: EdgeInsets.fromLTRB(left, 8, right, 32 + padding.bottom),
               sliver: SliverList.list(
                 children: _staggered(const [
                   ProfileHeader(avatarSize: avatarSize),
@@ -134,85 +125,6 @@ class ProfilePageState extends State<ProfilePage> {
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTwoPanes(BuildContext context) {
-    const avatarSize = 120.0;
-    final padding = MediaQuery.paddingOf(context);
-    final name =
-        context.select<UserViewModel, String>((user) => user.user.name);
-    return Row(
-      children: [
-        Expanded(
-          flex: 5,
-          child: Stack(
-            children: [
-              const Positioned.fill(child: ProfileAurora()),
-              CustomScrollView(
-                controller: _profilePaneScrollController,
-                slivers: [
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: LargeTitleBarDelegate(
-                      title: name,
-                      topInset: padding.top,
-                      controller: _profilePaneScrollController,
-                      leading: const _CloseButton(),
-                      titleRevealOffset:
-                          ProfileHeader.nameScrolledAway(avatarSize),
-                    ),
-                  ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                          16 + padding.left, 0, 16, 24 + padding.bottom),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: _staggered(const [
-                          ProfileHeader(avatarSize: avatarSize),
-                          ProgressCard(),
-                        ]),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 6,
-          child: CustomScrollView(
-            controller: _settingsPaneScrollController,
-            slivers: [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: LargeTitleBarDelegate(
-                  title: "Settings",
-                  topInset: padding.top,
-                  controller: _settingsPaneScrollController,
-                  trailing: const _AboutButton(),
-                ),
-              ),
-              const SliverToBoxAdapter(child: LargeTitle("Settings")),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                    16, 8, 16 + padding.right, 32 + padding.bottom),
-                sliver: SliverList.list(
-                  children: _staggered(const [
-                    AppearanceSection(),
-                    GeneralSection(),
-                    TasksSection(),
-                    NotesSection(),
-                  ]),
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );
