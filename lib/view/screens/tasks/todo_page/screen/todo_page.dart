@@ -147,7 +147,7 @@ class _TodoPageState extends State<TodoPage> {
 
   /// How the page shows the tasks now, and the tour that goes with it.
   TasksView get _view =>
-      Provider.of<UserViewModel>(context, listen: false).user.tasksView;
+      Provider.of<UserViewModel>(context, listen: false).shownTasksView;
   PageTour get _pageTour =>
       _view == TasksView.map ? PageTour.map : PageTour.tasks;
 
@@ -213,9 +213,8 @@ class _TodoPageState extends State<TodoPage> {
   }
 
   /// Shows the tasks as a map instead of a list, or the other way round,
-  /// and from now on.
-  Future<void> _switchView() async {
-    final user = Provider.of<UserViewModel>(context, listen: false);
+  /// for now: only the settings change the view the page opens with.
+  void _switchView() {
     // A tour that was about to start is for the view being left.
     _tourStart?.cancel();
     setState(() {
@@ -223,9 +222,9 @@ class _TodoPageState extends State<TodoPage> {
       // The list opens afresh, under its summary and its filter.
       _listDelay = 2;
     });
-    await user.setTasksView(
-        user.user.tasksView == TasksView.list ? TasksView.map : TasksView.list);
-    if (mounted) _tourIfDue();
+    Provider.of<UserViewModel>(context, listen: false)
+        .showTasksAs(_view == TasksView.list ? TasksView.map : TasksView.list);
+    _tourIfDue();
   }
 
   @override
@@ -237,7 +236,7 @@ class _TodoPageState extends State<TodoPage> {
         MediaQuery.orientationOf(context) == Orientation.landscape &&
             MediaQuery.sizeOf(context).aspectRatio >= 1.5;
     final view =
-        context.select<UserViewModel, TasksView>((user) => user.user.tasksView);
+        context.select<UserViewModel, TasksView>((user) => user.shownTasksView);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // There's no app bar to pick the status bar's icons, so they're set here.
       value: SystemUiOverlayStyle(

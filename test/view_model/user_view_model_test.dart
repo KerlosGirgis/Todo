@@ -179,6 +179,58 @@ void main() {
     });
   });
 
+  group('the tasks view', () {
+    test("switched from the to-do page's menu isn't saved", () async {
+      var notified = 0;
+      user.addListener(() => notified++);
+      user.showTasksAs(TasksView.map);
+      expect(user.shownTasksView, TasksView.map);
+      expect(notified, 1);
+      user.showTasksAs(TasksView.map);
+      expect(notified, 1);
+      expect(user.user.tasksView, TasksView.list);
+      expect(repository.updates, 0);
+
+      // The app opens with the saved one again.
+      final reopened = UserViewModel(
+        repository: repository,
+        homeWidgetService: homeWidget,
+        lockService: newLock(),
+        deviceService: device,
+        databaseService: FakeDatabase(),
+      );
+      await reopened.get();
+      expect(reopened.shownTasksView, TasksView.list);
+    });
+
+    test('picked in the settings is saved, and shows over the menu\'s',
+        () async {
+      user.showTasksAs(TasksView.map);
+      await user.setTasksView(TasksView.map);
+      expect(user.user.tasksView, TasksView.map);
+      expect(repository.rows.single.tasksView, TasksView.map);
+
+      user.showTasksAs(TasksView.list);
+      await user.setTasksView(TasksView.list);
+      expect(user.user.tasksView, TasksView.list);
+      expect(user.shownTasksView, TasksView.list);
+      expect(repository.updates, 2);
+
+      // The saved view again, though it's unchanged.
+      user.showTasksAs(TasksView.map);
+      var notified = 0;
+      user.addListener(() => notified++);
+      await user.setTasksView(TasksView.list);
+      expect(user.shownTasksView, TasksView.list);
+      expect(notified, 1);
+      expect(repository.updates, 2);
+
+      // Nothing to change.
+      await user.setTasksView(TasksView.list);
+      expect(notified, 1);
+    });
+  });
+
   group('rename', () {
     test('saves the name without the spaces around it', () async {
       expect(await user.rename("  Kerlos "), isA<Info>());

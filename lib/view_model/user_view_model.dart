@@ -167,9 +167,34 @@ class UserViewModel with ChangeNotifier {
   Future<void> setStartPage(StartPage startPage) => _set(
       startPage == user.startPage, () => user.copyWith(startPage: startPage));
 
-  /// Has the to-do page list the tasks, or map them.
-  Future<void> setTasksView(TasksView view) =>
-      _set(view == user.tasksView, () => user.copyWith(tasksView: view));
+  /// The view the to-do page's menu has switched to, away from the one the
+  /// settings pick, which lasts until the app closes or the setting
+  /// changes. Never saved, so the page opens with the settings' view.
+  TasksView? _tasksViewForNow;
+
+  /// How the to-do page shows the tasks: as its menu has switched them for
+  /// now, or else as the settings pick.
+  TasksView get shownTasksView => _tasksViewForNow ?? user.tasksView;
+
+  /// Shows the tasks as [view] for now, as the to-do page's menu does,
+  /// without saving it.
+  void showTasksAs(TasksView view) {
+    if (view == shownTasksView) return;
+    _tasksViewForNow = view == user.tasksView ? null : view;
+    notifyListeners();
+  }
+
+  /// Has the to-do page list the tasks, or map them, each time it opens,
+  /// and now, in place of a view its menu has switched to.
+  Future<void> setTasksView(TasksView view) async {
+    final shown = shownTasksView;
+    _tasksViewForNow = null;
+    if (view != user.tasksView) {
+      await _save(user.copyWith(tasksView: view));
+    } else if (view != shown) {
+      notifyListeners();
+    }
+  }
 
   /// Puts notes, and the home screen's widget, in the handwritten font, or
   /// back in the regular one.

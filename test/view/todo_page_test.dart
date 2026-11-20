@@ -330,13 +330,31 @@ Trip
     expect(find.byType(MapHub), findsOneWidget);
     expect(find.byType(TaskCard), findsNothing);
     expect(find.text("Flights"), findsOneWidget);
-    expect(page.user.user.tasksView, TasksView.map);
+    // For now: the page still opens with the view the settings pick.
+    expect(page.user.user.tasksView, TasksView.list);
 
     await page.choose(tester, "Show as List");
     await page.wait(tester, const Duration(seconds: 2));
     expect(find.byType(MapHub), findsNothing);
     expect(find.byType(TaskCard), findsNWidgets(6));
     expect(page.user.user.tasksView, TasksView.list);
+    await page.close(tester);
+  });
+
+  testWidgets("the settings' view takes over from the menu's",
+      (tester) async {
+    await page.open(tester, plans(), view: TasksView.map);
+    await page.choose(tester, "Show as List");
+    await page.wait(tester, const Duration(seconds: 2));
+    expect(find.byType(TaskCard), findsNWidgets(6));
+    expect(page.user.user.tasksView, TasksView.map);
+
+    // As the settings, over the page, set it.
+    await page.user.setTasksView(TasksView.list);
+    await page.user.setTasksView(TasksView.map);
+    await page.wait(tester, const Duration(seconds: 2));
+    expect(find.byType(MapHub), findsOneWidget);
+    expect(find.byType(TaskCard), findsNothing);
     await page.close(tester);
   });
 
