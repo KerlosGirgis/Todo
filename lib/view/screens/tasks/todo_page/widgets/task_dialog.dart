@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../core/utils/date_time_utils.dart';
+import '../../../../../core/utils/task_labels.dart';
 import '../../../../../models/clock_time.dart';
 import '../../../../../models/task_tree.dart';
 import '../../../../../models/todo_item.dart';
@@ -15,7 +16,6 @@ import '../../../profile/profile_page/widgets/settings_group.dart';
 import 'form_dialog.dart';
 import 'month_day_dialog.dart';
 import 'repeat_end_dialog.dart';
-import 'repeat_labels.dart';
 import 'weekday_picker.dart';
 
 const _accent = Color(0xff3D5AFE);

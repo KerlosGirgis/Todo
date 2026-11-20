@@ -18,10 +18,12 @@ import '../models/task_filters.dart';
 import '../models/task_listing.dart';
 import '../models/task_sort.dart';
 import '../models/task_tree.dart';
+import '../models/tasks_widget_snapshot.dart';
 import '../models/todo_item.dart';
 import '../models/trashed.dart';
 import '../services/authentication_service.dart';
 import '../services/backup_service.dart';
+import '../services/home_widget_service.dart';
 import '../services/lock_service.dart';
 import '../services/notification_service.dart';
 
@@ -81,6 +83,7 @@ class TasksViewModel with ChangeNotifier {
     LockService? lockService,
     AuthenticationService? authService,
     NotificationService? notificationService,
+    HomeWidgetService? homeWidgetService,
     DateTime Function()? clock,
   })  : _tasksRepository = repository ?? TasksRepository(),
         _backupService = backupService ?? BackupService(),
@@ -88,9 +91,14 @@ class TasksViewModel with ChangeNotifier {
         _lockService = lockService ?? LockService(),
         _authService = authService ?? AuthenticationService(),
         _notificationService = notificationService ?? NotificationService(),
+        _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
         _now = clock ?? DateTime.now {
-    // Reminders say which task they're for only while the app isn't locked.
-    _lockChanges = _lockService.changes.listen((_) => refreshReminders());
+    // Reminders say which task they're for only while the app isn't locked,
+    // and so does the widget.
+    _lockChanges = _lockService.changes.listen((_) {
+      refreshReminders();
+      _refreshWidget();
+    });
   }
 
   late final StreamSubscription<AppLock> _lockChanges;
@@ -170,6 +178,7 @@ class TasksViewModel with ChangeNotifier {
   final LockService _lockService;
   final AuthenticationService _authService;
   final NotificationService _notificationService;
+  final HomeWidgetService _homeWidgetService;
   final DateTime Function() _now;
 
   /// Whether the reminders have been checked against the phone's time zone
@@ -301,6 +310,35 @@ class TasksViewModel with ChangeNotifier {
     _shown = shown;
     _items = _shown.tasks;
     notifyListeners();
+    _refreshWidget();
+  }
+
+  /// Whether the widget is to be shown the tasks as they are once the
+  /// change being made has been.
+  bool _widgetDue = false;
+
+  /// Shows the home screen's to-do widget the tasks as they stand, in the
+  /// page's order, a week ahead, or only how many are left while the App
+  /// Lock is on. Once for all the changes made together, and not before the
+  /// tasks are read in, as the widget would be emptied.
+  void _refreshWidget() {
+    if (_day == null || _widgetDue) return;
+    _widgetDue = true;
+    scheduleMicrotask(() async {
+      _widgetDue = false;
+      try {
+        final locked = await _lockService.getLock() != AppLock.off;
+        await _homeWidgetService.showTasks(TasksWidgetSnapshot.of(
+          _allTasks,
+          now: _now(),
+          sort: sort,
+          direction: sortDirection,
+          locked: locked,
+        ));
+      } catch (e) {
+        // The widget's own trouble, which the tasks go ahead without.
+      }
+    });
   }
 
   /// Moves the task at [oldIndex] among the [tree]'s tasks, as a list has

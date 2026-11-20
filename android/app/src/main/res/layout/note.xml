@@ -1,43 +1,32 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Widget.Android.AppWidget.Container"
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The note widget. Its sizes are the settings' preview's too:
+     lib/view/screens/profile/profile_page/widgets/widget_previews.dart.
+     The text has no colour of its own, as it never had: the theme's for
+     text without one, unless its style gives it one. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:theme="@style/Theme.Android.AppWidgetContainer"
-    android:background="@android:color/transparent"
-    >
+    android:theme="@style/Theme.Android.AppWidgetContainer">
 
+    <!-- The background its style gives it, if any. -->
+    <ImageView
+        android:id="@android:id/background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/app_widget_background"
+        android:visibility="gone" />
 
     <TextView
-        android:id="@+id/noteTextA"
-        style="@style/Theme.Android.AppWidgetContainer"
+        android:id="@+id/note_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="0dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="0dp"
-        android:contentDescription="@string/appwidget_text"
-        android:text="@string/appwidget_text"
-        android:textSize="22sp"
+        android:layout_gravity="center"
+        android:layout_margin="16dp"
         android:fontFamily="arial"
-        android:textStyle="bold" />
-    <TextView
-        android:id="@+id/noteTextC"
-        style="@style/Theme.Android.AppWidgetContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="0dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginBottom="0dp"
-        android:contentDescription="@string/appwidget_text"
         android:text="@string/appwidget_text"
         android:textSize="22sp"
-        android:fontFamily="casual"
-        android:textStyle="bold"
-        android:visibility="gone"/>
-
-
-</RelativeLayout>
+        android:textStyle="bold" />
+</FrameLayout>

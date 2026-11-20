@@ -23,6 +23,7 @@ import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../../widgets/tour.dart';
+import '../../../../widgets/widget_page_requests.dart';
 import '../../../notes/notes_page/screen/notes_page.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
@@ -55,8 +56,15 @@ class TodoPage extends StatefulWidget {
   State<TodoPage> createState() => _TodoPageState();
 }
 
-class _TodoPageState extends State<TodoPage> {
+class _TodoPageState extends State<TodoPage>
+    with WidgetPageRequests<TodoPage> {
   final _scrollController = ScrollController();
+
+  @override
+  StartPage get widgetPage => StartPage.tasks;
+
+  @override
+  void openOtherPage() => _openNotes();
 
   /// Whether the tasks have been read in. Until then there's nothing under
   /// the title, rather than a "No Tasks" that flashes up first.

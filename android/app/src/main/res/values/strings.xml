@@ -3,4 +3,24 @@
     <string name="appwidget_text">Note</string>
     <string name="add_widget">Note</string>
     <string name="app_widget_description">Note</string>
+
+    <!-- The to-do widget. -->
+    <string name="tasks_widget_label">To-Do</string>
+    <string name="tasks_widget_description">Your tasks at a glance</string>
+    <string name="tasks_widget_title">To-Do</string>
+    <string name="tasks_widget_empty">No tasks yet</string>
+    <string name="tasks_widget_done">All done</string>
+    <string name="tasks_widget_locked">Unlock the app to see your tasks</string>
+    <string name="tasks_widget_waiting">Open the app to see your tasks here</string>
+    <string name="tasks_widget_row_to_do">to do</string>
+    <string name="tasks_widget_row_done">done</string>
+
+    <!-- The to-do widget as the phone's list of widgets shows it. -->
+    <string name="tasks_widget_sample_count">4</string>
+    <string name="tasks_widget_sample_plants">Water the plants</string>
+    <string name="tasks_widget_sample_plants_when">Today, 6:00 PM</string>
+    <string name="tasks_widget_sample_groceries">Groceries</string>
+    <string name="tasks_widget_sample_milk">Oat milk</string>
+    <string name="tasks_widget_sample_bank">Call the bank</string>
+    <string name="tasks_widget_sample_bank_when">Yesterday, 10:00 AM</string>
 </resources>

@@ -8,11 +8,11 @@ import 'package:readmore/readmore.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/utils/date_time_utils.dart';
+import '../../../../../core/utils/task_labels.dart';
 import '../../../../../models/recurrence.dart';
 import '../../../../../models/repeat_progress.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../widgets/check_circle.dart';
-import 'repeat_labels.dart';
 
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);
@@ -843,20 +843,6 @@ class _SwipeBackground extends StatelessWidget {
       ),
     );
   }
-}
-
-/// When [task] is for, as of [now]: "Today, 9:30 AM", "Tomorrow", "Fri, Oct
-/// 24" or "Jan 3, 2027, 9:30 AM", or null when it has neither a date nor a
-/// time. A task that comes round on days of the week or the month is for
-/// the day that stands for it.
-String? taskWhenLabel(TodoItem task, DateTime now) {
-  final day = taskDayOf(task, now);
-  final time = task.time;
-  final parts = [
-    if (day != null) DateTimeUtils.friendlyDay(day, now),
-    if (time != null) time.label,
-  ];
-  return parts.isEmpty ? null : parts.join(", ");
 }
 
 /// A small capsule with an icon and a few words about the task.

@@ -4,12 +4,11 @@ import 'dart:ui' show lerpDouble;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../../core/utils/task_labels.dart';
 import '../../../../../../models/task_tree.dart';
 import '../../../../../../models/todo_item.dart';
 import '../../../../../widgets/check_circle.dart';
 import '../../../../../widgets/progress_ring.dart';
-import '../repeat_labels.dart';
-import '../task_card.dart';
 import 'map_layout.dart';
 
 /// The colours of the map's branches, one for each task of its own in turn,

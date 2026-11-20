@@ -13,13 +13,15 @@ import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/tour_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
+import 'package:todo/view_model/widgets_view_model.dart';
 
 import '../view_model/notes_view_model_test.dart' as notes_test
     show FakeAuth, FakeHomeWidget, FakeLock, FakeNotesRepository;
 import '../view_model/tasks_view_model_test.dart'
     show FakeLock, FakeNotifications, FakeTasksRepository;
 import '../view_model/user_view_model_test.dart'
-    show FakeDatabase, FakeDevice, FakeHomeWidget, FakeUserRepository, newLock;
+    show FakeDatabase, FakeDevice, FakeUserRepository, newLock;
+import '../view_model/widgets_view_model_test.dart' show FakeWidgets;
 
 void main() {
   /// Lets [duration] go by a frame at a time, as it does on a phone, for
@@ -44,7 +46,6 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final user = UserViewModel(
       repository: FakeUserRepository(),
-      homeWidgetService: FakeHomeWidget(),
       lockService: newLock(),
       deviceService: FakeDevice(),
       databaseService: FakeDatabase(),
@@ -96,5 +97,78 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     tasks.dispose();
     notes.dispose();
+  });
+
+  testWidgets(
+      "the tasks' and the notes' widgets each have a row that "
+      "opens the sheet styling them", (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
+    FlutterSecureStorage.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({});
+    final user = UserViewModel(
+      repository: FakeUserRepository(),
+      lockService: newLock(),
+      deviceService: FakeDevice(),
+      databaseService: FakeDatabase(),
+    );
+    await user.get();
+    final tasks = TasksViewModel(
+      repository: FakeTasksRepository(),
+      notificationService: FakeNotifications(),
+      lockService: FakeLock(),
+    );
+    final notes = NotesViewModel(
+      repository: notes_test.FakeNotesRepository(),
+      authService: notes_test.FakeAuth(),
+      lockService: notes_test.FakeLock(),
+      homeWidgetService: notes_test.FakeHomeWidget(),
+    );
+    final widgets = WidgetsViewModel(service: FakeWidgets());
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: user),
+        ChangeNotifierProvider.value(value: tasks),
+        ChangeNotifierProvider.value(value: notes),
+        ChangeNotifierProvider.value(value: widgets),
+        ChangeNotifierProvider(
+            create: (_) => TourViewModel(service: TourService())),
+      ],
+      child: ToastificationWrapper(
+        child: MaterialApp(
+          theme: AppTheme.getTheme(isDarkMode: false),
+          home: const ProfilePage(),
+        ),
+      ),
+    ));
+    await wait(tester, const Duration(seconds: 2));
+
+    // Each row by what its subtitle says, as both are "Home Screen Widget".
+    for (final (row, title) in [
+      ("Your tasks on the home screen", "To-Do Widget"),
+      ("A note on the home screen", "Note Widget"),
+    ]) {
+      await tester.scrollUntilVisible(find.text(row), 300,
+          scrollable: find.byType(Scrollable).first);
+      await wait(tester);
+      expect(
+          find.ancestor(
+              of: find.text(row),
+              matching: find.widgetWithText(InkWell, "Home Screen Widget")),
+          findsOneWidget);
+      await tester.tap(find.text(row));
+      await wait(tester);
+      expect(find.text(title), findsOneWidget);
+      // Back to the settings, the style untried.
+      await tester.binding.handlePopRoute();
+      await wait(tester);
+      expect(find.text(title), findsNothing);
+    }
+
+    await tester.pumpWidget(const SizedBox());
+    tasks.dispose();
+    notes.dispose();
+    widgets.dispose();
   });
 }

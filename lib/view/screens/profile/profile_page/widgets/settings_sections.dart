@@ -6,12 +6,14 @@ import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
 import '../../../../../models/user_profile.dart';
+import '../../../../../models/widget_style.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../lock_page/widgets/password_dialogs.dart';
 import 'appearance_picker.dart';
 import 'settings_group.dart';
 import 'text_size_sheet.dart';
+import 'widget_style_sheet.dart';
 
 // iOS's system colours, so that each setting has an icon of its own colour,
 // as in the Settings app.
@@ -256,6 +258,10 @@ class TasksSection extends StatelessWidget {
             },
           ),
         ),
+        const _WidgetTile(
+          kind: WidgetKind.tasks,
+          subtitle: "Your tasks on the home screen",
+        ),
       ],
     );
   }
@@ -310,7 +316,34 @@ class NotesSection extends StatelessWidget {
           color: _purple,
           title: "Body Size",
         ),
+        const _WidgetTile(
+          kind: WidgetKind.note,
+          subtitle: "A note on the home screen",
+        ),
       ],
+    );
+  }
+}
+
+/// A row that opens the sheet styling [kind] of home screen widget.
+class _WidgetTile extends StatelessWidget {
+  const _WidgetTile({required this.kind, required this.subtitle});
+
+  final WidgetKind kind;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    // Read out as a button of its own, rather than as part of the group.
+    return MergeSemantics(
+      child: SettingsTile(
+        icon: Icons.widgets_rounded,
+        color: _blue,
+        title: "Home Screen Widget",
+        subtitle: Text(subtitle),
+        trailing: const DisclosureValue("Style"),
+        onTap: () => showWidgetStyleSheet(context, kind),
+      ),
     );
   }
 }

@@ -36,7 +36,8 @@
         android:label="Todo">
         <receiver
             android:name=".Note"
-            android:exported="false">
+            android:exported="false"
+            android:label="@string/appwidget_text">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -44,6 +45,18 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/note_info" />
+        </receiver>
+        <receiver
+            android:name=".Tasks"
+            android:exported="false"
+            android:label="@string/tasks_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/tasks_info" />
         </receiver>
 
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />

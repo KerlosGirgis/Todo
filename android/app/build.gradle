@@ -92,6 +92,8 @@ android {
         implementation 'androidx.window:window:1.5.1'
         implementation 'androidx.window:window-java:1.5.1'
         implementation 'androidx.biometric:biometric:1.1.0'
+        // The to-do widget's list, which before Android 12 needs its service.
+        implementation 'androidx.core:core-remoteviews:1.1.0'
     }
 
 }

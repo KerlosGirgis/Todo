@@ -7,7 +7,6 @@ import 'package:todo/models/verse.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:todo/services/device_service.dart';
-import 'package:todo/services/home_widget_service.dart';
 import 'package:todo/services/image_service.dart';
 import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/verse_service.dart';
@@ -18,7 +17,6 @@ import '../core/result.dart';
 class UserViewModel with ChangeNotifier {
   UserViewModel({
     UserRepository? repository,
-    HomeWidgetService? homeWidgetService,
     ImageService? imageService,
     LockService? lockService,
     AuthenticationService? authService,
@@ -26,7 +24,6 @@ class UserViewModel with ChangeNotifier {
     VerseService? verseService,
     DatabaseService? databaseService,
   })  : _userRepository = repository ?? UserRepository(),
-        _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
         _imageService = imageService ?? ImageService(),
         _lockService = lockService ?? LockService(),
         _authService =
@@ -80,7 +77,6 @@ class UserViewModel with ChangeNotifier {
       user.showVerse ? Verse.parse(_verseService.getDailyVerse()) : null;
 
   final UserRepository _userRepository;
-  final HomeWidgetService _homeWidgetService;
   final ImageService _imageService;
   final LockService _lockService;
   final AuthenticationService _authService;
@@ -196,15 +192,11 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  /// Puts notes, and the home screen's widget, in the handwritten font, or
-  /// back in the regular one.
-  Future<void> setCasualFont(bool casualFont) async {
-    if (casualFont == user.casualFont) return;
-    _user = user.copyWith(casualFont: casualFont);
-    await _userRepository.updateUser(user);
-    _homeWidgetService.setCasualFont(casualFont);
-    notifyListeners();
-  }
+  /// Puts notes in the handwritten font, or back in the regular one. The
+  /// home screen's note widget has a font of its own: see WidgetsViewModel.
+  Future<void> setCasualFont(bool casualFont) => _set(
+      casualFont == user.casualFont,
+      () => user.copyWith(casualFont: casualFont));
 
   Future<void> setWordCount(bool wordCount) => _set(
       wordCount == user.wordCount, () => user.copyWith(wordCount: wordCount));
@@ -315,10 +307,7 @@ class UserViewModel with ChangeNotifier {
 
   Future<Result> setNotesTextSize(double size) async {
     if (_isTextSize(size)) {
-      _user = user.copyWith(notesTextSize: size);
-      await _homeWidgetService.setTextSize(user.notesTextSize);
-      await _userRepository.updateUser(user);
-      notifyListeners();
+      await _save(user.copyWith(notesTextSize: size));
       return Success("Font Changed");
     } else {
       return Failure("Enter Valid Value");

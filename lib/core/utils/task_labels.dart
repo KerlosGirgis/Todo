@@ -1,7 +1,7 @@
-import '../../../../../core/utils/date_time_utils.dart';
-import '../../../../../models/clock_time.dart';
-import '../../../../../models/recurrence.dart';
-import '../../../../../models/todo_item.dart';
+import '../../models/clock_time.dart';
+import '../../models/recurrence.dart';
+import '../../models/todo_item.dart';
+import 'date_time_utils.dart';
 
 /// Monday to Friday, and the weekend.
 const _workWeek = {1, 2, 3, 4, 5};
@@ -16,6 +16,20 @@ DateTime? taskDayOf(TodoItem task, DateTime now) =>
       RepeatEvery.day => null,
       RepeatEvery.week || RepeatEvery.month => task.occurrenceOn(now),
     };
+
+/// When [task] is for, as of [now]: "Today, 9:30 AM", "Tomorrow", "Fri, Oct
+/// 24" or "Jan 3, 2027, 9:30 AM", or null when it has neither a date nor a
+/// time. A task that comes round on days of the week or the month is for
+/// the day that stands for it.
+String? taskWhenLabel(TodoItem task, DateTime now) {
+  final day = taskDayOf(task, now);
+  final time = task.time;
+  final parts = [
+    if (day != null) DateTimeUtils.friendlyDay(day, now),
+    if (time != null) time.label,
+  ];
+  return parts.isEmpty ? null : parts.join(", ");
+}
 
 /// How [recurrence] comes round, in a word or few, for a task's chip:
 /// "Daily", "Weekly", "Weekdays", "Weekends", "Mon, Wed, Fri", or "Monthly".

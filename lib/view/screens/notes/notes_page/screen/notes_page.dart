@@ -11,7 +11,9 @@ import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
 import '../../../../../models/trashed.dart';
+import '../../../../../models/user_profile.dart';
 import '../../../../../view_model/notes_view_model.dart';
+import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/glass_menu.dart';
@@ -19,6 +21,7 @@ import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../../widgets/tour.dart';
+import '../../../../widgets/widget_page_requests.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
 import '../../../tasks/todo_page/screen/todo_page.dart';
@@ -79,7 +82,14 @@ class NotesPage extends StatefulWidget {
   State<NotesPage> createState() => _NotesPageState();
 }
 
-class _NotesPageState extends State<NotesPage> {
+class _NotesPageState extends State<NotesPage>
+    with WidgetPageRequests<NotesPage> {
+  @override
+  StartPage get widgetPage => StartPage.notes;
+
+  @override
+  void openOtherPage() => _openTodo();
+
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
@@ -119,6 +129,9 @@ class _NotesPageState extends State<NotesPage> {
     _tours = Provider.of<TourViewModel>(context, listen: false)
       ..addListener(_toursReplayed);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // The tasks too, for the to-do widget on the home screen, which shows
+      // them as they are, whichever page the app opens on.
+      Provider.of<TasksViewModel?>(context, listen: false)?.get().ignore();
       final tourDue = _tours.isDue(PageTour.notes);
       var touring = false;
       try {

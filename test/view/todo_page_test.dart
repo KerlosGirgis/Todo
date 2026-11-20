@@ -24,7 +24,7 @@ import 'package:todo/view_model/user_view_model.dart';
 import '../view_model/tasks_view_model_test.dart'
     show FakeLock, FakeNotifications, FakeTasksRepository;
 import '../view_model/user_view_model_test.dart'
-    show FakeDatabase, FakeDevice, FakeHomeWidget, FakeUserRepository, newLock;
+    show FakeDatabase, FakeDevice, FakeUserRepository, newLock;
 
 /// The to-do page over tasks kept in memory, for a test to open and use.
 class TodoPageHarness {
@@ -72,7 +72,6 @@ class TodoPageHarness {
     );
     user = UserViewModel(
       repository: FakeUserRepository(),
-      homeWidgetService: FakeHomeWidget(),
       lockService: newLock(),
       deviceService: FakeDevice(),
       databaseService: FakeDatabase(),

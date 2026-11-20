@@ -56,6 +56,13 @@ class MainActivity: FlutterFragmentActivity() {
                 else -> result.notImplemented()
             }
         }
+        // How the phone draws the app's widgets, for the settings' previews.
+        MethodChannel(messenger, "com.k.todo/widgets").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "look" -> result.success(WidgetLook.describe(this))
+                else -> result.notImplemented()
+            }
+        }
         MethodChannel(messenger, "com.k.todo/biometrics").setMethodCallHandler { call, result ->
             when (call.method) {
                 "authenticate" -> authenticate(call.argument<String>("reason")!!, result)

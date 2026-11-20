@@ -3,6 +3,8 @@ import 'package:flutter_quill/flutter_quill.dart'
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import 'package:todo/models/widget_style.dart';
+import 'package:todo/services/home_widget_service.dart';
 import 'package:todo/services/notification_service.dart';
 import 'package:todo/view/widgets/app_gate.dart';
 import 'package:todo/view/widgets/app_lock_guard.dart';
@@ -11,6 +13,7 @@ import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/tour_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
+import 'package:todo/view_model/widgets_view_model.dart';
 import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'core/theme/app_theme.dart';
@@ -26,6 +29,7 @@ void main() async {
   await NotificationService.init();
   tz.initializeTimeZones();
   await NotificationService.followPhoneTimeZone();
+  final launchedFrom = await _launchingWidget();
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => UserViewModel()),
     ChangeNotifierProvider(create: (context) {
@@ -36,7 +40,19 @@ void main() async {
     ChangeNotifierProvider(create: (_) => TasksViewModel(), lazy: false),
     ChangeNotifierProvider(create: (_) => NotesViewModel()),
     ChangeNotifierProvider(create: (_) => TourViewModel()),
+    ChangeNotifierProvider(
+        create: (_) => WidgetsViewModel(launchedFrom: launchedFrom)),
   ], child: const MyApp()));
+}
+
+/// The home screen widget a tap on which opened the app, if one did, for
+/// the app to open on its page.
+Future<WidgetKind?> _launchingWidget() async {
+  try {
+    return await HomeWidgetService().launchedFrom();
+  } catch (e) {
+    return null;
+  }
 }
 
 class MyApp extends StatelessWidget {

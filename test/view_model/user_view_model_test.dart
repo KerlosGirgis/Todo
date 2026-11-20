@@ -9,7 +9,6 @@ import 'package:todo/repositories/user_repository.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:todo/services/device_service.dart';
-import 'package:todo/services/home_widget_service.dart';
 import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/verse_service.dart';
 import 'package:todo/view_model/auth_view_model.dart';
@@ -32,16 +31,6 @@ class FakeUserRepository extends UserRepository {
     updates++;
     rows[0] = item;
   }
-}
-
-class FakeHomeWidget extends HomeWidgetService {
-  bool? casualFont;
-
-  @override
-  Future<void> setCasualFont(bool useCasual) async => casualFont = useCasual;
-
-  @override
-  Future<void> setTextSize(double size) async {}
 }
 
 class FakeDevice extends DeviceService {
@@ -109,18 +98,15 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late FakeUserRepository repository;
-  late FakeHomeWidget homeWidget;
   late FakeDevice device;
   late UserViewModel user;
 
   setUp(() async {
     FlutterSecureStorage.setMockInitialValues({'encryptionKey': dbKey});
     repository = FakeUserRepository();
-    homeWidget = FakeHomeWidget();
     device = FakeDevice();
     user = UserViewModel(
       repository: repository,
-      homeWidgetService: homeWidget,
       lockService: newLock(),
       deviceService: device,
       databaseService: FakeDatabase(),
@@ -151,10 +137,13 @@ void main() {
       expect(notified, 0);
     });
 
-    test('the handwritten font goes to the widget too', () async {
+    test('the handwritten font is saved, and only when it changes',
+        () async {
       await user.setCasualFont(true);
       expect(user.user.casualFont, isTrue);
-      expect(homeWidget.casualFont, isTrue);
+      expect(repository.rows.single.casualFont, isTrue);
+      await user.setCasualFont(true);
+      expect(repository.updates, 1);
     });
 
     test('show up to five lines of a description', () async {
@@ -194,7 +183,6 @@ void main() {
       // The app opens with the saved one again.
       final reopened = UserViewModel(
         repository: repository,
-        homeWidgetService: homeWidget,
         lockService: newLock(),
         deviceService: device,
         databaseService: FakeDatabase(),
@@ -306,7 +294,6 @@ void main() {
       test('keeps the key as it is again for the fingerprint', () async {
         final fingerprint = UserViewModel(
           repository: repository,
-          homeWidgetService: homeWidget,
           lockService: newLock(),
           authService: PassingFingerprint(),
           deviceService: device,
@@ -352,7 +339,6 @@ void main() {
           askForNewPassword: ({required minLength}) async => "1234");
       final fresh = UserViewModel(
         repository: repository,
-        homeWidgetService: homeWidget,
         lockService: newLock(),
         deviceService: device,
         databaseService: FakeDatabase(),
@@ -373,7 +359,6 @@ void main() {
       final auth = AuthViewModel(
         UserViewModel(
           repository: repository,
-          homeWidgetService: homeWidget,
           lockService: newLock(),
           deviceService: device,
           databaseService: database,
