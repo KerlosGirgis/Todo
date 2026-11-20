@@ -242,6 +242,25 @@ shop
       ];
       expect(marking(tasks, "pack", done: true), ["pack", "trip"]);
     });
+
+    test('a repeating task counts only in one that repeats on its days', () {
+      TodoItem weekly(String uuid, Set<int> days, {String? parent}) => TodoItem(
+            uuid: uuid,
+            title: uuid,
+            parent: parent,
+            time: const ClockTime(7, 0),
+            reminder: Reminder.weekly,
+            weekdays: days,
+          );
+      final gym = [
+        weekly("gym", {DateTime.monday, DateTime.thursday}),
+        weekly("warm up", {DateTime.thursday, DateTime.monday}, parent: "gym"),
+        // It starts over every day, and the week's doesn't.
+        task("stretch", parent: "gym", daily: true),
+      ];
+      expect(marking(gym, "warm up", done: true), ["warm up", "gym"]);
+      expect(marking(gym, "stretch", done: true), ["stretch"]);
+    });
   });
 
   group('doneAheadOfSubtasks', () {

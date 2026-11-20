@@ -158,12 +158,12 @@ List<TourStep> todoTour({
 }
 
 /// [task] as a tap of its bell leaves it: reminding once, or not at all if
-/// it reminded once already. A daily reminder stays as it is, as the card
-/// would lose its "Daily" chip, and change height.
+/// it reminded once already. A repeating reminder stays as it is, as the
+/// card would lose its chips, and change height.
 TodoItem _withBellTapped(TodoItem task) => switch (task.reminder) {
       Reminder.none => task.copyWith(reminder: Reminder.once),
       Reminder.once => task.copyWith(reminder: Reminder.none),
-      Reminder.daily => task,
+      Reminder.daily || Reminder.weekly || Reminder.monthly => task,
     };
 
 /// A task to show the cards' gestures on when there are none: for tomorrow

@@ -55,8 +55,8 @@ dependencies:
   fl_chart: ^1.2.0
   readmore: ^3.0.0
   smooth_page_indicator: ^3.0.0
-  image_cropper: ^13.0.0
-  flutter_local_notifications: ^22.3.2
+  image_cropper: ^14.0.0
+  flutter_local_notifications: ^23.0.3
   toastification: ^3.2.0
   flutter_quill: ^11.6.0
 

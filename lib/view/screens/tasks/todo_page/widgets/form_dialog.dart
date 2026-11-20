@@ -270,3 +270,19 @@ class FormDialogGroup extends StatelessWidget {
     );
   }
 }
+
+/// A segment of a segmented control on a [FormDialog], such as the task's
+/// reminder's.
+class FormSegment extends StatelessWidget {
+  const FormSegment(this.label, {super.key});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Text(label, style: const TextStyle(fontSize: 14.5)),
+    );
+  }
+}

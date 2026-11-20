@@ -13,20 +13,32 @@ import '../../../../widgets/check_circle.dart';
 import '../../../profile/profile_page/widgets/profile_button.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
 import 'form_dialog.dart';
+import 'month_day_dialog.dart';
+import 'repeat_end_dialog.dart';
+import 'repeat_labels.dart';
+import 'weekday_picker.dart';
 
 const _accent = Color(0xff3D5AFE);
 
 // iOS's system colours, as on the profile page's settings: red for the date
-// and blue for the time, as in Reminders, orange for the alert, and indigo
-// for the task it's in.
+// and blue for the time, as in Reminders, orange for the alert, indigo for
+// the task it's in, green for how it repeats, and purple for until when.
 const _red = Color(0xffFF3B30);
 const _blue = Color(0xff007AFF);
 const _orange = Color(0xffFF9500);
 const _indigo = Color(0xff5856D6);
+const _green = Color(0xff34C759);
+const _purple = Color(0xffAF52DE);
+
+/// What the reminder's segmented control offers: no reminder, one, or one
+/// each time the task comes round.
+enum _ReminderChoice { off, once, repeat }
 
 /// Adds a task, or edits [task] when there is one: its title and
 /// description, then the task it's a subtask of, its date, time and reminder
-/// in rows like the profile page's settings.
+/// in rows like the profile page's settings. A repeating reminder has rows
+/// of its own under it: every day, on days of the week, or on a day of the
+/// month, and until when.
 class TaskDialog extends StatefulWidget {
   const TaskDialog({super.key, this.task, this.parent})
       : assert(task == null || parent == null);
@@ -88,6 +100,20 @@ class _TaskDialogState extends State<TaskDialog> {
           : TimeOfDay(hour: time.hour, minute: time.minute),
     );
     if (picked != null) _draft.setTime(ClockTime(picked.hour, picked.minute));
+  }
+
+  /// Has the user pick the day of the month a monthly task comes round on.
+  Future<void> _pickMonthDay() async {
+    final picked = await showFormDialog<int>(
+        context, MonthDayDialog(day: _draft.monthDay ?? 1));
+    if (picked != null) _draft.setMonthDay(picked);
+  }
+
+  /// Has the user pick how long the task keeps repeating.
+  Future<void> _pickEnd() async {
+    final picked = await showFormDialog<({DateTime? until})>(
+        context, RepeatEndDialog(draft: _draft));
+    if (picked != null) _draft.setUntil(picked.until);
   }
 
   /// Has the user pick the task this one is a subtask of, or none.
@@ -205,18 +231,88 @@ class _TaskDialogState extends State<TaskDialog> {
                   color: _orange,
                   title: "Reminder",
                   subtitle: _ReminderHint(draft: _draft, now: now),
-                  bottom: CupertinoSlidingSegmentedControl<Reminder>(
-                    groupValue: _draft.reminder,
-                    onValueChanged: (reminder) {
-                      if (reminder != null) _draft.setReminder(reminder);
+                  bottom: CupertinoSlidingSegmentedControl<_ReminderChoice>(
+                    groupValue: switch (_draft.reminder) {
+                      Reminder.none => _ReminderChoice.off,
+                      Reminder.once => _ReminderChoice.once,
+                      _ => _ReminderChoice.repeat,
+                    },
+                    onValueChanged: (choice) {
+                      switch (choice) {
+                        case _ReminderChoice.off:
+                          _draft.setReminder(Reminder.none);
+                        case _ReminderChoice.once:
+                          _draft.setReminder(Reminder.once);
+                        case _ReminderChoice.repeat:
+                          _draft.setRepeating();
+                        case null:
+                          break;
+                      }
                     },
                     children: const {
-                      Reminder.none: _Segment("Off"),
-                      Reminder.once: _Segment("Once"),
-                      Reminder.daily: _Segment("Daily"),
+                      _ReminderChoice.off: FormSegment("Off"),
+                      _ReminderChoice.once: FormSegment("Once"),
+                      _ReminderChoice.repeat: FormSegment("Repeat"),
                     },
                   ),
                 ),
+                if (_draft.repeats) ...[
+                  SettingsTile(
+                    icon: Icons.repeat_rounded,
+                    color: _green,
+                    title: "Repeat",
+                    bottom: Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: CupertinoSlidingSegmentedControl<Reminder>(
+                            groupValue: _draft.reminder,
+                            onValueChanged: (reminder) {
+                              if (reminder != null) {
+                                _draft.setReminder(reminder);
+                              }
+                            },
+                            children: const {
+                              Reminder.daily: FormSegment("Daily"),
+                              Reminder.weekly: FormSegment("Weekly"),
+                              Reminder.monthly: FormSegment("Monthly"),
+                            },
+                          ),
+                        ),
+                        if (_draft.reminder == Reminder.weekly) ...[
+                          const SizedBox(height: 14),
+                          WeekdayPicker(
+                            selected: _draft.weekdays,
+                            onToggle: _draft.toggleWeekday,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (_draft.monthDay case final monthDay?
+                      when _draft.reminder == Reminder.monthly)
+                    SettingsTile(
+                      icon: Icons.event_rounded,
+                      color: _red,
+                      title: "Day of the Month",
+                      trailing:
+                          DisclosureValue(DateTimeUtils.ordinal(monthDay)),
+                      onTap: _pickMonthDay,
+                    ),
+                  SettingsTile(
+                    icon: Icons.hourglass_bottom_rounded,
+                    color: _purple,
+                    title: "Ends",
+                    trailing: _PickedValue(
+                      label: _draft.until == null
+                          ? null
+                          : DateTimeUtils.friendlyDay(_draft.until!, now),
+                      none: "Never",
+                      onClear: () => _draft.setUntil(null),
+                    ),
+                    onTap: _pickEnd,
+                  ),
+                ],
               ],
             ),
           ],
@@ -239,16 +335,21 @@ class _TaskDialogState extends State<TaskDialog> {
 }
 
 /// A row's chosen value, in the accent, with a button that clears it, or
-/// "None" before there is one.
+/// [none] before there is one.
 class _PickedValue extends StatelessWidget {
-  const _PickedValue({required this.label, required this.onClear});
+  const _PickedValue({
+    required this.label,
+    this.none = "None",
+    required this.onClear,
+  });
 
   final String? label;
+  final String none;
   final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
-    if (label == null) return const DisclosureValue("None");
+    if (label == null) return DisclosureValue(none);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -296,13 +397,19 @@ class _ReminderHint extends StatelessWidget {
       ReminderStatus.needsDayAndTime => ("Needs a date and a time", true),
       ReminderStatus.needsTime => ("Needs a time", true),
       ReminderStatus.inPast => ("Needs a date and time in the future", true),
-      ReminderStatus.ready => draft.reminder == Reminder.daily
-          ? ("Every day at ${draft.time!.label}", false)
-          : (
+      ReminderStatus.endsTooSoon => ("Ends before it comes round", true),
+      ReminderStatus.ended => (
+          "Ended ${DateTimeUtils.dayInSentence(draft.until!, now)}",
+          false
+        ),
+      ReminderStatus.ready => switch (draft.rule) {
+          final rule? => (repeatSentence(rule, draft.time!, now), false),
+          null => (
               "${DateTimeUtils.friendlyDay(draft.day!, now)} at "
                   "${draft.time!.label}",
               false
             ),
+        },
     };
     return Text(
       hint,
@@ -313,21 +420,6 @@ class _ReminderHint extends StatelessWidget {
                   : const Color(0xffC93400),
             )
           : null,
-    );
-  }
-}
-
-/// A segment of the reminder's segmented control.
-class _Segment extends StatelessWidget {
-  const _Segment(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Text(label, style: const TextStyle(fontSize: 14.5)),
     );
   }
 }

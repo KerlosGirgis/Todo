@@ -15,7 +15,7 @@ class DatabaseService {
   String? get key => _key;
 
   final secureStorage = const FlutterSecureStorage();
-  static const int _databaseVersion = 9;
+  static const int _databaseVersion = 10;
 
   /// Opens the database with [key], which the App Lock's password unlocked,
   /// or else with the key kept as it is, or a new one for a new database.
@@ -52,6 +52,9 @@ class DatabaseService {
       time TEXT,
       uuid TEXT,
       notification INTEGER,
+      weekdays TEXT,
+      monthDay INTEGER,
+      until TEXT,
       since TEXT,
       doneDays TEXT,
       parent TEXT,
@@ -172,6 +175,22 @@ class DatabaseService {
       if (!(await _columns(db, 'User')).contains('tasksView')) {
         await db
             .execute('ALTER TABLE User ADD COLUMN tasksView INTEGER DEFAULT 0');
+      }
+    }
+    if (oldVersion < 10) {
+      // What a weekly task's days of the week are, as "1,3,5" from Monday;
+      // the day of the month a monthly one comes round on; and the last day
+      // a repeating one repeats on. The tasks there are have none: the daily
+      // ones repeat for good.
+      final tasks = await _columns(db, 'ToDo');
+      for (final (column, type) in [
+        ('weekdays', 'TEXT'),
+        ('monthDay', 'INTEGER'),
+        ('until', 'TEXT'),
+      ]) {
+        if (!tasks.contains(column)) {
+          await db.execute('ALTER TABLE ToDo ADD COLUMN $column $type');
+        }
       }
     }
   }

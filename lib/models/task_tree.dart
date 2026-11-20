@@ -97,9 +97,15 @@ class TaskNode {
   }
 
   /// Whether [parent], the task it's in, is only done once it is. Not when
-  /// it's a daily task in one that isn't: it starts over every day, and the
-  /// task it's in doesn't.
-  bool countsFor(TaskNode parent) => !task.isDaily || parent.task.isDaily;
+  /// it repeats unlike that one, as a daily task in a weekly one, or in one
+  /// that doesn't repeat: it starts over on days of its own, and the task
+  /// it's in doesn't.
+  bool countsFor(TaskNode parent) {
+    final own = task.recurrence;
+    if (own == null) return true;
+    final theirs = parent.task.recurrence;
+    return theirs != null && own.repeatsLike(theirs);
+  }
 }
 
 /// The tasks as a tree: each in the task its [TodoItem.parent] names, in the

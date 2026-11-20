@@ -11,7 +11,9 @@ import '../core/prompts.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/app_lock.dart';
 import '../models/clock_time.dart';
-import '../models/daily_progress.dart';
+import '../models/recurrence.dart';
+import '../models/reminder_plan.dart';
+import '../models/repeat_progress.dart';
 import '../models/task_filters.dart';
 import '../models/task_tree.dart';
 import '../models/todo_item.dart';
@@ -40,11 +42,18 @@ enum ReminderStatus {
   /// A one-time reminder without its day or its time.
   needsDayAndTime,
 
-  /// A daily reminder without its time.
+  /// A repeating reminder without its time.
   needsTime,
 
   /// A one-time reminder for a time that's already gone.
   inPast,
+
+  /// A repeating reminder that stops before the task would come round.
+  endsTooSoon,
+
+  /// A repeating reminder whose last time has gone: the task keeps its
+  /// days, with nothing more to remind the user of.
+  ended,
 
   /// A reminder that will go off.
   ready,
@@ -157,6 +166,9 @@ class TasksViewModel with ChangeNotifier {
           }
         } else if (await _lockService.getLock() != AppLock.off) {
           await refreshReminders();
+        } else {
+          // The days have gone by since they were last set.
+          await _refreshEndingReminders();
         }
       } catch (e) {
         // The reminders stay as they were.
@@ -164,14 +176,32 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  /// Starts each daily task over, not done yet, if a new day has begun since
-  /// the tasks were brought up to date: at midnight, or as the app comes
-  /// back after it.
+  /// Brings each repeating task up to date if a new day has begun since the
+  /// tasks were: at midnight, or as the app comes back after it. A daily
+  /// task starts over, not done yet, as does one that comes round today.
   void checkForNewDay() {
     if (_day == null) return;
     final today = _dateOf(_now());
-    if (today != _day) _setDay(today, _allTasks);
+    if (today != _day) {
+      _setDay(today, _allTasks);
+      unawaited(_refreshEndingReminders());
+    }
     _awaitNewDay();
+  }
+
+  /// Sets afresh the reminders of the repeating tasks that stop on a day, as
+  /// the days go by: nearing their last day, their last times are set one
+  /// by one, so that they stop with them, and once those have gone, they're
+  /// off.
+  Future<void> _refreshEndingReminders() async {
+    for (final task in _allTasks) {
+      if (!task.reminder.repeats || task.until == null) continue;
+      try {
+        await _scheduleReminder(task);
+      } catch (e) {
+        // The others are set all the same.
+      }
+    }
   }
 
   /// Lists [tasks] as they stand on [today].
@@ -376,6 +406,7 @@ class TasksViewModel with ChangeNotifier {
     final title = draft.title.trim();
     final desc = draft.description.trim();
     final (day, time, reminder) = (draft.day, draft.time, draft.reminder);
+    final rule = draft.rule;
     final parent = draft.parent;
     final moved = draft.moved;
     if (title.isEmpty) return Info("Give the task a title");
@@ -392,16 +423,19 @@ class TasksViewModel with ChangeNotifier {
       await get();
       // Unfolded, so the new task shows.
       if (parent != null) await setFolded(parent, false);
-      final result = await switch (reminder) {
-        Reminder.once => _remindOnce(added),
-        // Its day goes, as a daily task has none.
-        Reminder.daily => _remindDaily(added),
-        Reminder.none => Future.value(Info("Task Added")),
+      final result = await switch (rule) {
+        // Its day goes, as a repeating task has none.
+        final rule? => _repeat(added, rule),
+        _ when reminder == Reminder.once => _remindOnce(added),
+        _ => Future.value(Info("Task Added")),
       };
       await _settle();
       return result;
     }
-    var updated = TodoItem(
+    // Without a reminder until its own is set, so one that can't be leaves
+    // it without any, with its days as they'd be from now on.
+    final progress = _progressAs(task, rule);
+    final updated = TodoItem(
       title: title,
       desc: desc,
       id: task.id,
@@ -409,31 +443,28 @@ class TasksViewModel with ChangeNotifier {
       day: day,
       time: time,
       uuid: task.uuid,
-      reminder: reminder,
-      progress: _progressAs(task, reminder),
+      progress: progress,
       parent: task.parent,
       folded: task.folded,
     );
     await _tasksRepository.updateItem(updated);
-    await get();
-    if (moved) {
-      final result = await moveInto(updated, parent);
-      if (result != null) return result;
-      // With the id it has now, as moving it gave every task a new one.
-      updated = _current(updated);
+    try {
+      // Whichever it had, in case it's been turned off, or it's changed.
+      await _cancelReminders(task);
+    } catch (e) {
+      // It gets its own all the same.
     }
-    final Result result;
-    switch (updated.reminder) {
-      case Reminder.once:
-        await _cancelReminder(updated);
-        result = await _remindOnce(updated);
-      case Reminder.daily:
-        await _cancelReminder(updated);
-        result = await _remindDaily(updated);
-      case Reminder.none:
-        // In case the reminder was just turned off.
-        await _notificationService.cancelNotification(updated.uuid.hashCode);
-        result = Info("Task Updated");
+    await get();
+    final result = await switch (rule) {
+      final rule? => _repeat(updated, rule, progress: progress),
+      _ when reminder == Reminder.once => _remindOnce(updated),
+      _ => Future.value(Info("Task Updated")),
+    };
+    // Last, as moving it gives every task a new id, and it keeps its
+    // reminder.
+    if (moved) {
+      final moving = await moveInto(_current(updated), parent);
+      if (moving != null) return moving;
     }
     await _settle();
     return result;
@@ -463,7 +494,7 @@ class TasksViewModel with ChangeNotifier {
     for (final each in branch.all) {
       if (each.reminder == Reminder.none) continue;
       try {
-        await _notificationService.cancelNotification(each.uuid.hashCode);
+        await _cancelReminders(each);
       } catch (e) {
         // It's in the trash all the same.
       }
@@ -615,8 +646,8 @@ class TasksViewModel with ChangeNotifier {
   }
 
   /// Marks [task] done, which turns its reminder off, or not done again. A
-  /// daily task is done for today only, and keeps reminding the user every
-  /// day.
+  /// repeating task is done for the time that stands for it only, and keeps
+  /// reminding the user each time it comes round.
   ///
   /// A task that's done has nothing left to do in it, so its subtasks are
   /// done with it, and the task it's in is done once its last subtask is;
@@ -632,19 +663,22 @@ class TasksViewModel with ChangeNotifier {
     final changing =
         node == null ? [task] : [for (final each in nodes) each.task];
     for (final each in changing) {
-      if (!done || each.isDaily || each.reminder == Reminder.none) continue;
+      if (!done || each.repeats || each.reminder == Reminder.none) continue;
       try {
-        await _notificationService.cancelNotification(each.uuid.hashCode);
+        await _cancelReminders(each);
       } catch (e) {
         // It's done all the same.
       }
     }
+    // Before they're marked, as the time that stands for a repeating task
+    // may be another once it's done.
+    final said = done
+        ? (task.repeats ? "Done for ${_occasionOf(task)}" : "Task done")
+        : "Task undone";
     await _tasksRepository.updateItems([
       for (final each in changing) each.marked(done: done, today: today),
     ]);
     await get();
-    final said =
-        done ? (task.isDaily ? "Done for today" : "Task done") : "Task undone";
     if (node == null || changing.length < 2) {
       return done ? Success(said) : Info(said);
     }
@@ -667,6 +701,11 @@ class TasksViewModel with ChangeNotifier {
     }
     return Undoable(message, undo: () => _markAs(changing));
   }
+
+  /// The day that stands for a repeating [task] today, as a message names
+  /// it: "today", "yesterday", "tomorrow", or "Fri, Oct 24".
+  String _occasionOf(TodoItem task) =>
+      DateTimeUtils.dayInSentence(task.occurrenceOn(today) ?? today, today);
 
   /// [task]'s title in quotes, cut short if it's long, to name it in a
   /// message.
@@ -709,7 +748,8 @@ class TasksViewModel with ChangeNotifier {
   }
 
   /// Reminds the user of [task] every day, at its time.
-  Future<Result> remindDaily(TodoItem task) => _remindDaily(_current(task));
+  Future<Result> remindDaily(TodoItem task) =>
+      _repeat(_current(task), Recurrence.daily());
 
   /// Saves the tasks to a file locked with a password that
   /// [askForBackupPassword] gets from the user, once the App Lock lets them
@@ -757,7 +797,7 @@ class TasksViewModel with ChangeNotifier {
         final task = TodoItem.fromMap(e);
         // A daily task from a backup older than tasks' days counts its days
         // from today on.
-        return task.isDaily && task.progress.since == null
+        return task.repeats && task.progress.since == null
             ? task.copyWith(progress: task.progress.startingOn(today))
             : task;
       }).toList();
@@ -830,34 +870,43 @@ class TasksViewModel with ChangeNotifier {
     return Success("Data Restored");
   }
 
-  /// Sets [item]'s reminder, if it's still to come.
+  static const _reminderTitle = "Don't Forget Your Task!";
+
+  /// Sets the reminders [item] needs, if it has any still to come. Those of
+  /// a repeating task that it needs no more, as when its last times are set
+  /// one by one, or once they've gone, are cancelled.
   Future<void> _scheduleReminder(TodoItem item) async {
-    final time = item.time;
-    if (time == null) return;
-    switch (item.reminder) {
-      case Reminder.once:
-        final day = item.day;
-        if (day == null || item.done) return;
-        final scheduledTime = time.on(day);
-        if (scheduledTime.isAfter(_now())) {
-          await _notificationService.scheduleNotification(
-            item.uuid.hashCode,
-            "Don't Forget Your Task!",
-            await _reminderText(item),
-            scheduledTime,
-          );
+    final alarms = ReminderPlan.of(item, _now());
+    if (alarms.isNotEmpty) {
+      final body = await _reminderText(item);
+      for (final alarm in alarms) {
+        switch (alarm) {
+          case OnceAlarm(:final id, :final at):
+            await _notificationService.scheduleNotification(
+                id, _reminderTitle, body, at);
+          case RepeatingAlarm(:final id, :final first, :final every):
+            await _notificationService.scheduleRepeatingNotification(
+                id, _reminderTitle, body, first, every);
         }
-      case Reminder.daily:
-        // Only its time: a daily reminder has no day. Done today or not, as
-        // it goes off every day.
-        await _notificationService.scheduleDailyNotification(
-          item.uuid.hashCode,
-          "Don't Forget Your Task!",
-          await _reminderText(item),
-          time,
-        );
-      case Reminder.none:
-        break;
+      }
+    }
+    if (!item.reminder.repeats) return;
+    final kept = {for (final alarm in alarms) alarm.id};
+    for (final id in ReminderPlan.idsOf(item.uuid)) {
+      if (!kept.contains(id)) {
+        await _notificationService.cancelNotification(id);
+      }
+    }
+  }
+
+  /// Cancels the reminders [task] has on the phone: every one a repeating
+  /// task's can be, or a one-time reminder.
+  Future<void> _cancelReminders(TodoItem task) async {
+    final ids = task.reminder.repeats
+        ? ReminderPlan.idsOf(task.uuid)
+        : [task.uuid.hashCode];
+    for (final id in ids) {
+      await _notificationService.cancelNotification(id);
     }
   }
 
@@ -900,7 +949,7 @@ class TasksViewModel with ChangeNotifier {
         if (scheduledTime.isAfter(_now())) {
           await _notificationService.scheduleNotification(
             task.uuid.hashCode,
-            "Don't Forget Your Task!",
+            _reminderTitle,
             await _reminderText(task),
             scheduledTime,
           );
@@ -921,41 +970,47 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
-  Future<Result> _remindDaily(TodoItem task) async {
-    final time = task.time;
-    if (time != null) {
-      try {
-        await _notificationService.scheduleDailyNotification(
-          task.uuid.hashCode,
-          "Don't Forget Your Task!",
-          await _reminderText(task),
-          time,
-        );
-        // Without its day, as a daily task has none.
-        await _tasksRepository.updateItem(task.copyWith(
-          reminder: Reminder.daily,
-          progress: _progressAs(task, Reminder.daily),
-        ));
-        await get();
-        return Success("Notification Enabled");
-      } catch (e) {
-        return Failure("Failed to Enable Notification");
-      }
-    } else {
-      return Info("Please set time");
+  /// Has [task] come round as [rule] has it, with the user reminded at its
+  /// time each time, and [progress] as its days, or else the days
+  /// [_progressAs] gives it. Not when it would stop before it comes round.
+  Future<Result> _repeat(TodoItem task, Recurrence rule,
+      {RepeatProgress? progress}) async {
+    if (task.time == null) return Info("Please set time");
+    final repeating =
+        task.repeatingAs(rule, progress: progress ?? _progressAs(task, rule));
+    if (repeating.occurrenceOn(today) == null) {
+      return Info("Please set an end after its next time");
+    }
+    try {
+      await _scheduleReminder(repeating);
+      // Without its day, as a repeating task has none.
+      await _tasksRepository.updateItem(repeating);
+      await get();
+      // One whose last time has gone has nothing more to remind of.
+      return repeating.recurrence!.hasEndedBy(today)
+          ? Info("Task Updated")
+          : Success("Notification Enabled");
+    } catch (e) {
+      return Failure("Failed to Enable Notification");
     }
   }
 
-  /// [task]'s days once its reminder is [reminder]: one that becomes daily
-  /// counts its days from today on, with today done if the task is.
-  DailyProgress _progressAs(TodoItem task, Reminder reminder) =>
-      reminder == Reminder.daily && !task.isDaily
-          ? task.progress.startingOn(today).withDay(today, done: task.done)
-          : task.progress;
+  /// [task]'s days once it comes round as [rule] has it, or once it doesn't
+  /// repeat, for null. One that starts repeating, or starts coming round on
+  /// other days, counts its times from today on, with today done if the
+  /// task was and today is one of them. Any other keeps its days.
+  RepeatProgress _progressAs(TodoItem task, Recurrence? rule) {
+    final was = task.recurrence;
+    if (rule == null || (was != null && was.repeatsLike(rule))) {
+      return task.progress;
+    }
+    final fresh = task.progress.startingOn(today);
+    return rule.fits(today) ? fresh.withDay(today, done: task.done) : fresh;
+  }
 
   Future<Result> _cancelReminder(TodoItem task) async {
     try {
-      await _notificationService.cancelNotification(task.uuid.hashCode);
+      await _cancelReminders(task);
       await _tasksRepository
           .updateItem(task.copyWith(reminder: Reminder.none));
       await get();
@@ -969,7 +1024,9 @@ class TasksViewModel with ChangeNotifier {
 DateTime _dateOf(DateTime time) => DateTime(time.year, time.month, time.day);
 
 /// A task as its form has it, being added or changed, with the form's
-/// rules: a time on its own is for today, and a daily task has no day.
+/// rules: a time on its own is for today, a repeating task has no day, a
+/// weekly one comes round on one day of the week at least, and a monthly one
+/// on a day of the month.
 class TaskDraft with ChangeNotifier {
   TaskDraft._(this.task, this._now, this._tree, TodoItem? parent)
       : _title = task?.title ?? "",
@@ -977,8 +1034,16 @@ class TaskDraft with ChangeNotifier {
         _day = task?.day,
         _time = task?.time,
         _reminder = task?.reminder ?? Reminder.none,
+        _weekdays = task?.weekdays ?? const {},
+        _monthDay = task?.monthDay,
+        _until = task?.until,
         _was = parent,
-        _parent = parent;
+        _parent = parent {
+    if (_reminder.repeats) {
+      _lastRepeat = _reminder;
+      _fillRepeatDays(_today);
+    }
+  }
 
   /// The task being changed, or null for a new one.
   final TodoItem? task;
@@ -1003,6 +1068,24 @@ class TaskDraft with ChangeNotifier {
   Reminder _reminder;
   Reminder get reminder => _reminder;
 
+  /// The days of the week a weekly task comes round on, from
+  /// [DateTime.monday] to [DateTime.sunday].
+  Set<int> get weekdays => UnmodifiableSetView(_weekdays);
+  Set<int> _weekdays;
+
+  /// The day of the month a monthly task comes round on, from 1 to 31.
+  int? get monthDay => _monthDay;
+  int? _monthDay;
+
+  /// The last day a repeating task is to repeat on, or null for good.
+  DateTime? get until => _until;
+  DateTime? _until;
+
+  /// How the task last repeated on the form, to go back to.
+  Reminder _lastRepeat = Reminder.daily;
+
+  DateTime get _today => _dateOf(_now());
+
   /// The task it's a subtask of, or null for a task of its own.
   TodoItem? get parent => _parent;
   TodoItem? _parent;
@@ -1024,8 +1107,11 @@ class TaskDraft with ChangeNotifier {
   /// Whether there's a title to save the task with.
   bool get canSave => _title.trim().isNotEmpty;
 
-  /// Whether the task can have a day: not while it's for every day.
-  bool get hasDay => _reminder != Reminder.daily;
+  /// Whether the task can have a day: not while it repeats.
+  bool get hasDay => !_reminder.repeats;
+
+  /// Whether the task is to come round again and again.
+  bool get repeats => _reminder.repeats;
 
   void setTitle(String title) {
     final could = canSave;
@@ -1042,13 +1128,10 @@ class TaskDraft with ChangeNotifier {
   }
 
   /// Sets the task's time, or takes it away with null. A time on its own is
-  /// for today, unless the task is for every day.
+  /// for today, unless the task repeats.
   void setTime(ClockTime? time) {
     _time = time;
-    if (time != null && _day == null && hasDay) {
-      final now = _now();
-      _day = DateTime(now.year, now.month, now.day);
-    }
+    if (time != null && _day == null && hasDay) _day = _today;
     notifyListeners();
   }
 
@@ -1058,12 +1141,78 @@ class TaskDraft with ChangeNotifier {
     notifyListeners();
   }
 
-  /// A daily reminder goes off at the task's time every day, so the task
-  /// has no day.
+  /// A repeating reminder goes off at the task's time each time it comes
+  /// round, so the task has no day. One that's to come round on days of
+  /// the week, or of the month, starts out on the day the task was for, or
+  /// on today.
   void setReminder(Reminder reminder) {
     _reminder = reminder;
-    if (!hasDay) _day = null;
+    if (reminder.repeats) {
+      _lastRepeat = reminder;
+      _fillRepeatDays(_day ?? _today);
+      _day = null;
+    }
     notifyListeners();
+  }
+
+  /// Has the reminder repeat again, as it last did on the form, or daily.
+  void setRepeating() => setReminder(_lastRepeat);
+
+  void _fillRepeatDays(DateTime day) {
+    if (_weekdays.isEmpty) _weekdays = {day.weekday};
+    _monthDay ??= day.day;
+  }
+
+  /// Has a weekly task come round on [weekday] as well, or not anymore. It
+  /// keeps one day at least.
+  void toggleWeekday(int weekday) {
+    if (!Recurrence.isWeekday(weekday)) return;
+    if (!_weekdays.contains(weekday)) {
+      _weekdays = {..._weekdays, weekday};
+    } else if (_weekdays.length > 1) {
+      _weekdays = {..._weekdays}..remove(weekday);
+    } else {
+      return;
+    }
+    notifyListeners();
+  }
+
+  /// Has a monthly task come round on [day] of the month, from 1 to 31.
+  void setMonthDay(int day) {
+    if (!Recurrence.isMonthDay(day) || day == _monthDay) return;
+    _monthDay = day;
+    notifyListeners();
+  }
+
+  /// Has a repeating task stop after [until], or repeat for good, with
+  /// null.
+  void setUntil(DateTime? until) {
+    _until = until == null ? null : _dateOf(until);
+    notifyListeners();
+  }
+
+  /// When the task is to come round, or null when it isn't to repeat: from
+  /// the day it started repeating, when it's to come round on the days it
+  /// does already, or else from today, as it would once it's saved.
+  Recurrence? get rule {
+    final pattern = switch (_reminder) {
+      Reminder.daily => Recurrence.daily(),
+      Reminder.weekly => Recurrence.weekly(_weekdays),
+      Reminder.monthly => Recurrence.monthly(_monthDay!),
+      Reminder.none || Reminder.once => null,
+    };
+    if (pattern == null) return null;
+    final was = task?.recurrence;
+    final since = was != null && was.repeatsLike(pattern) ? was.since : _today;
+    return pattern.spanning(since: since, until: _until);
+  }
+
+  /// A form for how long the task is to repeat, from today. Only for a task
+  /// that's to repeat.
+  RepeatEndDraft endDraft() {
+    final rule = this.rule!;
+    return RepeatEndDraft._(
+        rule.spanning(since: rule.since, until: null), _today, _until);
   }
 
   /// How the reminder stands at [now]: whether it'll go off, or what it
@@ -1071,13 +1220,123 @@ class TaskDraft with ChangeNotifier {
   ReminderStatus reminderStatus(DateTime now) {
     final day = _day;
     final time = _time;
+    final rule = this.rule;
     return switch (_reminder) {
       Reminder.none => ReminderStatus.off,
       Reminder.once when day == null || time == null =>
         ReminderStatus.needsDayAndTime,
       Reminder.once when !time!.on(day!).isAfter(now) => ReminderStatus.inPast,
-      Reminder.daily when time == null => ReminderStatus.needsTime,
+      Reminder.once => ReminderStatus.ready,
+      _ when time == null => ReminderStatus.needsTime,
+      _ when rule!.currentAsOf(now) == null => ReminderStatus.endsTooSoon,
+      _ when rule.hasEndedBy(now) => ReminderStatus.ended,
       _ => ReminderStatus.ready,
     };
   }
+}
+
+/// How long a task keeps repeating, as the form for it has it.
+enum RepeatSpan {
+  /// For good.
+  forever,
+
+  /// For a number of days, weeks or months, from today.
+  forAWhile,
+
+  /// Until a day.
+  untilADay,
+}
+
+/// How long a task is to keep repeating, as its form has it: for good, for
+/// a while from today, or until a day; with how many more times it would
+/// come round, and the last of them.
+class RepeatEndDraft with ChangeNotifier {
+  RepeatEndDraft._(this._rule, this._today, DateTime? until)
+      : _span = until == null ? RepeatSpan.forever : RepeatSpan.untilADay,
+        _unit = _rule.every == RepeatEvery.month
+            ? RepeatUnit.months
+            : RepeatUnit.weeks,
+        _amount = switch (_rule.every) {
+          RepeatEvery.day => 2,
+          RepeatEvery.week => 4,
+          RepeatEvery.month => 6,
+        } {
+    _day = until ?? _unit.lastDay(_today, _amount);
+  }
+
+  /// The most days, weeks or months a while can be.
+  static const maxAmount = 99;
+
+  /// When the task comes round, for good.
+  final Recurrence _rule;
+  final DateTime _today;
+
+  RepeatSpan get span => _span;
+  RepeatSpan _span;
+
+  /// How many days, weeks or months it's to repeat for, from today.
+  int get amount => _amount;
+  int _amount;
+  RepeatUnit get unit => _unit;
+  RepeatUnit _unit;
+
+  /// The last day it's to repeat on, when it's to repeat until a day.
+  DateTime get day => _day;
+  late DateTime _day;
+
+  /// The first day it can stop on, which is today.
+  DateTime get firstDay => _today;
+
+  void setSpan(RepeatSpan span) {
+    if (span == _span) return;
+    _span = span;
+    notifyListeners();
+  }
+
+  /// Has it repeat for [amount] days, weeks or months, from 1 to
+  /// [maxAmount].
+  void setAmount(int amount) {
+    final clamped = amount.clamp(1, maxAmount);
+    if (clamped == _amount) return;
+    _amount = clamped;
+    notifyListeners();
+  }
+
+  void setUnit(RepeatUnit unit) {
+    if (unit == _unit) return;
+    _unit = unit;
+    notifyListeners();
+  }
+
+  /// Has it stop after [day], which is today at the earliest.
+  void setDay(DateTime day) {
+    final date = _dateOf(day);
+    _day = date.isBefore(_today) ? _today : date;
+    notifyListeners();
+  }
+
+  /// The last day the task is to repeat on, or null for good.
+  DateTime? get until => switch (_span) {
+        RepeatSpan.forever => null,
+        RepeatSpan.forAWhile => _unit.lastDay(_today, _amount),
+        RepeatSpan.untilADay => _day,
+      };
+
+  /// How many more times the task would come round, from today until it
+  /// stops, and the last of them; null while it's to repeat for good.
+  ({int count, DateTime? last})? get times {
+    final until = this.until;
+    if (until == null) return null;
+    var count = 0;
+    DateTime? last;
+    for (final day
+        in _rule.spanning(since: _rule.since, until: until).from(_today)) {
+      count++;
+      last = day;
+    }
+    return (count: count, last: last);
+  }
+
+  /// Whether the task would come round at all before it stopped.
+  bool get canSave => times?.count != 0;
 }

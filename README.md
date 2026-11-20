@@ -29,12 +29,12 @@ No account, no ads, no tracking, and no internet permission.
     <td align="center" valign="top" width="33%">
       <img src=".github/readme/feature-reminders.png" width="64" alt="" /><br />
       <b>Reminders</b><br />
-      Get reminded about a task once, or every day.
+      Get reminded about a task once, or every day, on chosen weekdays, or monthly, for as long as you choose.
     </td>
     <td align="center" valign="top" width="33%">
       <img src=".github/readme/feature-streaks.png" width="64" alt="" /><br />
-      <b>Daily streaks</b><br />
-      Daily tasks start fresh each day, with your week and streak on the card.
+      <b>Repeating tasks</b><br />
+      Repeating tasks start fresh each time they come round, with their recent history and streak on the card.
     </td>
     <td align="center" valign="top" width="33%">
       <img src=".github/readme/feature-rich-text.png" width="64" alt="" /><br />

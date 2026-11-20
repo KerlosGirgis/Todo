@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
-import '../models/clock_time.dart';
+import '../models/recurrence.dart';
 import 'device_service.dart';
 
 class NotificationService {
@@ -106,36 +105,43 @@ class NotificationService {
     );
   }
 
-  Future<void> scheduleDailyNotification(
-      int id, String title, String? body, ClockTime scheduledTime) async {
+  /// Sets a reminder that goes off at [first], then at that time again
+  /// [every] day, every week on that day, or every month on that day, by the
+  /// clock of the time zone it's set in. A monthly one skips the months
+  /// without its day.
+  Future<void> scheduleRepeatingNotification(int id, String title, String? body,
+      DateTime first, RepeatEvery every) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id: id,
       title: title,
       body: body,
-      scheduledDate: tz.TZDateTime.from(
-          nextInstanceOfTime(scheduledTime, DateTime.now()), tz.local),
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_channel',
-          'Daily Notifications',
-          channelDescription: 'Daily notification channel',
-        ),
+      scheduledDate: tz.TZDateTime.from(first, tz.local),
+      notificationDetails: NotificationDetails(
+        android: switch (every) {
+          RepeatEvery.day => const AndroidNotificationDetails(
+              'daily_channel',
+              'Daily Notifications',
+              channelDescription: 'Daily notification channel',
+            ),
+          RepeatEvery.week => const AndroidNotificationDetails(
+              'weekly_channel',
+              'Weekly Notifications',
+              channelDescription: 'Weekly notification channel',
+            ),
+          RepeatEvery.month => const AndroidNotificationDetails(
+              'monthly_channel',
+              'Monthly Notifications',
+              channelDescription: 'Monthly notification channel',
+            ),
+        },
       ),
-      // At its time every day, by the clock of the time zone it's set in.
-      matchDateTimeComponents: DateTimeComponents.time,
+      matchDateTimeComponents: switch (every) {
+        RepeatEvery.day => DateTimeComponents.time,
+        RepeatEvery.week => DateTimeComponents.dayOfWeekAndTime,
+        RepeatEvery.month => DateTimeComponents.dayOfMonthAndTime,
+      },
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
-  }
-
-  /// When the phone's clock next shows [time] after [now]: today, or
-  /// tomorrow once today's has gone. Counted by the clock, as a day can be 23
-  /// or 25 hours long.
-  @visibleForTesting
-  static DateTime nextInstanceOfTime(ClockTime time, DateTime now) {
-    final today = time.on(now);
-    return today.isBefore(now)
-        ? time.on(DateTime(now.year, now.month, now.day + 1))
-        : today;
   }
 
   Future<void> cancelNotification(int id) async {

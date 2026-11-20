@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/clock_time.dart';
-import 'package:todo/models/daily_progress.dart';
+import 'package:todo/models/recurrence.dart';
+import 'package:todo/models/reminder_plan.dart';
+import 'package:todo/models/repeat_progress.dart';
 import 'package:todo/models/task_filters.dart';
 import 'package:todo/models/task_tree.dart';
 import 'package:todo/models/todo_item.dart';
@@ -142,8 +144,26 @@ class FakeFiles extends FileService {
 
 class FakeNotifications extends NotificationService {
   final once = <int, DateTime>{};
-  final daily = <int, ClockTime>{};
+  final repeating = <int, ({DateTime first, RepeatEvery every})>{};
   final bodies = <int, String?>{};
+
+  /// The times of the reminders that repeat every day.
+  Map<int, ClockTime> get daily => _times(RepeatEvery.day);
+
+  /// The first times of the reminders that repeat every week, or month.
+  Map<int, DateTime> get weekly => _firsts(RepeatEvery.week);
+  Map<int, DateTime> get monthly => _firsts(RepeatEvery.month);
+
+  Map<int, ClockTime> _times(RepeatEvery every) => {
+        for (final MapEntry(:key, :value) in repeating.entries)
+          if (value.every == every)
+            key: ClockTime(value.first.hour, value.first.minute),
+      };
+
+  Map<int, DateTime> _firsts(RepeatEvery every) => {
+        for (final MapEntry(:key, :value) in repeating.entries)
+          if (value.every == every) key: value.first,
+      };
 
   @override
   String timeZone = "Africa/Cairo";
@@ -166,28 +186,31 @@ class FakeNotifications extends NotificationService {
   }
 
   @override
-  Future<void> scheduleDailyNotification(
-      int id, String title, String? body, ClockTime scheduledTime) async {
-    daily[id] = scheduledTime;
+  Future<void> scheduleRepeatingNotification(int id, String title, String? body,
+      DateTime first, RepeatEvery every) async {
+    repeating[id] = (first: first, every: every);
     bodies[id] = body;
   }
 
   @override
   Future<void> cancelNotification(int id) async {
     once.remove(id);
-    daily.remove(id);
+    repeating.remove(id);
+    bodies.remove(id);
   }
 
   @override
   Future<void> cancelAllNotifications() async {
     once.clear();
-    daily.clear();
+    repeating.clear();
+    bodies.clear();
   }
 
   @override
   Future<void> cancelPendingNotifications() async {
     once.clear();
-    daily.clear();
+    repeating.clear();
+    bodies.clear();
   }
 }
 
@@ -309,6 +332,92 @@ void main() {
       expect(draft.day, DateTime(2026, 5, 20));
       expect(draft.time, const ClockTime(9, 0));
       expect(draft.reminder, Reminder.once);
+    });
+
+    test('a repeating task starts out on the day it was for, or today', () {
+      final draft = tasks.draft()
+        ..setDay(DateTime(2026, 5, 15))
+        ..setReminder(Reminder.weekly);
+      expect(draft.weekdays, {DateTime.friday});
+      expect(draft.monthDay, 15);
+      expect(draft.day, isNull);
+      expect(draft.hasDay, isFalse);
+      expect((tasks.draft()..setReminder(Reminder.weekly)).weekdays,
+          {DateTime.wednesday});
+      expect((tasks.draft()..setReminder(Reminder.monthly)).monthDay, 13);
+    });
+
+    test('a weekly task keeps one day of the week at least', () {
+      final draft = tasks.draft()..setReminder(Reminder.weekly);
+      draft.toggleWeekday(DateTime.wednesday);
+      expect(draft.weekdays, {DateTime.wednesday});
+      draft
+        ..toggleWeekday(DateTime.monday)
+        ..toggleWeekday(DateTime.wednesday);
+      expect(draft.weekdays, {DateTime.monday});
+    });
+
+    test('Repeat goes back to how the form last repeated, or daily', () {
+      final draft = tasks.draft()
+        ..setReminder(Reminder.monthly)
+        ..setReminder(Reminder.none)
+        ..setRepeating();
+      expect(draft.reminder, Reminder.monthly);
+      expect((tasks.draft()..setRepeating()).reminder, Reminder.daily);
+    });
+
+    test('says when a repeating reminder would stop before it comes round', () {
+      final draft = tasks.draft()
+        ..setTime(const ClockTime(18, 0))
+        ..setReminder(Reminder.weekly)
+        ..toggleWeekday(DateTime.friday)
+        ..toggleWeekday(DateTime.wednesday)
+        ..setUntil(DateTime(2026, 5, 14));
+      expect(draft.reminderStatus(now), ReminderStatus.endsTooSoon);
+      draft.setUntil(DateTime(2026, 5, 15));
+      expect(draft.reminderStatus(now), ReminderStatus.ready);
+      expect(
+          draft.rule,
+          Recurrence.weekly({DateTime.friday},
+              since: DateTime(2026, 5, 13), until: DateTime(2026, 5, 15)));
+    });
+
+    test('says how long a task would keep repeating', () {
+      // On Wednesdays, from today.
+      final draft = tasks.draft()..setReminder(Reminder.weekly);
+      final end = draft.endDraft();
+      addTearDown(end.dispose);
+      expect(end.span, RepeatSpan.forever);
+      expect(end.until, isNull);
+      expect(end.times, isNull);
+      expect(end.canSave, isTrue);
+
+      end.setSpan(RepeatSpan.forAWhile);
+      expect((end.amount, end.unit), (4, RepeatUnit.weeks));
+      expect(end.until, DateTime(2026, 6, 9));
+      expect(end.times, (count: 4, last: DateTime(2026, 6, 3)));
+      end
+        ..setUnit(RepeatUnit.days)
+        ..setAmount(0);
+      expect(end.amount, 1);
+      expect(end.times, (count: 1, last: DateTime(2026, 5, 13)));
+
+      end
+        ..setSpan(RepeatSpan.untilADay)
+        ..setDay(DateTime(2026, 5, 1));
+      expect(end.day, DateTime(2026, 5, 13), reason: "not before today");
+
+      final friday = (tasks.draft()
+            ..setReminder(Reminder.weekly)
+            ..toggleWeekday(DateTime.friday)
+            ..toggleWeekday(DateTime.wednesday))
+          .endDraft();
+      addTearDown(friday.dispose);
+      friday
+        ..setSpan(RepeatSpan.untilADay)
+        ..setDay(DateTime(2026, 5, 14));
+      expect(friday.times, (count: 0, last: null));
+      expect(friday.canSave, isFalse);
     });
   });
 
@@ -546,8 +655,10 @@ void main() {
       await addStretch();
       time = DateTime(2026, 5, 15, 9);
       await tasks.get();
-      final progress = task("Stretch").progress;
-      DayStatus on(int day) => progress.statusOf(DateTime(2026, 5, day), time);
+      final stretch = task("Stretch");
+      DayStatus on(int day) =>
+          stretch.recurrence!.statusOf(DateTime(2026, 5, day), time,
+              done: stretch.progress.doneDays);
       expect(on(12), DayStatus.untracked);
       expect(on(13), DayStatus.missed);
       expect(on(14), DayStatus.missed);
@@ -642,8 +753,270 @@ void main() {
       expect(restored("Stretch").progress.since, DateTime(2026, 5, 13));
       expect(restored("Stretch").done, isFalse);
       expect(restored("Read").progress.since, DateTime(2026, 5, 1));
-      expect(restored("Read").progress.streak(time), 2);
+      final read = restored("Read");
+      expect(read.recurrence!.streak(time, done: read.progress.doneDays), 2);
       expect(notifications.daily, hasLength(2));
+    });
+  });
+
+  group('weekly and monthly tasks', () {
+    /// Adds a task at [time] through its form, repeating as [shape] has it.
+    Future<Result> addRepeating(String title, void Function(TaskDraft) shape,
+        {ClockTime time = const ClockTime(18, 0)}) {
+      final draft = tasks.draft()
+        ..setTitle(title)
+        ..setTime(time);
+      shape(draft);
+      return tasks.save(draft);
+    }
+
+    /// Gym on Mondays, since the Monday before last, May 4.
+    Future<TodoItem> addGym() async {
+      await repository.insertItem(TodoItem(
+        uuid: "gym",
+        title: "Gym",
+        time: const ClockTime(18, 0),
+        reminder: Reminder.weekly,
+        weekdays: {DateTime.monday},
+        progress: RepeatProgress(since: DateTime(2026, 5, 4)),
+      ));
+      await tasks.get();
+      return task("Gym");
+    }
+
+    test('come round on their days of the week, each with its reminder',
+        () async {
+      final result = await addRepeating(
+          "Gym",
+          (draft) => draft
+            ..setReminder(Reminder.weekly)
+            ..toggleWeekday(DateTime.monday)
+            ..toggleWeekday(DateTime.thursday)
+            ..toggleWeekday(DateTime.wednesday));
+      expect(result, isA<Success>());
+      final gym = task("Gym");
+      expect(gym.reminder, Reminder.weekly);
+      expect(gym.weekdays, {DateTime.monday, DateTime.thursday});
+      expect(gym.day, isNull);
+      expect(gym.progress.since, DateTime(2026, 5, 13));
+      final ids = ReminderPlan.idsOf(gym.uuid);
+      expect(notifications.weekly, {
+        ids[DateTime.monday]: DateTime(2026, 5, 18, 18),
+        ids[DateTime.thursday]: DateTime(2026, 5, 14, 18),
+      });
+      // Until its first time, that one stands for it.
+      expect(gym.occurrenceOn(now), DateTime(2026, 5, 14));
+      expect(gym.isPastDue(now), isFalse);
+    });
+
+    test('come round monthly on their day of the month', () async {
+      await addRepeating(
+          "Rent",
+          (draft) => draft
+            ..setReminder(Reminder.monthly)
+            ..setMonthDay(1),
+          time: const ClockTime(9, 0));
+      final rent = task("Rent");
+      expect(rent.monthDay, 1);
+      expect(
+          notifications.monthly, {rent.uuid.hashCode: DateTime(2026, 6, 1, 9)});
+    });
+
+    test('are done for today when they come round today', () async {
+      await addRepeating("Swim", (draft) => draft.setReminder(Reminder.weekly));
+      final result = await tasks.toggleDone(task("Swim"));
+      expect((result as Success).message, "Done for today");
+      expect(task("Swim").done, isTrue);
+      expect(notifications.weekly, hasLength(1), reason: "they keep reminding");
+    });
+
+    test('can be done late, until their next time comes', () async {
+      final missed = await addGym();
+      expect(missed.done, isFalse);
+      expect(missed.isPastDue(now), isTrue);
+      final result = await tasks.toggleDone(missed);
+      expect((result as Success).message, "Done for Mon, May 11");
+      expect(task("Gym").done, isTrue);
+      expect(repository.rows.single.progress.doneDays, {DateTime(2026, 5, 11)});
+
+      // Monday comes round afresh.
+      time = DateTime(2026, 5, 18, 9);
+      tasks.checkForNewDay();
+      final gym = task("Gym");
+      expect(gym.done, isFalse);
+      expect(gym.isPastDue(time), isFalse);
+      expect(
+          gym.recurrence!.statusOf(DateTime(2026, 5, 4), time,
+              done: gym.progress.doneDays),
+          DayStatus.missed);
+    });
+
+    test('count from today once they come round on other days', () async {
+      final before = await addGym();
+      await tasks.save(tasks.draft(before)..toggleWeekday(DateTime.friday));
+      final after = task("Gym");
+      expect(after.weekdays, {DateTime.monday, DateTime.friday});
+      expect(after.progress.since, DateTime(2026, 5, 13));
+      // Monday's was from before, so the next one stands for it.
+      expect(after.occurrenceOn(now), DateTime(2026, 5, 15));
+      expect(after.isPastDue(now), isFalse);
+      // Saved again as it is, it keeps counting from then.
+      time = DateTime(2026, 5, 20, 9);
+      await tasks.save(tasks.draft(task("Gym"))..setTitle("Gym!"));
+      expect(task("Gym!").progress.since, DateTime(2026, 5, 13));
+    });
+
+    test('lose the reminders they had once they are changed', () async {
+      await addRepeating(
+          "Gym",
+          (draft) => draft
+            ..setReminder(Reminder.weekly)
+            ..toggleWeekday(DateTime.friday));
+      expect(notifications.weekly, hasLength(2));
+      await tasks.save(tasks.draft(task("Gym"))
+        ..setReminder(Reminder.once)
+        ..setDay(DateTime(2026, 5, 13)));
+      expect(notifications.weekly, isEmpty);
+      expect(notifications.once.keys, [task("Gym").uuid.hashCode]);
+      expect(task("Gym").weekdays, isEmpty);
+    });
+
+    test('lose all their reminders as they go to the trash', () async {
+      await addRepeating(
+          "Gym",
+          (draft) => draft
+            ..setReminder(Reminder.weekly)
+            ..toggleWeekday(DateTime.friday));
+      final trashed = await tasks.delete(task("Gym"));
+      expect(notifications.repeating, isEmpty);
+      await tasks.restoreFromTrash(trashed!);
+      expect(notifications.weekly, hasLength(2));
+      expect(task("Gym").weekdays, {DateTime.wednesday, DateTime.friday});
+    });
+
+    test('are backed up and restored with their days', () async {
+      final restoring = TasksViewModel(
+        repository: repository,
+        notificationService: notifications,
+        lockService: lock,
+        fileService: FakeFiles([
+          {
+            'title': "Gym",
+            'status': 0,
+            'time': "6:00 PM",
+            'uuid': "u-1",
+            'notification': 3,
+            'weekdays': "1,4",
+            'until': "2026-07-01",
+            'since': "2026-05-04",
+          },
+        ]),
+        clock: () => time,
+      );
+      addTearDown(restoring.dispose);
+      await restoring.restore(true,
+          askForBackupPassword: (open) async => false);
+      final gym = restoring.items.single;
+      expect(
+          gym.recurrence,
+          Recurrence.weekly({1, 4},
+              since: DateTime(2026, 5, 4), until: DateTime(2026, 7, 1)));
+      expect(notifications.weekly, hasLength(2));
+    });
+  });
+
+  group('tasks that stop', () {
+    /// Adds a task that reminds daily at 6 PM until [until].
+    Future<Result> addPills(DateTime until) => tasks.save(tasks.draft()
+      ..setTitle("Pills")
+      ..setTime(const ClockTime(18, 0))
+      ..setReminder(Reminder.daily)
+      ..setUntil(until));
+
+    test('have their last few times set one by one', () async {
+      await addPills(DateTime(2026, 5, 16));
+      expect(task("Pills").until, DateTime(2026, 5, 16));
+      expect(notifications.once.values,
+          [for (var day = 13; day <= 16; day++) DateTime(2026, 5, day, 18)]);
+      expect(notifications.repeating, isEmpty);
+    });
+
+    test('repeat by themselves until their last few times', () async {
+      await addPills(DateTime(2026, 6, 30));
+      expect(notifications.daily.values, [const ClockTime(18, 0)]);
+      expect(notifications.once, isEmpty);
+      time = DateTime(2026, 6, 25, 0, 0, 1);
+      tasks.checkForNewDay();
+      await pumpEventQueue();
+      expect(notifications.repeating, isEmpty);
+      expect(notifications.once.values,
+          [for (var day = 25; day <= 30; day++) DateTime(2026, 6, day, 18)]);
+    });
+
+    test('have their reminders stop with them', () async {
+      await addPills(DateTime(2026, 5, 14));
+      expect(notifications.once, hasLength(2));
+      time = DateTime(2026, 5, 15, 0, 0, 1);
+      tasks.checkForNewDay();
+      await pumpEventQueue();
+      expect(notifications.once, isEmpty);
+      expect(task("Pills").recurrence!.hasEndedBy(time), isTrue);
+    });
+
+    test("set afresh as the app starts, as days went by while it didn't run",
+        () async {
+      await repository.insertItem(TodoItem(
+        uuid: "pills",
+        title: "Pills",
+        time: const ClockTime(18, 0),
+        reminder: Reminder.daily,
+        until: DateTime(2026, 5, 12),
+        progress: RepeatProgress(since: DateTime(2026, 5, 1)),
+      ));
+      // Set to repeat by itself back when it had many times left.
+      notifications.repeating["pills".hashCode] =
+          (first: DateTime(2026, 5, 1, 18), every: RepeatEvery.day);
+      await tasks.get();
+      expect(notifications.repeating, isEmpty);
+    });
+
+    test(
+        'are saved without repeating when they would stop before they '
+        'come round', () async {
+      final draft = tasks.draft()
+        ..setTitle("Gym")
+        ..setTime(const ClockTime(18, 0))
+        ..setReminder(Reminder.weekly)
+        ..toggleWeekday(DateTime.friday)
+        ..toggleWeekday(DateTime.wednesday)
+        ..setUntil(DateTime(2026, 5, 14));
+      final result = await tasks.save(draft);
+      expect((result as Info).message, "Please set an end after its next time");
+      expect(task("Gym").reminder, Reminder.none);
+      expect(notifications.repeating, isEmpty);
+    });
+
+    test('keep their days when saved again once they have ended', () async {
+      await repository.insertItem(TodoItem(
+        uuid: "course",
+        title: "Course",
+        time: const ClockTime(7, 0),
+        reminder: Reminder.daily,
+        until: DateTime(2026, 5, 10),
+        progress: RepeatProgress(
+            since: DateTime(2026, 5, 1), doneDays: [DateTime(2026, 5, 10)]),
+      ));
+      await tasks.get();
+      final draft = tasks.draft(task("Course"));
+      expect(draft.reminderStatus(now), ReminderStatus.ended);
+      final result = await tasks.save(draft..setTitle("Course done"));
+      expect((result as Info).message, "Task Updated");
+      final course = task("Course done");
+      expect(course.reminder, Reminder.daily);
+      expect(course.until, DateTime(2026, 5, 10));
+      expect(course.done, isTrue, reason: "its last time was done");
+      expect(notifications.repeating, isEmpty);
+      expect(notifications.once, isEmpty);
     });
   });
 

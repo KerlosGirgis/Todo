@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/models/clock_time.dart';
-import 'package:todo/models/daily_progress.dart';
+import 'package:todo/models/recurrence.dart';
+import 'package:todo/models/repeat_progress.dart';
 import 'package:todo/models/todo_item.dart';
 
 void main() {
@@ -31,22 +32,25 @@ void main() {
     });
   });
 
-  group('TodoItem', () {
-    final stored = {
-      'id': 4,
-      'title': "Water the plants",
-      'desc': "The ferns",
-      'status': 0,
-      'date': "2026-05-13",
-      'time': "6:00 PM",
-      'uuid': "u-1",
-      'notification': 1,
-      'since': "",
-      'doneDays': "",
-      'parent': "",
-      'folded': 0,
-    };
+  final stored = {
+    'id': 4,
+    'title': "Water the plants",
+    'desc': "The ferns",
+    'status': 0,
+    'date': "2026-05-13",
+    'time': "6:00 PM",
+    'uuid': "u-1",
+    'notification': 1,
+    'weekdays': "",
+    'monthDay': 0,
+    'until': "",
+    'since': "",
+    'doneDays': "",
+    'parent': "",
+    'folded': 0,
+  };
 
+  group('TodoItem', () {
     test('reads the stored columns', () {
       final task = TodoItem.fromMap(stored);
       expect(task.id, 4);
@@ -68,6 +72,9 @@ void main() {
       expect(map['notification'], 0);
       expect(map['since'], "");
       expect(map['doneDays'], "");
+      expect(map['weekdays'], "");
+      expect(map['monthDay'], 0);
+      expect(map['until'], "");
     });
 
     test("reads and writes a daily task's days", () {
@@ -93,7 +100,7 @@ void main() {
         time: const ClockTime(7, 0),
         reminder: Reminder.daily,
         done: true,
-        progress: DailyProgress(
+        progress: RepeatProgress(
             since: DateTime(2026, 5, 1), doneDays: [DateTime(2026, 5, 12)]),
       );
       expect(task.asOf(DateTime(2026, 5, 12, 23, 59)).done, isTrue);
@@ -157,43 +164,156 @@ void main() {
     });
   });
 
-  group('DailyProgress', () {
-    final progress = DailyProgress(
-      since: DateTime(2026, 5, 8, 15, 30),
-      doneDays: [
-        DateTime(2026, 5, 9),
-        DateTime(2026, 5, 11, 7),
-        DateTime(2026, 5, 12),
-      ],
-    );
-    // A Wednesday, like the view model tests' day.
-    final today = DateTime(2026, 5, 13, 12);
+  group('weekly and monthly tasks', () {
+    test("read and write their days, and when they stop", () {
+      final weekly = {
+        ...stored,
+        'date': "",
+        'notification': 3,
+        'weekdays': "1,3,5",
+        'until': "2026-06-30",
+        'since': "2026-05-01",
+        'doneDays': "2026-05-11",
+      };
+      final task = TodoItem.fromMap(weekly);
+      expect(task.reminder, Reminder.weekly);
+      expect(task.weekdays, {1, 3, 5});
+      expect(task.until, DateTime(2026, 6, 30));
+      expect(
+          task.recurrence,
+          Recurrence.weekly({1, 3, 5},
+              since: DateTime(2026, 5, 1), until: DateTime(2026, 6, 30)));
+      expect(task.toMap(), {...weekly}..remove('id'));
 
+      final monthly = {
+        ...weekly,
+        'notification': 4,
+        'weekdays': "",
+        'monthDay': 20
+      };
+      final read = TodoItem.fromMap(monthly);
+      expect(read.monthDay, 20);
+      expect(read.toMap(), {...monthly}..remove('id'));
+    });
+
+    test('keep only what their reminder goes by, and no day', () {
+      final task = TodoItem(
+        uuid: "u",
+        title: "t",
+        day: DateTime(2026, 5, 20),
+        reminder: Reminder.weekly,
+        weekdays: {1, 9},
+        monthDay: 3,
+        until: DateTime(2026, 6, 1, 15),
+      );
+      expect(task.day, isNull);
+      expect(task.weekdays, {1});
+      expect(task.monthDay, isNull);
+      expect(task.until, DateTime(2026, 6, 1));
+      final once = task.copyWith(reminder: Reminder.once);
+      expect(once.weekdays, isEmpty);
+      expect(once.until, isNull);
+      expect(once.repeats, isFalse);
+    });
+
+    test('do not repeat without the days they go by', () {
+      expect(TodoItem(uuid: "u", title: "t", reminder: Reminder.weekly).repeats,
+          isFalse);
+      expect(
+          TodoItem(uuid: "u", title: "t", reminder: Reminder.monthly).repeats,
+          isFalse);
+      expect(
+          TodoItem.fromMap({...stored, 'notification': 4, 'monthDay': 32})
+              .repeats,
+          isFalse);
+    });
+
+    // Mondays and Thursdays, since Monday, May 11.
+    final gym = TodoItem(
+      uuid: "u",
+      title: "Gym",
+      time: const ClockTime(18, 0),
+      reminder: Reminder.weekly,
+      weekdays: {DateTime.monday, DateTime.thursday},
+      progress: RepeatProgress(since: DateTime(2026, 5, 11)),
+    );
+
+    test('stand for their last time until the next one comes', () {
+      // Wednesday the 13th: Monday's still stands.
+      final wednesday = DateTime(2026, 5, 13, 12);
+      expect(gym.occurrenceOn(wednesday), DateTime(2026, 5, 11));
+      final done = gym.marked(done: true, today: wednesday);
+      expect(done.progress.doneDays, {DateTime(2026, 5, 11)});
+      expect(done.asOf(wednesday).done, isTrue);
+      // Thursday comes round afresh.
+      expect(done.asOf(DateTime(2026, 5, 14)).done, isFalse);
+    });
+
+    test("are overdue on the days after a time they weren't done for", () {
+      expect(gym.isPastDue(DateTime(2026, 5, 11, 23)), isFalse);
+      expect(gym.isPastDue(DateTime(2026, 5, 12, 9)), isTrue);
+      expect(
+          gym
+              .marked(done: true, today: DateTime(2026, 5, 12))
+              .isPastDue(DateTime(2026, 5, 12, 9)),
+          isTrue,
+          reason: "a done one is past due, but it's done");
+      expect(gym.isPastDue(DateTime(2026, 5, 14, 9)), isFalse);
+      // Daily ones never are: today stands for them.
+      expect(
+          TodoItem(
+            uuid: "u",
+            title: "t",
+            time: const ClockTime(7, 0),
+            reminder: Reminder.daily,
+            progress: RepeatProgress(since: DateTime(2026, 5, 1)),
+          ).isPastDue(DateTime(2026, 5, 13, 23)),
+          isFalse);
+    });
+
+    test('are for their first time while it is still to come', () {
+      final later = gym.repeatingAs(Recurrence.weekly({DateTime.friday}),
+          progress: RepeatProgress(since: DateTime(2026, 5, 13)));
+      expect(later.reminder, Reminder.weekly);
+      expect(later.occurrenceOn(DateTime(2026, 5, 13)), DateTime(2026, 5, 15));
+      expect(later.isPastDue(DateTime(2026, 5, 13, 20)), isFalse);
+    });
+  });
+
+  group('RepeatProgress', () {
     test('keeps days, not times', () {
+      final progress = RepeatProgress(
+        since: DateTime(2026, 5, 8, 15, 30),
+        doneDays: [DateTime(2026, 5, 11, 7)],
+      );
       expect(progress.since, DateTime(2026, 5, 8));
       expect(progress.isDoneOn(DateTime(2026, 5, 11, 22)), isTrue);
       expect(progress.isDoneOn(DateTime(2026, 5, 10)), isFalse);
     });
 
     test('writes its days oldest first, and reads them back', () {
-      final map = DailyProgress(since: DateTime(2026, 5, 8), doneDays: [
+      final map = RepeatProgress(since: DateTime(2026, 5, 8), doneDays: [
         DateTime(2026, 5, 12),
         DateTime(2026, 5, 9),
       ]).toMap();
       expect(map, {'since': "2026-05-08", 'doneDays': "2026-05-09,2026-05-12"});
-      final read = DailyProgress.fromMap(map);
+      final read = RepeatProgress.fromMap(map);
       expect(read.since, DateTime(2026, 5, 8));
       expect(read.doneDays, {DateTime(2026, 5, 9), DateTime(2026, 5, 12)});
     });
 
     test('skips days that will not read as days', () {
-      final read = DailyProgress.fromMap(
+      final read = RepeatProgress.fromMap(
           {'since': "soon", 'doneDays': "2026-05-09,,later, 2026-05-12"});
       expect(read.since, isNull);
       expect(read.doneDays, {DateTime(2026, 5, 9), DateTime(2026, 5, 12)});
     });
 
     test('marks a day done, or not', () {
+      final progress = RepeatProgress(since: DateTime(2026, 5, 8), doneDays: [
+        DateTime(2026, 5, 12),
+      ]);
+      final today = DateTime(2026, 5, 13, 12);
       final done = progress.withDay(today, done: true);
       expect(done.isDoneOn(today), isTrue);
       expect(done.since, progress.since);
@@ -203,49 +323,12 @@ void main() {
       expect(progress.isDoneOn(today), isFalse);
     });
 
-    test('says how each day went', () {
-      DayStatus on(int day) => progress.statusOf(DateTime(2026, 5, day), today);
-      expect(on(7), DayStatus.untracked);
-      expect(on(8), DayStatus.missed);
-      expect(on(9), DayStatus.done);
-      expect(on(10), DayStatus.missed);
-      expect(on(12), DayStatus.done);
-      expect(on(13), DayStatus.due);
-      expect(on(14), DayStatus.untracked);
-      expect(progress.withDay(today, done: true).statusOf(today, today),
-          DayStatus.done);
-    });
-
-    test('counts no day missed before it knows when it began', () {
-      final unknown = DailyProgress(doneDays: [DateTime(2026, 5, 12)]);
-      expect(
-          unknown.statusOf(DateTime(2026, 5, 11), today), DayStatus.untracked);
-      expect(unknown.statusOf(DateTime(2026, 5, 12), today), DayStatus.done);
-      expect(unknown.statusOf(today, today), DayStatus.due);
-    });
-
     test('starts counting again from a new day, keeping the days done', () {
+      final progress = RepeatProgress(
+          since: DateTime(2026, 5, 8), doneDays: [DateTime(2026, 5, 9)]);
       final restarted = progress.startingOn(DateTime(2026, 5, 12, 9));
       expect(restarted.since, DateTime(2026, 5, 12));
-      expect(restarted.statusOf(DateTime(2026, 5, 10), today),
-          DayStatus.untracked);
-      expect(restarted.statusOf(DateTime(2026, 5, 9), today), DayStatus.done);
-    });
-
-    test('a streak runs up to today, or to yesterday while today is to do', () {
-      expect(progress.streak(today), 2);
-      expect(progress.withDay(today, done: true).streak(today), 3);
-      expect(progress.streak(DateTime(2026, 5, 14)), 0);
-      expect(DailyProgress.none.streak(today), 0);
-    });
-
-    test('a streak runs across the end of a month', () {
-      final run = DailyProgress(doneDays: [
-        DateTime(2026, 2, 27),
-        DateTime(2026, 2, 28),
-        DateTime(2026, 3, 1),
-      ]);
-      expect(run.streak(DateTime(2026, 3, 2)), 3);
+      expect(restarted.doneDays, {DateTime(2026, 5, 9)});
     });
   });
 }

@@ -8,9 +8,11 @@ import 'package:readmore/readmore.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/utils/date_time_utils.dart';
-import '../../../../../models/daily_progress.dart';
+import '../../../../../models/recurrence.dart';
+import '../../../../../models/repeat_progress.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../widgets/check_circle.dart';
+import 'repeat_labels.dart';
 
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);
@@ -26,9 +28,9 @@ Color _orange(bool isDarkTheme) =>
 
 /// A task on the to-do page, on the same surface as the profile page's
 /// cards: a round check that fills in once it's done, its title and
-/// description, when it's due, and a bell for its reminder. A daily task's
-/// also shows how its last seven days went, and its streak, and one with
-/// subtasks how many of them are done.
+/// description, when it's due, and a bell for its reminder. A repeating
+/// task's also shows how it repeats and until when, how its last few times
+/// went, and its streak, and one with subtasks how many of them are done.
 class TaskCard extends StatefulWidget {
   const TaskCard({
     super.key,
@@ -185,9 +187,14 @@ class _TaskCardState extends State<TaskCard> {
     Color fade(double alpha, double doneAlpha) =>
         ink.withValues(alpha: lerpDouble(alpha, doneAlpha, doneness));
     final now = DateTime.now();
-    // Today as the card has it, which is how the tour can check it off.
-    final progress = task.progress.withDay(now, done: task.done);
-    final chips = _chips(context, doneness, now, progress);
+    final recurrence = task.recurrence;
+    final occurrence = task.occurrenceOn(now);
+    // The time that stands for it as the card has it, which is how the tour
+    // can check it off.
+    final progress = occurrence == null
+        ? task.progress
+        : task.progress.withDay(occurrence, done: task.done);
+    final chips = _chips(context, doneness, now, recurrence, progress);
     final subtasks = widget.subtasks;
     return Padding(
       // Less under the subtasks' row, which has room of its own to tap.
@@ -256,13 +263,14 @@ class _TaskCardState extends State<TaskCard> {
               padding: const EdgeInsets.fromLTRB(_textInset, 10, 10, 0),
               child: Wrap(spacing: 6, runSpacing: 6, children: chips),
             ),
-          if (task.isDaily)
+          if (recurrence != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(_textInset, 12, 10, 0),
-              // Fades back with the chips once the task's done for the day.
+              // Fades back with the chips once the task's done for now.
               child: Opacity(
                 opacity: lerpDouble(1, 0.5, doneness)!,
-                child: _WeekStrip(
+                child: _RecentTimes(
+                  recurrence: recurrence,
                   progress: progress,
                   today: now,
                   doneness: doneness,
@@ -315,16 +323,17 @@ class _TaskCardState extends State<TaskCard> {
     );
   }
 
-  /// When the task is due, whether it repeats daily, and for how many days
-  /// in a row it's been done.
+  /// When the task is due, how it repeats and until when, and for how many
+  /// times in a row it's been done.
   List<Widget> _chips(BuildContext context, double doneness, DateTime now,
-      DailyProgress progress) {
+      Recurrence? recurrence, RepeatProgress progress) {
     final task = widget.task;
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
     // Done tasks' chips fade back with the rest of the card.
     final strength = lerpDouble(1, 0.5, doneness)!;
-    final streak = progress.streak(now);
+    final streak = recurrence?.streak(now, done: progress.doneDays) ?? 0;
+    final end = recurrence == null ? null : repeatEndLabel(recurrence, now);
     final orange = _orange(isDarkTheme);
     final when = taskWhenLabel(task, now);
     // Red once it's overdue, as in Reminders, until it's done.
@@ -336,20 +345,23 @@ class _TaskCardState extends State<TaskCard> {
       red.withValues(alpha: isDarkTheme ? 0.18 : 0.12),
       overdue,
     )!;
+    final plain = ink.withValues(alpha: 0.6 * strength);
+    final plainTint =
+        ink.withValues(alpha: (isDarkTheme ? 0.08 : 0.05) * strength);
     return [
       if (when != null)
         _Chip(
-          icon: task.day == null
+          icon: taskDayOf(task, now) == null
               ? Icons.schedule_rounded
               : Icons.calendar_today_rounded,
           label: when,
           color: whenColor.withValues(alpha: whenColor.a * strength),
           tint: whenTint.withValues(alpha: whenTint.a * strength),
         ),
-      if (task.reminder == Reminder.daily)
+      if (recurrence != null)
         _Chip(
           icon: Icons.repeat_rounded,
-          label: "Daily",
+          label: repeatChipLabel(recurrence),
           color: Colors.white.withValues(alpha: strength),
           gradient: LinearGradient(
             colors: [
@@ -358,10 +370,19 @@ class _TaskCardState extends State<TaskCard> {
             ],
           ),
         ),
-      if (task.isDaily && streak >= 2)
+      if (end != null)
+        _Chip(
+          icon: recurrence!.hasEndedBy(now)
+              ? Icons.flag_rounded
+              : Icons.hourglass_bottom_rounded,
+          label: end,
+          color: plain,
+          tint: plainTint,
+        ),
+      if (recurrence != null && streak >= 2)
         _Chip(
           icon: Icons.local_fire_department_rounded,
-          label: "$streak-day streak",
+          label: streakLabel(recurrence, streak),
           color: orange.withValues(alpha: strength),
           tint:
               orange.withValues(alpha: (isDarkTheme ? 0.18 : 0.12) * strength),
@@ -370,42 +391,50 @@ class _TaskCardState extends State<TaskCard> {
   }
 }
 
-/// A daily task's last seven days, today last, each with its initial: filled
-/// in with the app's blues on a day the task was done, ringed on one it
-/// wasn't, and bare on one from before it was daily. Today's is ringed in
-/// the accent until it fills in as the task gets done.
-class _WeekStrip extends StatelessWidget {
-  const _WeekStrip({
+/// A repeating task's last few times, each with its initial: filled in with
+/// the app's blues for a time the task was done, ringed for one it missed,
+/// and bare for a day it doesn't come round on, or one from before it
+/// started repeating. The time that stands for it now is ringed in the
+/// accent until it fills in as the task gets done.
+///
+/// A daily or weekly task shows its last seven days, up to today, or up to
+/// its first time while that's still to come; a monthly one, its last six
+/// months, each by its initial.
+class _RecentTimes extends StatelessWidget {
+  const _RecentTimes({
+    required this.recurrence,
     required this.progress,
     required this.today,
     required this.doneness,
   });
 
-  final DailyProgress progress;
+  final Recurrence recurrence;
+  final RepeatProgress progress;
   final DateTime today;
 
-  /// How far today has filled in, as the card goes from to-do (0) to done
-  /// (1).
+  /// How far the time that stands for the task now has filled in, as the
+  /// card goes from to-do (0) to done (1).
   final double doneness;
 
-  static const _length = 7;
+  static const _days = 7;
+  static const _months = 6;
 
   @override
   Widget build(BuildContext context) {
-    final days = [
-      for (var back = _length - 1; back >= 0; back--)
-        DateTime(today.year, today.month, today.day - back),
-    ];
-    final statuses = [for (final day in days) progress.statusOf(day, today)];
+    final current = recurrence.currentAsOf(today);
+    final monthly = recurrence.every == RepeatEvery.month;
+    final slots = monthly ? _monthSlots(current) : _daySlots(current);
     int count(DayStatus status) =>
-        statuses.where((each) => each == status).length;
+        slots.where((slot) => slot.status == status).length;
+    final stillToDo = current != null && !progress.isDoneOn(current);
     // Big enough for its initial at the user's text size.
     final size =
         math.max(24.0, MediaQuery.textScalerOf(context).scale(11.5) + 11);
     return Semantics(
-      label: "Last $_length days: ${count(DayStatus.done)} done, "
-          "${count(DayStatus.missed)} missed"
-          "${statuses.last == DayStatus.due ? ", today still to do" : ""}",
+      label: "Last ${monthly ? "$_months months" : "$_days days"}: "
+          "${count(DayStatus.done)} done, ${count(DayStatus.missed)} missed"
+          "${stillToDo ? ", ${DateTimeUtils.dayInSentence(current, today)} "
+              "still to do" : ""}",
       excludeSemantics: true,
       child: Align(
         alignment: AlignmentDirectional.centerStart,
@@ -415,19 +444,19 @@ class _WeekStrip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final (index, day) in days.indexed) ...[
+              for (final (index, slot) in slots.indexed) ...[
                 if (index > 0) const SizedBox(width: 6),
-                index == _length - 1
+                slot.current
                     ? _DayDot(
-                        day: day,
+                        letter: slot.letter,
                         status: DayStatus.due,
                         fill: doneness,
                         size: size,
                       )
                     : _DayDot(
-                        day: day,
-                        status: statuses[index],
-                        fill: statuses[index] == DayStatus.done ? 1 : 0,
+                        letter: slot.letter,
+                        status: slot.status,
+                        fill: slot.status == DayStatus.done ? 1 : 0,
                         size: size,
                       ),
               ],
@@ -437,18 +466,60 @@ class _WeekStrip extends StatelessWidget {
       ),
     );
   }
+
+  /// The last seven days, up to today, or up to [current] when that's
+  /// still to come.
+  List<_Slot> _daySlots(DateTime? current) {
+    final last = current != null && current.isAfter(today) ? current : today;
+    return [
+      for (var back = _days - 1; back >= 0; back--)
+        _slot(DateTime(last.year, last.month, last.day - back),
+            DateFormat("EEEEE"), current),
+    ];
+  }
+
+  /// The last six months, up to the one [current] is in, each by the day the
+  /// task comes round on in it: none, in a month without that day.
+  List<_Slot> _monthSlots(DateTime? current) {
+    final last = current ?? today;
+    final monthDay = recurrence.monthDay!;
+    final letter = DateFormat("MMMMM");
+    return [
+      for (var back = _months - 1; back >= 0; back--)
+        if (DateTime(last.year, last.month - back) case final month
+            when DateTime(month.year, month.month + 1, 0).day < monthDay)
+          (
+            letter: letter.format(month),
+            status: DayStatus.untracked,
+            current: false
+          )
+        else
+          _slot(DateTime(last.year, last.month - back, monthDay), letter,
+              current),
+    ];
+  }
+
+  _Slot _slot(DateTime day, DateFormat letter, DateTime? current) => (
+        letter: letter.format(day),
+        status: recurrence.statusOf(day, today, done: progress.doneDays),
+        current: day == current,
+      );
 }
 
-/// A day of a [_WeekStrip]: its initial, in a circle.
+/// A day, or a month, of [_RecentTimes]: its initial, how it went, and
+/// whether it's the time that stands for the task now.
+typedef _Slot = ({String letter, DayStatus status, bool current});
+
+/// A day, or a month, of [_RecentTimes]: its initial, in a circle.
 class _DayDot extends StatelessWidget {
   const _DayDot({
-    required this.day,
+    required this.letter,
     required this.status,
     required this.fill,
     required this.size,
   });
 
-  final DateTime day;
+  final String letter;
 
   /// How the day went, short of being done.
   final DayStatus status;
@@ -463,7 +534,7 @@ class _DayDot extends StatelessWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
     final accent = context.colors.moreLess;
-    final (ring, letter) = switch (status) {
+    final (ring, letterColor) = switch (status) {
       DayStatus.due => (accent, accent),
       DayStatus.missed => (
           ink.withValues(alpha: isDarkTheme ? 0.3 : 0.22),
@@ -480,9 +551,9 @@ class _DayDot extends StatelessWidget {
         dimension: size,
         child: Center(
           child: Text(
-            DateFormat("EEEEE").format(day),
+            letter,
             style: TextStyle(
-              color: Color.lerp(letter, Colors.white, fill),
+              color: Color.lerp(letterColor, Colors.white, fill),
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
               height: 1,
@@ -776,9 +847,10 @@ class _SwipeBackground extends StatelessWidget {
 
 /// When [task] is for, as of [now]: "Today, 9:30 AM", "Tomorrow", "Fri, Oct
 /// 24" or "Jan 3, 2027, 9:30 AM", or null when it has neither a date nor a
-/// time.
+/// time. A task that comes round on days of the week or the month is for
+/// the day that stands for it.
 String? taskWhenLabel(TodoItem task, DateTime now) {
-  final day = task.day;
+  final day = taskDayOf(task, now);
   final time = task.time;
   final parts = [
     if (day != null) DateTimeUtils.friendlyDay(day, now),

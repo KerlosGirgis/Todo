@@ -8,6 +8,7 @@ import '../../../../../../models/task_tree.dart';
 import '../../../../../../models/todo_item.dart';
 import '../../../../../widgets/check_circle.dart';
 import '../../../../../widgets/progress_ring.dart';
+import '../repeat_labels.dart';
 import '../task_card.dart';
 import 'map_layout.dart';
 
@@ -104,13 +105,13 @@ class MapNodeStyle {
     return [
       if (when != null)
         MapNodeBit(
-          task.day == null
+          taskDayOf(task, now) == null
               ? Icons.schedule_rounded
               : Icons.calendar_today_rounded,
           when,
           task.isPastDue(now) && !task.done,
         ),
-      if (task.reminder == Reminder.daily)
+      if (task.repeats)
         const MapNodeBit(Icons.repeat_rounded)
       else if (task.reminder == Reminder.once)
         const MapNodeBit(Icons.notifications_active_rounded),
