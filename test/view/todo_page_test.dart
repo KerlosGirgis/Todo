@@ -386,6 +386,23 @@ Trip
     await page.close(tester);
   });
 
+  testWidgets(
+      "turned on its side, the list stays one column, clear of the "
+      "camera", (tester) async {
+    // The camera's cutout down the left side, as the phone is turned.
+    tester.view.padding = const FakeViewPadding(left: 45 * 2);
+    await page.open(tester, plans(), size: const Size(640, 360));
+    final summary = tester.getRect(find.byType(TasksSummaryCard));
+    final trip = tester.getRect(card("Trip"));
+    // The cards come under the summary, as wide as it, not beside it.
+    expect(trip.top - summary.bottom, closeTo(20, 0.5));
+    expect(trip.left, summary.left);
+    expect(trip.right, summary.right);
+    expect(trip.left, 16 + 45);
+    expect(trip.right, 640 - 16);
+    await page.close(tester);
+  });
+
   group("sort and filter", () {
     /// Tasks for days in January 2030, so none is overdue.
     TodoItem due(String title, int? day) => TodoItem(

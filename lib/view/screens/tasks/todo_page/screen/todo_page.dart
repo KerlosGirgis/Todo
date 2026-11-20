@@ -56,11 +56,7 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
-  // One per scroll view, as the two layouts briefly overlap when the screen
-  // turns, and a controller can't follow two scroll views at once.
   final _scrollController = ScrollController();
-  final _overviewPaneScrollController = ScrollController();
-  final _listPaneScrollController = ScrollController();
 
   /// Whether the tasks have been read in. Until then there's nothing under
   /// the title, rather than a "No Tasks" that flashes up first.
@@ -159,8 +155,6 @@ class _TodoPageState extends State<TodoPage> {
     _tourStart?.cancel();
     _tour.dispose();
     _scrollController.dispose();
-    _overviewPaneScrollController.dispose();
-    _listPaneScrollController.dispose();
     super.dispose();
   }
 
@@ -296,11 +290,6 @@ class _TodoPageState extends State<TodoPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    // Side by side when the screen is too short for one long column, as on a
-    // phone turned on its side.
-    final twoPanes =
-        MediaQuery.orientationOf(context) == Orientation.landscape &&
-            MediaQuery.sizeOf(context).aspectRatio >= 1.5;
     final view =
         context.select<UserViewModel, TasksView>((user) => user.shownTasksView);
     final fullScreen = _fullScreen && view == TasksView.map;
@@ -343,9 +332,7 @@ class _TodoPageState extends State<TodoPage> {
                 Positioned.fill(
                   child: switch (view) {
                     TasksView.map => _buildMap(context, fullScreen: fullScreen),
-                    TasksView.list => twoPanes
-                        ? _buildTwoPanes(context)
-                        : _buildOnePane(context),
+                    TasksView.list => _buildList(context),
                   },
                 ),
                 // In the corner across from the page's buttons, on the same
@@ -413,10 +400,15 @@ class _TodoPageState extends State<TodoPage> {
     );
   }
 
-  Widget _buildOnePane(BuildContext context) {
+  /// The tasks as a list, in one column under the page's title and the
+  /// summary, on a phone turned on its side as well.
+  Widget _buildList(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    // Keeps the cards a comfortable width on tablets.
-    final gutter = math.max(16.0, (MediaQuery.sizeOf(context).width - 640) / 2);
+    // Clear of a camera cutout on a phone turned on its side, and a
+    // comfortable width for the cards on wide screens.
+    final centred = (MediaQuery.sizeOf(context).width - 640) / 2;
+    final left = math.max(16 + padding.left, centred);
+    final right = math.max(16 + padding.right, centred);
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
@@ -432,7 +424,7 @@ class _TodoPageState extends State<TodoPage> {
           ),
         ),
         SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: gutter),
+          padding: EdgeInsets.only(left: left, right: right),
           sliver: SliverToBoxAdapter(
             child: Column(
               key: _headerKey,
@@ -446,80 +438,13 @@ class _TodoPageState extends State<TodoPage> {
         ),
         if (_loaded)
           _TaskListSliver(
-            padding: EdgeInsets.fromLTRB(gutter, _listTop, gutter,
+            padding: EdgeInsets.fromLTRB(left, _listTop, right,
                 PageActionButtons.height + 24 + padding.bottom),
             listDelay: _listDelay,
             onEdit: _editTask,
             onAddSubtask: _addSubtask,
             firstCardKey: _touring ? _firstCardKey : null,
           ),
-      ],
-    );
-  }
-
-  Widget _buildTwoPanes(BuildContext context) {
-    final padding = MediaQuery.paddingOf(context);
-    return Row(
-      children: [
-        Expanded(
-          flex: 5,
-          child: CustomScrollView(
-            controller: _overviewPaneScrollController,
-            slivers: [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: LargeTitleBarDelegate(
-                  title: _title,
-                  topInset: padding.top,
-                  controller: _overviewPaneScrollController,
-                  titleRevealOffset: _TodoHeader.scrolledAway,
-                ),
-              ),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                    16 + padding.left, 0, 16, 24 + padding.bottom),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    key: _headerKey,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const RiseIn(child: _TodoHeader()),
-                      if (_loaded) const _Overview(),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 6,
-          child: CustomScrollView(
-            controller: _listPaneScrollController,
-            slivers: [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: LargeTitleBarDelegate(
-                  // The title is in the other pane already.
-                  title: "",
-                  topInset: padding.top,
-                  controller: _listPaneScrollController,
-                  trailing: _BarActions(
-                      items: _menuItems(TasksView.list), menuKey: _menuKey),
-                ),
-              ),
-              if (_loaded)
-                _TaskListSliver(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16 + padding.right,
-                      PageActionButtons.height + 24 + padding.bottom),
-                  listDelay: _listDelay,
-                  onEdit: _editTask,
-                  onAddSubtask: _addSubtask,
-                  firstCardKey: _touring ? _firstCardKey : null,
-                ),
-            ],
-          ),
-        ),
       ],
     );
   }
