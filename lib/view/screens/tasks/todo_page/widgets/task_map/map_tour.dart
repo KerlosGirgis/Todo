@@ -5,12 +5,13 @@ import 'map_layout.dart';
 
 /// The map's tour: what the map is, around its centre, whose key is [hub];
 /// how a task on it works, on the first one, [node], when there is one;
-/// then what the [fit] button is for, and that the switch back to the list
-/// is in the [menu].
+/// then what the [fit] and [fullScreen] buttons are for, and that the
+/// switch back to the list is in the [menu].
 List<TourStep> mapTour({
   required GlobalKey hub,
   required GlobalKey node,
   required GlobalKey fit,
+  required GlobalKey fullScreen,
   required GlobalKey menu,
 }) {
   return [
@@ -48,6 +49,14 @@ List<TourStep> mapTour({
       icon: Icons.fit_screen_rounded,
       title: "See It All",
       message: "Lost your place? This brings the whole map back into view.",
+      radius: 19,
+    ),
+    TourStep(
+      target: fullScreen,
+      icon: Icons.open_in_full_rounded,
+      title: "Go Full Screen",
+      message: "Need more room? This gives the map the whole screen. Tap it "
+          "again, or go back, to leave full screen.",
       radius: 19,
     ),
     TourStep(

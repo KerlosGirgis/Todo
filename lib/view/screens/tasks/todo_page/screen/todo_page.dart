@@ -89,16 +89,31 @@ class _TodoPageState extends State<TodoPage> {
   final _hubKey = GlobalKey();
   final _nodeKey = GlobalKey();
   final _fitKey = GlobalKey();
+  final _fullScreenKey = GlobalKey();
 
   /// How tall the bar over the map is, once it's been laid out: the map is
   /// fitted to the room under it.
   double? _mapBarHeight;
 
+  /// Whether the map has the whole screen: the page's bar and buttons are
+  /// out of the way, and so are the phone's status and navigation bars.
+  bool _fullScreen = false;
+
+  /// Whether the phone's bars are hidden: while the map has the whole
+  /// screen, unless another page is over it.
+  bool _systemBarsHidden = false;
+
   /// The page's route, whose tour waits while another page is over it.
   ModalRoute<Object?>? _route;
 
+  /// Whether another page is over this one, such as the lock page.
+  bool _covered = false;
+
   /// Which tours are due, which says when the user asks for them again.
   late final TourViewModel _tours;
+
+  /// The tasks, which can leave the map with nothing to show.
+  late final TasksViewModel _tasks;
 
   /// Starts the daily tasks over when the app comes back on a new day.
   late final AppLifecycleListener _lifecycle;
@@ -108,6 +123,8 @@ class _TodoPageState extends State<TodoPage> {
     super.initState();
     _tours = Provider.of<TourViewModel>(context, listen: false)
       ..addListener(_toursReplayed);
+    _tasks = Provider.of<TasksViewModel>(context, listen: false)
+      ..addListener(_tasksChanged);
     _lifecycle = AppLifecycleListener(
       onResume:
           Provider.of<TasksViewModel>(context, listen: false).checkForNewDay,
@@ -127,15 +144,20 @@ class _TodoPageState extends State<TodoPage> {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
     if (route == _route) return;
-    _route?.secondaryAnimation?.removeStatusListener(_uncovered);
+    _route?.secondaryAnimation?.removeStatusListener(_coverChanged);
     _route = route;
-    route?.secondaryAnimation?.addStatusListener(_uncovered);
+    route?.secondaryAnimation?.addStatusListener(_coverChanged);
   }
 
   @override
   void dispose() {
-    _route?.secondaryAnimation?.removeStatusListener(_uncovered);
+    // The rest of the app has the phone's bars.
+    if (_systemBarsHidden) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+    _route?.secondaryAnimation?.removeStatusListener(_coverChanged);
     _lifecycle.dispose();
+    _tasks.removeListener(_tasksChanged);
     _tours.removeListener(_toursReplayed);
     _tourStart?.cancel();
     _tour.dispose();
@@ -155,20 +177,31 @@ class _TodoPageState extends State<TodoPage> {
   /// settings, as they come back from them.
   void _toursReplayed() => _tourIfDue();
 
-  /// As the page comes back from under another, such as the settings, where
-  /// the list may have been changed for the map.
-  void _uncovered(AnimationStatus status) {
-    if (status == AnimationStatus.dismissed) _tourIfDue();
+  /// As another page comes over this one, such as the lock page, which has
+  /// the phone's bars, and as the page comes back from under it, or from
+  /// under the settings, where the list may have been changed for the map.
+  void _coverChanged(AnimationStatus status) {
+    _covered = status != AnimationStatus.dismissed;
+    _syncSystemBars();
+    if (!_covered) _tourIfDue();
   }
 
   /// Shows the user how the list works, or the map, whichever the page is
-  /// showing, once it has settled, if they haven't been shown yet.
+  /// showing, once it has settled, if they haven't been shown yet. Not
+  /// while the map has the whole screen, without the menu the tour points
+  /// at.
   Future<void> _tourIfDue() async {
     final tour = _pageTour;
-    if (_touring || !_loaded || !await _tours.isDue(tour) || !mounted) return;
+    if (_touring || _fullScreen || !_loaded) return;
+    if (!await _tours.isDue(tour) || !mounted) return;
     // Not for a view that's been switched away from meanwhile, nor under
     // another page.
-    if (_touring || tour != _pageTour || !(_route?.isCurrent ?? true)) return;
+    if (_touring ||
+        _fullScreen ||
+        tour != _pageTour ||
+        !(_route?.isCurrent ?? true)) {
+      return;
+    }
     setState(() => _touring = true);
     _tourStart?.cancel();
     _tourStart = Timer(_tourDelay, () => _startTour(tour));
@@ -191,6 +224,7 @@ class _TodoPageState extends State<TodoPage> {
             hub: _hubKey,
             node: _nodeKey,
             fit: _fitKey,
+            fullScreen: _fullScreenKey,
             menu: _menuKey,
           ),
         _ => todoTour(
@@ -227,6 +261,39 @@ class _TodoPageState extends State<TodoPage> {
     _tourIfDue();
   }
 
+  /// Gives the map the whole screen, or gives the page its bar and buttons
+  /// back, and the phone its bars.
+  void _setFullScreen(bool on) {
+    if (on == _fullScreen) return;
+    // A tour about to start waits until the page has its bar back.
+    final tourWaits = on && (_tourStart?.isActive ?? false);
+    if (tourWaits) _tourStart!.cancel();
+    setState(() {
+      _fullScreen = on;
+      if (tourWaits) _touring = false;
+    });
+    _syncSystemBars();
+    if (!on) _tourIfDue();
+  }
+
+  /// Hides the phone's status and navigation bars while the map has the
+  /// whole screen and no other page is over it, and shows them otherwise.
+  /// A swipe in from the edge of the screen shows them for a moment.
+  void _syncSystemBars() {
+    final hide = _fullScreen && !_covered;
+    if (hide == _systemBarsHidden) return;
+    _systemBarsHidden = hide;
+    SystemChrome.setEnabledSystemUIMode(
+        // Otherwise edge to edge, as the app has them from the start.
+        hide ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge);
+  }
+
+  /// Gives the page its bar back once the map has nothing left to show, as
+  /// the last task on it is deleted, say, for the buttons that add one.
+  void _tasksChanged() {
+    if (_fullScreen && _tasks.emptyReason != null) _setFullScreen(false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
@@ -237,6 +304,7 @@ class _TodoPageState extends State<TodoPage> {
             MediaQuery.sizeOf(context).aspectRatio >= 1.5;
     final view =
         context.select<UserViewModel, TasksView>((user) => user.shownTasksView);
+    final fullScreen = _fullScreen && view == TasksView.map;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // There's no app bar to pick the status bar's icons, so they're set here.
       value: SystemUiOverlayStyle(
@@ -245,26 +313,37 @@ class _TodoPageState extends State<TodoPage> {
             isDarkTheme ? Brightness.light : Brightness.dark,
         statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
       ),
-      child: Tour(
-        controller: _tour,
-        child: Scaffold(
-          resizeToAvoidBottomInset: false,
-          backgroundColor: context.colors.pageBackground,
-          floatingActionButton: KeyedSubtree(
-            key: _buttonsKey,
-            child: PageActionButtons(
-              switchIcon: Icons.edit_note_rounded,
-              switchTooltip: "Notes",
-              onSwitch: _openNotes,
-              addTooltip: "Add Task",
-              onAdd: _addTask,
+      child: PopScope(
+        // Back leaves full screen, rather than the app.
+        canPop: !fullScreen,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) _setFullScreen(false);
+        },
+        child: Tour(
+          controller: _tour,
+          child: Scaffold(
+            resizeToAvoidBottomInset: false,
+            backgroundColor: context.colors.pageBackground,
+            floatingActionButton: _SlideAway(
+              hidden: fullScreen,
+              away: const Offset(0, 1.5),
+              child: KeyedSubtree(
+                key: _buttonsKey,
+                child: PageActionButtons(
+                  switchIcon: Icons.edit_note_rounded,
+                  switchTooltip: "Notes",
+                  onSwitch: _openNotes,
+                  addTooltip: "Add Task",
+                  onAdd: _addTask,
+                ),
+              ),
             ),
+            body: switch (view) {
+              TasksView.map => _buildMap(context, fullScreen: fullScreen),
+              TasksView.list =>
+                twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
+            },
           ),
-          body: switch (view) {
-            TasksView.map => _buildMap(context),
-            TasksView.list =>
-              twoPanes ? _buildTwoPanes(context) : _buildOnePane(context),
-          },
         ),
       ),
     );
@@ -272,8 +351,8 @@ class _TodoPageState extends State<TodoPage> {
 
   /// The tasks as a map that fills the page, under a bar of its own with
   /// the filters on it: the map doesn't scroll, so there's no header for
-  /// them to scroll away with.
-  Widget _buildMap(BuildContext context) {
+  /// them to scroll away with. In [fullScreen], the bar is out of the way.
+  Widget _buildMap(BuildContext context, {required bool fullScreen}) {
     final padding = MediaQuery.paddingOf(context);
     final barHeight = _mapBarHeight;
     return Stack(
@@ -283,12 +362,18 @@ class _TodoPageState extends State<TodoPage> {
           Positioned.fill(
             child: _TaskMapPane(
               insets: EdgeInsets.fromLTRB(
-                  padding.left, barHeight, padding.right, padding.bottom),
+                  padding.left,
+                  fullScreen ? padding.top : barHeight,
+                  padding.right,
+                  padding.bottom),
+              fullScreen: fullScreen,
+              onFullScreen: _setFullScreen,
               onEdit: _editTask,
               onAddSubtask: _addSubtask,
               hubKey: _hubKey,
               nodeKey: _nodeKey,
               fitKey: _fitKey,
+              fullScreenKey: _fullScreenKey,
             ),
           ),
         Positioned(
@@ -301,13 +386,17 @@ class _TodoPageState extends State<TodoPage> {
                 setState(() => _mapBarHeight = height);
               }
             },
-            child: _MapBar(
-              trailing: _BarActions(
-                  items: _menuItems(TasksView.map), menuKey: _menuKey),
-              // Once there are tasks to say whether there's anything to
-              // filter.
-              filters: _loaded,
-              onFilterChanged: _changeFilter,
+            child: _SlideAway(
+              hidden: fullScreen,
+              away: const Offset(0, -1),
+              child: _MapBar(
+                trailing: _BarActions(
+                    items: _menuItems(TasksView.map), menuKey: _menuKey),
+                // Once there are tasks to say whether there's anything to
+                // filter.
+                filters: _loaded,
+                onFilterChanged: _changeFilter,
+              ),
             ),
           ),
         ),
@@ -634,21 +723,72 @@ class _RenderMeasuredHeight extends RenderProxyBox {
   }
 }
 
+/// Slides [child] off the screen and fades it out while it's [hidden], as
+/// the map takes the whole screen, and brings it back after. It keeps its
+/// place meanwhile, so it's laid out as before.
+class _SlideAway extends StatelessWidget {
+  const _SlideAway({
+    required this.hidden,
+    required this.away,
+    required this.child,
+  });
+
+  static const _duration = Duration(milliseconds: 300);
+
+  final bool hidden;
+
+  /// Where it slides to, in its own size: up for the bar, down for the
+  /// buttons.
+  final Offset away;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration =
+        MediaQuery.disableAnimationsOf(context) ? Duration.zero : _duration;
+    return IgnorePointer(
+      ignoring: hidden,
+      child: ExcludeSemantics(
+        excluding: hidden,
+        child: AnimatedSlide(
+          offset: hidden ? away : Offset.zero,
+          duration: duration,
+          curve: Curves.easeInOutCubic,
+          child: AnimatedOpacity(
+            opacity: hidden ? 0 : 1,
+            duration: duration,
+            curve: Curves.easeInOutCubic,
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// The tasks the filter lets through as a map, or what to show instead when
 /// there are none.
 class _TaskMapPane extends StatelessWidget {
   const _TaskMapPane({
     required this.insets,
+    required this.fullScreen,
+    required this.onFullScreen,
     required this.onEdit,
     required this.onAddSubtask,
     required this.hubKey,
     required this.nodeKey,
     required this.fitKey,
+    required this.fullScreenKey,
   });
 
   /// How much of the map the page's bar covers, and the edges of the screen
   /// it's to keep clear of.
   final EdgeInsets insets;
+
+  /// Whether the map has the whole screen, and what gives it the whole
+  /// screen, or gives the page its bar back.
+  final bool fullScreen;
+  final ValueChanged<bool> onFullScreen;
 
   /// Opens the editor for the task.
   final ValueChanged<TodoItem> onEdit;
@@ -660,6 +800,7 @@ class _TaskMapPane extends StatelessWidget {
   final GlobalKey hubKey;
   final GlobalKey nodeKey;
   final GlobalKey fitKey;
+  final GlobalKey fullScreenKey;
 
   @override
   Widget build(BuildContext context) {
@@ -680,9 +821,12 @@ class _TaskMapPane extends StatelessWidget {
       onAddSubtask: onAddSubtask,
       onDelete: (task) => _moveToTrash(tasks, task),
       onResult: _showResult,
+      fullScreen: fullScreen,
+      onFullScreen: onFullScreen,
       hubKey: hubKey,
       nodeKey: nodeKey,
       fitKey: fitKey,
+      fullScreenKey: fullScreenKey,
     );
   }
 }

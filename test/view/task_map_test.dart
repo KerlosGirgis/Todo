@@ -1,7 +1,10 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/task_map/map_node.dart';
+import 'package:todo/view_model/tour_view_model.dart';
 
 import 'todo_page_test.dart' show TodoPageHarness, plans;
 
@@ -245,5 +248,127 @@ Shop""");
     expect(find.text("No Tasks"), findsOneWidget);
     expect(find.byType(MapHub), findsNothing);
     await page.close(tester);
+  });
+
+  group("full screen", () {
+    /// What the page asks of the phone from now on, such as to hide its
+    /// bars, as "method argument", in order.
+    List<String> phoneCalls(WidgetTester tester) {
+      final calls = <String>[];
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        calls.add("${call.method} ${call.arguments}");
+        return null;
+      });
+      addTearDown(() =>
+          messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+      return calls;
+    }
+
+    /// The modes the page has put the phone's bars in, in order.
+    List<String> barModes(List<String> calls) => [
+          for (final call in calls)
+            if (call.startsWith("SystemChrome.setEnabledSystemUIMode "))
+              call.split(" ").last,
+        ];
+
+    /// What's on the page's bar and in its corner, which the map covers in
+    /// full screen.
+    final aroundTheMap = {
+      "the title": find.text("ToDo"),
+      "the filters": find.textContaining("Undone"),
+      "the menu": find.byTooltip("Menu"),
+      "the switch to the notes": find.byTooltip("Notes"),
+      "the add button": find.byTooltip("Add Task"),
+    };
+
+    testWidgets("gives the map the whole screen, then the page its bar back",
+        (tester) async {
+      await page.open(tester, plans(), view: TasksView.map);
+      final calls = phoneCalls(tester);
+      final trip = rectOf(tester, "Trip");
+      expect(find.byTooltip("Exit Full Screen"), findsNothing);
+
+      await tester.tap(find.byTooltip("Full Screen"));
+      await page.wait(tester);
+      aroundTheMap.forEach((what, finder) =>
+          expect(finder.hitTestable(), findsNothing, reason: what));
+      expect(barModes(calls), ["SystemUiMode.immersiveSticky"]);
+      // The map stays where it was on the screen, and works as before.
+      expect(rectOf(tester, "Trip"), trip);
+      expect(find.byTooltip("Show Whole Map").hitTestable(), findsOneWidget);
+      await tester.tap(find.text("Pack"));
+      await page.wait(tester);
+      expect(find.byTooltip("Add Subtask"), findsOneWidget);
+
+      await tester.tap(find.byTooltip("Exit Full Screen"));
+      await page.wait(tester);
+      aroundTheMap.forEach((what, finder) =>
+          expect(finder.hitTestable(), findsOneWidget, reason: what));
+      expect(barModes(calls),
+          ["SystemUiMode.immersiveSticky", "SystemUiMode.edgeToEdge"]);
+      expect(rectOf(tester, "Trip"), trip);
+      expect(find.byTooltip("Full Screen"), findsOneWidget);
+      await page.close(tester);
+    });
+
+    testWidgets("Back leaves full screen, and only then the app",
+        (tester) async {
+      await page.open(tester, plans(), view: TasksView.map);
+      final calls = phoneCalls(tester);
+      await tester.tap(find.byTooltip("Full Screen"));
+      await page.wait(tester);
+
+      expect(await tester.binding.handlePopRoute(), isTrue);
+      await page.wait(tester);
+      expect(find.byTooltip("Menu").hitTestable(), findsOneWidget);
+      expect(find.byType(MapHub), findsOneWidget);
+      expect(barModes(calls).last, "SystemUiMode.edgeToEdge");
+      expect(calls.where((call) => call.startsWith("SystemNavigator.pop")),
+          isEmpty);
+
+      await tester.binding.handlePopRoute();
+      expect(calls.where((call) => call.startsWith("SystemNavigator.pop")),
+          hasLength(1));
+      await page.close(tester);
+    });
+
+    testWidgets("the page gets its bar back once the map has nothing on it",
+        (tester) async {
+      await page.open(tester, [TodoItem(uuid: "milk", title: "Milk")],
+          view: TasksView.map);
+      final calls = phoneCalls(tester);
+      await tester.tap(find.byTooltip("Full Screen"));
+      await page.wait(tester);
+      await tester.tap(find.text("Milk"));
+      await page.wait(tester);
+      await tester.tap(find.byTooltip("Delete"));
+      await page.wait(tester);
+      expect(find.text("No Tasks"), findsOneWidget);
+      expect(find.byTooltip("Menu").hitTestable(), findsOneWidget);
+      expect(barModes(calls).last, "SystemUiMode.edgeToEdge");
+      // Once the toast that says it's in the trash is out of the way.
+      await page.wait(tester, const Duration(seconds: 6));
+      expect(find.byTooltip("Add Task").hitTestable(), findsOneWidget);
+      await page.close(tester);
+    });
+
+    testWidgets("the map's tour waits until the page has its bar back",
+        (tester) async {
+      await page.open(tester, plans(), due: {PageTour.map});
+      await page.choose(tester, "Show as Map");
+      // Before the tour starts.
+      await page.wait(tester, const Duration(milliseconds: 400));
+      await tester.tap(find.byTooltip("Full Screen"));
+      await page.wait(tester, const Duration(seconds: 3));
+      expect(find.text("Your Tasks as a Map"), findsNothing);
+
+      await tester.tap(find.byTooltip("Exit Full Screen"));
+      await page.wait(tester, const Duration(seconds: 2));
+      expect(find.text("Your Tasks as a Map"), findsOneWidget);
+      await tester.tap(find.text("Skip"));
+      await page.wait(tester);
+      await page.close(tester);
+    });
   });
 }

@@ -27,6 +27,9 @@ import 'map_toolbar.dart';
 /// away. A task that's pressed and held is picked up, with its subtasks, to
 /// be dropped on the task it's to go into, or just above or below the one
 /// it's to go next to.
+///
+/// The buttons in the corner fit the whole map to the screen and, with
+/// [onFullScreen], give the map the whole screen.
 class TaskMap extends StatefulWidget {
   const TaskMap({
     super.key,
@@ -36,9 +39,12 @@ class TaskMap extends StatefulWidget {
     required this.onAddSubtask,
     required this.onDelete,
     required this.onResult,
+    this.fullScreen = false,
+    this.onFullScreen,
     this.hubKey,
     this.nodeKey,
     this.fitKey,
+    this.fullScreenKey,
   });
 
   final TasksViewModel tasks;
@@ -60,11 +66,22 @@ class TaskMap extends StatefulWidget {
   /// say.
   final ValueChanged<Result?> onResult;
 
-  /// Keys for the centre, the first task and the button that fits the map
-  /// to the screen, so that a tour can point at them.
+  /// Whether the map has the whole screen, without the page's bar and
+  /// buttons over it.
+  final bool fullScreen;
+
+  /// Gives the map the whole screen, or gives the page its bar and buttons
+  /// back, from a button over the one that fits the map to the screen.
+  /// Without it, there's no such button.
+  final ValueChanged<bool>? onFullScreen;
+
+  /// Keys for the centre, the first task and the buttons that fit the map
+  /// to the screen and give it the whole screen, so that a tour can point
+  /// at them.
   final Key? hubKey;
   final Key? nodeKey;
   final Key? fitKey;
+  final Key? fullScreenKey;
 
   @override
   State<TaskMap> createState() => _TaskMapState();
@@ -697,13 +714,37 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
             PositionedDirectional(
               start: 16 + padding.left,
               bottom: 16 + padding.bottom,
-              child: KeyedSubtree(
-                key: widget.fitKey,
-                child: GlassIconButton(
-                  icon: Icons.fit_screen_rounded,
-                  tooltip: "Show Whole Map",
-                  onPressed: () => _glideTo(_viewOf(smallest: _smallestWhole)),
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.onFullScreen case final onFullScreen?) ...[
+                    KeyedSubtree(
+                      key: widget.fullScreenKey,
+                      // Arrows rather than the corners of a screen, which
+                      // the button under it has.
+                      child: GlassIconButton(
+                        icon: widget.fullScreen
+                            ? Icons.close_fullscreen_rounded
+                            : Icons.open_in_full_rounded,
+                        iconSize: 20,
+                        tooltip: widget.fullScreen
+                            ? "Exit Full Screen"
+                            : "Full Screen",
+                        onPressed: () => onFullScreen(!widget.fullScreen),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  KeyedSubtree(
+                    key: widget.fitKey,
+                    child: GlassIconButton(
+                      icon: Icons.fit_screen_rounded,
+                      tooltip: "Show Whole Map",
+                      onPressed: () =>
+                          _glideTo(_viewOf(smallest: _smallestWhole)),
+                    ),
+                  ),
+                ],
               ),
             ),
             // Where the task being carried would go, in words, over it.

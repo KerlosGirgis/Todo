@@ -413,6 +413,7 @@ Trip
       "Work on a Task",
       "Move a Task",
       "See It All",
+      "Go Full Screen",
     ]) {
       expect(find.text(title), findsOneWidget);
       await tester.tap(find.text("Next"));
