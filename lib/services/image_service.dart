@@ -1,34 +1,37 @@
 import 'dart:io';
 import 'dart:ui' show Color;
 
-import 'package:flutter/foundation.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class ImageService {
   /// Has the user pick a photo from the gallery and crop it to a circle,
-  /// then keeps it in the app's storage, deleting the photo at [replacing],
-  /// if there's one. The kept photo's path, or null when the user backs out.
-  Future<String?> pickProfilePicture({String? replacing}) async {
+  /// then keeps a copy of it in the app's storage. The copy's path, or null
+  /// when the user backs out.
+  Future<String?> pickProfilePicture() async {
     final image = await _pickImage();
     if (image == null) return null;
     final croppedImage = await _cropImage(image);
     if (croppedImage == null) return null;
-    final savedImage = await _saveImageToAppStorage(croppedImage, replacing);
+    final savedImage = await _saveImageToAppStorage(croppedImage);
     return savedImage.path;
+  }
+
+  /// Deletes the photo at [path], one [pickProfilePicture] kept, if it's
+  /// still there. Never a file outside the app's own storage.
+  Future<void> deletePhoto(String path) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    if (!p.isWithin(appDir.path, path)) return;
+    final file = File(path);
+    if (await file.exists()) await file.delete();
   }
 
   Future<File?> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      if (kDebugMode) {
-        print("file returned");
-      }
-      return File(pickedFile.path);
-    }
-    return null;
+    return pickedFile == null ? null : File(pickedFile.path);
   }
 
   Future<File?> _cropImage(File imageFile) async {
@@ -54,18 +57,8 @@ class ImageService {
     return null;
   }
 
-  Future<File> _saveImageToAppStorage(File image, String? replacing) async {
+  Future<File> _saveImageToAppStorage(File image) async {
     final appDir = await getApplicationDocumentsDirectory();
-
-    final fileName = image.path.split('/').last;
-    if (replacing != null) {
-      final oldFile = File(replacing);
-      if (await oldFile.exists()) {
-        await oldFile.delete();
-      }
-    }
-    final savedImage = await image.copy('${appDir.path}/$fileName');
-
-    return savedImage;
+    return image.copy(p.join(appDir.path, p.basename(image.path)));
   }
 }

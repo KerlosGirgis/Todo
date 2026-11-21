@@ -85,7 +85,7 @@ class UserViewModel with ChangeNotifier {
   Future<void> get() async {
     List<UserProfile> users = await _userRepository.getUser();
     if (users.isEmpty) {
-      _userRepository.insertUser(user);
+      await _userRepository.insertUser(user);
       users = await _userRepository.getUser();
     }
     _user = users.first;
@@ -135,18 +135,27 @@ class UserViewModel with ChangeNotifier {
     return Info("Name Updated");
   }
 
-  Future<void> setAvatar(Avatar avatar) =>
-      _set(avatar == user.avatar, () => user.copyWith(avatar: avatar));
+  /// Has [avatar] stand for the user. A photo of their own that stood for
+  /// them before is deleted, but only once the profile has the new avatar:
+  /// until then, it's the one the profile points at.
+  Future<void> setAvatar(Avatar avatar) async {
+    final old = user.avatar;
+    if (avatar == old) return;
+    await _save(user.copyWith(avatar: avatar));
+    if (old is PhotoAvatar) {
+      try {
+        await _imageService.deletePhoto(old.path);
+      } catch (e) {
+        // Left behind, which only takes up a little room.
+      }
+    }
+  }
 
   /// Has the user pick a photo of their own for their avatar, in place of
-  /// the one they picked before, if they did.
+  /// whichever stands for them now.
   Future<void> pickPhoto() async {
-    final avatar = user.avatar;
-    final path = await _imageService.pickProfilePicture(
-        replacing: avatar is PhotoAvatar ? avatar.path : null);
-    if (path != null) {
-      setAvatar(PhotoAvatar(path));
-    }
+    final path = await _imageService.pickProfilePicture();
+    if (path != null) await setAvatar(PhotoAvatar(path));
   }
 
   Future<void> setDarkTheme(bool darkTheme) => _set(

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -9,6 +11,7 @@ import 'package:todo/repositories/user_repository.dart';
 import 'package:todo/services/authentication_service.dart';
 import 'package:todo/services/database_service.dart';
 import 'package:todo/services/device_service.dart';
+import 'package:todo/services/image_service.dart';
 import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/verse_service.dart';
 import 'package:todo/view_model/auth_view_model.dart';
@@ -19,17 +22,48 @@ class FakeUserRepository extends UserRepository {
   final rows = <UserProfile>[];
   var updates = 0;
 
+  /// Whether adding the profile fails, or saving it does, as when the disk
+  /// is full.
+  bool failInserts = false;
+  bool failUpdates = false;
+
   @override
-  Future<void> insertUser(UserProfile user) async =>
-      rows.add(UserProfile.fromMap({...user.toMap(), 'id': 1}));
+  Future<void> insertUser(UserProfile user) async {
+    if (failInserts) throw StateError("Disk full");
+    rows.add(UserProfile.fromMap({...user.toMap(), 'id': 1}));
+  }
 
   @override
   Future<List<UserProfile>> getUser() async => List.of(rows);
 
   @override
   Future<void> updateUser(UserProfile item) async {
+    if (failUpdates) throw StateError("Disk full");
     updates++;
     rows[0] = item;
+  }
+}
+
+/// A gallery whose photo the user picks is [picked], or none for backing
+/// out. It keeps each photo deleted, with the avatar the saved profile had
+/// as it went.
+class FakeImages extends ImageService {
+  FakeImages(this._profile);
+
+  final FakeUserRepository _profile;
+  String? picked;
+  final deleted = <(String, Avatar)>[];
+
+  /// Whether deleting a photo fails.
+  bool failDeletes = false;
+
+  @override
+  Future<String?> pickProfilePicture() async => picked;
+
+  @override
+  Future<void> deletePhoto(String path) async {
+    if (failDeletes) throw const FileSystemException("Busy");
+    deleted.add((path, _profile.rows.single.avatar));
   }
 }
 
@@ -233,6 +267,80 @@ void main() {
       // Nothing to change.
       await user.setTasksView(TasksView.list);
       expect(notified, 1);
+    });
+  });
+
+  test("says why the profile couldn't be made, rather than half making it",
+      () async {
+    final fresh = UserViewModel(
+      repository: FakeUserRepository()..failInserts = true,
+      lockService: newLock(),
+      deviceService: device,
+      databaseService: FakeDatabase(),
+    );
+    await expectLater(
+        fresh.get(),
+        throwsA(isA<StateError>()
+            .having((e) => e.message, 'message', "Disk full")));
+  });
+
+  group('a photo of their own', () {
+    const first = PhotoAvatar("/data/app_flutter/first.jpg");
+    const second = PhotoAvatar("/data/app_flutter/second.jpg");
+    late FakeImages images;
+    late UserViewModel withPhotos;
+
+    setUp(() async {
+      images = FakeImages(repository);
+      withPhotos = UserViewModel(
+        repository: repository,
+        imageService: images,
+        lockService: newLock(),
+        deviceService: device,
+        databaseService: FakeDatabase(),
+      );
+      await withPhotos.get();
+      images.picked = first.path;
+      await withPhotos.pickPhoto();
+    });
+
+    test(
+        "takes the place of the one before, which is deleted once the "
+        "profile has the new one", () async {
+      expect(withPhotos.user.avatar, first);
+      // The bundled one it took the place of is no file of its own.
+      expect(images.deleted, isEmpty);
+
+      images.picked = second.path;
+      await withPhotos.pickPhoto();
+      expect(repository.rows.single.avatar, second);
+      expect(images.deleted, [(first.path, second)]);
+    });
+
+    test("stays when the user backs out of picking another", () async {
+      images.picked = null;
+      await withPhotos.pickPhoto();
+      expect(repository.rows.single.avatar, first);
+      expect(images.deleted, isEmpty);
+    });
+
+    test("is deleted once a bundled avatar takes its place", () async {
+      await withPhotos.setAvatar(const BundledAvatar("004"));
+      expect(images.deleted, [(first.path, const BundledAvatar("004"))]);
+    });
+
+    test("stays when the profile can't be saved with another", () async {
+      repository.failUpdates = true;
+      images.picked = second.path;
+      await expectLater(withPhotos.pickPhoto(), throwsA(isA<StateError>()));
+      expect(repository.rows.single.avatar, first);
+      expect(images.deleted, isEmpty);
+    });
+
+    test("that can't be deleted is only left behind", () async {
+      images.failDeletes = true;
+      await withPhotos.setAvatar(const BundledAvatar("004"));
+      expect(repository.rows.single.avatar, const BundledAvatar("004"));
     });
   });
 
