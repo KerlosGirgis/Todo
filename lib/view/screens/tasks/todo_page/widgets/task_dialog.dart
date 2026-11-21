@@ -79,7 +79,7 @@ class _TaskDialogState extends State<TaskDialog> {
   }
 
   Future<void> _pickDate() async {
-    final now = DateTime.now();
+    final now = _draft.now;
     final today = DateUtils.dateOnly(now);
     final date = _draft.day;
     final picked = await showDatePicker(
@@ -97,7 +97,7 @@ class _TaskDialogState extends State<TaskDialog> {
     final picked = await showTimePicker(
       context: context,
       initialTime: time == null
-          ? TimeOfDay.now()
+          ? TimeOfDay.fromDateTime(_draft.now)
           : TimeOfDay(hour: time.hour, minute: time.minute),
     );
     if (picked != null) _draft.setTime(ClockTime(picked.hour, picked.minute));
@@ -145,7 +145,7 @@ class _TaskDialogState extends State<TaskDialog> {
       listenable: _draft,
       builder: (context, child) {
         final date = _draft.day;
-        final now = DateTime.now();
+        final now = _draft.now;
         final parent = _draft.parent;
         return FormDialog(
           icon: adding ? Icons.add_task_rounded : Icons.edit_rounded,
@@ -394,7 +394,7 @@ class _ReminderHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (hint, missing) = switch (draft.reminderStatus(now)) {
+    final (hint, missing) = switch (draft.reminderStatus()) {
       ReminderStatus.off => ("No reminder", false),
       ReminderStatus.needsDayAndTime => ("Needs a date and a time", true),
       ReminderStatus.needsTime => ("Needs a time", true),

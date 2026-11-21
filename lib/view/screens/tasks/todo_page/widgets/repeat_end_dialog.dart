@@ -60,7 +60,7 @@ class _RepeatEndDialogState extends State<RepeatEndDialog> {
     return ListenableBuilder(
       listenable: _end,
       builder: (context, child) {
-        final now = DateTime.now();
+        final today = _end.today;
         return FormDialog(
           icon: Icons.hourglass_bottom_rounded,
           title: "Repeat For",
@@ -96,7 +96,7 @@ class _RepeatEndDialogState extends State<RepeatEndDialog> {
                         color: _red,
                         title: "Last Day",
                         trailing: DisclosureValue(
-                          DateTimeUtils.friendlyDay(_end.day, now),
+                          DateTimeUtils.friendlyDay(_end.day, today),
                         ),
                         onTap: _pickDay,
                       ),
@@ -106,7 +106,7 @@ class _RepeatEndDialogState extends State<RepeatEndDialog> {
               },
             ),
             const SizedBox(height: 14),
-            _TimesLeft(end: _end, now: now),
+            _TimesLeft(end: _end, now: today),
           ],
           actions: [
             ProfileButton(

@@ -8,13 +8,15 @@ import 'package:todo/models/todo_item.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/task_card.dart';
 
 void main() {
-  Future<void> showCard(WidgetTester tester, TodoItem task) =>
+  /// Shows [task]'s card as of [now], or the phone's time.
+  Future<void> showCard(WidgetTester tester, TodoItem task, {DateTime? now}) =>
       tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.getTheme(isDarkMode: false),
           home: Scaffold(
             body: TaskCard(
               task: task,
+              now: now ?? DateTime.now(),
               titleScale: 1,
               descriptionScale: 1,
               descriptionLines: 2,
@@ -32,6 +34,21 @@ void main() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day - days);
   }
+
+  testWidgets("shows its task as of the time it's given, not the phone's", (
+    tester,
+  ) async {
+    final water = TodoItem(
+      uuid: "w",
+      title: "Water the plants",
+      day: DateTime(2026, 5, 14),
+      time: const ClockTime(9, 0),
+    );
+    await showCard(tester, water, now: DateTime(2026, 5, 13, 12));
+    expect(find.text("Tomorrow, 9:00 AM"), findsOneWidget);
+    await showCard(tester, water, now: DateTime(2026, 5, 14, 12));
+    expect(find.text("Today, 9:00 AM"), findsOneWidget);
+  });
 
   final stretch = TodoItem(
     uuid: "u",

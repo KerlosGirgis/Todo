@@ -192,11 +192,14 @@ class _TaskListState extends State<TaskList> {
           ),
         );
     final byHand = tasks.sort == TaskSort.custom;
+    // One time for every card, as the tasks have it.
+    final now = tasks.now;
 
     TaskCard card(TaskNode node, {bool interactive = true}) {
       final task = node.task;
       return TaskCard(
         task: task,
+        now: now,
         titleScale: titleScale,
         descriptionScale: descriptionScale,
         descriptionLines: descriptionLines,

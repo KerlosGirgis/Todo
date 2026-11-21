@@ -326,6 +326,8 @@ class _TaskPreviewState extends State<_TaskPreview> {
               padding: const EdgeInsets.all(16),
               child: TaskCard(
                 task: _sampleTask,
+                // A sample, which has no day to go by the tasks' clock for.
+                now: DateTime.now(),
                 titleScale: widget.titleSize,
                 descriptionScale: widget.descSize,
                 descriptionLines: 0,

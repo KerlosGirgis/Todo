@@ -17,12 +17,17 @@ class TrashTaskCard extends StatelessWidget {
   const TrashTaskCard({
     super.key,
     required this.entry,
+    required this.now,
     required this.onRestore,
     required this.onDelete,
   });
 
   /// The task's entry, with the tasks in it.
   final Trashed<TaskBranch> entry;
+
+  /// The time the card goes by, to say how long ago it was deleted: its
+  /// view model's, which the deletion was dated by.
+  final DateTime now;
   final VoidCallback onRestore;
   final VoidCallback onDelete;
 
@@ -41,6 +46,7 @@ class TrashTaskCard extends StatelessWidget {
         _ => "$subtasks subtasks",
       },
       deletedAt: entry.deletedAt,
+      now: now,
       onRestore: onRestore,
       onDelete: onDelete,
     );
@@ -54,12 +60,17 @@ class TrashNoteCard extends StatelessWidget {
   const TrashNoteCard({
     super.key,
     required this.entry,
+    required this.now,
     required this.onRestore,
     required this.onDelete,
   });
 
   /// The note's entry, without its text while it's locked.
   final Trashed<Note> entry;
+
+  /// The time the card goes by, to say how long ago it was deleted: its
+  /// view model's, which the deletion was dated by.
+  final DateTime now;
   final VoidCallback onRestore;
   final VoidCallback onDelete;
 
@@ -82,6 +93,7 @@ class TrashNoteCard extends StatelessWidget {
           ? null
           : Text(text),
       deletedAt: entry.deletedAt,
+      now: now,
       onRestore: onRestore,
       onDelete: onDelete,
     );
@@ -124,6 +136,7 @@ class _TrashCard extends StatelessWidget {
     this.detail,
     this.extra,
     required this.deletedAt,
+    required this.now,
     required this.onRestore,
     required this.onDelete,
   });
@@ -134,6 +147,7 @@ class _TrashCard extends StatelessWidget {
   final Widget? detail;
   final String? extra;
   final DateTime deletedAt;
+  final DateTime now;
   final VoidCallback onRestore;
   final VoidCallback onDelete;
 
@@ -142,7 +156,7 @@ class _TrashCard extends StatelessWidget {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
     final detail = this.detail;
-    final deleted = deletedLabel(deletedAt, DateTime.now());
+    final deleted = deletedLabel(deletedAt, now);
     return DecoratedBox(
       decoration: ShapeDecoration(
         shape: TaskCard.shape,

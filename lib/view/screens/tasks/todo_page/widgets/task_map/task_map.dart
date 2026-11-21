@@ -286,7 +286,7 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
   void _lay({required bool animate}) {
     final style = _style!;
     final tree = widget.tasks.tree;
-    final now = DateTime.now();
+    final now = widget.tasks.now;
     final bits = {
       for (final node in tree.nodes) node.key: MapNodeStyle.bitsOf(node, now),
     };

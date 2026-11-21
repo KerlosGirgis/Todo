@@ -15,6 +15,7 @@ import 'task_card.dart';
 /// map is in the menu.
 List<TourStep> todoTour({
   required TodoItem? task,
+  required DateTime now,
   ({int done, int total})? subtasks,
   required GlobalKey card,
   required GlobalKey header,
@@ -23,7 +24,7 @@ List<TourStep> todoTour({
   required GlobalKey sortFilter,
   required GlobalKey menu,
 }) {
-  final shown = task ?? _example();
+  final shown = task ?? _example(now);
   final target = task == null ? header : card;
   final place = task == null
       ? (BuildContext context, Rect header) =>
@@ -47,6 +48,7 @@ List<TourStep> todoTour({
     behind: behind,
     builder: (context, pose) => _TourTaskCard(
       task: taskAt?.call(pose) ?? shown,
+      now: now,
       subtasks: subtasks,
       checkKey: check,
       titleKey: title,
@@ -186,10 +188,9 @@ TodoItem _withBellTapped(TodoItem task) => switch (task.reminder) {
   Reminder.daily || Reminder.weekly || Reminder.monthly => task,
 };
 
-/// A task to show the cards' gestures on when there are none: for tomorrow
-/// morning, so it's never overdue.
-TodoItem _example() {
-  final now = DateTime.now();
+/// A task to show the cards' gestures on when there are none: for the
+/// morning after [now], so it's never overdue.
+TodoItem _example(DateTime now) {
   return TodoItem(
     uuid: "tour",
     title: "Water the plants",
@@ -204,6 +205,7 @@ TodoItem _example() {
 class _TourTaskCard extends StatelessWidget {
   const _TourTaskCard({
     required this.task,
+    required this.now,
     required this.subtasks,
     required this.checkKey,
     required this.titleKey,
@@ -211,6 +213,7 @@ class _TourTaskCard extends StatelessWidget {
   });
 
   final TodoItem task;
+  final DateTime now;
   final ({int done, int total})? subtasks;
   final GlobalKey checkKey;
   final GlobalKey titleKey;
@@ -228,6 +231,7 @@ class _TourTaskCard extends StatelessWidget {
         );
     return TaskCard(
       task: task,
+      now: now,
       titleScale: titleScale,
       descriptionScale: descriptionScale,
       descriptionLines: descriptionLines,

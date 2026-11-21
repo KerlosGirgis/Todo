@@ -45,8 +45,9 @@ class TodoPageHarness {
   }
 
   /// Opens the page on [seed], as a list or a map, on a phone of [size],
-  /// with the tasks listed as [listing] if it was kept from before. Every
-  /// tour counts as seen, unless some are [due].
+  /// with the tasks listed as [listing] if it was kept from before, and the
+  /// tasks going by [clock], or the phone's. Every tour counts as seen,
+  /// unless some are [due].
   Future<void> open(
     WidgetTester tester,
     List<TodoItem> seed, {
@@ -54,6 +55,7 @@ class TodoPageHarness {
     Size size = const Size(412, 915),
     Set<PageTour> due = const {},
     TaskListing? listing,
+    DateTime Function()? clock,
   }) async {
     tester.view.physicalSize = size * 2;
     tester.view.devicePixelRatio = 2;
@@ -71,6 +73,7 @@ class TodoPageHarness {
       repository: rows,
       notificationService: FakeNotifications(),
       lockService: FakeLock(),
+      clock: clock,
     );
     user = UserViewModel(
       repository: FakeUserRepository(),
@@ -216,6 +219,27 @@ void main() {
     expect(find.text("1 subtask"), findsNWidgets(2));
     await page.close(tester);
   });
+
+  for (final view in TasksView.values) {
+    testWidgets("the ${view.name} shows the tasks as of their clock, not the "
+        "phone's", (tester) async {
+      await page.open(
+        tester,
+        [
+          TodoItem(
+            uuid: "w",
+            title: "Water the plants",
+            day: DateTime(2026, 5, 14),
+            time: const ClockTime(9, 0),
+          ),
+        ],
+        view: view,
+        clock: () => DateTime(2026, 5, 13, 12),
+      );
+      expect(find.text("Tomorrow, 9:00 AM"), findsOneWidget);
+      await page.close(tester);
+    });
+  }
 
   testWidgets("a tap on a task's subtasks folds them away, and back", (
     tester,

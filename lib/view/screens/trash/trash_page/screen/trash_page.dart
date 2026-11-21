@@ -183,6 +183,7 @@ class _TrashPageState extends State<TrashPage> {
                   padding: listPadding,
                   cardOf: (entry) => TrashTaskCard(
                     entry: entry,
+                    now: context.read<TasksViewModel>().now,
                     onRestore: () => _restoreTask(entry),
                     onDelete: () => _deleteTask(entry),
                   ),
@@ -194,6 +195,7 @@ class _TrashPageState extends State<TrashPage> {
                   padding: listPadding,
                   cardOf: (entry) => TrashNoteCard(
                     entry: entry,
+                    now: context.read<NotesViewModel>().now,
                     onRestore: () => _restoreNote(entry),
                     onDelete: () => _deleteNote(entry),
                   ),

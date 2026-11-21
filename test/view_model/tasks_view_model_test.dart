@@ -370,19 +370,19 @@ void main() {
 
     test('says what a reminder still needs', () {
       final draft = tasks.draft();
-      expect(draft.reminderStatus(now), ReminderStatus.off);
+      expect(draft.reminderStatus(), ReminderStatus.off);
       draft.setReminder(Reminder.once);
-      expect(draft.reminderStatus(now), ReminderStatus.needsDayAndTime);
+      expect(draft.reminderStatus(), ReminderStatus.needsDayAndTime);
       draft.setTime(const ClockTime(11, 0));
-      expect(draft.reminderStatus(now), ReminderStatus.inPast);
+      expect(draft.reminderStatus(), ReminderStatus.inPast);
       draft.setTime(const ClockTime(13, 0));
-      expect(draft.reminderStatus(now), ReminderStatus.ready);
+      expect(draft.reminderStatus(), ReminderStatus.ready);
       draft
         ..setTime(null)
         ..setReminder(Reminder.daily);
-      expect(draft.reminderStatus(now), ReminderStatus.needsTime);
+      expect(draft.reminderStatus(), ReminderStatus.needsTime);
       draft.setTime(const ClockTime(7, 0));
-      expect(draft.reminderStatus(now), ReminderStatus.ready);
+      expect(draft.reminderStatus(), ReminderStatus.ready);
     });
 
     test('starts from the task it changes', () {
@@ -444,9 +444,9 @@ void main() {
         ..toggleWeekday(DateTime.friday)
         ..toggleWeekday(DateTime.wednesday)
         ..setUntil(DateTime(2026, 5, 14));
-      expect(draft.reminderStatus(now), ReminderStatus.endsTooSoon);
+      expect(draft.reminderStatus(), ReminderStatus.endsTooSoon);
       draft.setUntil(DateTime(2026, 5, 15));
-      expect(draft.reminderStatus(now), ReminderStatus.ready);
+      expect(draft.reminderStatus(), ReminderStatus.ready);
       expect(
         draft.rule,
         Recurrence.weekly(
@@ -1275,7 +1275,7 @@ void main() {
       );
       await tasks.get();
       final draft = tasks.draft(task("Course"));
-      expect(draft.reminderStatus(now), ReminderStatus.ended);
+      expect(draft.reminderStatus(), ReminderStatus.ended);
       final result = await tasks.save(draft..setTitle("Course done"));
       expect((result as Info).message, "Task Updated");
       final course = task("Course done");

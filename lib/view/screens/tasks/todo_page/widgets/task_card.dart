@@ -31,6 +31,7 @@ class TaskCard extends StatefulWidget {
   const TaskCard({
     super.key,
     required this.task,
+    required this.now,
     required this.titleScale,
     required this.descriptionScale,
     required this.descriptionLines,
@@ -51,6 +52,10 @@ class TaskCard extends StatefulWidget {
   );
 
   final TodoItem task;
+
+  /// The time the card shows the task as of: the tasks' own, as
+  /// `TasksViewModel.now` has it, so the card agrees with the list.
+  final DateTime now;
 
   /// How many tasks are in this one, however deep, and how many of them are
   /// done. Null for a task with none.
@@ -182,7 +187,7 @@ class _TaskCardState extends State<TaskCard> {
     // Text fades back as the task gets done.
     Color fade(double alpha, double doneAlpha) =>
         ink.withValues(alpha: lerpDouble(alpha, doneAlpha, doneness));
-    final now = DateTime.now();
+    final now = widget.now;
     final recurrence = task.recurrence;
     final occurrence = task.occurrenceOn(now);
     // The time that stands for it as the card has it, which is how the tour

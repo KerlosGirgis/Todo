@@ -228,6 +228,7 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
         ),
         _ => todoTour(
           task: first?.task,
+          now: _tasks.now,
           subtasks: first == null || first.subtaskCount == 0
               ? null
               : (done: first.doneSubtaskCount, total: first.subtaskCount),

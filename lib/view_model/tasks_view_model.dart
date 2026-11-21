@@ -190,6 +190,10 @@ class TasksViewModel with ChangeNotifier {
 
   /// The day the tasks stand on, which a daily task is done or not for.
   DateTime get today => _day ?? _dateOf(_now());
+
+  /// The time as the tasks go by it, which the pages show them as of: the
+  /// clock this was made with, which tests can set.
+  DateTime get now => _now();
   DateTime? _day;
 
   /// Goes off as the next day begins, to start the daily tasks over.
@@ -1293,6 +1297,9 @@ class TaskDraft with ChangeNotifier {
 
   DateTime get _today => _dateOf(_now());
 
+  /// The time as the form goes by it: the tasks' clock.
+  DateTime get now => _now();
+
   /// The task it's a subtask of, or null for a task of its own.
   TodoItem? get parent => _parent;
   TodoItem? _parent;
@@ -1425,9 +1432,10 @@ class TaskDraft with ChangeNotifier {
     );
   }
 
-  /// How the reminder stands at [now]: whether it'll go off, or what it
-  /// still needs.
-  ReminderStatus reminderStatus(DateTime now) {
+  /// How the reminder stands now: whether it'll go off, or what it still
+  /// needs.
+  ReminderStatus reminderStatus() {
+    final now = _now();
     final day = _day;
     final time = _time;
     final rule = this.rule;
@@ -1496,6 +1504,9 @@ class RepeatEndDraft with ChangeNotifier {
 
   /// The first day it can stop on, which is today.
   DateTime get firstDay => _today;
+
+  /// The day the form goes by, as the task's form does: today.
+  DateTime get today => _today;
 
   void setSpan(RepeatSpan span) {
     if (span == _span) return;

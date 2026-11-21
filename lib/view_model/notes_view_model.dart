@@ -62,6 +62,10 @@ class NotesViewModel with ChangeNotifier {
   final FileService _fileService;
   final DateTime Function() _now;
 
+  /// The time as the notes go by it, which the pages show them as of: the
+  /// clock this was made with, which tests can set.
+  DateTime get now => _now();
+
   /// Whether the note on the widget has been checked since the app started:
   /// see [_checkWidget].
   bool _widgetChecked = false;
