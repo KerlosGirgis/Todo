@@ -21,33 +21,37 @@ LockService newLock() =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() => FlutterSecureStorage.setMockInitialValues({
-        'encryptionKey': dbKey,
-      }));
+  setUp(
+    () => FlutterSecureStorage.setMockInitialValues({'encryptionKey': dbKey}),
+  );
 
-  test("a password lock keeps the database's key only locked with it",
-      () async {
-    await newLock().enableLock(password: "1234", key: dbKey);
-    expect(await newLock().getLock(), AppLock.password);
-    expect(await unlockedKey(), isNull);
-    expect(await storage.read(key: 'lockPassword'), isNot(contains(dbKey)));
+  test(
+    "a password lock keeps the database's key only locked with it",
+    () async {
+      await newLock().enableLock(password: "1234", key: dbKey);
+      expect(await newLock().getLock(), AppLock.password);
+      expect(await unlockedKey(), isNull);
+      expect(await storage.read(key: 'lockPassword'), isNot(contains(dbKey)));
 
-    final wrong = await newLock().checkPassword("0000");
-    expect(wrong.matched, isFalse);
-    expect(wrong.key, isNull);
-    final right = await newLock().checkPassword("1234");
-    expect(right.matched, isTrue);
-    expect(right.key, dbKey);
-  });
+      final wrong = await newLock().checkPassword("0000");
+      expect(wrong.matched, isFalse);
+      expect(wrong.key, isNull);
+      final right = await newLock().checkPassword("1234");
+      expect(right.matched, isTrue);
+      expect(right.key, dbKey);
+    },
+  );
 
-  test("a new password locks the key, which the old one no longer opens",
-      () async {
-    await newLock().enableLock(password: "1234", key: dbKey);
-    await newLock().enableLock(password: "4321", key: dbKey);
-    expect((await newLock().checkPassword("1234")).matched, isFalse);
-    expect((await newLock().checkPassword("4321")).key, dbKey);
-    expect(await unlockedKey(), isNull);
-  });
+  test(
+    "a new password locks the key, which the old one no longer opens",
+    () async {
+      await newLock().enableLock(password: "1234", key: dbKey);
+      await newLock().enableLock(password: "4321", key: dbKey);
+      expect((await newLock().checkPassword("1234")).matched, isFalse);
+      expect((await newLock().checkPassword("4321")).key, dbKey);
+      expect(await unlockedKey(), isNull);
+    },
+  );
 
   test("turning the lock off keeps the key as it is again", () async {
     await newLock().enableLock(password: "1234", key: dbKey);
@@ -65,8 +69,7 @@ void main() {
     expect(await storage.read(key: 'lockPassword'), isNull);
   });
 
-  test(
-      "a copy of the key left by a change that didn't finish goes once the "
+  test("a copy of the key left by a change that didn't finish goes once the "
       "password unlocks it", () async {
     await newLock().enableLock(password: "1234", key: dbKey);
     // As turning the lock off does first, before the app was closed.
@@ -87,22 +90,23 @@ void main() {
     return saved;
   }
 
-  test("a password saved before it locked the key locks it once it's right",
-      () async {
-    await saveOldPassword();
-
-    expect((await newLock().checkPassword("0000")).matched, isFalse);
-    expect(await unlockedKey(), dbKey);
-    final right = await newLock().checkPassword("1234");
-    expect(right.matched, isTrue);
-    expect(right.key, dbKey);
-    expect(await unlockedKey(), isNull);
-    expect(await storage.read(key: 'lockPassword'), startsWith("lock-key:"));
-    expect((await newLock().checkPassword("1234")).key, dbKey);
-  });
-
   test(
-      "a password saved before it locked the key still opens the app when "
+    "a password saved before it locked the key locks it once it's right",
+    () async {
+      await saveOldPassword();
+
+      expect((await newLock().checkPassword("0000")).matched, isFalse);
+      expect(await unlockedKey(), dbKey);
+      final right = await newLock().checkPassword("1234");
+      expect(right.matched, isTrue);
+      expect(right.key, dbKey);
+      expect(await unlockedKey(), isNull);
+      expect(await storage.read(key: 'lockPassword'), startsWith("lock-key:"));
+      expect((await newLock().checkPassword("1234")).key, dbKey);
+    },
+  );
+
+  test("a password saved before it locked the key still opens the app when "
       "the phone can't lock the key yet", () async {
     final saved = await saveOldPassword();
     final lock = LockService.withClock(
@@ -117,15 +121,17 @@ void main() {
     expect(await storage.read(key: 'lockPassword'), saved);
   });
 
-  test("a try that has to wait unlocks nothing, even with the password",
-      () async {
-    await newLock().enableLock(password: "1234", key: dbKey);
-    for (var i = 0; i < 5; i++) {
-      await newLock().checkPassword("0000");
-    }
-    final check = await newLock().checkPassword("1234");
-    expect(check.matched, isFalse);
-    expect(check.wait, const Duration(seconds: 30));
-    expect(check.key, isNull);
-  });
+  test(
+    "a try that has to wait unlocks nothing, even with the password",
+    () async {
+      await newLock().enableLock(password: "1234", key: dbKey);
+      for (var i = 0; i < 5; i++) {
+        await newLock().checkPassword("0000");
+      }
+      final check = await newLock().checkPassword("1234");
+      expect(check.matched, isFalse);
+      expect(check.wait, const Duration(seconds: 30));
+      expect(check.key, isNull);
+    },
+  );
 }

@@ -85,8 +85,8 @@ Color _titleInk(BuildContext context, Color picked) {
   for (var step = 0; step < 10; step++) {
     final color = Color.lerp(picked, ink, step / 10)!;
     final luminance = color.computeLuminance();
-    final contrast = (math.max(luminance, page) + 0.05) /
-        (math.min(luminance, page) + 0.05);
+    final contrast =
+        (math.max(luminance, page) + 0.05) / (math.min(luminance, page) + 0.05);
     if (contrast >= 3) return color;
   }
   return ink;

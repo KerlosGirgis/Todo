@@ -17,9 +17,9 @@ class NotificationService {
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
-      android: androidInitializationSettings,
-      iOS: iOSInitializationSettings,
-    );
+          android: androidInitializationSettings,
+          iOS: iOSInitializationSettings,
+        );
     // A tap on a reminder only opens the app, so there's no handler for it.
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
@@ -27,7 +27,8 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
   }
 
@@ -75,7 +76,11 @@ class NotificationService {
   }
 
   Future<void> scheduleNotification(
-      int id, String title, String? body, DateTime scheduledTime) async {
+    int id,
+    String title,
+    String? body,
+    DateTime scheduledTime,
+  ) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id: id,
       title: title,
@@ -100,8 +105,13 @@ class NotificationService {
   /// [every] day, every week on that day, or every month on that day, by the
   /// clock of the time zone it's set in. A monthly one skips the months
   /// without its day.
-  Future<void> scheduleRepeatingNotification(int id, String title, String? body,
-      DateTime first, RepeatEvery every) async {
+  Future<void> scheduleRepeatingNotification(
+    int id,
+    String title,
+    String? body,
+    DateTime first,
+    RepeatEvery every,
+  ) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id: id,
       title: title,
@@ -110,20 +120,20 @@ class NotificationService {
       notificationDetails: NotificationDetails(
         android: switch (every) {
           RepeatEvery.day => const AndroidNotificationDetails(
-              'daily_channel',
-              'Daily Notifications',
-              channelDescription: 'Daily notification channel',
-            ),
+            'daily_channel',
+            'Daily Notifications',
+            channelDescription: 'Daily notification channel',
+          ),
           RepeatEvery.week => const AndroidNotificationDetails(
-              'weekly_channel',
-              'Weekly Notifications',
-              channelDescription: 'Weekly notification channel',
-            ),
+            'weekly_channel',
+            'Weekly Notifications',
+            channelDescription: 'Weekly notification channel',
+          ),
           RepeatEvery.month => const AndroidNotificationDetails(
-              'monthly_channel',
-              'Monthly Notifications',
-              channelDescription: 'Monthly notification channel',
-            ),
+            'monthly_channel',
+            'Monthly Notifications',
+            channelDescription: 'Monthly notification channel',
+          ),
         },
       ),
       matchDateTimeComponents: switch (every) {

@@ -26,8 +26,9 @@ class KeyService {
   /// A key for a new database.
   static String newKey() {
     final random = Random.secure();
-    return List<int>.generate(32, (_) => random.nextInt(256))
-        .map((e) => e.toRadixString(16).padLeft(2, '0'))
-        .join();
+    return List<int>.generate(
+      32,
+      (_) => random.nextInt(256),
+    ).map((e) => e.toRadixString(16).padLeft(2, '0')).join();
   }
 }

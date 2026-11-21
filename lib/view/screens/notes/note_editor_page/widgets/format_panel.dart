@@ -55,14 +55,16 @@ class FormatPanel extends StatelessWidget {
               // at the start of a line.
               final lines = selection.isCollapsed
                   ? (controller.document.queryChild(selection.start).node
-                              as Line?)
-                          ?.style
-                          .attributes ??
-                      const <String, Attribute>{}
+                                as Line?)
+                            ?.style
+                            .attributes ??
+                        const <String, Attribute>{}
                   : controller.document
-                      .collectStyle(
-                          selection.start, selection.end - selection.start)
-                      .attributes;
+                        .collectStyle(
+                          selection.start,
+                          selection.end - selection.start,
+                        )
+                        .attributes;
               final text = controller.getSelectionStyle().attributes;
               final list = lines[Attribute.list.key];
               final script = text[Attribute.script.key];
@@ -80,19 +82,36 @@ class FormatPanel extends StatelessWidget {
                         flex: 5,
                         child: _Group(
                           children: [
-                            _toggle(text, Attribute.bold,
-                                Icons.format_bold_rounded, "Bold"),
-                            _toggle(text, Attribute.italic,
-                                Icons.format_italic_rounded, "Italic"),
-                            _toggle(text, Attribute.underline,
-                                Icons.format_underlined_rounded, "Underline"),
                             _toggle(
-                                text,
-                                Attribute.strikeThrough,
-                                Icons.format_strikethrough_rounded,
-                                "Strikethrough"),
-                            _toggle(text, Attribute.inlineCode,
-                                Icons.code_rounded, "Code"),
+                              text,
+                              Attribute.bold,
+                              Icons.format_bold_rounded,
+                              "Bold",
+                            ),
+                            _toggle(
+                              text,
+                              Attribute.italic,
+                              Icons.format_italic_rounded,
+                              "Italic",
+                            ),
+                            _toggle(
+                              text,
+                              Attribute.underline,
+                              Icons.format_underlined_rounded,
+                              "Underline",
+                            ),
+                            _toggle(
+                              text,
+                              Attribute.strikeThrough,
+                              Icons.format_strikethrough_rounded,
+                              "Strikethrough",
+                            ),
+                            _toggle(
+                              text,
+                              Attribute.inlineCode,
+                              Icons.code_rounded,
+                              "Code",
+                            ),
                           ],
                         ),
                       ),
@@ -120,16 +139,25 @@ class FormatPanel extends StatelessWidget {
                         flex: 3,
                         child: _Group(
                           children: [
-                            _listToggle(list == Attribute.ul, Attribute.ul,
-                                Icons.format_list_bulleted_rounded, "Bullets"),
-                            _listToggle(list == Attribute.ol, Attribute.ol,
-                                Icons.format_list_numbered_rounded, "Numbers"),
                             _listToggle(
-                                list == Attribute.checked ||
-                                    list == Attribute.unchecked,
-                                Attribute.unchecked,
-                                Icons.checklist_rounded,
-                                "Checklist"),
+                              list == Attribute.ul,
+                              Attribute.ul,
+                              Icons.format_list_bulleted_rounded,
+                              "Bullets",
+                            ),
+                            _listToggle(
+                              list == Attribute.ol,
+                              Attribute.ol,
+                              Icons.format_list_numbered_rounded,
+                              "Numbers",
+                            ),
+                            _listToggle(
+                              list == Attribute.checked ||
+                                  list == Attribute.unchecked,
+                              Attribute.unchecked,
+                              Icons.checklist_rounded,
+                              "Checklist",
+                            ),
                           ],
                         ),
                       ),
@@ -138,10 +166,18 @@ class FormatPanel extends StatelessWidget {
                         flex: 2,
                         child: _Group(
                           children: [
-                            _toggle(lines, Attribute.blockQuote,
-                                Icons.format_quote_rounded, "Quote"),
-                            _toggle(lines, Attribute.codeBlock,
-                                Icons.data_object_rounded, "Code Block"),
+                            _toggle(
+                              lines,
+                              Attribute.blockQuote,
+                              Icons.format_quote_rounded,
+                              "Quote",
+                            ),
+                            _toggle(
+                              lines,
+                              Attribute.codeBlock,
+                              Icons.data_object_rounded,
+                              "Code Block",
+                            ),
                           ],
                         ),
                       ),
@@ -174,12 +210,24 @@ class FormatPanel extends StatelessWidget {
                         flex: 3,
                         child: _Group(
                           children: [
-                            _toggle(text, NoteDocumentUtils.highlight,
-                                Icons.border_color_rounded, "Highlight"),
-                            _scriptToggle(script, Attribute.superscript,
-                                Icons.superscript_rounded, "Superscript"),
-                            _scriptToggle(script, Attribute.subscript,
-                                Icons.subscript_rounded, "Subscript"),
+                            _toggle(
+                              text,
+                              NoteDocumentUtils.highlight,
+                              Icons.border_color_rounded,
+                              "Highlight",
+                            ),
+                            _scriptToggle(
+                              script,
+                              Attribute.superscript,
+                              Icons.superscript_rounded,
+                              "Superscript",
+                            ),
+                            _scriptToggle(
+                              script,
+                              Attribute.subscript,
+                              Icons.subscript_rounded,
+                              "Subscript",
+                            ),
                           ],
                         ),
                       ),
@@ -192,7 +240,8 @@ class FormatPanel extends StatelessWidget {
                               icon: Icons.horizontal_rule_rounded,
                               tooltip: "Divider",
                               onPressed: () => controller.changeWithoutKeyboard(
-                                  controller.insertDivider),
+                                controller.insertDivider,
+                              ),
                             ),
                             _Segment(
                               icon: Icons.format_clear_rounded,
@@ -200,7 +249,8 @@ class FormatPanel extends StatelessWidget {
                               onPressed: controller.textFormats.isEmpty
                                   ? null
                                   : () => controller.changeWithoutKeyboard(
-                                      controller.clearTextFormats),
+                                      controller.clearTextFormats,
+                                    ),
                             ),
                           ],
                         ),
@@ -218,8 +268,12 @@ class FormatPanel extends StatelessWidget {
 
   /// A button that gives the text, or its lines, [attribute], or takes it
   /// away again, lit while [attributes] has it.
-  Widget _toggle(Map<String, Attribute> attributes, Attribute attribute,
-      IconData icon, String tooltip) {
+  Widget _toggle(
+    Map<String, Attribute> attributes,
+    Attribute attribute,
+    IconData icon,
+    String tooltip,
+  ) {
     final on = attributes.containsKey(attribute.key);
     return _Segment(
       icon: icon,
@@ -245,7 +299,11 @@ class FormatPanel extends StatelessWidget {
   /// [script] says, or sets it back on the line once it is. It can't be
   /// both.
   Widget _scriptToggle(
-      Attribute? current, Attribute script, IconData icon, String tooltip) {
+    Attribute? current,
+    Attribute script,
+    IconData icon,
+    String tooltip,
+  ) {
     final on = current == script;
     return _Segment(
       icon: icon,
@@ -256,8 +314,9 @@ class FormatPanel extends StatelessWidget {
     );
   }
 
-  void _format(Attribute attribute) => controller
-      .changeWithoutKeyboard(() => controller.formatSelection(attribute));
+  void _format(Attribute attribute) => controller.changeWithoutKeyboard(
+    () => controller.formatSelection(attribute),
+  );
 
   void _indent(bool more) =>
       controller.changeWithoutKeyboard(() => controller.indentSelection(more));
@@ -350,7 +409,8 @@ class _StylesState extends State<_Styles> {
     super.didUpdateWidget(oldWidget);
     if (widget.level != oldWidget.level) {
       WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _reveal(const Duration(milliseconds: 250)));
+        (_) => _reveal(const Duration(milliseconds: 250)),
+      );
     }
   }
 
@@ -372,10 +432,12 @@ class _StylesState extends State<_Styles> {
       ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
       ScrollPositionAlignmentPolicy.keepVisibleAtStart,
     ]) {
-      Scrollable.ensureVisible(heading,
-          alignmentPolicy: policy,
-          duration: duration,
-          curve: Curves.easeOutCubic);
+      Scrollable.ensureVisible(
+        heading,
+        alignmentPolicy: policy,
+        duration: duration,
+        curve: Curves.easeOutCubic,
+      );
     }
   }
 
@@ -418,8 +480,9 @@ class _StylesState extends State<_Styles> {
                 child: ShaderMask(
                   blendMode: BlendMode.dstIn,
                   shaderCallback: (bounds) {
-                    final fade =
-                        bounds.width > _fade * 2 ? _fade / bounds.width : 0.0;
+                    final fade = bounds.width > _fade * 2
+                        ? _fade / bounds.width
+                        : 0.0;
                     return LinearGradient(
                       colors: [
                         if (_moreBefore) Colors.transparent else Colors.white,

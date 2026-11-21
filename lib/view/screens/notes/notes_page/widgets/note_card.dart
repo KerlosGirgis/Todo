@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:provider/provider.dart';
+
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
@@ -13,8 +14,8 @@ import '../../../../../view_model/user_view_model.dart';
 /// White or black, whichever reads better on a note's [cover].
 Color onCoverColor(Color cover) =>
     ThemeData.estimateBrightnessForColor(cover) == Brightness.dark
-        ? Colors.white
-        : Colors.black;
+    ? Colors.white
+    : Colors.black;
 
 class NoteCard extends StatefulWidget {
   const NoteCard({
@@ -50,10 +51,12 @@ class _NoteCardState extends State<NoteCard> {
   @override
   Widget build(BuildContext context) {
     final note = widget.note;
-    final titleSize = context
-        .select<UserViewModel, double>((user) => user.user.notesTitleSize);
-    final casualFont =
-        context.select<UserViewModel, bool>((user) => user.user.casualFont);
+    final titleSize = context.select<UserViewModel, double>(
+      (user) => user.user.notesTitleSize,
+    );
+    final casualFont = context.select<UserViewModel, bool>(
+      (user) => user.user.casualFont,
+    );
     final coverColor = Color(note.coverColor);
     final onCover = onCoverColor(coverColor);
 
@@ -140,9 +143,11 @@ class NoteCardContent extends StatelessWidget {
         builder: (context, constraints) {
           final title = Text(
             note.title,
-            maxLines:
-                _linesThatFit(context, constraints.maxHeight * 0.6, titleStyle)
-                    .clamp(1, 3),
+            maxLines: _linesThatFit(
+              context,
+              constraints.maxHeight * 0.6,
+              titleStyle,
+            ).clamp(1, 3),
             overflow: TextOverflow.ellipsis,
             textDirection: _textDirection(note.title),
             style: titleStyle,
@@ -164,17 +169,17 @@ class NoteCardContent extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 8),
                   child: switch (preview) {
                     null => Directionality(
-                        // From the right under a title in Arabic.
-                        textDirection: _textDirection(note.title),
-                        child: _LockedPreview(ink: onCover),
-                      ),
+                      // From the right under a title in Arabic.
+                      textDirection: _textDirection(note.title),
+                      child: _LockedPreview(ink: onCover),
+                    ),
                     NotePreview(lines: []) => _EmptyPreview(ink: onCover),
                     _ => _TextPreview(
-                        preview: preview,
-                        ink: onCover,
-                        cover: cover,
-                        casualFont: casualFont,
-                      ),
+                      preview: preview,
+                      ink: onCover,
+                      cover: cover,
+                      casualFont: casualFont,
+                    ),
                   },
                 ),
               ),
@@ -224,8 +229,11 @@ class NoteCover extends StatelessWidget {
               ]
             : [
                 BoxShadow(
-                  color: Color.lerp(Colors.black, color, 0.5 * saturation)!
-                      .withValues(alpha: 0.08 + 0.1 * saturation),
+                  color: Color.lerp(
+                    Colors.black,
+                    color,
+                    0.5 * saturation,
+                  )!.withValues(alpha: 0.08 + 0.1 * saturation),
                   blurRadius: 24,
                   spreadRadius: -6,
                   offset: const Offset(0, 10),
@@ -333,10 +341,14 @@ class NoteTitleHero extends StatelessWidget {
     final fromSize = _sizeOf(fromHeroContext);
     final toSize = _sizeOf(toHeroContext);
     // Both ways, the animation runs from the card, at 0, to the editor, at 1.
-    final (card, cardSize, editor, editorSize) =
-        flightDirection == HeroFlightDirection.push
-            ? (from, fromSize, to, toSize)
-            : (to, toSize, from, fromSize);
+    final (
+      card,
+      cardSize,
+      editor,
+      editorSize,
+    ) = flightDirection == HeroFlightDirection.push
+        ? (from, fromSize, to, toSize)
+        : (to, toSize, from, fromSize);
     // How much larger the editor's title is than the card's.
     final growth = editor.style!.fontSize! / card.style!.fontSize!;
     return Directionality(
@@ -431,27 +443,28 @@ class _RimPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.5
-        ..shader = (lightCover
-                ? LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.9),
-                      Colors.black.withValues(alpha: 0.1),
-                    ],
-                  )
-                : LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.42),
-                      Colors.white.withValues(alpha: 0.1),
-                      Colors.white.withValues(alpha: 0.06),
-                      Colors.white.withValues(alpha: 0.18),
-                    ],
-                    stops: const [0, 0.4, 0.75, 1],
-                  ))
-            .createShader(rect),
+        ..shader =
+            (lightCover
+                    ? LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.9),
+                          Colors.black.withValues(alpha: 0.1),
+                        ],
+                      )
+                    : LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.42),
+                          Colors.white.withValues(alpha: 0.1),
+                          Colors.white.withValues(alpha: 0.06),
+                          Colors.white.withValues(alpha: 0.18),
+                        ],
+                        stops: const [0, 0.4, 0.75, 1],
+                      ))
+                .createShader(rect),
     );
   }
 
@@ -527,8 +540,9 @@ class _TextPreview extends StatelessWidget {
     final total = preview.checked + preview.unchecked;
     return Directionality(
       // From the right for a note in Arabic, its bullets and ticks too.
-      textDirection:
-          _textDirection(preview.lines.map((line) => line.text).join("\n")),
+      textDirection: _textDirection(
+        preview.lines.map((line) => line.text).join("\n"),
+      ),
       child: total == 0
           ? lines
           : _WithChip(
@@ -593,26 +607,31 @@ class _PreviewLines extends StatelessWidget {
             break;
           }
           final span = _spanOf(line, style);
-          final width = constraints.maxWidth -
+          final width =
+              constraints.maxWidth -
               layout.leadOf(line) -
               (line.code ? layout.codeInset : 0);
-          final count =
-              line.divider ? 1 : _lineCount(context, span, style, strut, width);
+          final count = line.divider
+              ? 1
+              : _lineCount(context, span, style, strut, width);
           final shown = math.min(count, room);
-          rows.add(_PreviewRow(
-            line: line,
-            span: span,
-            style: style,
-            strut: strut,
-            lines: shown,
-            layout: layout,
-            ink: ink,
-            cover: cover,
-            // Where a block of code starts and ends, which round it off.
-            codeStarts: line.code && (index == 0 || !lines[index - 1].code),
-            codeEnds: line.code &&
-                (index == lines.length - 1 || !lines[index + 1].code),
-          ));
+          rows.add(
+            _PreviewRow(
+              line: line,
+              span: span,
+              style: style,
+              strut: strut,
+              lines: shown,
+              layout: layout,
+              ink: ink,
+              cover: cover,
+              // Where a block of code starts and ends, which round it off.
+              codeStarts: line.code && (index == 0 || !lines[index - 1].code),
+              codeEnds:
+                  line.code &&
+                  (index == lines.length - 1 || !lines[index + 1].code),
+            ),
+          );
           room -= shown;
           if (shown < count) {
             cut = true;
@@ -647,35 +666,35 @@ class _PreviewLines extends StatelessWidget {
     final bold = casualFont ? FontWeight.w800 : FontWeight.w700;
     final lineStyle = switch (line.heading) {
       1 => TextStyle(
-          color: ink.withValues(alpha: 0.92),
-          fontSize: style.fontSize! * 1.12,
-          fontWeight: bold,
-          letterSpacing: -0.3,
-        ),
+        color: ink.withValues(alpha: 0.92),
+        fontSize: style.fontSize! * 1.12,
+        fontWeight: bold,
+        letterSpacing: -0.3,
+      ),
       2 => TextStyle(
-          color: ink.withValues(alpha: 0.88),
-          fontSize: style.fontSize! * 1.06,
-          fontWeight: bold,
-          letterSpacing: -0.25,
-        ),
+        color: ink.withValues(alpha: 0.88),
+        fontSize: style.fontSize! * 1.06,
+        fontWeight: bold,
+        letterSpacing: -0.25,
+      ),
       3 || 4 => TextStyle(color: ink.withValues(alpha: 0.82), fontWeight: bold),
       5 => TextStyle(
-          color: ink.withValues(alpha: 0.76),
-          fontSize: style.fontSize! * 0.95,
-          fontWeight: bold,
-        ),
+        color: ink.withValues(alpha: 0.76),
+        fontSize: style.fontSize! * 0.95,
+        fontWeight: bold,
+      ),
       6 => TextStyle(
-          color: ink.withValues(alpha: 0.6),
-          fontSize: style.fontSize! * 0.9,
-          fontWeight: bold,
-        ),
+        color: ink.withValues(alpha: 0.6),
+        fontSize: style.fontSize! * 0.9,
+        fontWeight: bold,
+      ),
       _ when line.code => TextStyle(
-          color: ink.withValues(alpha: 0.75),
-          fontFamily: _code,
-          fontSize: style.fontSize! * 0.88,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0,
-        ),
+        color: ink.withValues(alpha: 0.75),
+        fontFamily: _code,
+        fontSize: style.fontSize! * 0.88,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      ),
       _ => line.quote ? TextStyle(color: ink.withValues(alpha: 0.5)) : null,
     };
     final faded = ink.withValues(alpha: 0.38);
@@ -698,8 +717,8 @@ class _PreviewLines extends StatelessWidget {
               fontFeatures: run.superscript
                   ? const [FontFeature.superscripts()]
                   : run.subscript
-                      ? const [FontFeature.subscripts()]
-                      : null,
+                  ? const [FontFeature.subscripts()]
+                  : null,
               decoration: TextDecoration.combine([
                 if (done || run.strikethrough) TextDecoration.lineThrough,
                 if (run.underline || run.link) TextDecoration.underline,
@@ -881,43 +900,43 @@ class _ListMark extends StatelessWidget {
     final fontSize = layout.fontSize;
     return switch (list) {
       NoteListKind.numbered => Padding(
-          padding: EdgeInsetsDirectional.only(end: fontSize * 0.35),
-          child: Align(
-            alignment: AlignmentDirectional.topEnd,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                "$number.",
-                maxLines: 1,
-                style: style.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-                strutStyle: strut,
+        padding: EdgeInsetsDirectional.only(end: fontSize * 0.35),
+        child: Align(
+          alignment: AlignmentDirectional.topEnd,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              "$number.",
+              maxLines: 1,
+              style: style.copyWith(
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
+              strutStyle: strut,
             ),
           ),
         ),
+      ),
       NoteListKind.bullet => Align(
-          alignment: const AlignmentDirectional(-0.2, 0.1),
-          child: CustomPaint(
-            size: Size.square(fontSize * 0.34),
-            painter: _BulletPainter(
-              color: ink.withValues(alpha: 0.62),
-              hollow: indent.isOdd,
-            ),
+        alignment: const AlignmentDirectional(-0.2, 0.1),
+        child: CustomPaint(
+          size: Size.square(fontSize * 0.34),
+          painter: _BulletPainter(
+            color: ink.withValues(alpha: 0.62),
+            hollow: indent.isOdd,
           ),
         ),
+      ),
       NoteListKind.checked || NoteListKind.unchecked => Align(
-          alignment: const AlignmentDirectional(-1, 0.1),
-          child: CustomPaint(
-            size: Size.square(fontSize * 0.94),
-            painter: _CheckPainter(
-              done: list == NoteListKind.checked,
-              ink: ink,
-              cover: cover,
-            ),
+        alignment: const AlignmentDirectional(-1, 0.1),
+        child: CustomPaint(
+          size: Size.square(fontSize * 0.94),
+          painter: _CheckPainter(
+            done: list == NoteListKind.checked,
+            ink: ink,
+            cover: cover,
           ),
         ),
+      ),
     };
   }
 }
@@ -937,8 +956,11 @@ class _BulletPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = radius * 0.45;
     }
-    canvas.drawCircle(size.center(Offset.zero),
-        hollow ? radius - paint.strokeWidth / 2 : radius, paint);
+    canvas.drawCircle(
+      size.center(Offset.zero),
+      hollow ? radius - paint.strokeWidth / 2 : radius,
+      paint,
+    );
   }
 
   @override
@@ -977,7 +999,10 @@ class _CheckPainter extends CustomPainter {
       return;
     }
     canvas.drawCircle(
-        center, radius, Paint()..color = ink.withValues(alpha: 0.88));
+      center,
+      radius,
+      Paint()..color = ink.withValues(alpha: 0.88),
+    );
     // The same tick as the to-do page's.
     final width = size.width;
     final height = size.height;
@@ -1017,11 +1042,7 @@ class _FadeLastLine extends StatelessWidget {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: const [Colors.white, Colors.white, Color(0x00FFFFFF)],
-        stops: [
-          0,
-          math.max(0, 1 - lineHeight * 0.75 / bounds.height),
-          1,
-        ],
+        stops: [0, math.max(0, 1 - lineHeight * 0.75 / bounds.height), 1],
       ).createShader(bounds),
       child: child,
     );
@@ -1087,8 +1108,10 @@ class _CardChip extends StatelessWidget {
 
   /// How tall a chip is, as large as the user has their text.
   static double heightOf(BuildContext context) =>
-      math.max(MediaQuery.textScalerOf(context).scale(_iconSize),
-          _lineHeightOf(context, _style)) +
+      math.max(
+        MediaQuery.textScalerOf(context).scale(_iconSize),
+        _lineHeightOf(context, _style),
+      ) +
       _padding.vertical;
 
   @override
@@ -1202,8 +1225,10 @@ class _LockedPreview extends StatelessWidget {
     final lightCover = ink == Colors.black;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final lineHeight =
-            _lineHeightOf(context, const TextStyle(fontSize: 15, height: 1.38));
+        final lineHeight = _lineHeightOf(
+          context,
+          const TextStyle(fontSize: 15, height: 1.38),
+        );
         final chipHeight = _CardChip.heightOf(context);
         final lines = ((constraints.maxHeight - chipHeight - 8) / lineHeight)
             .floor()
@@ -1276,20 +1301,26 @@ class _HiddenLinesPainter extends CustomPainter {
 
 TextDirection _textDirection(String text) =>
     intl.Bidi.detectRtlDirectionality(text)
-        ? TextDirection.rtl
-        : TextDirection.ltr;
+    ? TextDirection.rtl
+    : TextDirection.ltr;
 
 /// Whole lines of [style] that fit in [height], so text is never cut mid-line.
-int _linesThatFit(BuildContext context, double height, TextStyle style,
-        {StrutStyle? strutStyle}) =>
-    (height / _lineHeightOf(context, style, strutStyle: strutStyle)).floor();
+int _linesThatFit(
+  BuildContext context,
+  double height,
+  TextStyle style, {
+  StrutStyle? strutStyle,
+}) => (height / _lineHeightOf(context, style, strutStyle: strutStyle)).floor();
 
 /// How tall a line of [style] is laid out, as large as the user has their
 /// text. A line is measured as [Text] lays it out, with [strutStyle] if it
 /// has one, rather than worked out from the style: the lines come out
 /// rounded to whole pixels, so 20.7 points of line are laid out 21 tall.
-double _lineHeightOf(BuildContext context, TextStyle style,
-    {StrutStyle? strutStyle}) {
+double _lineHeightOf(
+  BuildContext context,
+  TextStyle style, {
+  StrutStyle? strutStyle,
+}) {
   final line = TextPainter(
     text: TextSpan(
       text: " ",
@@ -1306,8 +1337,13 @@ double _lineHeightOf(BuildContext context, TextStyle style,
 
 /// How many lines [span] takes in [style], as [Text] lays it out [width]
 /// wide.
-int _lineCount(BuildContext context, TextSpan span, TextStyle style,
-    StrutStyle strut, double width) {
+int _lineCount(
+  BuildContext context,
+  TextSpan span,
+  TextStyle style,
+  StrutStyle strut,
+  double width,
+) {
   final painter = TextPainter(
     text: TextSpan(
       style: DefaultTextStyle.of(context).style.merge(style),

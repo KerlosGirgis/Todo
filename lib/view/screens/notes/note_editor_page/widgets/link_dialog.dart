@@ -93,8 +93,9 @@ class _LinkDialogState extends State<LinkDialog> {
           keyboardType: TextInputType.url,
           autocorrect: false,
           enableSuggestions: false,
-          textInputAction:
-              widget.textEditable ? TextInputAction.next : TextInputAction.done,
+          textInputAction: widget.textEditable
+              ? TextInputAction.next
+              : TextInputAction.done,
           onSubmitted: widget.textEditable ? null : (_) => _save(),
           cursorColor: _accent,
           style: style,

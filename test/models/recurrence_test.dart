@@ -19,8 +19,10 @@ void main() {
       expect(on(12), DayStatus.done);
       expect(on(13), DayStatus.due);
       expect(on(14), DayStatus.untracked);
-      expect(daily.statusOf(today, today, done: {...done, may(13)}),
-          DayStatus.done);
+      expect(
+        daily.statusOf(today, today, done: {...done, may(13)}),
+        DayStatus.done,
+      );
     });
 
     test('counts no day missed before it knows when it began', () {
@@ -34,7 +36,9 @@ void main() {
     test('counts days from when it starts afresh, keeping the days done', () {
       final restarted = Recurrence.daily(since: may(12));
       expect(
-          restarted.statusOf(may(10), today, done: done), DayStatus.untracked);
+        restarted.statusOf(may(10), today, done: done),
+        DayStatus.untracked,
+      );
       expect(restarted.statusOf(may(9), today, done: done), DayStatus.done);
     });
 
@@ -57,14 +61,19 @@ void main() {
 
   group('a weekly task', () {
     // Mondays and Thursdays, since Monday the 4th.
-    final gym =
-        Recurrence.weekly({DateTime.monday, DateTime.thursday}, since: may(4));
+    final gym = Recurrence.weekly({
+      DateTime.monday,
+      DateTime.thursday,
+    }, since: may(4));
 
     test('comes round on its days of the week', () {
       expect(gym.occursOn(may(11)), isTrue);
       expect(gym.occursOn(may(13)), isFalse);
-      expect(gym.occursOn(DateTime(2026, 4, 30)), isFalse,
-          reason: "before it started");
+      expect(
+        gym.occursOn(DateTime(2026, 4, 30)),
+        isFalse,
+        reason: "before it started",
+      );
       expect(gym.lastOnOrBefore(today), may(11));
       expect(gym.firstOnOrAfter(today), may(14));
       expect(gym.from(today).take(3), [may(14), may(18), may(21)]);
@@ -94,8 +103,11 @@ void main() {
 
     test('has a streak of its times in a row', () {
       expect(gym.streak(today, done: {may(4), may(7), may(11)}), 3);
-      expect(gym.streak(today, done: {may(4), may(7)}), 2,
-          reason: "Monday's still to do");
+      expect(
+        gym.streak(today, done: {may(4), may(7)}),
+        2,
+        reason: "Monday's still to do",
+      );
       expect(gym.streak(today, done: {may(4), may(11)}), 1);
     });
   });
@@ -119,8 +131,10 @@ void main() {
       ]);
       expect(last.currentAsOf(DateTime(2026, 4, 30)), DateTime(2026, 3, 31));
       final leap = Recurrence.monthly(29, since: DateTime(2027, 1, 1));
-      expect(leap.from(DateTime(2027, 1, 30)).take(2),
-          [DateTime(2027, 3, 29), DateTime(2027, 4, 29)]);
+      expect(leap.from(DateTime(2027, 1, 30)).take(2), [
+        DateTime(2027, 3, 29),
+        DateTime(2027, 4, 29),
+      ]);
       expect(leap.firstOnOrAfter(DateTime(2028, 2, 1)), DateTime(2028, 2, 29));
     });
 
@@ -147,8 +161,11 @@ void main() {
     });
 
     test('never comes round when it stops before it would', () {
-      final never =
-          Recurrence.weekly({DateTime.friday}, since: today, until: may(14));
+      final never = Recurrence.weekly(
+        {DateTime.friday},
+        since: today,
+        until: may(14),
+      );
       expect(never.currentAsOf(today), isNull);
       expect(never.hasEndedBy(today), isTrue);
       expect(never.statusOf(today, today, done: {}), DayStatus.untracked);
@@ -168,20 +185,29 @@ void main() {
     });
 
     test('of months from a day the last month lacks ends before its end', () {
-      expect(RepeatUnit.months.lastDay(DateTime(2027, 1, 31), 1),
-          DateTime(2027, 2, 27));
-      expect(RepeatUnit.months.lastDay(DateTime(2027, 1, 30), 13),
-          DateTime(2028, 2, 28));
+      expect(
+        RepeatUnit.months.lastDay(DateTime(2027, 1, 31), 1),
+        DateTime(2027, 2, 27),
+      );
+      expect(
+        RepeatUnit.months.lastDay(DateTime(2027, 1, 30), 13),
+        DateTime(2028, 2, 28),
+      );
     });
   });
 
   test('tells whether two come round on the same days', () {
     expect(
-        Recurrence.weekly({1, 3}, since: may(1))
-            .repeatsLike(Recurrence.weekly({3, 1}, until: may(30))),
-        isTrue);
+      Recurrence.weekly({
+        1,
+        3,
+      }, since: may(1)).repeatsLike(Recurrence.weekly({3, 1}, until: may(30))),
+      isTrue,
+    );
     expect(
-        Recurrence.weekly({1}).repeatsLike(Recurrence.weekly({1, 3})), isFalse);
+      Recurrence.weekly({1}).repeatsLike(Recurrence.weekly({1, 3})),
+      isFalse,
+    );
     expect(Recurrence.monthly(1).repeatsLike(Recurrence.monthly(2)), isFalse);
     expect(Recurrence.daily().repeatsLike(Recurrence.weekly({1})), isFalse);
   });

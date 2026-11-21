@@ -35,18 +35,19 @@ class Trashed<T> {
     required int? itemId,
     required Map<String, Object?> item,
     required DateTime deletedAt,
-  }) =>
-      {
-        'kind': kind.name,
-        'itemId': itemId,
-        'item': jsonEncode(item),
-        'deletedAt': deletedAt.toIso8601String(),
-      };
+  }) => {
+    'kind': kind.name,
+    'itemId': itemId,
+    'item': jsonEncode(item),
+    'deletedAt': deletedAt.toIso8601String(),
+  };
 
   /// An entry the trash keeps, its item read by [fromMap] as from a backup,
   /// or null for one that can't be read.
   static Trashed<T>? fromRow<T>(
-      Map<String, Object?> row, T Function(Map<String, dynamic> map) fromMap) {
+    Map<String, Object?> row,
+    T Function(Map<String, dynamic> map) fromMap,
+  ) {
     try {
       final item = jsonDecode(row['item'] as String) as Map<String, dynamic>;
       return Trashed(

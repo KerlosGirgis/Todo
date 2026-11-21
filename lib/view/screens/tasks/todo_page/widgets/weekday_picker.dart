@@ -41,8 +41,10 @@ class WeekdayPicker extends StatelessWidget {
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = math.min(_maxSize,
-            (constraints.maxWidth - _gap * (days.length - 1)) / days.length);
+        final size = math.min(
+          _maxSize,
+          (constraints.maxWidth - _gap * (days.length - 1)) / days.length,
+        );
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -109,8 +111,8 @@ class _WeekdayButton extends StatelessWidget {
             // January 2024 began on a Monday.
             DateFormat("EEEEE").format(DateTime(2024, 1, day)),
             // It has to fit in its circle.
-            textScaler:
-                MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3),
+            textScaler: MediaQuery.textScalerOf(context)
+                .clamp(maxScaleFactor: 1.3),
             style: TextStyle(
               color: picked ? Colors.white : ink.withValues(alpha: 0.7),
               fontSize: 14,

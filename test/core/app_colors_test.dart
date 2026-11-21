@@ -20,10 +20,14 @@ void main() {
 
   test("a dialog's outline is inside it, where its clip keeps it, and a "
       "sheet's outside, so its lower edge falls off the screen", () {
-    expect(AppColors.amoled.dialogSide.strokeAlign,
-        BorderSide.strokeAlignInside);
-    expect(AppColors.amoled.sheetSide.strokeAlign,
-        BorderSide.strokeAlignOutside);
+    expect(
+      AppColors.amoled.dialogSide.strokeAlign,
+      BorderSide.strokeAlignInside,
+    );
+    expect(
+      AppColors.amoled.sheetSide.strokeAlign,
+      BorderSide.strokeAlignOutside,
+    );
   });
 
   test("iOS's system red is a touch brighter on dark pages", () {
@@ -33,9 +37,13 @@ void main() {
   });
 
   test('switching to AMOLED black brings the outline in', () {
-    expect(AppColors.dark.lerp(AppColors.amoled, 1).dialogSide,
-        AppColors.amoled.dialogSide);
-    expect(AppColors.amoled.lerp(AppColors.dark, 1).dialogSide,
-        BorderSide.none);
+    expect(
+      AppColors.dark.lerp(AppColors.amoled, 1).dialogSide,
+      AppColors.amoled.dialogSide,
+    );
+    expect(
+      AppColors.amoled.lerp(AppColors.dark, 1).dialogSide,
+      BorderSide.none,
+    );
   });
 }

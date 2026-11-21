@@ -59,8 +59,10 @@ class _RiseInState extends State<RiseIn> with SingleTickerProviderStateMixin {
         final value = _controller.value;
         return Transform.translate(
           offset: Offset(0, 32 * (1 - Curves.easeOutCubic.transform(value))),
-          child:
-              Opacity(opacity: Curves.easeOut.transform(value), child: child),
+          child: Opacity(
+            opacity: Curves.easeOut.transform(value),
+            child: child,
+          ),
         );
       },
       child: widget.child,

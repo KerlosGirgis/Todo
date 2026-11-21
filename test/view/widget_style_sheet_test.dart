@@ -43,8 +43,10 @@ void main() {
 
   /// Lets [duration] go by a frame at a time, for the sheet's and the
   /// toasts' animations.
-  Future<void> wait(WidgetTester tester,
-      [Duration duration = const Duration(seconds: 1)]) async {
+  Future<void> wait(
+    WidgetTester tester, [
+    Duration duration = const Duration(seconds: 1),
+  ]) async {
     const frame = Duration(milliseconds: 50);
     for (var waited = Duration.zero; waited < duration; waited += frame) {
       await tester.pump(frame);
@@ -70,33 +72,38 @@ void main() {
 
   /// Opens [kind]'s sheet on a phone held upright, from a page with a button
   /// that opens it.
-  Future<void> open(WidgetTester tester, WidgetKind kind,
-      {Size size = const Size(1080, 2400)}) async {
+  Future<void> open(
+    WidgetTester tester,
+    WidgetKind kind, {
+    Size size = const Size(1080, 2400),
+  }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 2.625;
     addTearDown(tester.view.reset);
     await user.get();
-    await tester.pumpWidget(MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: user),
-        ChangeNotifierProvider.value(value: widgets),
-      ],
-      child: ToastificationWrapper(
-        child: MaterialApp(
-          theme: AppTheme.getTheme(isDarkMode: false),
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: TextButton(
-                  onPressed: () => showWidgetStyleSheet(context, kind),
-                  child: const Text("Open"),
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: user),
+          ChangeNotifierProvider.value(value: widgets),
+        ],
+        child: ToastificationWrapper(
+          child: MaterialApp(
+            theme: AppTheme.getTheme(isDarkMode: false),
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: TextButton(
+                    onPressed: () => showWidgetStyleSheet(context, kind),
+                    child: const Text("Open"),
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text("Open"));
     await wait(tester);
   }
@@ -112,8 +119,7 @@ void main() {
     await wait(tester, const Duration(milliseconds: 400));
   }
 
-  testWidgets(
-      "the to-do widget's preview shows the tasks still to do, and "
+  testWidgets("the to-do widget's preview shows the tasks still to do, and "
       "the done ones once they're shown", (tester) async {
     await open(tester, WidgetKind.tasks);
     expect(find.text("To-Do Widget"), findsOneWidget);
@@ -122,11 +128,16 @@ void main() {
     expect(find.text("Yesterday, 10:00 AM"), findsOneWidget);
     // Unchanged, there's nothing to apply.
     expect(
-        tester
-            .widget<FilledButton>(find.ancestor(
-                of: find.text("Apply"), matching: find.byType(FilledButton)))
-            .onPressed,
-        isNull);
+      tester
+          .widget<FilledButton>(
+            find.ancestor(
+              of: find.text("Apply"),
+              matching: find.byType(FilledButton),
+            ),
+          )
+          .onPressed,
+      isNull,
+    );
 
     await tapRow(tester, "Show Done Tasks");
     expect(find.text("Eggs"), findsOneWidget);
@@ -139,22 +150,28 @@ void main() {
     await wait(tester, const Duration(seconds: 5));
   });
 
-  testWidgets(
-      "a background of its own makes the automatic text stand out "
+  testWidgets("a background of its own makes the automatic text stand out "
       "against it, and Reset takes it back", (tester) async {
     await open(tester, WidgetKind.tasks);
     // On the phone's own background, in the phone's colours.
     expect(tasksPreview(tester).colors.text, look.light.text);
     final title = find.descendant(
-        of: find.byType(TasksWidgetContent), matching: find.text("To-Do"));
+      of: find.byType(TasksWidgetContent),
+      matching: find.text("To-Do"),
+    );
     expect(tester.widget<Text>(title).style!.color, Color(look.light.text));
 
     await tapRow(tester, "Background");
-    await tester.tap(find.byWidgetPredicate(
-        (widget) => widget is SwatchButton && widget.label == "Graphite"));
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) => widget is SwatchButton && widget.label == "Graphite",
+      ),
+    );
     await wait(tester, const Duration(milliseconds: 300));
-    expect(tester.widget<Text>(title).style!.color,
-        const Color(WidgetStyle.lightInk));
+    expect(
+      tester.widget<Text>(title).style!.color,
+      const Color(WidgetStyle.lightInk),
+    );
 
     await tester.ensureVisible(find.text("Reset"));
     await tester.tap(find.text("Reset"));
@@ -166,8 +183,9 @@ void main() {
     expect(phone.styles, isEmpty);
   });
 
-  testWidgets("the preview switches to dark mode, as the phone would",
-      (tester) async {
+  testWidgets("the preview switches to dark mode, as the phone would", (
+    tester,
+  ) async {
     await open(tester, WidgetKind.tasks);
     expect(tasksPreview(tester).colors, same(look.light));
     await tester.tap(find.text("Dark"));
@@ -175,13 +193,15 @@ void main() {
     expect(tasksPreview(tester).colors, same(look.dark));
   });
 
-  testWidgets("the note widget's preview has its note, in the font picked",
-      (tester) async {
+  testWidgets("the note widget's preview has its note, in the font picked", (
+    tester,
+  ) async {
     await open(tester, WidgetKind.note);
     expect(find.text("Note Widget"), findsOneWidget);
     final note = find.descendant(
-        of: find.byType(NoteWidgetContent),
-        matching: find.text("Weekend plans"));
+      of: find.byType(NoteWidgetContent),
+      matching: find.text("Weekend plans"),
+    );
     expect(tester.widget<Text>(note).style!.fontFamily, isNot('casual'));
     // In the colour it's always been, with no background of its own.
     expect(tester.widget<Text>(note).style!.color, Color(look.light.noteText));
@@ -195,13 +215,16 @@ void main() {
 
     await tester.tap(find.text("Apply"));
     await wait(tester);
-    expect(phone.styles[WidgetKind.note],
-        WidgetStyle.noteDefault.copyWith(font: WidgetFont.casual));
+    expect(
+      phone.styles[WidgetKind.note],
+      WidgetStyle.noteDefault.copyWith(font: WidgetFont.casual),
+    );
     await wait(tester, const Duration(seconds: 5));
   });
 
-  testWidgets("Add Widget asks the phone for one, styled as the sheet has it",
-      (tester) async {
+  testWidgets("Add Widget asks the phone for one, styled as the sheet has it", (
+    tester,
+  ) async {
     await open(tester, WidgetKind.tasks);
     await tapRow(tester, "Show Done Tasks");
     await tester.tap(find.text("Add Widget"));
@@ -212,16 +235,18 @@ void main() {
     await wait(tester, const Duration(seconds: 5));
   });
 
-  testWidgets("there's no Add Widget where the phone can't add one",
-      (tester) async {
+  testWidgets("there's no Add Widget where the phone can't add one", (
+    tester,
+  ) async {
     phone.canAdd = false;
     await open(tester, WidgetKind.tasks);
     expect(find.text("Add Widget"), findsNothing);
     expect(find.text("Apply"), findsOneWidget);
   });
 
-  testWidgets("says what the widget shows while the App Lock is on",
-      (tester) async {
+  testWidgets("says what the widget shows while the App Lock is on", (
+    tester,
+  ) async {
     await open(tester, WidgetKind.tasks);
     expect(find.textContaining("App Lock"), findsNothing);
     await tester.pumpWidget(const SizedBox());
@@ -231,8 +256,9 @@ void main() {
     expect(find.textContaining("While the App Lock is on"), findsOneWidget);
   });
 
-  testWidgets("on a phone turned on its side, the whole sheet scrolls",
-      (tester) async {
+  testWidgets("on a phone turned on its side, the whole sheet scrolls", (
+    tester,
+  ) async {
     await open(tester, WidgetKind.tasks, size: const Size(2400, 1080));
     expect(tester.takeException(), isNull);
     await tapRow(tester, "Show Done Tasks");

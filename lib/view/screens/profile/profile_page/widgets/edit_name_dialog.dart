@@ -1,8 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/core/result.dart';
-import 'package:todo/core/ui/feedback_toast.dart';
-import 'package:todo/view_model/user_view_model.dart';
+
+import '../../../../../core/result.dart';
+import '../../../../../core/ui/feedback_toast.dart';
+import '../../../../../view_model/user_view_model.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import 'profile_button.dart';
 
@@ -21,9 +22,10 @@ Future<void> showEditNameDialog(BuildContext context) {
         const EditNameDialog(),
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final curvedAnimation = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic);
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
       return FadeTransition(
         opacity: curvedAnimation,
         child: ScaleTransition(
@@ -36,9 +38,7 @@ Future<void> showEditNameDialog(BuildContext context) {
 }
 
 class EditNameDialog extends StatefulWidget {
-  const EditNameDialog({
-    super.key,
-  });
+  const EditNameDialog({super.key});
 
   @override
   State<EditNameDialog> createState() => _EditNameDialogState();
@@ -63,8 +63,9 @@ class _EditNameDialogState extends State<EditNameDialog> {
   }
 
   Future<void> _save() async {
-    final result =
-        await context.read<UserViewModel>().rename(_nameController.text);
+    final result = await context.read<UserViewModel>().rename(
+      _nameController.text,
+    );
     if (!mounted) return;
     // Open still, to fix the name, when it won't do.
     if (result is! Failure) Navigator.of(context).pop();
@@ -124,19 +125,23 @@ class _EditNameDialogState extends State<EditNameDialog> {
               style: TextStyle(fontSize: 18, color: context.colors.wB),
               decoration: InputDecoration(
                 hintText: "Your name",
-                hintStyle:
-                    TextStyle(color: context.colors.wB.withValues(alpha: 0.35)),
+                hintStyle: TextStyle(
+                  color: context.colors.wB.withValues(alpha: 0.35),
+                ),
                 filled: true,
                 fillColor: context.colors.wB.withValues(alpha: 0.06),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 border: fieldShape,
                 enabledBorder: fieldShape,
                 focusedBorder: fieldShape.copyWith(
                   borderSide: const BorderSide(color: _accent, width: 1.5),
                 ),
-                counterStyle:
-                    TextStyle(color: context.colors.wB.withValues(alpha: 0.4)),
+                counterStyle: TextStyle(
+                  color: context.colors.wB.withValues(alpha: 0.4),
+                ),
               ),
             ),
             const SizedBox(height: 12),

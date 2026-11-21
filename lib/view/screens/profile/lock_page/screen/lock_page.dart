@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -10,9 +12,7 @@ import '../../profile_page/widgets/profile_button.dart';
 import '../widgets/password_field.dart';
 
 class LockPage extends StatefulWidget {
-  const LockPage({
-    super.key,
-  });
+  const LockPage({super.key});
 
   @override
   State<LockPage> createState() => LockPageState();
@@ -38,18 +38,21 @@ class LockPageState extends State<LockPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Flexible(
-                    child: Image.asset("assets/locked.png"),
-                  ),
+                  Flexible(child: Image.asset("assets/locked.png")),
                   Flexible(
                     child: IconButton(
-                        onPressed: () async {
-                          await Provider.of<AuthViewModel>(context,
-                                  listen: false)
-                              .retryAuthentication();
-                        },
-                        icon: const Icon(Icons.refresh_sharp,
-                            size: 70, color: Color(0xff3D5AFE))),
+                      onPressed: () async {
+                        await Provider.of<AuthViewModel>(
+                          context,
+                          listen: false,
+                        ).retryAuthentication();
+                      },
+                      icon: const Icon(
+                        Icons.refresh_sharp,
+                        size: 70,
+                        color: Color(0xff3D5AFE),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -85,7 +88,7 @@ class _PasswordUnlockState extends State<_PasswordUnlock> {
     final result = await context.read<AuthViewModel>().unlock(password);
     // Once it's right, the app opens in this page's place.
     if (!mounted || result is! Failure) return;
-    HapticFeedback.heavyImpact();
+    unawaited(HapticFeedback.heavyImpact());
     _controller.clear();
     setState(() {
       _checking = false;
@@ -133,8 +136,9 @@ class _PasswordUnlockState extends State<_PasswordUnlock> {
                   builder: (context, child) => ProfileButton(
                     // The password takes a moment to unlock the data with.
                     label: _checking ? "Checking…" : "Unlock",
-                    onPressed:
-                        _controller.text.isEmpty || _checking ? null : _unlock,
+                    onPressed: _controller.text.isEmpty || _checking
+                        ? null
+                        : _unlock,
                   ),
                 ),
               ],

@@ -33,16 +33,19 @@ const _listTop = 20.0;
 /// The trash page, sliding in from the side, with the deleted [kind] in
 /// view.
 Route<void> trashRoute(TrashKind kind) => PageRouteBuilder<void>(
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          TrashPage(kind: kind),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-          SlideTransition(
+  pageBuilder: (context, animation, secondaryAnimation) =>
+      TrashPage(kind: kind),
+  transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+      SlideTransition(
         position: animation.drive(
-            Tween(begin: const Offset(1, 0), end: Offset.zero)
-                .chain(CurveTween(curve: Curves.ease))),
+          Tween(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).chain(CurveTween(curve: Curves.ease)),
+        ),
         child: child,
       ),
-    );
+);
 
 /// Where deleted tasks and notes wait until the user puts them back or
 /// deletes them for good: one or the other at a time, with a switch between
@@ -96,13 +99,19 @@ class _TrashPageState extends State<TrashPage> {
     // comfortable width on large screens, as on the to-do page.
     final gutterLeft = math.max(16 + padding.left, (width - 640) / 2);
     final gutterRight = math.max(16 + padding.right, (width - 640) / 2);
-    final tasks =
-        context.select<TasksViewModel, int>((tasks) => tasks.trash.length);
-    final notes =
-        context.select<NotesViewModel, int>((notes) => notes.trash.length);
+    final tasks = context.select<TasksViewModel, int>(
+      (tasks) => tasks.trash.length,
+    );
+    final notes = context.select<NotesViewModel, int>(
+      (notes) => notes.trash.length,
+    );
     final count = _kind == TrashKind.task ? tasks : notes;
     final listPadding = EdgeInsets.fromLTRB(
-        gutterLeft, _listTop, gutterRight, 24 + padding.bottom);
+      gutterLeft,
+      _listTop,
+      gutterRight,
+      24 + padding.bottom,
+    );
     return ThemedStatusBar(
       child: Scaffold(
         backgroundColor: context.colors.pageBackground,
@@ -140,7 +149,9 @@ class _TrashPageState extends State<TrashPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    RiseIn(child: _TrashHeader(tasks: tasks, notes: notes)),
+                    RiseIn(
+                      child: _TrashHeader(tasks: tasks, notes: notes),
+                    ),
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
                       child: RiseIn(
@@ -164,29 +175,29 @@ class _TrashPageState extends State<TrashPage> {
             if (_loaded)
               switch (_kind) {
                 TrashKind.task => _TrashList<TaskBranch>(
-                    // A list of its own for each, so the cards rise in
-                    // afresh.
-                    key: const ValueKey(TrashKind.task),
-                    kind: TrashKind.task,
-                    entries: context.watch<TasksViewModel>().trash,
-                    padding: listPadding,
-                    cardOf: (entry) => TrashTaskCard(
-                      entry: entry,
-                      onRestore: () => _restoreTask(entry),
-                      onDelete: () => _deleteTask(entry),
-                    ),
+                  // A list of its own for each, so the cards rise in
+                  // afresh.
+                  key: const ValueKey(TrashKind.task),
+                  kind: TrashKind.task,
+                  entries: context.watch<TasksViewModel>().trash,
+                  padding: listPadding,
+                  cardOf: (entry) => TrashTaskCard(
+                    entry: entry,
+                    onRestore: () => _restoreTask(entry),
+                    onDelete: () => _deleteTask(entry),
                   ),
+                ),
                 TrashKind.note => _TrashList<Note>(
-                    key: const ValueKey(TrashKind.note),
-                    kind: TrashKind.note,
-                    entries: context.watch<NotesViewModel>().trash,
-                    padding: listPadding,
-                    cardOf: (entry) => TrashNoteCard(
-                      entry: entry,
-                      onRestore: () => _restoreNote(entry),
-                      onDelete: () => _deleteNote(entry),
-                    ),
+                  key: const ValueKey(TrashKind.note),
+                  kind: TrashKind.note,
+                  entries: context.watch<NotesViewModel>().trash,
+                  padding: listPadding,
+                  cardOf: (entry) => TrashNoteCard(
+                    entry: entry,
+                    onRestore: () => _restoreNote(entry),
+                    onDelete: () => _deleteNote(entry),
                   ),
+                ),
               },
           ],
         ),
@@ -195,18 +206,18 @@ class _TrashPageState extends State<TrashPage> {
   }
 
   List<GlassMenuItem> _menuItems() => [
-        GlassMenuItem(
-          icon: Icons.restore_from_trash_rounded,
-          tooltip: "Restore All",
-          onPressed: _restoreAll,
-        ),
-        GlassMenuItem(
-          icon: Icons.delete_sweep_rounded,
-          tooltip: "Delete All",
-          color: context.colors.systemRed,
-          onPressed: _deleteAll,
-        ),
-      ];
+    GlassMenuItem(
+      icon: Icons.restore_from_trash_rounded,
+      tooltip: "Restore All",
+      onPressed: _restoreAll,
+    ),
+    GlassMenuItem(
+      icon: Icons.delete_sweep_rounded,
+      tooltip: "Delete All",
+      color: context.colors.systemRed,
+      onPressed: _deleteAll,
+    ),
+  ];
 
   void _show(TrashKind kind) => setState(() => _kind = kind);
 
@@ -230,10 +241,12 @@ class _TrashPageState extends State<TrashPage> {
       title: "Delete Forever?",
       message: switch (entry.item.subtasks.length) {
         0 => "“$title” will be deleted for good. This can't be undone.",
-        1 => "“$title” and its subtask will be deleted for good. This "
-            "can't be undone.",
-        final count => "“$title” and its $count subtasks will be deleted "
-            "for good. This can't be undone.",
+        1 =>
+          "“$title” and its subtask will be deleted for good. This "
+              "can't be undone.",
+        final count =>
+          "“$title” and its $count subtasks will be deleted "
+              "for good. This can't be undone.",
       },
     );
     if (confirmed) FeedbackToast.show(await tasks.deleteForever(entry));
@@ -247,12 +260,14 @@ class _TrashPageState extends State<TrashPage> {
     final confirmed = await confirmDeleteForever(
       context,
       title: "Delete Forever?",
-      message: "“${entry.item.title}” will be deleted for good. This can't "
+      message:
+          "“${entry.item.title}” will be deleted for good. This can't "
           "be undone.",
     );
     if (confirmed) {
       FeedbackToast.show(
-          await notes.deleteForever(entry, askForPassword: askForPassword));
+        await notes.deleteForever(entry, askForPassword: askForPassword),
+      );
     }
   }
 
@@ -261,11 +276,15 @@ class _TrashPageState extends State<TrashPage> {
     final Result result;
     switch (_kind) {
       case TrashKind.task:
-        result = await Provider.of<TasksViewModel>(context, listen: false)
-            .restoreAllFromTrash();
+        result = await Provider.of<TasksViewModel>(
+          context,
+          listen: false,
+        ).restoreAllFromTrash();
       case TrashKind.note:
-        result = await Provider.of<NotesViewModel>(context, listen: false)
-            .restoreAllFromTrash();
+        result = await Provider.of<NotesViewModel>(
+          context,
+          listen: false,
+        ).restoreAllFromTrash();
     }
     FeedbackToast.show(result);
   }
@@ -286,9 +305,9 @@ class _TrashPageState extends State<TrashPage> {
       title: "Delete All ${things[0].toUpperCase()}${things.substring(1)}?",
       message: count == 1
           ? "The ${things.substring(0, things.length - 1)} in the Trash will "
-              "be deleted for good. This can't be undone."
+                "be deleted for good. This can't be undone."
           : "The $count $things in the Trash will be deleted for good. This "
-              "can't be undone.",
+                "can't be undone.",
     );
     if (!confirmed) return;
     FeedbackToast.show(switch (kind) {
@@ -363,8 +382,10 @@ class _KindControl extends StatelessWidget {
       },
       children: const {
         TrashKind.task: _Segment(icon: Icons.checklist_rounded, label: "To-Do"),
-        TrashKind.note:
-            _Segment(icon: Icons.sticky_note_2_rounded, label: "Notes"),
+        TrashKind.note: _Segment(
+          icon: Icons.sticky_note_2_rounded,
+          label: "Notes",
+        ),
       },
     );
   }
@@ -409,10 +430,12 @@ class _Hint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       switch (kind) {
-        TrashKind.task => "Deleted tasks stay here until you restore them or "
-            "delete them forever.",
-        TrashKind.note => "Deleted notes stay here until you restore them or "
-            "delete them forever.",
+        TrashKind.task =>
+          "Deleted tasks stay here until you restore them or "
+              "delete them forever.",
+        TrashKind.note =>
+          "Deleted notes stay here until you restore them or "
+              "delete them forever.",
       },
       style: TextStyle(
         color: context.colors.wB.withValues(alpha: 0.5),
@@ -594,8 +617,8 @@ class _LeavingState extends State<_Leaving>
   }
 
   void _leave() => _controller.reverse().whenComplete(() {
-        if (mounted) widget.onGone();
-      });
+    if (mounted) widget.onGone();
+  });
 
   @override
   void dispose() {

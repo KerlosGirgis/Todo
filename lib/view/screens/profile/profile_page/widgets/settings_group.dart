@@ -124,10 +124,7 @@ class SettingsTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (trailing != null) ...[
-                  const SizedBox(width: 12),
-                  trailing!,
-                ],
+                if (trailing != null) ...[const SizedBox(width: 12), trailing!],
               ],
             ),
             if (bottom != null) ...[
@@ -215,8 +212,11 @@ class DisclosureValue extends StatelessWidget {
 /// A setting's icon, white on a rounded square of its own colour, as in
 /// iOS's Settings.
 class _IconBadge extends StatelessWidget {
-  const _IconBadge(
-      {required this.icon, required this.color, required this.size});
+  const _IconBadge({
+    required this.icon,
+    required this.color,
+    required this.size,
+  });
 
   final IconData icon;
   final Color color;

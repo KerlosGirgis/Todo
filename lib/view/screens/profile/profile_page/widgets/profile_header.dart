@@ -38,7 +38,7 @@ class ProfileHeader extends StatelessWidget {
 }
 
 String _greeting(int hour) => switch (hour) {
-      >= 5 && < 12 => "Good morning",
-      >= 12 && < 17 => "Good afternoon",
-      _ => "Good evening",
-    };
+  >= 5 && < 12 => "Good morning",
+  >= 12 && < 17 => "Good afternoon",
+  _ => "Good evening",
+};

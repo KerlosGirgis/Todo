@@ -16,14 +16,20 @@ class TrashTable {
   /// as [item], and gives the trash's id for it. The rows with the ids
   /// [alongWith] go with it, as a task's subtasks do: [item] holds them too.
   /// Throws when there's no row [itemId], as it's been deleted already.
-  Future<int> moveIn(Database db, String table,
-      {required int? itemId,
-      Iterable<int?> alongWith = const [],
-      required Map<String, Object?> item,
-      required DateTime deletedAt}) {
+  Future<int> moveIn(
+    Database db,
+    String table, {
+    required int? itemId,
+    Iterable<int?> alongWith = const [],
+    required Map<String, Object?> item,
+    required DateTime deletedAt,
+  }) {
     return db.transaction((txn) async {
-      final deleted =
-          await txn.delete(table, where: 'id = ?', whereArgs: [itemId]);
+      final deleted = await txn.delete(
+        table,
+        where: 'id = ?',
+        whereArgs: [itemId],
+      );
       if (deleted == 0) throw StateError("There's no row $itemId to delete");
       for (final id in alongWith) {
         await txn.delete(table, where: 'id = ?', whereArgs: [id]);
@@ -31,7 +37,11 @@ class TrashTable {
       return txn.insert(
         name,
         Trashed.toRow(
-            kind: kind, itemId: itemId, item: item, deletedAt: deletedAt),
+          kind: kind,
+          itemId: itemId,
+          item: item,
+          deletedAt: deletedAt,
+        ),
       );
     });
   }
@@ -39,13 +49,16 @@ class TrashTable {
   /// The entries, the last deleted first, read by [fromMap]. One that can't
   /// be read is left out.
   Future<List<Trashed<T>>> read<T>(
-      Database db, T Function(Map<String, dynamic> map) fromMap) async {
-    final rows = await db.query(name,
-        where: 'kind = ?', whereArgs: [kind.name], orderBy: 'id DESC');
-    return [
-      for (final row in rows)
-        if (Trashed.fromRow(row, fromMap) case final entry?) entry,
-    ];
+    Database db,
+    T Function(Map<String, dynamic> map) fromMap,
+  ) async {
+    final rows = await db.query(
+      name,
+      where: 'kind = ?',
+      whereArgs: [kind.name],
+      orderBy: 'id DESC',
+    );
+    return [for (final row in rows) ?Trashed.fromRow(row, fromMap)];
   }
 
   /// Takes the entry [id] out of the trash and puts [item] back in [table],
@@ -56,13 +69,20 @@ class TrashTable {
   /// at the end with [item], in their order. The id [item] has there, or
   /// null when the entry isn't in the trash anymore: put back or deleted for
   /// good already.
-  Future<int?> moveOut(Database db, String table, int id,
-      {required int? itemId,
-      required Map<String, Object?> item,
-      List<Map<String, Object?>> alongWith = const []}) {
+  Future<int?> moveOut(
+    Database db,
+    String table,
+    int id, {
+    required int? itemId,
+    required Map<String, Object?> item,
+    List<Map<String, Object?>> alongWith = const [],
+  }) {
     return db.transaction((txn) async {
-      final taken = await txn.delete(name,
-          where: 'id = ? AND kind = ?', whereArgs: [id, kind.name]);
+      final taken = await txn.delete(
+        name,
+        where: 'id = ? AND kind = ?',
+        whereArgs: [id, kind.name],
+      );
       if (taken == 0) return null;
       final rows = [
         {...item, 'id': itemId},
@@ -71,16 +91,22 @@ class TrashTable {
       var free = true;
       for (final row in rows) {
         final rowId = row['id'];
-        free = rowId != null &&
-            (await txn.query(table,
-                    columns: ['id'], where: 'id = ?', whereArgs: [rowId]))
-                .isEmpty;
+        free =
+            rowId != null &&
+            (await txn.query(
+              table,
+              columns: ['id'],
+              where: 'id = ?',
+              whereArgs: [rowId],
+            )).isEmpty;
         if (!free) break;
       }
       int? first;
       for (final row in rows) {
-        final rowId =
-            await txn.insert(table, free ? row : ({...row}..remove('id')));
+        final rowId = await txn.insert(
+          table,
+          free ? row : ({...row}..remove('id')),
+        );
         first ??= rowId;
       }
       return first;
@@ -92,8 +118,11 @@ class TrashTable {
   Future<void> delete(Database db, Iterable<int> ids) {
     return db.transaction((txn) async {
       for (final id in ids) {
-        await txn.delete(name,
-            where: 'id = ? AND kind = ?', whereArgs: [id, kind.name]);
+        await txn.delete(
+          name,
+          where: 'id = ? AND kind = ?',
+          whereArgs: [id, kind.name],
+        );
       }
     });
   }

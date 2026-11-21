@@ -32,9 +32,11 @@ const colorPalette = <(String, Color)>[
 String colorName(Color? color) => color == null
     ? "Automatic"
     : colorPalette
-        .firstWhere((entry) => entry.$2 == color,
-            orElse: () => ("Custom", color))
-        .$1;
+          .firstWhere(
+            (entry) => entry.$2 == color,
+            orElse: () => ("Custom", color),
+          )
+          .$1;
 
 /// A row for a colour, showing which it is, as the task dialog's rows show
 /// their date and time. A tap opens the palette under it, or closes it
@@ -191,8 +193,10 @@ class ColorSwatches extends StatelessWidget {
     final perRow = offersAutomatic ? 7 : 6;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size =
-            math.min(38.0, (constraints.maxWidth - (perRow - 1) * 8) / perRow);
+        final size = math.min(
+          38.0,
+          (constraints.maxWidth - (perRow - 1) * 8) / perRow,
+        );
         return Column(
           children: [
             for (var start = 0; start < swatches.length; start += perRow) ...[
@@ -371,7 +375,10 @@ class AutomaticDot extends StatelessWidget {
 /// Opens a picker for any colour, starting from [current], headed [title].
 /// The colour picked, or [current] when the picker is cancelled.
 Future<Color> pickCustomColor(
-    BuildContext context, Color current, String title) {
+  BuildContext context,
+  Color current,
+  String title,
+) {
   return showColorPickerDialog(
     context,
     current,
@@ -415,18 +422,21 @@ Future<Color> pickCustomColor(
     barrierColor: Colors.black54,
     actionButtons: ColorPickerActionButtons(
       dialogOkButtonLabel: "Choose",
-      dialogOkButtonStyle:
-          TextButton.styleFrom(foregroundColor: context.colors.moreLess),
-      dialogCancelButtonStyle:
-          TextButton.styleFrom(foregroundColor: context.colors.moreLess),
+      dialogOkButtonStyle: TextButton.styleFrom(
+        foregroundColor: context.colors.moreLess,
+      ),
+      dialogCancelButtonStyle: TextButton.styleFrom(
+        foregroundColor: context.colors.moreLess,
+      ),
     ),
     // Fades and grows in, like the dialog it opens from.
     transitionDuration: const Duration(milliseconds: 300),
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final curvedAnimation = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic);
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
       return FadeTransition(
         opacity: curvedAnimation,
         child: ScaleTransition(

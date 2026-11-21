@@ -54,9 +54,9 @@ class _NoteDialogState extends State<NoteDialog> {
   }
 
   Color _colorOf(_ColorTarget target) => Color(switch (target) {
-        _ColorTarget.cover => _draft.coverColor,
-        _ColorTarget.title => _draft.titleColor,
-      });
+    _ColorTarget.cover => _draft.coverColor,
+    _ColorTarget.title => _draft.titleColor,
+  });
 
   void _setColor(_ColorTarget target, Color color) {
     switch (target) {
@@ -69,15 +69,20 @@ class _NoteDialogState extends State<NoteDialog> {
 
   Future<void> _pickCustomColor(_ColorTarget target) async {
     final current = _colorOf(target);
-    final picked = await pickCustomColor(context, current,
-        target == _ColorTarget.cover ? "Cover Color" : "Title Color");
+    final picked = await pickCustomColor(
+      context,
+      current,
+      target == _ColorTarget.cover ? "Cover Color" : "Title Color",
+    );
     // A cancelled picker hands back the colour it started with.
     if (mounted && picked != current) _setColor(target, picked);
   }
 
   Future<void> _setLocked(bool locked) async {
-    final result = await _draft.setLocked(locked,
-        askForPassword: noteLockPasswordPrompt(context));
+    final result = await _draft.setLocked(
+      locked,
+      askForPassword: noteLockPasswordPrompt(context),
+    );
     if (!mounted) return;
     FeedbackToast.show(result);
   }

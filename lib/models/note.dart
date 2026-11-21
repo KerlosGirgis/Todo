@@ -34,12 +34,12 @@ class Note {
 
   /// The note with nothing of its text, as the notes page holds a locked one.
   Note withoutText() => Note(
-        id: id,
-        title: title,
-        titleColor: titleColor,
-        coverColor: coverColor,
-        locked: locked,
-      );
+    id: id,
+    title: title,
+    titleColor: titleColor,
+    coverColor: coverColor,
+    locked: locked,
+  );
 
   Note copyWith({
     String? title,
@@ -92,7 +92,10 @@ class Note {
   static int _readColor(Object? color, int fallback) {
     if (color is int) return color;
     if (color is! String) return fallback;
-    var hex = color.replaceAll('#', '').replaceAll(' ', '').replaceAll('0x', '');
+    var hex = color
+        .replaceAll('#', '')
+        .replaceAll(' ', '')
+        .replaceAll('0x', '');
     if (hex.isEmpty || color.length > 200) return 0xFF000000;
     if (hex.length == 3) hex = hex[0] * 2 + hex[1] * 2 + hex[2] * 2;
     hex = hex.padLeft(6, '0').padLeft(8, 'F');

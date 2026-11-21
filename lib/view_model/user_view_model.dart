@@ -1,16 +1,17 @@
 import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
-import 'package:todo/models/app_lock.dart';
-import 'package:todo/models/avatar.dart';
-import 'package:todo/models/user_profile.dart';
-import 'package:todo/models/verse.dart';
-import 'package:todo/services/authentication_service.dart';
-import 'package:todo/services/database_service.dart';
-import 'package:todo/services/device_service.dart';
-import 'package:todo/services/image_service.dart';
-import 'package:todo/services/lock_service.dart';
-import 'package:todo/services/verse_service.dart';
-import 'package:todo/repositories/user_repository.dart';
+
+import '../models/app_lock.dart';
+import '../models/avatar.dart';
+import '../models/user_profile.dart';
+import '../models/verse.dart';
+import '../services/authentication_service.dart';
+import '../services/database_service.dart';
+import '../services/device_service.dart';
+import '../services/image_service.dart';
+import '../services/lock_service.dart';
+import '../services/verse_service.dart';
+import '../repositories/user_repository.dart';
 import '../core/prompts.dart';
 import '../core/result.dart';
 
@@ -23,31 +24,32 @@ class UserViewModel with ChangeNotifier {
     DeviceService? deviceService,
     VerseService? verseService,
     DatabaseService? databaseService,
-  })  : _userRepository = repository ?? UserRepository(),
-        _imageService = imageService ?? ImageService(),
-        _lockService = lockService ?? LockService(),
-        _authService =
-            authService ?? AuthenticationService(lockService: lockService),
-        _deviceService = deviceService ?? DeviceService(),
-        _verseService = verseService ?? VerseService(),
-        _dbService = databaseService ?? DatabaseService();
+  }) : _userRepository = repository ?? UserRepository(),
+       _imageService = imageService ?? ImageService(),
+       _lockService = lockService ?? LockService(),
+       _authService =
+           authService ?? AuthenticationService(lockService: lockService),
+       _deviceService = deviceService ?? DeviceService(),
+       _verseService = verseService ?? VerseService(),
+       _dbService = databaseService ?? DatabaseService();
 
   UserProfile _user = UserProfile(
-      name: "user",
-      avatar: BundledAvatar.fallback,
-      darkTheme:
-          PlatformDispatcher.instance.platformBrightness == Brightness.dark,
-      amoledTheme: false,
-      autoSave: true,
-      casualFont: false,
-      showVerse: true,
-      wordCount: false,
-      notesTextSize: 1,
-      startPage: StartPage.tasks,
-      descLines: 2,
-      tasksTitleSize: 1,
-      tasksDescSize: 1,
-      notesTitleSize: 1);
+    name: "user",
+    avatar: BundledAvatar.fallback,
+    darkTheme:
+        PlatformDispatcher.instance.platformBrightness == Brightness.dark,
+    amoledTheme: false,
+    autoSave: true,
+    casualFont: false,
+    showVerse: true,
+    wordCount: false,
+    notesTextSize: 1,
+    startPage: StartPage.tasks,
+    descLines: 2,
+    tasksTitleSize: 1,
+    tasksDescSize: 1,
+    notesTitleSize: 1,
+  );
   UserProfile get user => _user;
 
   /// What the app asks for each time it opens.
@@ -159,16 +161,22 @@ class UserViewModel with ChangeNotifier {
   }
 
   Future<void> setDarkTheme(bool darkTheme) => _set(
-      darkTheme == user.darkTheme, () => user.copyWith(darkTheme: darkTheme));
+    darkTheme == user.darkTheme,
+    () => user.copyWith(darkTheme: darkTheme),
+  );
 
   Future<void> setAmoledTheme(bool amoled) => _set(
-      amoled == user.amoledTheme, () => user.copyWith(amoledTheme: amoled));
+    amoled == user.amoledTheme,
+    () => user.copyWith(amoledTheme: amoled),
+  );
 
-  Future<void> setAutoSave(bool autoSave) => _set(
-      autoSave == user.autoSave, () => user.copyWith(autoSave: autoSave));
+  Future<void> setAutoSave(bool autoSave) =>
+      _set(autoSave == user.autoSave, () => user.copyWith(autoSave: autoSave));
 
   Future<void> setStartPage(StartPage startPage) => _set(
-      startPage == user.startPage, () => user.copyWith(startPage: startPage));
+    startPage == user.startPage,
+    () => user.copyWith(startPage: startPage),
+  );
 
   /// The view the to-do page's menu has switched to, away from the one the
   /// settings pick, which lasts until the app closes or the setting
@@ -202,14 +210,19 @@ class UserViewModel with ChangeNotifier {
   /// Puts notes in the handwritten font, or back in the regular one. The
   /// home screen's note widget has a font of its own: see WidgetsViewModel.
   Future<void> setCasualFont(bool casualFont) => _set(
-      casualFont == user.casualFont,
-      () => user.copyWith(casualFont: casualFont));
+    casualFont == user.casualFont,
+    () => user.copyWith(casualFont: casualFont),
+  );
 
   Future<void> setWordCount(bool wordCount) => _set(
-      wordCount == user.wordCount, () => user.copyWith(wordCount: wordCount));
+    wordCount == user.wordCount,
+    () => user.copyWith(wordCount: wordCount),
+  );
 
   Future<void> setShowVerse(bool showVerse) => _set(
-      showVerse == user.showVerse, () => user.copyWith(showVerse: showVerse));
+    showVerse == user.showVerse,
+    () => user.copyWith(showVerse: showVerse),
+  );
 
   /// Changes what the app is locked with to [lock], once the lock it has now
   /// lets the user through: their fingerprint, or the password
@@ -232,8 +245,9 @@ class UserViewModel with ChangeNotifier {
       case AppLock.fingerprint:
         return _lockWithFingerprint(password: password);
       case AppLock.password:
-        final newPassword =
-            await askForNewPassword(minLength: minPasswordLength);
+        final newPassword = await askForNewPassword(
+          minLength: minPasswordLength,
+        );
         if (newPassword == null) return null;
         return _lockWithPassword(newPassword, password: password);
     }
@@ -243,7 +257,7 @@ class UserViewModel with ChangeNotifier {
   /// fingerprint, or [password], whichever the app is locked with.
   Future<Result> _turnOffAppLock({String? password}) async {
     if (!await _authService.passesAppLock(password: password)) {
-      return Failure("Authentication Failed");
+      return Failure("Authentication failed");
     }
     if (!await _withKey((key) => _lockService.disableLock(key: key))) {
       return Failure(_unchangeable);
@@ -258,7 +272,7 @@ class UserViewModel with ChangeNotifier {
   Future<Result> _lockWithFingerprint({String? password}) async {
     if (!await _authService.passesAppLock(password: password) ||
         !await _authService.authenticate()) {
-      return Failure("Authentication Failed");
+      return Failure("Authentication failed");
     }
     if (!await _withKey((key) => _lockService.enableLock(key: key))) {
       return Failure(_unchangeable);
@@ -271,17 +285,20 @@ class UserViewModel with ChangeNotifier {
   /// Locks the app with [newPassword], once the lock it has now lets the user
   /// through: their fingerprint, or [password]. For an app locked with a
   /// password already, this changes it.
-  Future<Result> _lockWithPassword(String newPassword,
-      {String? password}) async {
+  Future<Result> _lockWithPassword(
+    String newPassword, {
+    String? password,
+  }) async {
     if (newPassword.length < minPasswordLength) {
       return Failure("Use at least $minPasswordLength characters");
     }
     if (!await _authService.passesAppLock(password: password)) {
-      return Failure("Authentication Failed");
+      return Failure("Authentication failed");
     }
     final changing = _appLock == AppLock.password;
     if (!await _withKey(
-        (key) => _lockService.enableLock(password: newPassword, key: key))) {
+      (key) => _lockService.enableLock(password: newPassword, key: key),
+    )) {
       return Failure(_unchangeable);
     }
     _setAppLock(AppLock.password);
@@ -309,40 +326,43 @@ class UserViewModel with ChangeNotifier {
   static bool _isTextSize(double size) =>
       size >= minTextSize && size <= maxTextSize;
 
-  Future<Result> setNotesTextSize(double size) async {
-    if (_isTextSize(size)) {
-      await _save(user.copyWith(notesTextSize: size));
-      return Success("Font Changed");
-    } else {
-      return Failure("Enter Valid Value");
-    }
-  }
+  Future<Result?> setNotesTextSize(double size) => _setTextSize(
+    size,
+    user.notesTextSize,
+    (size) => user.copyWith(notesTextSize: size),
+  );
 
-  Future<Result> setNotesTitleSize(double size) async {
-    if (_isTextSize(size)) {
-      await _save(user.copyWith(notesTitleSize: size));
-      return Success("Font Changed");
-    } else {
-      return Failure("Enter Valid Value");
-    }
-  }
+  Future<Result?> setNotesTitleSize(double size) => _setTextSize(
+    size,
+    user.notesTitleSize,
+    (size) => user.copyWith(notesTitleSize: size),
+  );
 
-  Future<Result> setTasksTitleSize(double size) async {
-    if (_isTextSize(size)) {
-      await _save(user.copyWith(tasksTitleSize: size));
-      return Success("Font Changed");
-    } else {
-      return Failure("Enter Valid Value");
-    }
-  }
+  Future<Result?> setTasksTitleSize(double size) => _setTextSize(
+    size,
+    user.tasksTitleSize,
+    (size) => user.copyWith(tasksTitleSize: size),
+  );
 
-  Future<Result> setTasksDescSize(double size) async {
-    if (_isTextSize(size)) {
-      await _save(user.copyWith(tasksDescSize: size));
-      return Success("Font Changed");
-    } else {
-      return Failure("Enter Valid Value");
+  Future<Result?> setTasksDescSize(double size) => _setTextSize(
+    size,
+    user.tasksDescSize,
+    (size) => user.copyWith(tasksDescSize: size),
+  );
+
+  /// Saves [size], one of the text sizes on offer, with [change], unless
+  /// it's [current] already: then there's nothing to say.
+  Future<Result?> _setTextSize(
+    double size,
+    double current,
+    UserProfile Function(double size) change,
+  ) async {
+    if (!_isTextSize(size)) {
+      return const Failure("That text size isn't on offer");
     }
+    if (size == current) return null;
+    await _save(change(size));
+    return const Success("Text Size Changed");
   }
 
   /// Shows [lines] lines of a task's description before "Show More", or the
@@ -350,7 +370,9 @@ class UserViewModel with ChangeNotifier {
   Future<void> setDescLines(int lines) async {
     if (lines >= 0 && lines <= maxDescLines) {
       await _set(
-          lines == user.descLines, () => user.copyWith(descLines: lines));
+        lines == user.descLines,
+        () => user.copyWith(descLines: lines),
+      );
     }
   }
 }

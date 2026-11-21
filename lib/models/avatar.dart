@@ -37,17 +37,17 @@ final class BundledAvatar extends Avatar {
   /// The picture's asset, or the plain avatar's for a number there's no
   /// picture for.
   String get asset => switch (number) {
-        "001" => "assets/avatars/avatar_hacker.png",
-        "002" => "assets/avatars/avatar_man_1.png",
-        "003" => "assets/avatars/avatar_man_2.png",
-        "004" => "assets/avatars/avatar_man_3.png",
-        "005" => "assets/avatars/avatar_man_4.png",
-        "006" => "assets/avatars/avatar_woman_1.png",
-        "007" => "assets/avatars/avatar_woman_2.png",
-        "008" => "assets/avatars/avatar_woman_3.png",
-        "009" => "assets/avatars/avatar_woman_4.png",
-        _ => "assets/avatars/avatar.png",
-      };
+    "001" => "assets/avatars/avatar_hacker.png",
+    "002" => "assets/avatars/avatar_man_1.png",
+    "003" => "assets/avatars/avatar_man_2.png",
+    "004" => "assets/avatars/avatar_man_3.png",
+    "005" => "assets/avatars/avatar_man_4.png",
+    "006" => "assets/avatars/avatar_woman_1.png",
+    "007" => "assets/avatars/avatar_woman_2.png",
+    "008" => "assets/avatars/avatar_woman_3.png",
+    "009" => "assets/avatars/avatar_woman_4.png",
+    _ => "assets/avatars/avatar.png",
+  };
 
   @override
   String get encoded => number;

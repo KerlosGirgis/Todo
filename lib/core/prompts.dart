@@ -22,4 +22,5 @@ typedef NewBackupPasswordPrompt = Future<bool> Function({
 /// they enter with [open], and tells whether one opened it, or false if they
 /// cancel.
 typedef BackupPasswordPrompt = Future<bool> Function(
-    Future<Result> Function(String password) open);
+  Future<Result> Function(String password) open,
+);

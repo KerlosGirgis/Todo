@@ -28,10 +28,7 @@ class ProfileAurora extends StatelessWidget {
 }
 
 class _AuroraPainter extends CustomPainter {
-  const _AuroraPainter({
-    required this.strength,
-    required this.background,
-  });
+  const _AuroraPainter({required this.strength, required this.background});
 
   final double strength;
   final Color background;

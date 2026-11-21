@@ -21,15 +21,15 @@ class EmptyTrash extends StatelessWidget {
   Widget build(BuildContext context) {
     final (title, message) = switch (kind) {
       TrashKind.task => (
-          "No Deleted Tasks",
-          "Tasks you delete wait here until you restore them or delete "
-              "them forever.",
-        ),
+        "No Deleted Tasks",
+        "Tasks you delete wait here until you restore them or delete "
+            "them forever.",
+      ),
       TrashKind.note => (
-          "No Deleted Notes",
-          "Notes you delete wait here until you restore them or delete "
-              "them forever.",
-        ),
+        "No Deleted Notes",
+        "Notes you delete wait here until you restore them or delete "
+            "them forever.",
+      ),
     };
     return Center(
       child: Padding(

@@ -17,14 +17,14 @@ enum TaskFilter {
   /// time that stands for it, and comes round as its card says: a weekly
   /// task on every day of the week is a daily one.
   bool shows(TodoItem task) => switch (this) {
-        all => true,
-        done => task.done,
-        undone => !task.done,
-        daily => _cadenceOf(task) == RepeatEvery.day,
-        weekly => _cadenceOf(task) == RepeatEvery.week,
-        monthly => _cadenceOf(task) == RepeatEvery.month,
-        once => !task.repeats,
-      };
+    all => true,
+    done => task.done,
+    undone => !task.done,
+    daily => _cadenceOf(task) == RepeatEvery.day,
+    weekly => _cadenceOf(task) == RepeatEvery.week,
+    monthly => _cadenceOf(task) == RepeatEvery.month,
+    once => !task.repeats,
+  };
 }
 
 /// How often [task] comes round, or null for one that doesn't repeat.

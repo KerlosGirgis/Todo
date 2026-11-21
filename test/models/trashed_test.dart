@@ -19,13 +19,16 @@ void main() {
       time: const ClockTime(18, 0),
       reminder: Reminder.daily,
       progress: RepeatProgress(
-          since: DateTime(2026, 5, 10), doneDays: [DateTime(2026, 5, 12)]),
+        since: DateTime(2026, 5, 10),
+        doneDays: [DateTime(2026, 5, 12)],
+      ),
     );
     final row = Trashed.toRow(
-        kind: TrashKind.task,
-        itemId: task.id,
-        item: task.toMap(),
-        deletedAt: deletedAt);
+      kind: TrashKind.task,
+      itemId: task.id,
+      item: task.toMap(),
+      deletedAt: deletedAt,
+    );
     expect(row['kind'], "task");
     expect(row['itemId'], 7);
     expect(jsonDecode(row['item'] as String), task.toMap());
@@ -49,10 +52,11 @@ void main() {
       locked: true,
     );
     final row = Trashed.toRow(
-        kind: TrashKind.note,
-        itemId: note.id,
-        item: note.toMap(),
-        deletedAt: deletedAt);
+      kind: TrashKind.note,
+      itemId: note.id,
+      item: note.toMap(),
+      deletedAt: deletedAt,
+    );
     final entry = Trashed.fromRow({...row, 'id': 1}, Note.fromMap)!;
     expect(row['kind'], "note");
     expect(entry.item.id, 2);

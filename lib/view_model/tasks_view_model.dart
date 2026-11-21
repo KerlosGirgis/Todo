@@ -3,10 +3,13 @@ import 'dart:collection';
 
 import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
-import 'package:todo/core/result.dart';
-import 'package:todo/services/file_service.dart';
-import 'package:todo/repositories/tasks_repository.dart';
+
+import '../core/result.dart';
+import '../services/file_service.dart';
+import '../repositories/tasks_repository.dart';
+
 import 'package:uuid/v4.dart';
+
 import '../core/prompts.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/app_lock.dart';
@@ -18,7 +21,7 @@ import '../models/task_filters.dart';
 import '../models/task_listing.dart';
 import '../models/task_sort.dart';
 import '../models/task_tree.dart';
-import '../models/tasks_widget_snapshot.dart';
+import '../core/tasks_widget_snapshot.dart';
 import '../models/todo_item.dart';
 import '../models/trashed.dart';
 import '../services/authentication_service.dart';
@@ -85,14 +88,14 @@ class TasksViewModel with ChangeNotifier {
     NotificationService? notificationService,
     HomeWidgetService? homeWidgetService,
     DateTime Function()? clock,
-  })  : _tasksRepository = repository ?? TasksRepository(),
-        _backupService = backupService ?? BackupService(),
-        _fileService = fileService ?? FileService(),
-        _lockService = lockService ?? LockService(),
-        _authService = authService ?? AuthenticationService(),
-        _notificationService = notificationService ?? NotificationService(),
-        _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
-        _now = clock ?? DateTime.now {
+  }) : _tasksRepository = repository ?? TasksRepository(),
+       _backupService = backupService ?? BackupService(),
+       _fileService = fileService ?? FileService(),
+       _lockService = lockService ?? LockService(),
+       _authService = authService ?? AuthenticationService(),
+       _notificationService = notificationService ?? NotificationService(),
+       _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
+       _now = clock ?? DateTime.now {
     // Reminders say which task they're for only while the app isn't locked,
     // and so does the widget.
     _lockChanges = _lockService.changes.listen((_) {
@@ -222,8 +225,9 @@ class TasksViewModel with ChangeNotifier {
           // Until they all are, they're set afresh at each start.
           if (await refreshReminders()) {
             await _notificationService.setRemindersTimeZone(timeZone);
-            await _notificationService
-                .setRemindersIdVersion(ReminderPlan.idVersion);
+            await _notificationService.setRemindersIdVersion(
+              ReminderPlan.idVersion,
+            );
           }
         } else if (await _lockService.getLock() != AppLock.off) {
           await refreshReminders();
@@ -292,8 +296,10 @@ class TasksViewModel with ChangeNotifier {
   void _awaitNewDay() {
     _dayEnd?.cancel();
     final now = _now();
-    _dayEnd = Timer(DateTime(now.year, now.month, now.day + 1).difference(now),
-        checkForNewDay);
+    _dayEnd = Timer(
+      DateTime(now.year, now.month, now.day + 1).difference(now),
+      checkForNewDay,
+    );
   }
 
   /// Lists only the tasks [filter] lets through, from now on and when the
@@ -346,13 +352,15 @@ class TasksViewModel with ChangeNotifier {
       _widgetDue = false;
       try {
         final locked = await _lockService.getLock() != AppLock.off;
-        await _homeWidgetService.showTasks(TasksWidgetSnapshot.of(
-          _allTasks,
-          now: _now(),
-          sort: sort,
-          direction: sortDirection,
-          locked: locked,
-        ));
+        await _homeWidgetService.showTasks(
+          TasksWidgetSnapshot.of(
+            _allTasks,
+            now: _now(),
+            sort: sort,
+            direction: sortDirection,
+            locked: locked,
+          ),
+        );
       } catch (e) {
         // The widget's own trouble, which the tasks go ahead without.
       }
@@ -401,8 +409,11 @@ class TasksViewModel with ChangeNotifier {
   /// Moves [task] next to [sibling], into the task that one's in: ahead of
   /// it, or right [after] it. The tasks in it go with it. Null when there's
   /// nothing to say.
-  Future<Result?> moveBeside(TodoItem task, TodoItem sibling,
-      {required bool after}) async {
+  Future<Result?> moveBeside(
+    TodoItem task,
+    TodoItem sibling, {
+    required bool after,
+  }) async {
     final node = _tree.nodeOf(_current(task));
     final beside = _tree.nodeOf(_current(sibling));
     if (node == null || beside == null) return _gone;
@@ -422,8 +433,11 @@ class TasksViewModel with ChangeNotifier {
 
   static const _gone = Info("That task isn't on the list anymore");
 
-  Future<Result?> _move(TodoItem task,
-      {required TodoItem? parent, TodoItem? before}) async {
+  Future<Result?> _move(
+    TodoItem task, {
+    required TodoItem? parent,
+    TodoItem? before,
+  }) async {
     final node = _tree.nodeOf(_current(task));
     final into = parent == null ? null : _tree.nodeOf(_current(parent));
     if (node == null || (parent != null && into == null)) return _gone;
@@ -434,9 +448,11 @@ class TasksViewModel with ChangeNotifier {
     if (into != null && into.task.uuid.isEmpty) {
       return const Failure("Couldn't move the task");
     }
-    var tasks = _tree.moving(node,
-        parent: into,
-        before: before == null ? null : _tree.nodeOf(_current(before)));
+    var tasks = _tree.moving(
+      node,
+      parent: into,
+      before: before == null ? null : _tree.nodeOf(_current(before)),
+    );
     if (tasks == null) return null;
     if (into != null && into.task.folded) {
       // Unfolded, so the task shows where it's gone.
@@ -514,8 +530,12 @@ class TasksViewModel with ChangeNotifier {
   }
 
   /// A form for [task], or for a new task without one.
-  TaskDraft draft([TodoItem? task]) => TaskDraft._(task, _now, _tree,
-      task == null ? null : _tree.nodeOf(task)?.parent?.task);
+  TaskDraft draft([TodoItem? task]) => TaskDraft._(
+    task,
+    _now,
+    _tree,
+    task == null ? null : _tree.nodeOf(task)?.parent?.task,
+  );
 
   /// A form for a new subtask of [parent].
   TaskDraft subtaskDraft(TodoItem parent) =>
@@ -668,9 +688,11 @@ class TasksViewModel with ChangeNotifier {
     final reminded = await _remindAgain(branch.all);
     await _settle();
     if (!reminded) {
-      return Failure(branch.subtasks.isEmpty
-          ? "Task restored, but its reminder couldn't be set"
-          : "Task restored, but not every reminder could be set");
+      return Failure(
+        branch.subtasks.isEmpty
+            ? "Task restored, but its reminder couldn't be set"
+            : "Task restored, but not every reminder could be set",
+      );
     }
     return Success("Task Restored");
   }
@@ -702,16 +724,20 @@ class TasksViewModel with ChangeNotifier {
     ]);
     await _settle();
     if (!allBack) {
-      return Failure(restored.isEmpty
-          ? "Couldn't restore the tasks"
-          : "Couldn't restore every task");
+      return Failure(
+        restored.isEmpty
+            ? "Couldn't restore the tasks"
+            : "Couldn't restore every task",
+      );
     }
     if (!remindersSet) {
       return Failure("Tasks restored, but not every reminder could be set");
     }
-    return Success(restored.length == 1
-        ? "Task Restored"
-        : "${restored.length} Tasks Restored");
+    return Success(
+      restored.length == 1
+          ? "Task Restored"
+          : "${restored.length} Tasks Restored",
+    );
   }
 
   /// Deletes the task [entry] holds for good, with the tasks in it.
@@ -738,12 +764,14 @@ class TasksViewModel with ChangeNotifier {
     }
     await _reloadTrash();
     return Info(
-        count == 1 ? "1 Task Deleted Forever" : "$count Tasks Deleted Forever");
+      count == 1 ? "1 Task Deleted Forever" : "$count Tasks Deleted Forever",
+    );
   }
 
   /// The uuids of the tasks on the list, which a task put back can't share.
-  Future<Set<String>> _uuidsInUse() async =>
-      {for (final task in await _tasksRepository.getItems()) task.uuid};
+  Future<Set<String>> _uuidsInUse() async => {
+    for (final task in await _tasksRepository.getItems()) task.uuid,
+  };
 
   /// Puts [entry]'s tasks back on the list, any of them under a new uuid if
   /// a task on the list has its own, [uuids] being theirs: one restored from
@@ -751,7 +779,9 @@ class TasksViewModel with ChangeNotifier {
   /// share one. The tasks as they're back, or null if they aren't in the
   /// trash anymore.
   Future<TaskBranch?> _putBack(
-      Trashed<TaskBranch> entry, Set<String> uuids) async {
+    Trashed<TaskBranch> entry,
+    Set<String> uuids,
+  ) async {
     final renamed = <String, String>{};
     // A task ahead of its subtasks, which follow it to its new uuid.
     TodoItem own(TodoItem task) {
@@ -763,8 +793,9 @@ class TasksViewModel with ChangeNotifier {
     }
 
     final task = own(entry.item.task);
-    final branch = TaskBranch(
-        task, [for (final subtask in entry.item.subtasks) own(subtask)]);
+    final branch = TaskBranch(task, [
+      for (final subtask in entry.item.subtasks) own(subtask),
+    ]);
     final id = await _tasksRepository.restoreFromTrash(entry.id, branch);
     if (id == null) return null;
     uuids.addAll(branch.all.map((each) => each.uuid));
@@ -800,10 +831,12 @@ class TasksViewModel with ChangeNotifier {
     task = _current(task);
     final done = !task.done;
     final node = _tree.nodeOf(task);
-    final nodes =
-        node == null ? const <TaskNode>[] : _tree.marking(node, done: done);
-    final changing =
-        node == null ? [task] : [for (final each in nodes) each.task];
+    final nodes = node == null
+        ? const <TaskNode>[]
+        : _tree.marking(node, done: done);
+    final changing = node == null
+        ? [task]
+        : [for (final each in nodes) each.task];
     // Before they're marked, as the time that stands for a repeating task
     // may be another once it's done.
     final said = done
@@ -873,7 +906,10 @@ class TasksViewModel with ChangeNotifier {
           // Not one that's been deleted since.
           if (_tree.nodeOf(was)?.task case final now?)
             now.copyWith(
-                done: was.done, reminder: was.reminder, progress: was.progress),
+              done: was.done,
+              reminder: was.reminder,
+              progress: was.progress,
+            ),
       ];
       await _tasksRepository.updateItems(restored);
     } catch (e) {
@@ -909,7 +945,7 @@ class TasksViewModel with ChangeNotifier {
   }) async {
     final pass = await _authService.passAppLock(askForPassword);
     if (pass == null) return null;
-    if (!pass.passed) return Failure("Authentication Failed");
+    if (!pass.passed) return Failure("Authentication failed");
     try {
       final tasks = await _tasksRepository.getItems();
       final file = await _backupService.write(
@@ -924,22 +960,27 @@ class TasksViewModel with ChangeNotifier {
       }
       return Success("Backup Created");
     } catch (e) {
-      return Failure("Backup Failed");
+      return Failure("Couldn't back up the tasks");
     }
   }
 
   /// Adds the tasks from a backup file the user picks, once
   /// [askForBackupPassword] gets the password it's locked with, in place of
   /// every task there is when [overwrite] is set. Null if the user cancels.
-  Future<Result?> restore(bool overwrite,
-      {required BackupPasswordPrompt askForBackupPassword}) async {
+  Future<Result?> restore(
+    bool overwrite, {
+    required BackupPasswordPrompt askForBackupPassword,
+  }) async {
     try {
       final bytes = await _fileService.pickJsonFile();
       if (bytes == null) {
         return Info("You didn't choose a file");
       }
-      final records = await _backupService.read(bytes,
-          kind: BackupKind.tasks, askForPassword: askForBackupPassword);
+      final records = await _backupService.read(
+        bytes,
+        kind: BackupKind.tasks,
+        askForPassword: askForBackupPassword,
+      );
       if (records == null) return null;
       final importedTasks = records.map<TodoItem>((e) {
         final task = TodoItem.fromMap(e);
@@ -950,8 +991,9 @@ class TasksViewModel with ChangeNotifier {
             : task;
       }).toList();
 
-      final existingTasks =
-          overwrite ? <TodoItem>[] : await _tasksRepository.getItems();
+      final existingTasks = overwrite
+          ? <TodoItem>[]
+          : await _tasksRepository.getItems();
       final newTasks = <TodoItem>[];
 
       for (final item in importedTasks) {
@@ -972,7 +1014,7 @@ class TasksViewModel with ChangeNotifier {
         // the tasks as they were.
         await _tasksRepository.importItems(newTasks, overwrite: overwrite);
       } catch (e) {
-        return Failure("Restore failed. Data rolled back safely.");
+        return Failure("Couldn't restore the backup. Nothing was changed.");
       }
       await _reload();
       final result = await _setRestoredReminders(newTasks, replaced: overwrite);
@@ -981,15 +1023,17 @@ class TasksViewModel with ChangeNotifier {
     } on WrongBackupKindException {
       return Failure("That's a backup of notes, not tasks");
     } catch (e) {
-      return Failure("Failed To Restore");
+      return Failure("Couldn't restore the backup");
     }
   }
 
   /// Turns on the reminders of [tasks], which have just been restored, once
   /// the reminders of the tasks they [replaced] are off. A reminder that
   /// can't be set leaves its task restored without it, and is named.
-  Future<Result> _setRestoredReminders(List<TodoItem> tasks,
-      {required bool replaced}) async {
+  Future<Result> _setRestoredReminders(
+    List<TodoItem> tasks, {
+    required bool replaced,
+  }) async {
     var oldRemindersOff = true;
     if (replaced) {
       try {
@@ -1010,7 +1054,7 @@ class TasksViewModel with ChangeNotifier {
       final which = failed.length == 1
           ? failed.first
           : "${failed.first} and ${failed.length - 1} more";
-      return Failure("Couldn't enable notification for $which");
+      return Failure("Couldn't set the reminder for $which");
     }
     if (!oldRemindersOff) {
       return Failure("Couldn't turn off the old reminders");
@@ -1031,10 +1075,19 @@ class TasksViewModel with ChangeNotifier {
         switch (alarm) {
           case OnceAlarm(:final id, :final at):
             await _notificationService.scheduleNotification(
-                id, _reminderTitle, body, at);
+              id,
+              _reminderTitle,
+              body,
+              at,
+            );
           case RepeatingAlarm(:final id, :final first, :final every):
             await _notificationService.scheduleRepeatingNotification(
-                id, _reminderTitle, body, first, every);
+              id,
+              _reminderTitle,
+              body,
+              first,
+              every,
+            );
         }
       }
     }
@@ -1101,10 +1154,12 @@ class TasksViewModel with ChangeNotifier {
             await _reminderText(task),
             scheduledTime,
           );
-          await _tasksRepository
-              .updateItem(task.copyWith(done: false, reminder: Reminder.once));
+          await _tasksRepository.updateItem(
+            task.copyWith(done: false, reminder: Reminder.once),
+          );
           await _reload();
-          final remaining = "Time remaining:\n "
+          final remaining =
+              "Time remaining:\n "
               "${DateTimeUtils.durationToString(scheduledTime.difference(_now()))}";
           return Info(task.done ? "Task undone. $remaining" : remaining);
         } else {
@@ -1114,18 +1169,23 @@ class TasksViewModel with ChangeNotifier {
         return Info("Please set time and date");
       }
     } catch (e) {
-      return Failure("Failed to Enable Notification");
+      return Failure("Couldn't set the reminder");
     }
   }
 
   /// Has [task] come round as [rule] has it, with the user reminded at its
   /// time each time, and [progress] as its days, or else the days
   /// [_progressAs] gives it. Not when it would stop before it comes round.
-  Future<Result> _repeat(TodoItem task, Recurrence rule,
-      {RepeatProgress? progress}) async {
+  Future<Result> _repeat(
+    TodoItem task,
+    Recurrence rule, {
+    RepeatProgress? progress,
+  }) async {
     if (task.time == null) return Info("Please set time");
-    final repeating =
-        task.repeatingAs(rule, progress: progress ?? _progressAs(task, rule));
+    final repeating = task.repeatingAs(
+      rule,
+      progress: progress ?? _progressAs(task, rule),
+    );
     if (repeating.occurrenceOn(today) == null) {
       return Info("Please set an end after its next time");
     }
@@ -1137,9 +1197,9 @@ class TasksViewModel with ChangeNotifier {
       // One whose last time has gone has nothing more to remind of.
       return repeating.recurrence!.hasEndedBy(today)
           ? Info("Task Updated")
-          : Success("Notification Enabled");
+          : Success("Reminder Set");
     } catch (e) {
-      return Failure("Failed to Enable Notification");
+      return Failure("Couldn't set the reminder");
     }
   }
 
@@ -1159,12 +1219,11 @@ class TasksViewModel with ChangeNotifier {
   Future<Result> _cancelReminder(TodoItem task) async {
     try {
       await _cancelReminders(task);
-      await _tasksRepository
-          .updateItem(task.copyWith(reminder: Reminder.none));
+      await _tasksRepository.updateItem(task.copyWith(reminder: Reminder.none));
       await _reload();
-      return Info("Notification Disabled");
+      return Info("Reminder Turned Off");
     } catch (e) {
-      return Failure("Failed to disable notification");
+      return Failure("Couldn't turn the reminder off");
     }
   }
 }
@@ -1177,16 +1236,16 @@ DateTime _dateOf(DateTime time) => DateTime(time.year, time.month, time.day);
 /// on a day of the month.
 class TaskDraft with ChangeNotifier {
   TaskDraft._(this.task, this._now, this._tree, TodoItem? parent)
-      : _title = task?.title ?? "",
-        _description = task?.desc ?? "",
-        _day = task?.day,
-        _time = task?.time,
-        _reminder = task?.reminder ?? Reminder.none,
-        _weekdays = task?.weekdays ?? const {},
-        _monthDay = task?.monthDay,
-        _until = task?.until,
-        _was = parent,
-        _parent = parent {
+    : _title = task?.title ?? "",
+      _description = task?.desc ?? "",
+      _day = task?.day,
+      _time = task?.time,
+      _reminder = task?.reminder ?? Reminder.none,
+      _weekdays = task?.weekdays ?? const {},
+      _monthDay = task?.monthDay,
+      _until = task?.until,
+      _was = parent,
+      _parent = parent {
     if (_reminder.repeats) {
       _lastRepeat = _reminder;
       _fillRepeatDays(_today);
@@ -1360,7 +1419,10 @@ class TaskDraft with ChangeNotifier {
   RepeatEndDraft endDraft() {
     final rule = this.rule!;
     return RepeatEndDraft._(
-        rule.spanning(since: rule.since, until: null), _today, _until);
+      rule.spanning(since: rule.since, until: null),
+      _today,
+      _until,
+    );
   }
 
   /// How the reminder stands at [now]: whether it'll go off, or what it
@@ -1400,15 +1462,15 @@ enum RepeatSpan {
 /// come round, and the last of them.
 class RepeatEndDraft with ChangeNotifier {
   RepeatEndDraft._(this._rule, this._today, DateTime? until)
-      : _span = until == null ? RepeatSpan.forever : RepeatSpan.untilADay,
-        _unit = _rule.every == RepeatEvery.month
-            ? RepeatUnit.months
-            : RepeatUnit.weeks,
-        _amount = switch (_rule.every) {
-          RepeatEvery.day => 2,
-          RepeatEvery.week => 4,
-          RepeatEvery.month => 6,
-        } {
+    : _span = until == null ? RepeatSpan.forever : RepeatSpan.untilADay,
+      _unit = _rule.every == RepeatEvery.month
+          ? RepeatUnit.months
+          : RepeatUnit.weeks,
+      _amount = switch (_rule.every) {
+        RepeatEvery.day => 2,
+        RepeatEvery.week => 4,
+        RepeatEvery.month => 6,
+      } {
     _day = until ?? _unit.lastDay(_today, _amount);
   }
 
@@ -1465,10 +1527,10 @@ class RepeatEndDraft with ChangeNotifier {
 
   /// The last day the task is to repeat on, or null for good.
   DateTime? get until => switch (_span) {
-        RepeatSpan.forever => null,
-        RepeatSpan.forAWhile => _unit.lastDay(_today, _amount),
-        RepeatSpan.untilADay => _day,
-      };
+    RepeatSpan.forever => null,
+    RepeatSpan.forAWhile => _unit.lastDay(_today, _amount),
+    RepeatSpan.untilADay => _day,
+  };
 
   /// How many more times the task would come round, from today until it
   /// stops, and the last of them; null while it's to repeat for good.

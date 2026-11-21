@@ -48,16 +48,13 @@ const _listTop = 20.0;
 const _tourDelay = Duration(milliseconds: 900);
 
 class TodoPage extends StatefulWidget {
-  const TodoPage({
-    super.key,
-  });
+  const TodoPage({super.key});
 
   @override
   State<TodoPage> createState() => _TodoPageState();
 }
 
-class _TodoPageState extends State<TodoPage>
-    with WidgetPageRequests<TodoPage> {
+class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   final _scrollController = ScrollController();
 
   @override
@@ -127,8 +124,10 @@ class _TodoPageState extends State<TodoPage>
     _tasks = Provider.of<TasksViewModel>(context, listen: false)
       ..addListener(_tasksChanged);
     _lifecycle = AppLifecycleListener(
-      onResume:
-          Provider.of<TasksViewModel>(context, listen: false).checkForNewDay,
+      onResume: Provider.of<TasksViewModel>(
+        context,
+        listen: false,
+      ).checkForNewDay,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
@@ -136,7 +135,7 @@ class _TodoPageState extends State<TodoPage>
       } finally {
         if (mounted) setState(() => _loaded = true);
       }
-      _tourIfDue();
+      await _tourIfDue();
     });
   }
 
@@ -213,32 +212,32 @@ class _TodoPageState extends State<TodoPage>
       setState(() => _touring = false);
       return;
     }
-    final first = Provider.of<TasksViewModel>(context, listen: false)
-        .tree
-        .nodes
-        .firstOrNull;
+    final first = Provider.of<TasksViewModel>(
+      context,
+      listen: false,
+    ).tree.nodes.firstOrNull;
     _tour.start(
       switch (tour) {
         PageTour.map => mapTour(
-            hub: _hubKey,
-            node: _nodeKey,
-            fit: _fitKey,
-            fullScreen: _fullScreenKey,
-            sortFilter: _sortFilterKey,
-            menu: _menuKey,
-          ),
+          hub: _hubKey,
+          node: _nodeKey,
+          fit: _fitKey,
+          fullScreen: _fullScreenKey,
+          sortFilter: _sortFilterKey,
+          menu: _menuKey,
+        ),
         _ => todoTour(
-            task: first?.task,
-            subtasks: first == null || first.subtaskCount == 0
-                ? null
-                : (done: first.doneSubtaskCount, total: first.subtaskCount),
-            card: _firstCardKey,
-            header: _headerKey,
-            gap: _listTop,
-            buttons: _buttonsKey,
-            sortFilter: _sortFilterKey,
-            menu: _menuKey,
-          ),
+          task: first?.task,
+          subtasks: first == null || first.subtaskCount == 0
+              ? null
+              : (done: first.doneSubtaskCount, total: first.subtaskCount),
+          card: _firstCardKey,
+          header: _headerKey,
+          gap: _listTop,
+          buttons: _buttonsKey,
+          sortFilter: _sortFilterKey,
+          menu: _menuKey,
+        ),
       },
       onEnd: () {
         setState(() => _touring = false);
@@ -257,8 +256,10 @@ class _TodoPageState extends State<TodoPage>
       // The list opens afresh, under its summary.
       _listDelay = 1;
     });
-    Provider.of<UserViewModel>(context, listen: false)
-        .showTasksAs(_view == TasksView.list ? TasksView.map : TasksView.list);
+    Provider.of<UserViewModel>(
+      context,
+      listen: false,
+    ).showTasksAs(_view == TasksView.list ? TasksView.map : TasksView.list);
     _tourIfDue();
   }
 
@@ -285,8 +286,9 @@ class _TodoPageState extends State<TodoPage>
     if (hide == _systemBarsHidden) return;
     _systemBarsHidden = hide;
     SystemChrome.setEnabledSystemUIMode(
-        // Otherwise edge to edge, as the app has them from the start.
-        hide ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge);
+      // Otherwise edge to edge, as the app has them from the start.
+      hide ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
+    );
   }
 
   /// Gives the page its bar back once the map has nothing left to show, as
@@ -297,8 +299,9 @@ class _TodoPageState extends State<TodoPage>
 
   @override
   Widget build(BuildContext context) {
-    final view =
-        context.select<UserViewModel, TasksView>((user) => user.shownTasksView);
+    final view = context.select<UserViewModel, TasksView>(
+      (user) => user.shownTasksView,
+    );
     final fullScreen = _fullScreen && view == TasksView.map;
     final padding = MediaQuery.paddingOf(context);
     return ThemedStatusBar(
@@ -367,10 +370,11 @@ class _TodoPageState extends State<TodoPage>
           Positioned.fill(
             child: _TaskMapPane(
               insets: EdgeInsets.fromLTRB(
-                  padding.left,
-                  padding.top + (fullScreen ? 0 : TitleBar.height),
-                  padding.right,
-                  padding.bottom),
+                padding.left,
+                padding.top + (fullScreen ? 0 : TitleBar.height),
+                padding.right,
+                padding.bottom,
+              ),
               fullScreen: fullScreen,
               onFullScreen: _setFullScreen,
               onEdit: _editTask,
@@ -392,7 +396,9 @@ class _TodoPageState extends State<TodoPage>
               title: _title,
               topInset: padding.top,
               trailing: PageBarActions(
-                  items: _menuItems(TasksView.map), menuKey: _menuKey),
+                items: _menuItems(TasksView.map),
+                menuKey: _menuKey,
+              ),
             ),
           ),
         ),
@@ -419,7 +425,9 @@ class _TodoPageState extends State<TodoPage>
             topInset: padding.top,
             controller: _scrollController,
             trailing: PageBarActions(
-                items: _menuItems(TasksView.list), menuKey: _menuKey),
+              items: _menuItems(TasksView.list),
+              menuKey: _menuKey,
+            ),
             titleRevealOffset: _TodoHeader.scrolledAway,
           ),
         ),
@@ -438,8 +446,12 @@ class _TodoPageState extends State<TodoPage>
         ),
         if (_loaded)
           _TaskListSliver(
-            padding: EdgeInsets.fromLTRB(left, _listTop, right,
-                PageActionButtons.height + 24 + padding.bottom),
+            padding: EdgeInsets.fromLTRB(
+              left,
+              _listTop,
+              right,
+              PageActionButtons.height + 24 + padding.bottom,
+            ),
             listDelay: _listDelay,
             onEdit: _editTask,
             onAddSubtask: _addSubtask,
@@ -452,35 +464,35 @@ class _TodoPageState extends State<TodoPage>
   /// The menu's items: first the switch to the map, or back to the list
   /// from [view], then the tasks' less frequent actions.
   List<GlassMenuItem> _menuItems(TasksView view) => [
-        GlassMenuItem(
-          icon: view == TasksView.list
-              ? Icons.hub_rounded
-              : Icons.view_agenda_rounded,
-          tooltip: view == TasksView.list ? "Show as Map" : "Show as List",
-          onPressed: _switchView,
-        ),
-        GlassMenuItem(
-          icon: Icons.settings_backup_restore_rounded,
-          tooltip: "Restore Backup",
-          onPressed: () =>
-              showFormDialog<void>(context, const TasksOverwriteDialog()),
-        ),
-        GlassMenuItem(
-          icon: Icons.backup_rounded,
-          tooltip: "Back Up Tasks",
-          onPressed: _backUp,
-        ),
-        GlassMenuItem(
-          icon: Icons.delete_outline_rounded,
-          tooltip: "Trash",
-          onPressed: () => Navigator.push(context, trashRoute(TrashKind.task)),
-        ),
-        GlassMenuItem(
-          icon: Icons.settings_rounded,
-          tooltip: "Settings",
-          onPressed: _openSettings,
-        ),
-      ];
+    GlassMenuItem(
+      icon: view == TasksView.list
+          ? Icons.hub_rounded
+          : Icons.view_agenda_rounded,
+      tooltip: view == TasksView.list ? "Show as Map" : "Show as List",
+      onPressed: _switchView,
+    ),
+    GlassMenuItem(
+      icon: Icons.settings_backup_restore_rounded,
+      tooltip: "Restore Backup",
+      onPressed: () =>
+          showFormDialog<void>(context, const TasksOverwriteDialog()),
+    ),
+    GlassMenuItem(
+      icon: Icons.backup_rounded,
+      tooltip: "Back Up Tasks",
+      onPressed: _backUp,
+    ),
+    GlassMenuItem(
+      icon: Icons.delete_outline_rounded,
+      tooltip: "Trash",
+      onPressed: () => Navigator.push(context, trashRoute(TrashKind.task)),
+    ),
+    GlassMenuItem(
+      icon: Icons.settings_rounded,
+      tooltip: "Settings",
+      onPressed: _openSettings,
+    ),
+  ];
 
   void _changeFilter(TaskFilter filter) {
     // The cards rise in again for the new filter, straight away.
@@ -491,16 +503,20 @@ class _TodoPageState extends State<TodoPage>
   void _changeSort(TaskSort sort, SortDirection direction) {
     // The cards rise in again in their new order, straight away.
     setState(() => _listDelay = 0);
-    Provider.of<TasksViewModel>(context, listen: false)
-        .setSort(sort, direction: direction);
+    Provider.of<TasksViewModel>(
+      context,
+      listen: false,
+    ).setSort(sort, direction: direction);
   }
 
   /// Backs the tasks up, once the App Lock lets the user through.
   void _backUp() {
     Provider.of<TasksViewModel>(context, listen: false)
         .backup(
-          askForPassword: passwordPrompt(context,
-              subtitle: "Enter your password to back up your tasks."),
+          askForPassword: passwordPrompt(
+            context,
+            subtitle: "Enter your password to back up your tasks.",
+          ),
           askForBackupPassword: newBackupPasswordPrompt(context),
         )
         .then(FeedbackToast.show);
@@ -522,11 +538,14 @@ class _TodoPageState extends State<TodoPage>
             const NotesPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
             SlideTransition(
-          position: animation.drive(
-              Tween(begin: const Offset(-1, 0), end: Offset.zero)
-                  .chain(CurveTween(curve: Curves.ease))),
-          child: child,
-        ),
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(-1, 0),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.ease)),
+              ),
+              child: child,
+            ),
       ),
     );
   }
@@ -544,14 +563,11 @@ Future<void> _moveToTrash(TasksViewModel tasks, TodoItem task) async {
     return;
   }
   final subtasks = trashed.item.subtasks.length;
-  FeedbackToast.deleted(
-    switch (subtasks) {
-      0 => "Task moved to Trash",
-      1 => "Task and its subtask moved to Trash",
-      _ => "Task and its $subtasks subtasks moved to Trash",
-    },
-    onUndo: () => tasks.restoreFromTrash(trashed).then(FeedbackToast.undone),
-  );
+  FeedbackToast.deleted(switch (subtasks) {
+    0 => "Task moved to Trash",
+    1 => "Task and its subtask moved to Trash",
+    _ => "Task and its $subtasks subtasks moved to Trash",
+  }, onUndo: () => tasks.restoreFromTrash(trashed).then(FeedbackToast.undone));
 }
 
 /// The sort and filter buttons, in the bottom left corner, over the list
@@ -576,9 +592,11 @@ class _SortFilterSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wanted = context.select<TasksViewModel, bool>((tasks) =>
-        tasks.filter != TaskFilter.all ||
-        tasks.finishedTasksCount + tasks.unfinishedTasksCount > 0);
+    final wanted = context.select<TasksViewModel, bool>(
+      (tasks) =>
+          tasks.filter != TaskFilter.all ||
+          tasks.finishedTasksCount + tasks.unfinishedTasksCount > 0,
+    );
     if (!loaded || !wanted) return const SizedBox.shrink();
     return KeyedSubtree(
       key: buttonsKey,
@@ -617,8 +635,9 @@ class _SlideAway extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final duration =
-        MediaQuery.disableAnimationsOf(context) ? Duration.zero : _duration;
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : _duration;
     return IgnorePointer(
       ignoring: hidden,
       child: ExcludeSemantics(
@@ -682,9 +701,13 @@ class _TaskMapPane extends StatelessWidget {
       // Centred in the room the bar and the buttons leave, as on the list.
       return Padding(
         padding: EdgeInsets.only(
-            top: insets.top,
-            bottom: PageActionButtons.height + 24 + insets.bottom),
-        child: RiseIn(key: ValueKey(reason), child: EmptyTasks(reason: reason)),
+          top: insets.top,
+          bottom: PageActionButtons.height + 24 + insets.bottom,
+        ),
+        child: RiseIn(
+          key: ValueKey(reason),
+          child: EmptyTasks(reason: reason),
+        ),
       );
     }
     return TaskMap(
@@ -722,8 +745,11 @@ class _TodoHeader extends StatelessWidget {
       children: [
         Text(
           DateFormat("EEEE, MMMM d")
-              .format(context
-                  .select<TasksViewModel, DateTime>((tasks) => tasks.today))
+              .format(
+                context.select<TasksViewModel, DateTime>(
+                  (tasks) => tasks.today,
+                ),
+              )
               .toUpperCase(),
           style: TextStyle(
             color: context.colors.moreLess,
@@ -757,7 +783,8 @@ class _Overview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = context.select<TasksViewModel, int>(
-        (tasks) => tasks.finishedTasksCount + tasks.unfinishedTasksCount);
+      (tasks) => tasks.finishedTasksCount + tasks.unfinishedTasksCount,
+    );
     if (total == 0) return const SizedBox.shrink();
     return const Padding(
       padding: EdgeInsets.only(top: 18),
@@ -802,8 +829,10 @@ class _TaskListSliver extends StatelessWidget {
         // past its end, so an empty page doesn't scroll.
         child: Padding(
           padding: EdgeInsets.only(top: padding.top, bottom: padding.bottom),
-          child:
-              RiseIn(key: ValueKey(reason), child: EmptyTasks(reason: reason)),
+          child: RiseIn(
+            key: ValueKey(reason),
+            child: EmptyTasks(reason: reason),
+          ),
         ),
       );
     }

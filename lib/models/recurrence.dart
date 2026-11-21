@@ -29,8 +29,11 @@ enum RepeatUnit {
         end = DateTime(start.year, start.month, start.day + 7 * amount);
       case RepeatUnit.months:
         final month = DateTime(start.year, start.month + amount);
-        end = DateTime(month.year, month.month,
-            start.day < _daysIn(month) ? start.day : _daysIn(month));
+        end = DateTime(
+          month.year,
+          month.month,
+          start.day < _daysIn(month) ? start.day : _daysIn(month),
+        );
     }
     return _dayBefore(end);
   }
@@ -64,16 +67,15 @@ enum DayStatus {
 class Recurrence {
   /// Every day.
   Recurrence.daily({DateTime? since, DateTime? until})
-      : this._(RepeatEvery.day, since: since, until: until);
+    : this._(RepeatEvery.day, since: since, until: until);
 
   /// On each of [weekdays], from [DateTime.monday] to [DateTime.sunday].
   Recurrence.weekly(Set<int> weekdays, {DateTime? since, DateTime? until})
-      : this._(RepeatEvery.week,
-            weekdays: weekdays, since: since, until: until);
+    : this._(RepeatEvery.week, weekdays: weekdays, since: since, until: until);
 
   /// On [day] of each month, from 1 to 31.
   Recurrence.monthly(int day, {DateTime? since, DateTime? until})
-      : this._(RepeatEvery.month, monthDay: day, since: since, until: until);
+    : this._(RepeatEvery.month, monthDay: day, since: since, until: until);
 
   /// Throws an [ArgumentError] for a weekly one without its days, or a
   /// monthly one without its day, which would never come round.
@@ -83,13 +85,14 @@ class Recurrence {
     int? monthDay,
     DateTime? since,
     DateTime? until,
-  })  : weekdays = every == RepeatEvery.week
-            ? Set.unmodifiable(_checkedWeekdays(weekdays))
-            : const <int>{},
-        monthDay =
-            every == RepeatEvery.month ? _checkedMonthDay(monthDay) : null,
-        since = since == null ? null : _date(since),
-        until = until == null ? null : _date(until);
+  }) : weekdays = every == RepeatEvery.week
+           ? Set.unmodifiable(_checkedWeekdays(weekdays))
+           : const <int>{},
+       monthDay = every == RepeatEvery.month
+           ? _checkedMonthDay(monthDay)
+           : null,
+       since = since == null ? null : _date(since),
+       until = until == null ? null : _date(until);
 
   static Set<int> _checkedWeekdays(Set<int> days) {
     if (days.isEmpty || !days.every(isWeekday)) {
@@ -130,8 +133,13 @@ class Recurrence {
 
   /// The same days, from [since] to [until] instead.
   Recurrence spanning({required DateTime? since, required DateTime? until}) =>
-      Recurrence._(every,
-          weekdays: weekdays, monthDay: monthDay, since: since, until: until);
+      Recurrence._(
+        every,
+        weekdays: weekdays,
+        monthDay: monthDay,
+        since: since,
+        until: until,
+      );
 
   /// Whether it comes round on the same days as [other], whenever each of
   /// them starts or stops.
@@ -144,10 +152,10 @@ class Recurrence {
   /// Whether [day] is one of the days it comes round on, whether or not
   /// it's repeating by then, or still.
   bool fits(DateTime day) => switch (every) {
-        RepeatEvery.day => true,
-        RepeatEvery.week => weekdays.contains(day.weekday),
-        RepeatEvery.month => day.day == monthDay,
-      };
+    RepeatEvery.day => true,
+    RepeatEvery.week => weekdays.contains(day.weekday),
+    RepeatEvery.month => day.day == monthDay,
+  };
 
   /// Whether it comes round on [day].
   bool occursOn(DateTime day) {
@@ -196,9 +204,11 @@ class Recurrence {
   /// Each day it comes round on, from [day] on, in order: for good, unless
   /// it stops.
   Iterable<DateTime> from(DateTime day) sync* {
-    for (var next = firstOnOrAfter(day);
-        next != null;
-        next = firstOnOrAfter(_dayAfter(next))) {
+    for (
+      var next = firstOnOrAfter(day);
+      next != null;
+      next = firstOnOrAfter(_dayAfter(next))
+    ) {
       yield next;
     }
   }
@@ -211,8 +221,11 @@ class Recurrence {
   /// How [day] went, as of [today], for a task done on the days in [done]:
   /// every time it came round stands until the next one, so it's only
   /// missed once the next has come.
-  DayStatus statusOf(DateTime day, DateTime today,
-      {required Set<DateTime> done}) {
+  DayStatus statusOf(
+    DateTime day,
+    DateTime today, {
+    required Set<DateTime> done,
+  }) {
     final date = _date(day);
     if (done.contains(date)) return DayStatus.done;
     final current = currentAsOf(today);
@@ -255,7 +268,7 @@ class Recurrence {
       case RepeatEvery.month:
         final monthDay = this.monthDay!;
         // Every day of the month is in one of any two months in a row.
-        for (var back = 0;; back++) {
+        for (var back = 0; ; back++) {
           final month = DateTime(date.year, date.month - back);
           if (_daysIn(month) < monthDay) continue;
           final day = DateTime(month.year, month.month, monthDay);
@@ -276,7 +289,7 @@ class Recurrence {
         return day;
       case RepeatEvery.month:
         final monthDay = this.monthDay!;
-        for (var ahead = 0;; ahead++) {
+        for (var ahead = 0; ; ahead++) {
           final month = DateTime(date.year, date.month + ahead);
           if (_daysIn(month) < monthDay) continue;
           final day = DateTime(month.year, month.month, monthDay);
@@ -294,7 +307,12 @@ class Recurrence {
 
   @override
   int get hashCode => Object.hash(
-      every, monthDay, Object.hashAllUnordered(weekdays), since, until);
+    every,
+    monthDay,
+    Object.hashAllUnordered(weekdays),
+    since,
+    until,
+  );
 
   @override
   String toString() =>

@@ -9,11 +9,11 @@ void main() {
   final today = DateTime(2026, 5, 13);
 
   TodoItem on(String title, int? day, [ClockTime? time]) => TodoItem(
-        uuid: title,
-        title: title,
-        day: day == null ? null : DateTime(2026, 5, day),
-        time: time,
-      );
+    uuid: title,
+    title: title,
+    day: day == null ? null : DateTime(2026, 5, day),
+    time: time,
+  );
 
   final tasks = [
     on("Someday", null),

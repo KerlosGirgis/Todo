@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import '../core/utils/task_labels.dart';
-import 'task_sort.dart';
-import 'task_tree.dart';
-import 'todo_item.dart';
+import '../models/task_sort.dart';
+import '../models/task_tree.dart';
+import '../models/todo_item.dart';
+import 'utils/task_labels.dart';
 
 /// What the to-do widget on the home screen shows: the tasks, in the order
 /// the to-do page lists them, each with how it stands on each of the [days]
@@ -55,7 +55,12 @@ class TasksWidgetSnapshot {
     ];
     if (locked) {
       return TasksWidgetSnapshot._(
-          from: from, locked: true, left: left, total: all.length, tasks: []);
+        from: from,
+        locked: true,
+        left: left,
+        total: all.length,
+        tasks: [],
+      );
     }
     var tree = TaskTree(all);
     final compare = sort.compare(from, direction);
@@ -78,25 +83,28 @@ class TasksWidgetSnapshot {
         when.add(taskWhenLabel(then, date));
       }
       indexes[node] = listed.length;
-      listed.add(WidgetTask(
-        title: task.title,
-        parent: node.parent == null ? -1 : indexes[node.parent]!,
-        done: done,
-        late: late,
-        due: task.repeats ? null : task.due,
-        when: when,
-        repeat: switch (task.recurrence) {
-          final recurrence? => repeatChipLabel(recurrence),
-          null => null,
-        },
-      ));
+      listed.add(
+        WidgetTask(
+          title: task.title,
+          parent: node.parent == null ? -1 : indexes[node.parent]!,
+          done: done,
+          late: late,
+          due: task.repeats ? null : task.due,
+          when: when,
+          repeat: switch (task.recurrence) {
+            final recurrence? => repeatChipLabel(recurrence),
+            null => null,
+          },
+        ),
+      );
     }
     return TasksWidgetSnapshot._(
-        from: from,
-        locked: false,
-        left: left,
-        total: all.length,
-        tasks: listed);
+      from: from,
+      locked: false,
+      left: left,
+      total: all.length,
+      tasks: listed,
+    );
   }
 
   /// The day the snapshot was made on, at midnight: its first day.
@@ -127,9 +135,7 @@ class TasksWidgetSnapshot {
   /// lists. The phone's widget works them out the same way.
   List<WidgetRow> rowsOn(DateTime now, {required bool showDone}) {
     final day = dayOf(now);
-    final shown = [
-      for (final task in tasks) showDone || !task.doneOn(day),
-    ];
+    final shown = [for (final task in tasks) showDone || !task.doneOn(day)];
     final depths = <int>[];
     final rows = <WidgetRow>[];
     for (final (index, task) in tasks.indexed) {
@@ -139,14 +145,16 @@ class TasksWidgetSnapshot {
       depths.add(depth);
       if (!shown[index]) continue;
       final done = task.doneOn(day);
-      rows.add(WidgetRow(
-        title: task.title,
-        depth: depth,
-        done: done,
-        late: !done && task.isLateAt(now, day),
-        when: task.when[day],
-        repeat: task.repeat,
-      ));
+      rows.add(
+        WidgetRow(
+          title: task.title,
+          depth: depth,
+          done: done,
+          late: !done && task.isLateAt(now, day),
+          when: task.when[day],
+          repeat: task.repeat,
+        ),
+      );
     }
     return rows;
   }
@@ -159,14 +167,15 @@ class TasksWidgetSnapshot {
   /// due time in milliseconds since 1970, for a task that doesn't repeat;
   /// and its labels, one for all the days when they're all the same.
   Map<String, Object?> toJson() => {
-        'from': "${from.year.toString().padLeft(4, '0')}-"
-            "${from.month.toString().padLeft(2, '0')}-"
-            "${from.day.toString().padLeft(2, '0')}",
-        'locked': locked,
-        'left': left,
-        'total': total,
-        'tasks': [for (final task in tasks) task.toJson()],
-      };
+    'from':
+        "${from.year.toString().padLeft(4, '0')}-"
+        "${from.month.toString().padLeft(2, '0')}-"
+        "${from.day.toString().padLeft(2, '0')}",
+    'locked': locked,
+    'left': left,
+    'total': total,
+    'tasks': [for (final task in tasks) task.toJson()],
+  };
 
   String encode() => jsonEncode(toJson());
 }
@@ -250,10 +259,7 @@ class WidgetRow {
   /// The line under the title: when it's for, and how it repeats.
   String? get details {
     final (day, repeats) = (when, repeat);
-    final parts = [
-      if (day != null) day,
-      if (repeats != null) repeats,
-    ];
+    final parts = [?day, ?repeats];
     return parts.isEmpty ? null : parts.join(" · ");
   }
 }

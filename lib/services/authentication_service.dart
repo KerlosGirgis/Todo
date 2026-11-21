@@ -26,7 +26,7 @@ typedef AppLockPass = ({bool passed, String? password});
 
 class AuthenticationService {
   AuthenticationService({LockService? lockService})
-      : _lockService = lockService ?? LockService();
+    : _lockService = lockService ?? LockService();
 
   /// The app's own Android code for the fingerprint, which takes only
   /// Android's strongest biometrics, rather than also the weaker ones, such
@@ -40,11 +40,13 @@ class AuthenticationService {
       await checkFingerprint() == FingerprintCheck.passed;
 
   /// Asks for the user's fingerprint, saying why with [reason].
-  Future<FingerprintCheck> checkFingerprint(
-      {String reason = 'Please authenticate'}) async {
+  Future<FingerprintCheck> checkFingerprint({
+    String reason = 'Please authenticate',
+  }) async {
     try {
-      return switch (await _channel
-          .invokeMethod<String>('authenticate', {'reason': reason})) {
+      return switch (await _channel.invokeMethod<String>('authenticate', {
+        'reason': reason,
+      })) {
         'passed' => FingerprintCheck.passed,
         'lockedOut' => FingerprintCheck.lockedOut,
         'unavailable' => FingerprintCheck.unavailable,
@@ -56,8 +58,7 @@ class AuthenticationService {
   }
 
   Future<bool> authenticateApp() async =>
-      await checkFingerprint(
-          reason: 'Authenticate to access your To-Do app') ==
+      await checkFingerprint(reason: 'Authenticate to access your To-Do app') ==
       FingerprintCheck.passed;
 
   /// Whether the App Lock lets the user through, as it does when the app
@@ -69,8 +70,9 @@ class AuthenticationService {
       return switch (await _lockService.getLock()) {
         AppLock.off => true,
         AppLock.fingerprint => await authenticate(),
-        AppLock.password => password != null &&
-            (await _lockService.checkPassword(password)).matched,
+        AppLock.password =>
+          password != null &&
+              (await _lockService.checkPassword(password)).matched,
       };
     } catch (e) {
       return false;
@@ -92,6 +94,9 @@ class AuthenticationService {
     }
     final password = await askForPassword();
     if (password == null) return null;
-    return (passed: await passesAppLock(password: password), password: password);
+    return (
+      passed: await passesAppLock(password: password),
+      password: password,
+    );
   }
 }

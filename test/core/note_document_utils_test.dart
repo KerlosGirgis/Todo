@@ -7,8 +7,10 @@ import 'package:todo/models/note_preview.dart';
 Note noteOf(List<Map<String, dynamic>> content) =>
     NoteDocumentUtils.withContent(const Note(title: "Test"), content);
 
-Map<String, dynamic> line([Map<String, dynamic>? attributes]) =>
-    {'insert': '\n', if (attributes != null) 'attributes': attributes};
+Map<String, dynamic> line([Map<String, dynamic>? attributes]) => {
+  'insert': '\n',
+  'attributes': ?attributes,
+};
 
 /// Every format Markdown has: the smaller headings, code in a line and in a
 /// block of its own, highlighting, raised and lowered text, and a rule
@@ -19,27 +21,27 @@ final markdown = [
   {'insert': 'Run '},
   {
     'insert': 'flutter test',
-    'attributes': {'code': true}
+    'attributes': {'code': true},
   },
   {'insert': ' and '},
   {
     'insert': 'mark',
-    'attributes': {'background': '#ffff00'}
+    'attributes': {'background': '#ffff00'},
   },
   {'insert': ' E=mc'},
   {
     'insert': '2',
-    'attributes': {'script': 'super'}
+    'attributes': {'script': 'super'},
   },
   {'insert': ' H'},
   {
     'insert': '2',
-    'attributes': {'script': 'sub'}
+    'attributes': {'script': 'sub'},
   },
   {'insert': 'O'},
   line(),
   {
-    'insert': {'divider': 'hr'}
+    'insert': {'divider': 'hr'},
   },
   line(),
   {'insert': 'void main() {'},
@@ -66,8 +68,10 @@ void main() {
       expect(runs["mark"]!.highlight, isTrue);
       expect(runs["mark"]!.code, isFalse);
       final scripts = lines[1].runs.where((run) => run.text == "2").toList();
-      expect(scripts.map((run) => (run.superscript, run.subscript)),
-          [(true, false), (false, true)]);
+      expect(scripts.map((run) => (run.superscript, run.subscript)), [
+        (true, false),
+        (false, true),
+      ]);
     });
 
     test('keeps a rule across the note as a line of its own', () {
@@ -101,7 +105,7 @@ void main() {
       {'insert': 'One'},
       line({'list': 'ordered'}),
       {
-        'insert': {'divider': 'hr'}
+        'insert': {'divider': 'hr'},
       },
       line(),
       {'insert': 'One again'},

@@ -27,7 +27,7 @@ List<TourStep> todoTour({
   final target = task == null ? header : card;
   final place = task == null
       ? (BuildContext context, Rect header) =>
-          Rect.fromLTWH(header.left, header.bottom + gap, header.width, 0)
+            Rect.fromLTWH(header.left, header.bottom + gap, header.width, 0)
       : null;
   final check = GlobalKey();
   final title = GlobalKey();
@@ -39,21 +39,20 @@ List<TourStep> todoTour({
     GlobalKey? touch,
     Alignment touchAlignment = Alignment.center,
     Widget? behind,
-  }) =>
-      TourDemo(
-        gestures: gestures,
-        place: place,
-        touch: touch,
-        touchAlignment: touchAlignment,
-        behind: behind,
-        builder: (context, pose) => _TourTaskCard(
-          task: taskAt?.call(pose) ?? shown,
-          subtasks: subtasks,
-          checkKey: check,
-          titleKey: title,
-          bellKey: bell,
-        ),
-      );
+  }) => TourDemo(
+    gestures: gestures,
+    place: place,
+    touch: touch,
+    touchAlignment: touchAlignment,
+    behind: behind,
+    builder: (context, pose) => _TourTaskCard(
+      task: taskAt?.call(pose) ?? shown,
+      subtasks: subtasks,
+      checkKey: check,
+      titleKey: title,
+      bellKey: bell,
+    ),
+  );
 
   return [
     TourStep(
@@ -83,21 +82,24 @@ List<TourStep> todoTour({
       target: target,
       icon: Icons.subdirectory_arrow_right_rounded,
       title: "Break a Task Down",
-      message: "Swipe a task right to add a subtask to it. Subtasks can "
+      message:
+          "Swipe a task right to add a subtask to it. Subtasks can "
           "have subtasks of their own, and a task is done once they all "
           "are.",
       demo: demo(
         [TourGesture.pull],
         touchAlignment: const Alignment(-0.5, 0),
         behind: const TaskSubtaskBackground(
-            alignment: AlignmentDirectional.centerStart),
+          alignment: AlignmentDirectional.centerStart,
+        ),
       ),
     ),
     TourStep(
       target: target,
       icon: Icons.swap_vert_rounded,
       title: "Move a Task",
-      message: "Press and hold anywhere else on a task, then drag it to "
+      message:
+          "Press and hold anywhere else on a task, then drag it to "
           "where it belongs. It lines up with the task under it, and its "
           "subtasks go with it.",
       demo: demo([TourGesture.drag], touch: check),
@@ -106,20 +108,23 @@ List<TourStep> todoTour({
       target: target,
       icon: Icons.delete_rounded,
       title: "Delete a Task",
-      message: "Swipe a task left to move it to the Trash, along with its "
+      message:
+          "Swipe a task left to move it to the Trash, along with its "
           "subtasks.",
       demo: demo(
         [TourGesture.swipe],
         touchAlignment: const Alignment(0.6, 0),
         behind: const TaskDeleteBackground(
-            alignment: AlignmentDirectional.centerEnd),
+          alignment: AlignmentDirectional.centerEnd,
+        ),
       ),
     ),
     TourStep(
       target: target,
       icon: Icons.notifications_active_rounded,
       title: "Get Reminded",
-      message: "Tap the bell to be reminded at the task's time. Press and "
+      message:
+          "Tap the bell to be reminded at the task's time. Press and "
           "hold it to be reminded every day.",
       demo: demo(
         [TourGesture.tap],
@@ -135,7 +140,8 @@ List<TourStep> todoTour({
       target: buttons,
       icon: Icons.add_rounded,
       title: "Add a Task",
-      message: "Tap + to add a task. The button above it switches to your "
+      message:
+          "Tap + to add a task. The button above it switches to your "
           "notes.",
       radius: 20,
       padding: 8,
@@ -144,7 +150,8 @@ List<TourStep> todoTour({
       target: sortFilter,
       icon: Icons.filter_alt_rounded,
       title: "Sort and Filter",
-      message: "Sort your tasks by due date, or show just some of them: "
+      message:
+          "Sort your tasks by due date, or show just some of them: "
           "the done or undone ones, or the daily, weekly, monthly or "
           "one-time ones.",
       radius: 19,
@@ -153,7 +160,8 @@ List<TourStep> todoTour({
       target: menu,
       icon: Icons.menu_rounded,
       title: "More Options",
-      message: "Back up and restore your tasks, find deleted ones in the "
+      message:
+          "Back up and restore your tasks, find deleted ones in the "
           "Trash, or open Settings, from this menu.",
       radius: 19,
     ),
@@ -161,7 +169,8 @@ List<TourStep> todoTour({
       target: menu,
       icon: Icons.hub_rounded,
       title: "See Them as a Map",
-      message: "Open this menu to switch to a map of your tasks, where each "
+      message:
+          "Open this menu to switch to a map of your tasks, where each "
           "one branches out into its subtasks, and back to this list.",
       radius: 19,
     ),
@@ -172,10 +181,10 @@ List<TourStep> todoTour({
 /// it reminded once already. A repeating reminder stays as it is, as the
 /// card would lose its chips, and change height.
 TodoItem _withBellTapped(TodoItem task) => switch (task.reminder) {
-      Reminder.none => task.copyWith(reminder: Reminder.once),
-      Reminder.once => task.copyWith(reminder: Reminder.none),
-      Reminder.daily || Reminder.weekly || Reminder.monthly => task,
-    };
+  Reminder.none => task.copyWith(reminder: Reminder.once),
+  Reminder.once => task.copyWith(reminder: Reminder.none),
+  Reminder.daily || Reminder.weekly || Reminder.monthly => task,
+};
 
 /// A task to show the cards' gestures on when there are none: for tomorrow
 /// morning, so it's never overdue.
@@ -209,12 +218,14 @@ class _TourTaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (titleScale, descriptionScale, descriptionLines) =
-        context.select<UserViewModel, (double, double, int)>((user) => (
-              user.user.tasksTitleSize,
-              user.user.tasksDescSize,
-              user.user.descLines,
-            ));
+    final (titleScale, descriptionScale, descriptionLines) = context
+        .select<UserViewModel, (double, double, int)>(
+          (user) => (
+            user.user.tasksTitleSize,
+            user.user.tasksDescSize,
+            user.user.descLines,
+          ),
+        );
     return TaskCard(
       task: task,
       titleScale: titleScale,

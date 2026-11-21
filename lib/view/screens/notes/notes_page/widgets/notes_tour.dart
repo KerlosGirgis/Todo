@@ -26,24 +26,29 @@ List<TourStep> notesTour({
   final target = note == null ? header : card;
   final place = note == null
       ? (BuildContext context, Rect header) => Rect.fromLTWH(
-          header.left, header.bottom + gap, noteCardSize(context).width, 0)
+          header.left,
+          header.bottom + gap,
+          noteCardSize(context).width,
+          0,
+        )
       : null;
 
   TourDemo demo(List<TourGesture> gestures) => TourDemo(
-        gestures: gestures,
-        place: place,
-        pressedScale: 0.97,
-        builder: (context, pose) => note == null
-            ? const _TourNoteCard(note: _example, preview: _examplePreview)
-            : _TourNoteCard(note: note, preview: preview),
-      );
+    gestures: gestures,
+    place: place,
+    pressedScale: 0.97,
+    builder: (context, pose) => note == null
+        ? const _TourNoteCard(note: _example, preview: _examplePreview)
+        : _TourNoteCard(note: note, preview: preview),
+  );
 
   return [
     TourStep(
       target: target,
       icon: Icons.edit_note_rounded,
       title: "Open a Note",
-      message: "Tap a note to read it or write in it. To delete it, use the "
+      message:
+          "Tap a note to read it or write in it. To delete it, use the "
           "menu inside.",
       demo: demo([TourGesture.tap]),
     ),
@@ -51,7 +56,8 @@ List<TourStep> notesTour({
       target: target,
       icon: Icons.palette_rounded,
       title: "Make It Yours",
-      message: "Press and hold a note to rename it, change its colors or "
+      message:
+          "Press and hold a note to rename it, change its colors or "
           "lock it.",
       demo: demo([TourGesture.hold]),
     ),
@@ -67,7 +73,8 @@ List<TourStep> notesTour({
       target: buttons,
       icon: Icons.add_rounded,
       title: "Write a Note",
-      message: "Tap + to start a new note. The button above it switches to "
+      message:
+          "Tap + to start a new note. The button above it switches to "
           "your to-do list.",
       radius: 20,
       padding: 8,
@@ -76,7 +83,8 @@ List<TourStep> notesTour({
       target: menu,
       icon: Icons.menu_rounded,
       title: "More Options",
-      message: "Reorder your notes, back them up, restore a backup, find "
+      message:
+          "Reorder your notes, back them up, restore a backup, find "
           "deleted ones in the Trash, or open Settings from this menu.",
       radius: 19,
     ),
@@ -94,11 +102,17 @@ const _examplePreview = NotePreview(
   lines: [
     NotePreviewLine(runs: [NotePreviewRun("Leave by ten on Saturday.")]),
     NotePreviewLine(
-        runs: [NotePreviewRun("Passport")], list: NoteListKind.checked),
+      runs: [NotePreviewRun("Passport")],
+      list: NoteListKind.checked,
+    ),
     NotePreviewLine(
-        runs: [NotePreviewRun("Chargers")], list: NoteListKind.checked),
+      runs: [NotePreviewRun("Chargers")],
+      list: NoteListKind.checked,
+    ),
     NotePreviewLine(
-        runs: [NotePreviewRun("Sunscreen")], list: NoteListKind.unchecked),
+      runs: [NotePreviewRun("Sunscreen")],
+      list: NoteListKind.unchecked,
+    ),
   ],
   checked: 2,
   unchecked: 1,
@@ -114,10 +128,12 @@ class _TourNoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleSize = context
-        .select<UserViewModel, double>((user) => user.user.notesTitleSize);
-    final casualFont =
-        context.select<UserViewModel, bool>((user) => user.user.casualFont);
+    final titleSize = context.select<UserViewModel, double>(
+      (user) => user.user.notesTitleSize,
+    );
+    final casualFont = context.select<UserViewModel, bool>(
+      (user) => user.user.casualFont,
+    );
     return SizedBox(
       height: noteCardSize(context).height,
       child: NoteCover(

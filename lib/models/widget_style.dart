@@ -59,9 +59,9 @@ class WidgetStyle {
 
   /// The style [kind] of widget first comes with.
   static WidgetStyle defaultFor(WidgetKind kind) => switch (kind) {
-        WidgetKind.tasks => tasksDefault,
-        WidgetKind.note => noteDefault,
-      };
+    WidgetKind.tasks => tasksDefault,
+    WidgetKind.note => noteDefault,
+  };
 
   /// The colour of the widget's background, as ARGB, or null for the
   /// phone's own widget background, which follows its dark mode.
@@ -135,11 +135,13 @@ class WidgetStyle {
     bool? showDone,
   }) {
     return WidgetStyle(
-      background:
-          identical(background, _same) ? this.background : background as int?,
+      background: identical(background, _same)
+          ? this.background
+          : background as int?,
       opacity: opacity ?? this.opacity,
-      textColor:
-          identical(textColor, _same) ? this.textColor : textColor as int?,
+      textColor: identical(textColor, _same)
+          ? this.textColor
+          : textColor as int?,
       accent: accent ?? this.accent,
       textSize: textSize ?? this.textSize,
       font: font ?? this.font,
@@ -151,12 +153,14 @@ class WidgetStyle {
 
   /// The style as the widgets keep it, with [defaults] for anything it
   /// lacks or has out of range.
-  factory WidgetStyle.fromJson(Map<String, dynamic> json,
-      {WidgetStyle defaults = tasksDefault}) {
+  factory WidgetStyle.fromJson(
+    Map<String, dynamic> json, {
+    WidgetStyle defaults = tasksDefault,
+  }) {
     int? color(String key, int? fallback) => json.containsKey(key)
         ? switch (json[key]) {
             final int value => value & 0xffffffff,
-            _ => null
+            _ => null,
           }
         : fallback;
     double number(String key, double fallback, double min, double max) =>
@@ -181,22 +185,24 @@ class WidgetStyle {
   /// The colours as ARGB numbers, or null for automatic; the font by its
   /// name.
   Map<String, Object?> toJson() => {
-        'background': background,
-        'opacity': opacity,
-        'textColor': textColor,
-        'accent': accent,
-        'textSize': textSize,
-        'font': font.name,
-        'showDone': showDone,
-      };
+    'background': background,
+    'opacity': opacity,
+    'textColor': textColor,
+    'accent': accent,
+    'textSize': textSize,
+    'font': font.name,
+    'showDone': showDone,
+  };
 
   /// The note widget's style from before it had one of its own: its text
   /// sized and in the font the notes' settings last set it to, which it
   /// keeps until its style is changed.
   static WidgetStyle legacyNote({String? textSize, bool? casualFont}) =>
       noteDefault.copyWith(
-        textSize: (double.tryParse(textSize ?? "") ?? 1)
-            .clamp(minTextSize, maxTextSize),
+        textSize: (double.tryParse(textSize ?? "") ?? 1).clamp(
+          minTextSize,
+          maxTextSize,
+        ),
         font: casualFont == true ? WidgetFont.casual : WidgetFont.regular,
       );
 
@@ -213,7 +219,14 @@ class WidgetStyle {
 
   @override
   int get hashCode => Object.hash(
-      background, opacity, textColor, accent, textSize, font, showDone);
+    background,
+    opacity,
+    textColor,
+    accent,
+    textSize,
+    font,
+    showDone,
+  );
 
   @override
   String toString() => "WidgetStyle(${toJson()})";

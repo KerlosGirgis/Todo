@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
 
-import '../models/tasks_widget_snapshot.dart';
+import '../core/tasks_widget_snapshot.dart';
 import '../models/widget_look.dart';
 import '../models/widget_style.dart';
 
@@ -28,9 +28,9 @@ class HomeWidgetService {
   /// Both are null with no note there, and the id is null for a note put
   /// there before the widget kept track of which note it shows.
   Future<({int? id, String? text})> shownNote() async => (
-        id: await HomeWidget.getWidgetData<int>("noteId"),
-        text: await HomeWidget.getWidgetData<String>("note"),
-      );
+    id: await HomeWidget.getWidgetData<int>("noteId"),
+    text: await HomeWidget.getWidgetData<String>("note"),
+  );
 
   /// Has the widget keep track of the note it shows by [noteId], its id now.
   Future<void> followNote(int noteId) =>
@@ -58,8 +58,10 @@ class HomeWidgetService {
     final saved = await HomeWidget.getWidgetData<String>(kind.styleKey);
     if (saved != null) {
       try {
-        return WidgetStyle.fromJson(jsonDecode(saved) as Map<String, dynamic>,
-            defaults: defaults);
+        return WidgetStyle.fromJson(
+          jsonDecode(saved) as Map<String, dynamic>,
+          defaults: defaults,
+        );
       } catch (e) {
         // Taken as it first comes, as the widget takes it too.
       }
@@ -76,7 +78,9 @@ class HomeWidgetService {
   /// Has every widget of [kind] look as [style] has it.
   Future<void> setStyle(WidgetKind kind, WidgetStyle style) async {
     await HomeWidget.saveWidgetData<String>(
-        kind.styleKey, jsonEncode(style.toJson()));
+      kind.styleKey,
+      jsonEncode(style.toJson()),
+    );
     await HomeWidget.updateWidget(androidName: kind.androidName);
   }
 

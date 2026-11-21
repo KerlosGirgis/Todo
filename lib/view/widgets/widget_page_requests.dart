@@ -29,9 +29,10 @@ mixin WidgetPageRequests<T extends StatefulWidget> on State<T> {
   void initState() {
     super.initState();
     _auth = Provider.of<AuthViewModel?>(context, listen: false);
-    _requests = Provider.of<WidgetsViewModel?>(context, listen: false)
-        ?.pageRequests
-        .listen(_requested);
+    _requests = Provider.of<WidgetsViewModel?>(
+      context,
+      listen: false,
+    )?.pageRequests.listen(_requested);
   }
 
   @override

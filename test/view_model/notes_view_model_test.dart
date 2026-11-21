@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show Color;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/core/result.dart';
@@ -50,17 +51,21 @@ class FakeNotesRepository extends NotesRepository {
   var _nextTrashId = 1;
 
   @override
-  Future<Trashed<Note>> moveToTrash(Note note,
-      {required DateTime deletedAt}) async {
+  Future<Trashed<Note>> moveToTrash(
+    Note note, {
+    required DateTime deletedAt,
+  }) async {
     final index = rows.indexWhere((row) => row.id == note.id);
     if (index == -1) throw StateError("No note ${note.id}");
     rows.removeAt(index);
     final id = _nextTrashId++;
-    trash.add(Trashed(
-      id: id,
-      item: Note.fromMap({...note.toMap(), 'id': note.id}),
-      deletedAt: deletedAt,
-    ));
+    trash.add(
+      Trashed(
+        id: id,
+        item: Note.fromMap({...note.toMap(), 'id': note.id}),
+        deletedAt: deletedAt,
+      ),
+    );
     return Trashed(id: id, item: note, deletedAt: deletedAt);
   }
 
@@ -77,11 +82,15 @@ class FakeNotesRepository extends NotesRepository {
     final free = note.id != null && rows.every((row) => row.id != note.id);
     if (!free) {
       // Past every id there is, as some rows come with their own.
-      _nextId =
-          rows.fold(_nextId, (top, row) => top > row.id! ? top : row.id! + 1);
+      _nextId = rows.fold(
+        _nextId,
+        (top, row) => top > row.id! ? top : row.id! + 1,
+      );
     }
-    final row =
-        Note.fromMap({...note.toMap(), 'id': free ? note.id : _nextId++});
+    final row = Note.fromMap({
+      ...note.toMap(),
+      'id': free ? note.id : _nextId++,
+    });
     final after = rows.indexWhere((each) => each.id! > row.id!);
     rows.insert(after == -1 ? rows.length : after, row);
     return row.id;
@@ -99,8 +108,9 @@ class FakeAuth extends AuthenticationService {
   var fingerprintsAsked = 0;
 
   @override
-  Future<FingerprintCheck> checkFingerprint(
-      {String reason = 'Please authenticate'}) async {
+  Future<FingerprintCheck> checkFingerprint({
+    String reason = 'Please authenticate',
+  }) async {
     fingerprintsAsked++;
     return fingerprint;
   }
@@ -142,7 +152,7 @@ const formatted = [
   {'insert': 'Plans'},
   {
     'insert': '\n',
-    'attributes': {'header': 1}
+    'attributes': {'header': 1},
   },
   {'insert': 'Walk by the river\n'},
 ];
@@ -169,10 +179,11 @@ void main() {
     );
     repository.rows.addAll([
       Note(
-          id: 1,
-          title: "Open",
-          body: "Plans\nWalk by the river",
-          delta: jsonEncode(formatted)),
+        id: 1,
+        title: "Open",
+        body: "Plans\nWalk by the river",
+        delta: jsonEncode(formatted),
+      ),
       const Note(id: 2, title: "Diary", body: "secret", locked: true),
     ]);
     await notes.get();
@@ -195,48 +206,63 @@ void main() {
       expect(notes.search("diary").single.title, "Diary");
     });
 
-    test("open with all they say once the fingerprint lets the user in",
-        () async {
-      final access =
-          await notes.open(shown("Diary"), askForPassword: noPassword);
-      final editor = (access as Granted<NoteEditorViewModel>).value;
-      expect(editor.note.body, "secret");
-      expect(editor.content, [
-        {'insert': 'secret\n'}
-      ]);
-      expect(auth.fingerprintsAsked, 1);
-    });
+    test(
+      "open with all they say once the fingerprint lets the user in",
+      () async {
+        final access = await notes.open(
+          shown("Diary"),
+          askForPassword: noPassword,
+        );
+        final editor = (access as Granted<NoteEditorViewModel>).value;
+        expect(editor.note.body, "secret");
+        expect(editor.content, [
+          {'insert': 'secret\n'},
+        ]);
+        expect(auth.fingerprintsAsked, 1);
+      },
+    );
 
     test("don't open when the fingerprint doesn't", () async {
       auth.fingerprint = FingerprintCheck.failed;
-      final access = await notes.edit(shown("Diary"), askForPassword: noPassword);
-      expect((access as Denied).message, "Authentication Failed");
+      final access = await notes.edit(
+        shown("Diary"),
+        askForPassword: noPassword,
+      );
+      expect((access as Denied).message, "Authentication failed");
     });
 
-    test("don't open without a fingerprint when the App Lock can't be read",
-        () async {
-      auth.fingerprint = FingerprintCheck.unavailable;
-      lock.unreadable = true;
-      var asked = 0;
-      final access = await notes.open(shown("Diary"), askForPassword: () async {
-        asked++;
-        return "1234";
-      });
-      expect((access as Denied).message, "Authentication Failed");
-      expect(asked, 0);
-    });
+    test(
+      "don't open without a fingerprint when the App Lock can't be read",
+      () async {
+        auth.fingerprint = FingerprintCheck.unavailable;
+        lock.unreadable = true;
+        var asked = 0;
+        final access = await notes.open(
+          shown("Diary"),
+          askForPassword: () async {
+            asked++;
+            return "1234";
+          },
+        );
+        expect((access as Denied).message, "Authentication failed");
+        expect(asked, 0);
+      },
+    );
 
     test("open without asking when they're not locked", () async {
-      final access = await notes.open(shown("Open"), askForPassword: noPassword);
+      final access = await notes.open(
+        shown("Open"),
+        askForPassword: noPassword,
+      );
       expect(access, isA<Granted<NoteEditorViewModel>>());
       expect(auth.fingerprintsAsked, 0);
     });
 
     test("keep their text when their title is changed", () async {
-      final draft = ((await notes.edit(shown("Diary"),
-              askForPassword: noPassword)) as Granted<NoteDraft>)
-          .value
-        ..setTitle("Journal");
+      final draft = ((await notes.edit(
+        shown("Diary"),
+        askForPassword: noPassword,
+      )) as Granted<NoteDraft>).value..setTitle("Journal");
       expect(await draft.save(), isA<Info>());
       final saved = repository.rows.singleWhere((note) => note.id == 2);
       expect(saved.title, "Journal");
@@ -261,6 +287,25 @@ void main() {
       expect(draft.titleColor, 0xFFFFFFFF);
     });
 
+    test("tells a dark cover from a light one as Flutter's colours do", () {
+      final draft = notes.newDraft();
+      for (var red = 0; red < 256; red += 15) {
+        for (var green = 0; green < 256; green += 15) {
+          for (var blue = 0; blue < 256; blue += 15) {
+            final cover = 0xFF000000 | red << 16 | green << 8 | blue;
+            draft.setCoverColor(cover);
+            final luminance = Color(cover).computeLuminance();
+            final dark = (luminance + 0.05) * (luminance + 0.05) <= 0.15;
+            expect(
+              draft.titleColor,
+              dark ? 0xFFFFFFFF : 0xFF1E1E1E,
+              reason: cover.toRadixString(16),
+            );
+          }
+        }
+      }
+    });
+
     test("a colourful title stays as it was picked", () {
       final draft = notes.newDraft()
         ..setTitleColor(0xFFFF3B30)
@@ -272,7 +317,7 @@ void main() {
       auth.fingerprint = FingerprintCheck.failed;
       final draft = notes.newDraft();
       final refused = await draft.setLocked(true, askForPassword: noPassword);
-      expect((refused as Failure).message, "Authentication Failed");
+      expect((refused as Failure).message, "Authentication failed");
       expect(draft.locked, isFalse);
       auth.fingerprint = FingerprintCheck.passed;
       expect(await draft.setLocked(true, askForPassword: noPassword), isNull);
@@ -280,9 +325,10 @@ void main() {
     });
 
     test("unlocking a note opened to be changed asks nothing more", () async {
-      final draft = ((await notes.edit(shown("Diary"),
-              askForPassword: noPassword)) as Granted<NoteDraft>)
-          .value;
+      final draft = ((await notes.edit(
+        shown("Diary"),
+        askForPassword: noPassword,
+      )) as Granted<NoteDraft>).value;
       auth.fingerprintsAsked = 0;
       expect(await draft.setLocked(false, askForPassword: noPassword), isNull);
       expect(draft.locked, isFalse);
@@ -301,9 +347,10 @@ void main() {
       homeWidget
         ..id = 1
         ..text = "Plans";
-      final draft = ((await notes.edit(shown("Open"),
-              askForPassword: noPassword)) as Granted<NoteDraft>)
-          .value;
+      final draft = ((await notes.edit(
+        shown("Open"),
+        askForPassword: noPassword,
+      )) as Granted<NoteDraft>).value;
       await draft.setLocked(true, askForPassword: noPassword);
       await draft.save();
       expect(homeWidget.id, isNull);
@@ -314,9 +361,10 @@ void main() {
   group('trash', () {
     /// Moves the note titled [title] to the trash, from its editor.
     Future<Trashed<Note>> trash(String title) async {
-      final editor = ((await notes.open(shown(title),
-              askForPassword: noPassword)) as Granted<NoteEditorViewModel>)
-          .value;
+      final editor = ((await notes.open(
+        shown(title),
+        askForPassword: noPassword,
+      )) as Granted<NoteEditorViewModel>).value;
       final trashed = await editor.delete(askForPassword: noPassword);
       return (trashed as Granted<Trashed<Note>>).value;
     }
@@ -364,33 +412,43 @@ void main() {
 
     test("deletes a note for good", () async {
       final trashed = await trash("Open");
-      expect(await notes.deleteForever(trashed, askForPassword: noPassword),
-          isA<Info>());
+      expect(
+        await notes.deleteForever(trashed, askForPassword: noPassword),
+        isA<Info>(),
+      );
       expect(notes.trash, isEmpty);
       expect(repository.trash, isEmpty);
     });
 
-    test("deletes a locked note for good only once its lock lets the user",
-        () async {
-      await trash("Diary");
-      final entry = notes.trash.single;
-      auth.fingerprint = FingerprintCheck.failed;
-      expect(await notes.deleteForever(entry, askForPassword: noPassword),
-          isA<Failure>());
-      expect(repository.trash, hasLength(1));
-      auth.fingerprint = FingerprintCheck.passed;
-      expect(await notes.deleteForever(entry, askForPassword: noPassword),
-          isA<Info>());
-      expect(repository.trash, isEmpty);
-    });
+    test(
+      "deletes a locked note for good only once its lock lets the user",
+      () async {
+        await trash("Diary");
+        final entry = notes.trash.single;
+        auth.fingerprint = FingerprintCheck.failed;
+        expect(
+          await notes.deleteForever(entry, askForPassword: noPassword),
+          isA<Failure>(),
+        );
+        expect(repository.trash, hasLength(1));
+        auth.fingerprint = FingerprintCheck.passed;
+        expect(
+          await notes.deleteForever(entry, askForPassword: noPassword),
+          isA<Info>(),
+        );
+        expect(repository.trash, isEmpty);
+      },
+    );
 
     test("empties the trash once the lock lets the user, with a locked note "
         "in it", () async {
       await trash("Open");
       await trash("Diary");
       auth.fingerprint = FingerprintCheck.failed;
-      expect(await notes.emptyTrash(askForPassword: noPassword),
-          isA<Failure>());
+      expect(
+        await notes.emptyTrash(askForPassword: noPassword),
+        isA<Failure>(),
+      );
       expect(repository.trash, hasLength(2));
       auth.fingerprint = FingerprintCheck.passed;
       final asked = auth.fingerprintsAsked;
@@ -400,30 +458,33 @@ void main() {
       expect(repository.trash, isEmpty);
     });
 
-    test("empties the trash without the lock when no note in it is locked",
-        () async {
-      await trash("Open");
-      final asked = auth.fingerprintsAsked;
-      expect(await notes.emptyTrash(askForPassword: noPassword), isA<Info>());
-      expect(auth.fingerprintsAsked, asked);
-      expect(notes.trash, isEmpty);
-    });
+    test(
+      "empties the trash without the lock when no note in it is locked",
+      () async {
+        await trash("Open");
+        final asked = auth.fingerprintsAsked;
+        expect(await notes.emptyTrash(askForPassword: noPassword), isA<Info>());
+        expect(auth.fingerprintsAsked, asked);
+        expect(notes.trash, isEmpty);
+      },
+    );
   });
 
   group('NoteEditorViewModel', () {
     Future<NoteEditorViewModel> openNote(String title) async =>
-        ((await notes.open(shown(title), askForPassword: noPassword))
-                as Granted<NoteEditorViewModel>)
-            .value;
+        ((await notes.open(
+          shown(title),
+          askForPassword: noPassword,
+        )) as Granted<NoteEditorViewModel>).value;
 
     const edited = [
-      {'insert': 'Plans for Sunday\n'}
+      {'insert': 'Plans for Sunday\n'},
     ];
 
     testWidgets("auto-saves once the writing pauses", (tester) async {
       final editor = await openNote("Open");
       editor.edit([
-        {'insert': 'Plans for\n'}
+        {'insert': 'Plans for\n'},
       ], autoSave: true);
       await tester.pump(const Duration(milliseconds: 300));
       editor.edit(edited, autoSave: true);
@@ -457,8 +518,9 @@ void main() {
       expect(repository.rows.first.body, "Plans for Sunday");
     });
 
-    testWidgets("puts the saved note in the list without reading them all",
-        (tester) async {
+    testWidgets("puts the saved note in the list without reading them all", (
+      tester,
+    ) async {
       final editor = await openNote("Open");
       final reads = repository.reads;
       editor.edit(edited, autoSave: false);
@@ -485,20 +547,24 @@ void main() {
       editor.edit(edited, autoSave: false);
       await editor.save();
       await Future<void>.delayed(Duration.zero);
-      expect(failures, ["Sorry, Something went wrong, note not saved"]);
+      expect(failures, ["Couldn't save the note"]);
       expect(editor.unsaved.value, isTrue);
       await subscription.cancel();
     });
 
-    test("shows the saved text on the widget, but not a locked note's",
-        () async {
-      final open = await openNote("Open");
-      expect(await open.showOnWidget(), isA<Info>());
-      expect(homeWidget.text, "Plans\nWalk by the river");
-      final diary = await openNote("Diary");
-      expect((await diary.showOnWidget() as Info).message,
-          "Locked notes can't go on the widget");
-    });
+    test(
+      "shows the saved text on the widget, but not a locked note's",
+      () async {
+        final open = await openNote("Open");
+        expect(await open.showOnWidget(), isA<Info>());
+        expect(homeWidget.text, "Plans\nWalk by the river");
+        final diary = await openNote("Diary");
+        expect(
+          (await diary.showOnWidget() as Info).message,
+          "Locked notes can't go on the widget",
+        );
+      },
+    );
 
     test("moves the note to the trash, and takes it off the widget", () async {
       final editor = await openNote("Open");
@@ -511,14 +577,16 @@ void main() {
       expect(homeWidget.id, isNull);
     });
 
-    test("puts what's waiting to be saved in the trash with the note",
-        () async {
-      final editor = await openNote("Open");
-      editor.edit(edited, autoSave: true);
-      await editor.delete(askForPassword: noPassword);
-      expect(repository.trash.single.item.body, "Plans for Sunday");
-      expect(repository.trash.single.item.delta, jsonEncode(edited));
-    });
+    test(
+      "puts what's waiting to be saved in the trash with the note",
+      () async {
+        final editor = await openNote("Open");
+        editor.edit(edited, autoSave: true);
+        await editor.delete(askForPassword: noPassword);
+        expect(repository.trash.single.item.body, "Plans for Sunday");
+        expect(repository.trash.single.item.delta, jsonEncode(edited));
+      },
+    );
 
     test("keeps a locked note where it is when its lock says no", () async {
       final editor = await openNote("Diary");
@@ -528,13 +596,14 @@ void main() {
       expect(repository.trash, isEmpty);
     });
 
-    test(
-        "moves the note to the trash though the notes can't be read in "
+    test("moves the note to the trash though the notes can't be read in "
         "after it", () async {
       final editor = await openNote("Open");
       repository.failReads = true;
-      expect(await editor.delete(askForPassword: noPassword),
-          isA<Granted<Trashed<Note>>>());
+      expect(
+        await editor.delete(askForPassword: noPassword),
+        isA<Granted<Trashed<Note>>>(),
+      );
 
       repository.failReads = false;
       await notes.get();

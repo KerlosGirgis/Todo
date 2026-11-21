@@ -36,8 +36,9 @@ class ProfileButton extends StatelessWidget {
         ? (isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30))
         : _accent;
     final style = FilledButton.styleFrom(
-      backgroundColor:
-          tinted ? color.withValues(alpha: isDarkTheme ? 0.2 : 0.1) : color,
+      backgroundColor: tinted
+          ? color.withValues(alpha: isDarkTheme ? 0.2 : 0.1)
+          : color,
       foregroundColor: tinted
           ? (destructive ? color : context.colors.moreLess)
           : Colors.white,

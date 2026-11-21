@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/avatar.dart';
@@ -22,8 +23,10 @@ class RingedAvatar extends StatelessWidget {
     };
     return LayoutBuilder(
       builder: (context, constraints) {
-        final ringWidth =
-            math.max(2.0, constraints.biggest.shortestSide * 0.035);
+        final ringWidth = math.max(
+          2.0,
+          constraints.biggest.shortestSide * 0.035,
+        );
         return CustomPaint(
           painter: _RingPainter(width: ringWidth),
           child: Padding(

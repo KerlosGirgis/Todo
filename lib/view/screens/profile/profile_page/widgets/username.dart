@@ -7,14 +7,13 @@ import 'edit_name_dialog.dart';
 
 /// The user's name, which opens the dialog that edits it.
 class UserName extends StatelessWidget {
-  const UserName({
-    super.key,
-  });
+  const UserName({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final name =
-        context.select<UserViewModel, String>((user) => user.user.name);
+    final name = context.select<UserViewModel, String>(
+      (user) => user.user.name,
+    );
     return Semantics(
       button: true,
       label: name,

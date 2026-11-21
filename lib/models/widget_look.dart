@@ -20,13 +20,14 @@ class WidgetThemeColors {
   final int noteText;
 
   factory WidgetThemeColors.fromMap(
-          Map<Object?, Object?> map, WidgetThemeColors fallback) =>
-      WidgetThemeColors(
-        background: _color(map['background']) ?? fallback.background,
-        text: _color(map['text']) ?? fallback.text,
-        secondaryText: _color(map['secondary']) ?? fallback.secondaryText,
-        noteText: _color(map['note']) ?? fallback.noteText,
-      );
+    Map<Object?, Object?> map,
+    WidgetThemeColors fallback,
+  ) => WidgetThemeColors(
+    background: _color(map['background']) ?? fallback.background,
+    text: _color(map['text']) ?? fallback.text,
+    secondaryText: _color(map['secondary']) ?? fallback.secondaryText,
+    noteText: _color(map['note']) ?? fallback.noteText,
+  );
 }
 
 /// How the phone draws the app's widgets, so the settings can draw them
@@ -79,8 +80,11 @@ class WidgetLook {
     final sizes = <WidgetKind, ({double width, double height})>{};
     if (map['sizes'] case final Map<Object?, Object?> given) {
       for (final kind in WidgetKind.values) {
-        if (given[kind.androidName]
-            case [final num width, final num height, ...]) {
+        if (given[kind.androidName] case [
+          final num width,
+          final num height,
+          ...,
+        ]) {
           if (width > 0 && height > 0) {
             sizes[kind] = (width: width.toDouble(), height: height.toDouble());
           }
@@ -93,19 +97,22 @@ class WidgetLook {
         _ => 24,
       },
       light: switch (map['light']) {
-        final Map<Object?, Object?> colors =>
-          WidgetThemeColors.fromMap(colors, lightFallback),
+        final Map<Object?, Object?> colors => WidgetThemeColors.fromMap(
+          colors,
+          lightFallback,
+        ),
         _ => lightFallback,
       },
       dark: switch (map['dark']) {
-        final Map<Object?, Object?> colors =>
-          WidgetThemeColors.fromMap(colors, darkFallback),
+        final Map<Object?, Object?> colors => WidgetThemeColors.fromMap(
+          colors,
+          darkFallback,
+        ),
         _ => darkFallback,
       },
       wallpaper: [
         if (map['wallpaper'] case final List<Object?> colors)
-          for (final color in colors)
-            if (_color(color) case final color?) color,
+          for (final color in colors) ?_color(color),
       ],
       sizes: sizes,
     );

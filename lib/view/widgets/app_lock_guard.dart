@@ -77,13 +77,13 @@ class _AppLockGuardState extends State<AppLockGuard> {
 /// puts the app away, as Home does, rather than going back to a page under
 /// it, or closing them all.
 Route<void> _lockPageRoute(AuthViewModel auth) => PageRouteBuilder<void>(
-      transitionDuration: Duration.zero,
-      reverseTransitionDuration: Duration.zero,
-      pageBuilder: (context, animation, secondaryAnimation) => PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (!didPop) auth.putAway();
-        },
-        child: const LockPage(),
-      ),
-    );
+  transitionDuration: Duration.zero,
+  reverseTransitionDuration: Duration.zero,
+  pageBuilder: (context, animation, secondaryAnimation) => PopScope(
+    canPop: false,
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop) auth.putAway();
+    },
+    child: const LockPage(),
+  ),
+);

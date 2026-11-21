@@ -105,12 +105,11 @@ abstract final class ReminderPlan {
     if (first == null) return const [];
     return switch (recurrence.every) {
       RepeatEvery.week => [
-          for (final weekday in recurrence.weekdays.toList()..sort())
-            if (times.where((at) => at.weekday == weekday).firstOrNull
-                case final first?)
-              RepeatingAlarm(
-                  _weekdayId(uuid, weekday), first, RepeatEvery.week),
-        ],
+        for (final weekday in recurrence.weekdays.toList()..sort())
+          if (times.where((at) => at.weekday == weekday).firstOrNull
+              case final first?)
+            RepeatingAlarm(_weekdayId(uuid, weekday), first, RepeatEvery.week),
+      ],
       final every => [RepeatingAlarm(idOf(uuid), first, every)],
     };
   }
@@ -122,13 +121,11 @@ abstract final class ReminderPlan {
   /// Every id a reminder of the task with [uuid] can have: [idOf]'s, then
   /// one for each day of the week, then one for each of its last times.
   static List<int> idsOf(String uuid) => [
-        idOf(uuid),
-        for (var weekday = DateTime.monday;
-            weekday <= DateTime.sunday;
-            weekday++)
-          _weekdayId(uuid, weekday),
-        for (var index = 0; index < lastTimes; index++) _timeId(uuid, index),
-      ];
+    idOf(uuid),
+    for (var weekday = DateTime.monday; weekday <= DateTime.sunday; weekday++)
+      _weekdayId(uuid, weekday),
+    for (var index = 0; index < lastTimes; index++) _timeId(uuid, index),
+  ];
 
   static int _weekdayId(String uuid, int weekday) => _hash("$uuid#w$weekday");
 

@@ -31,12 +31,12 @@ class MapPlace {
   final String? parent;
 
   MapPlace _shifted(Offset by) => MapPlace(
-        node: node,
-        rect: rect.shift(by),
-        onLeft: onLeft,
-        branch: branch,
-        parent: parent,
-      );
+    node: node,
+    rect: rect.shift(by),
+    onLeft: onLeft,
+    branch: branch,
+    parent: parent,
+  );
 }
 
 /// The tasks laid out as a map: the centre, the tasks of their own stacked
@@ -67,8 +67,11 @@ class MapLayout {
   /// Lays out the tasks of [tree], each as big as [sizeOf] says, on both
   /// sides of the centre if [twoSided]. A folded task's subtasks are left
   /// off.
-  factory MapLayout(TaskTree tree,
-      {required Size Function(TaskNode node) sizeOf, bool twoSided = false}) {
+  factory MapLayout(
+    TaskTree tree, {
+    required Size Function(TaskNode node) sizeOf,
+    bool twoSided = false,
+  }) {
     final heights = <TaskNode, double>{};
     List<TaskNode> shownIn(TaskNode node) =>
         node.task.folded ? const [] : node.children;
@@ -78,23 +81,33 @@ class MapLayout {
     double stacked(List<TaskNode> nodes, double gap) =>
         nodes.fold(-gap, (height, node) => height + heightOf(node) + gap);
     heightOf = (node) => heights[node] ??= () {
-          final children = shownIn(node);
-          final own = sizeOf(node).height;
-          return children.isEmpty
-              ? own
-              : math.max(own, stacked(children, siblingGap));
-        }();
+      final children = shownIn(node);
+      final own = sizeOf(node).height;
+      return children.isEmpty
+          ? own
+          : math.max(own, stacked(children, siblingGap));
+    }();
 
     final places = <String, MapPlace>{};
-    void place(TaskNode node, double edge, double top,
-        {required bool onLeft, required int branch, required String? parent}) {
+    void place(
+      TaskNode node,
+      double edge,
+      double top, {
+      required bool onLeft,
+      required int branch,
+      required String? parent,
+    }) {
       final size = sizeOf(node);
       final height = heightOf(node);
       final left = onLeft ? edge - size.width : edge;
       places[node.key] = MapPlace(
         node: node,
         rect: Rect.fromLTWH(
-            left, top + (height - size.height) / 2, size.width, size.height),
+          left,
+          top + (height - size.height) / 2,
+          size.width,
+          size.height,
+        ),
         onLeft: onLeft,
         branch: branch,
         parent: parent,
@@ -104,8 +117,14 @@ class MapLayout {
       final childEdge = onLeft ? left - gap : left + size.width + gap;
       var y = top + (height - stacked(children, siblingGap)) / 2;
       for (final child in children) {
-        place(child, childEdge, y,
-            onLeft: onLeft, branch: branch, parent: node.key);
+        place(
+          child,
+          childEdge,
+          y,
+          onLeft: onLeft,
+          branch: branch,
+          parent: node.key,
+        );
         y += heightOf(child) + siblingGap;
       }
     }
@@ -119,8 +138,14 @@ class MapLayout {
       if (nodes.isEmpty) return;
       var y = -stacked(nodes, branchGap) / 2;
       for (final (index, node) in nodes.indexed) {
-        place(node, onLeft ? -(hubRadius + hubGap) : hubRadius + hubGap, y,
-            onLeft: onLeft, branch: first + index, parent: null);
+        place(
+          node,
+          onLeft ? -(hubRadius + hubGap) : hubRadius + hubGap,
+          y,
+          onLeft: onLeft,
+          branch: first + index,
+          parent: null,
+        );
         y += heightOf(node) + branchGap;
       }
     }

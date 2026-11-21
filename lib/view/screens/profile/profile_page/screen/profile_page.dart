@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/glass_icon_button.dart';
@@ -17,21 +18,21 @@ import '../widgets/settings_sections.dart';
 /// The settings, under the user's profile, sliding up over the page they're
 /// opened from.
 Route<void> profileRoute() => PageRouteBuilder<void>(
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          const ProfilePage(),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-          SlideTransition(
+  pageBuilder: (context, animation, secondaryAnimation) => const ProfilePage(),
+  transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+      SlideTransition(
         position: animation.drive(
-            Tween(begin: const Offset(0, 1), end: Offset.zero)
-                .chain(CurveTween(curve: Curves.ease))),
+          Tween(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).chain(CurveTween(curve: Curves.ease)),
+        ),
         child: child,
       ),
-    );
+);
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({
-    super.key,
-  });
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => ProfilePageState();
@@ -67,8 +68,9 @@ class ProfilePageState extends State<ProfilePage> {
     final centred = (MediaQuery.sizeOf(context).width - 600) / 2;
     final left = math.max(16 + padding.left, centred);
     final right = math.max(16 + padding.right, centred);
-    final name =
-        context.select<UserViewModel, String>((user) => user.user.name);
+    final name = context.select<UserViewModel, String>(
+      (user) => user.user.name,
+    );
     return Stack(
       children: [
         Positioned(
@@ -81,10 +83,11 @@ class ProfilePageState extends State<ProfilePage> {
             listenable: _scrollController,
             builder: (context, child) => Transform.translate(
               offset: Offset(
-                  0,
-                  _scrollController.hasClients
-                      ? -_scrollController.offset / 2
-                      : 0),
+                0,
+                _scrollController.hasClients
+                    ? -_scrollController.offset / 2
+                    : 0,
+              ),
               child: child,
             ),
             child: const ProfileAurora(),
@@ -127,23 +130,23 @@ class ProfilePageState extends State<ProfilePage> {
 /// [sections], spaced apart, rising into place one after another as the page
 /// opens.
 List<Widget> _staggered(List<Widget> sections) => [
-      for (final (index, section) in sections.indexed)
-        AnimationConfiguration.staggeredList(
-          position: index,
-          duration: const Duration(milliseconds: 500),
-          child: SlideAnimation(
-            verticalOffset: 32,
-            curve: Curves.easeOutCubic,
-            child: FadeInAnimation(
-              curve: Curves.easeOut,
-              child: Padding(
-                padding: EdgeInsets.only(top: index == 0 ? 0 : 28),
-                child: section,
-              ),
-            ),
+  for (final (index, section) in sections.indexed)
+    AnimationConfiguration.staggeredList(
+      position: index,
+      duration: const Duration(milliseconds: 500),
+      child: SlideAnimation(
+        verticalOffset: 32,
+        curve: Curves.easeOutCubic,
+        child: FadeInAnimation(
+          curve: Curves.easeOut,
+          child: Padding(
+            padding: EdgeInsets.only(top: index == 0 ? 0 : 28),
+            child: section,
           ),
         ),
-    ];
+      ),
+    ),
+];
 
 class _CloseButton extends StatelessWidget {
   const _CloseButton();
@@ -169,16 +172,17 @@ class _AboutButton extends StatelessWidget {
       tooltip: "About",
       onPressed: () {
         toastification.show(
-            title: Text(
-              "Developed with ❤️ by Kerlos Girgis",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            type: ToastificationType.info,
-            autoCloseDuration: const Duration(seconds: 5),
-            dragToClose: true,
-            alignment: AlignmentGeometry.directional(0, 1),
-            style: ToastificationStyle.flat);
+          title: Text(
+            "Developed with ❤️ by Kerlos Girgis",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16),
+          ),
+          type: ToastificationType.info,
+          autoCloseDuration: const Duration(seconds: 5),
+          dragToClose: true,
+          alignment: AlignmentGeometry.directional(0, 1),
+          style: ToastificationStyle.flat,
+        );
       },
     );
   }

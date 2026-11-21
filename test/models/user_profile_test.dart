@@ -40,33 +40,46 @@ void main() {
 
   test('reads sizes kept as whole numbers', () {
     expect(
-        UserProfile.fromMap({...stored, 'notesTextSize': 1}).notesTextSize,
-        1.0);
+      UserProfile.fromMap({...stored, 'notesTextSize': 1}).notesTextSize,
+      1.0,
+    );
   });
 
   test('lists the tasks unless it says to map them', () {
     expect(UserProfile.fromMap(stored).tasksView, TasksView.map);
-    expect(UserProfile.fromMap({...stored, 'tasksView': 0}).tasksView,
-        TasksView.list);
+    expect(
+      UserProfile.fromMap({...stored, 'tasksView': 0}).tasksView,
+      TasksView.list,
+    );
     // From before there was a map, or with a view from a newer version.
-    expect(UserProfile.fromMap({...stored}..remove('tasksView')).tasksView,
-        TasksView.list);
-    expect(UserProfile.fromMap({...stored, 'tasksView': 7}).tasksView,
-        TasksView.list);
+    expect(
+      UserProfile.fromMap({...stored}..remove('tasksView')).tasksView,
+      TasksView.list,
+    );
+    expect(
+      UserProfile.fromMap({...stored, 'tasksView': 7}).tasksView,
+      TasksView.list,
+    );
   });
 
   test('opens on the notes for any start page but the first', () {
-    expect(UserProfile.fromMap({...stored, 'startPage': 0}).startPage,
-        StartPage.tasks);
-    expect(UserProfile.fromMap({...stored, 'startPage': 2}).startPage,
-        StartPage.notes);
+    expect(
+      UserProfile.fromMap({...stored, 'startPage': 0}).startPage,
+      StartPage.tasks,
+    );
+    expect(
+      UserProfile.fromMap({...stored, 'startPage': 2}).startPage,
+      StartPage.notes,
+    );
   });
 
   group('Avatar', () {
     test('reads a number as a bundled avatar and a path as a photo', () {
       expect(Avatar.decode("007"), const BundledAvatar("007"));
-      expect(Avatar.decode("/data/user/0/com.k.todo/app_flutter/me.jpg"),
-          const PhotoAvatar("/data/user/0/com.k.todo/app_flutter/me.jpg"));
+      expect(
+        Avatar.decode("/data/user/0/com.k.todo/app_flutter/me.jpg"),
+        const PhotoAvatar("/data/user/0/com.k.todo/app_flutter/me.jpg"),
+      );
     });
 
     test('writes itself back as it was', () {
@@ -76,8 +89,10 @@ void main() {
 
     test('shows the plain avatar for a number it has no picture for', () {
       expect(const BundledAvatar("042").asset, "assets/avatars/avatar.png");
-      expect(const BundledAvatar("001").asset,
-          "assets/avatars/avatar_hacker.png");
+      expect(
+        const BundledAvatar("001").asset,
+        "assets/avatars/avatar_hacker.png",
+      );
     });
 
     test('offers the ten bundled avatars', () {
@@ -90,11 +105,14 @@ void main() {
   group('Verse', () {
     test('splits off its reference, in title case', () {
       final verse = Verse.parse(
-          "Many waters cannot quench love -- song of solomon 8:7");
+        "Many waters cannot quench love -- song of solomon 8:7",
+      );
       expect(verse.text, "Many waters cannot quench love");
       expect(verse.reference, "Song of Solomon 8:7");
-      expect(verse.raw,
-          "Many waters cannot quench love -- song of solomon 8:7");
+      expect(
+        verse.raw,
+        "Many waters cannot quench love -- song of solomon 8:7",
+      );
     });
 
     test('is all text without a reference', () {

@@ -34,8 +34,10 @@ class TodoPageHarness {
 
   /// Lets [duration] go by a frame at a time, as it does on a phone, for
   /// the animations in it: a single pump would draw only their first frame.
-  Future<void> wait(WidgetTester tester,
-      [Duration duration = const Duration(seconds: 1)]) async {
+  Future<void> wait(
+    WidgetTester tester, [
+    Duration duration = const Duration(seconds: 1),
+  ]) async {
     const frame = Duration(milliseconds: 50);
     for (var waited = Duration.zero; waited < duration; waited += frame) {
       await tester.pump(frame);
@@ -78,20 +80,23 @@ class TodoPageHarness {
     );
     await user.get();
     await user.setTasksView(view);
-    await tester.pumpWidget(MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: user),
-        ChangeNotifierProvider.value(value: tasks),
-        ChangeNotifierProvider(
-            create: (_) => TourViewModel(service: TourService())),
-      ],
-      child: ToastificationWrapper(
-        child: MaterialApp(
-          theme: AppTheme.getTheme(isDarkMode: false),
-          home: const TodoPage(),
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: user),
+          ChangeNotifierProvider.value(value: tasks),
+          ChangeNotifierProvider(
+            create: (_) => TourViewModel(service: TourService()),
+          ),
+        ],
+        child: ToastificationWrapper(
+          child: MaterialApp(
+            theme: AppTheme.getTheme(isDarkMode: false),
+            home: const TodoPage(),
+          ),
         ),
       ),
-    ));
+    );
     // The tasks are read in, then they rise in, or branch out.
     await wait(tester, const Duration(seconds: 2));
   }
@@ -117,7 +122,9 @@ class TodoPageHarness {
   /// The choice called [label] in the sort's or the filter's panel, while
   /// it's open.
   Finder choice(String label) => find.descendant(
-      of: find.byType(GlassPopoverOption), matching: find.text(label));
+    of: find.byType(GlassPopoverOption),
+    matching: find.text(label),
+  );
 
   /// Opens the panel of the bar's button with [tooltip], Sort or Filter,
   /// then picks [label] in it.
@@ -130,16 +137,16 @@ class TodoPageHarness {
 
   /// The titles of the list's cards, from the top down.
   List<String> cards(WidgetTester tester) => [
-        for (final card in tester.widgetList<TaskCard>(find.byType(TaskCard)))
-          card.task.title,
-      ];
+    for (final card in tester.widgetList<TaskCard>(find.byType(TaskCard)))
+      card.task.title,
+  ];
 
   /// The tasks as an outline: each task's title, two spaces in for each
   /// task it's inside of.
   String get outline => [
-        for (final node in tasks.tree.nodes)
-          "${"  " * node.depth}${node.task.title}",
-      ].join("\n");
+    for (final node in tasks.tree.nodes)
+      "${"  " * node.depth}${node.task.title}",
+  ].join("\n");
 
   TodoItem task(String title) =>
       tasks.items.singleWhere((task) => task.title == title);
@@ -154,13 +161,13 @@ class TodoPageHarness {
 ///     Shop
 ///       Milk
 List<TodoItem> plans() => [
-      TodoItem(uuid: "trip", title: "Trip"),
-      TodoItem(uuid: "book", title: "Book", parent: "trip"),
-      TodoItem(uuid: "flights", title: "Flights", parent: "book"),
-      TodoItem(uuid: "pack", title: "Pack", parent: "trip"),
-      TodoItem(uuid: "shop", title: "Shop"),
-      TodoItem(uuid: "milk", title: "Milk", parent: "shop"),
-    ];
+  TodoItem(uuid: "trip", title: "Trip"),
+  TodoItem(uuid: "book", title: "Book", parent: "trip"),
+  TodoItem(uuid: "flights", title: "Flights", parent: "book"),
+  TodoItem(uuid: "pack", title: "Pack", parent: "trip"),
+  TodoItem(uuid: "shop", title: "Shop"),
+  TodoItem(uuid: "milk", title: "Milk", parent: "shop"),
+];
 
 void main() {
   late TodoPageHarness page;
@@ -200,16 +207,19 @@ void main() {
     expect(left["Pack"], left["Book"]);
     expect(left["Shop"], left["Trip"]);
     expect(left["Milk"], left["Book"]);
-    expect(tester.getTopLeft(card("Pack")).dy,
-        greaterThan(tester.getTopLeft(card("Flights")).dy));
+    expect(
+      tester.getTopLeft(card("Pack")).dy,
+      greaterThan(tester.getTopLeft(card("Flights")).dy),
+    );
     // A task says how far along its subtasks are.
     expect(find.text("3 subtasks"), findsOneWidget);
     expect(find.text("1 subtask"), findsNWidgets(2));
     await page.close(tester);
   });
 
-  testWidgets("a tap on a task's subtasks folds them away, and back",
-      (tester) async {
+  testWidgets("a tap on a task's subtasks folds them away, and back", (
+    tester,
+  ) async {
     await page.open(tester, plans());
     await tester.tap(find.text("3 subtasks"));
     await page.wait(tester);
@@ -219,8 +229,10 @@ void main() {
     expect(find.text("Milk"), findsOneWidget);
     expect(page.rows.rows.first.folded, isTrue);
     // Shop's card has come up under Trip's.
-    expect(tester.getTopLeft(card("Shop")).dy,
-        lessThan(tester.getBottomLeft(card("Trip")).dy + 20));
+    expect(
+      tester.getTopLeft(card("Shop")).dy,
+      lessThan(tester.getBottomLeft(card("Trip")).dy + 20),
+    );
 
     await tester.tap(find.text("3 subtasks"));
     await page.wait(tester);
@@ -229,8 +241,9 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets("a swipe to the right adds a subtask to the task",
-      (tester) async {
+  testWidgets("a swipe to the right adds a subtask to the task", (
+    tester,
+  ) async {
     await page.open(tester, plans());
     await tester.drag(find.text("Shop"), const Offset(160, 0));
     await page.wait(tester);
@@ -247,8 +260,7 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets(
-      "a swipe to the left deletes a task with its subtasks, "
+  testWidgets("a swipe to the left deletes a task with its subtasks, "
       "until Undo", (tester) async {
     await page.open(tester, plans());
     await tester.drag(find.text("Trip"), const Offset(-300, 0));
@@ -266,8 +278,9 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets("checking a task off checks its subtasks off, until Undo",
-      (tester) async {
+  testWidgets("checking a task off checks its subtasks off, until Undo", (
+    tester,
+  ) async {
     await page.open(tester, plans());
     await tester.tap(find.text("Trip"));
     await page.wait(tester);
@@ -283,12 +296,12 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets(
-      "a dragged task takes its subtasks along, and lines up with "
+  testWidgets("a dragged task takes its subtasks along, and lines up with "
       "the task under it", (tester) async {
     await page.open(tester, plans());
     // Shop, picked up and carried to just above Pack.
-    final up = tester.getTopLeft(card("Pack")).dy -
+    final up =
+        tester.getTopLeft(card("Pack")).dy -
         tester.getTopLeft(card("Shop")).dy -
         10;
     await dragCard(tester, "Shop", Offset(0, up));
@@ -301,13 +314,16 @@ Trip
   Pack""");
     expect(find.text("Milk"), findsOneWidget);
     expect(
-        tester.getTopLeft(card("Shop")).dx, tester.getTopLeft(card("Pack")).dx);
+      tester.getTopLeft(card("Shop")).dx,
+      tester.getTopLeft(card("Pack")).dx,
+    );
     expect(tester.takeException(), isNull);
     await page.close(tester);
   });
 
-  testWidgets("a task picked up and put back keeps its subtasks on show",
-      (tester) async {
+  testWidgets("a task picked up and put back keeps its subtasks on show", (
+    tester,
+  ) async {
     await page.open(tester, plans());
     final gesture = await tester.startGesture(handle(tester, "Trip"));
     await page.wait(tester, const Duration(milliseconds: 700));
@@ -321,8 +337,9 @@ Trip
     await page.close(tester);
   });
 
-  testWidgets("the form moves a task into the task picked for it",
-      (tester) async {
+  testWidgets("the form moves a task into the task picked for it", (
+    tester,
+  ) async {
     await page.open(tester, plans());
     await tester.longPress(find.text("Pack"));
     await page.wait(tester);
@@ -335,11 +352,13 @@ Trip
     expect(find.text("A task of its own"), findsOneWidget);
     // Not itself.
     expect(
-        find.descendant(of: find.byType(ListView), matching: find.text("Pack")),
-        findsNothing);
+      find.descendant(of: find.byType(ListView), matching: find.text("Pack")),
+      findsNothing,
+    );
     expect(
-        find.descendant(of: find.byType(ListView), matching: find.text("Milk")),
-        findsOneWidget);
+      find.descendant(of: find.byType(ListView), matching: find.text("Milk")),
+      findsOneWidget,
+    );
     await tester.tap(find.text("Shop").last);
     await page.wait(tester);
     await tester.tap(find.text("Save"));
@@ -348,8 +367,9 @@ Trip
     await page.close(tester);
   });
 
-  testWidgets("the menu shows the tasks as a map, and as a list again",
-      (tester) async {
+  testWidgets("the menu shows the tasks as a map, and as a list again", (
+    tester,
+  ) async {
     await page.open(tester, plans());
     expect(find.byType(MapHub), findsNothing);
     await page.choose(tester, "Show as Map");
@@ -368,8 +388,7 @@ Trip
     await page.close(tester);
   });
 
-  testWidgets("the settings' view takes over from the menu's",
-      (tester) async {
+  testWidgets("the settings' view takes over from the menu's", (tester) async {
     await page.open(tester, plans(), view: TasksView.map);
     await page.choose(tester, "Show as List");
     await page.wait(tester, const Duration(seconds: 2));
@@ -385,8 +404,7 @@ Trip
     await page.close(tester);
   });
 
-  testWidgets(
-      "turned on its side, the list stays one column, clear of the "
+  testWidgets("turned on its side, the list stays one column, clear of the "
       "camera", (tester) async {
     // The camera's cutout down the left side, as the phone is turned.
     tester.view.padding = const FakeViewPadding(left: 45 * 2);
@@ -405,72 +423,88 @@ Trip
   group("sort and filter", () {
     /// Tasks for days in January 2030, so none is overdue.
     TodoItem due(String title, int? day) => TodoItem(
-          uuid: title,
-          title: title,
-          day: day == null ? null : DateTime(2030, 1, day),
-        );
+      uuid: title,
+      title: title,
+      day: day == null ? null : DateTime(2030, 1, day),
+    );
 
-    testWidgets("sit in the bottom left corner, across from the page's buttons",
-        (tester) async {
-      await page.open(tester, plans());
-      final sort = tester.getRect(find.byTooltip("Sort"));
-      final filter = tester.getRect(find.byTooltip("Filter"));
-      final add = tester.getRect(find.byTooltip("Add Task"));
-      expect(sort.left, 16);
-      expect(sort.right, lessThanOrEqualTo(filter.left));
-      // On the same line as the add button.
-      expect(filter.bottom, closeTo(add.bottom, 0.5));
-      // Under the title, the summary, then straight to the first card, with
-      // no filter bar between them.
-      expect(
+    testWidgets(
+      "sit in the bottom left corner, across from the page's buttons",
+      (tester) async {
+        await page.open(tester, plans());
+        final sort = tester.getRect(find.byTooltip("Sort"));
+        final filter = tester.getRect(find.byTooltip("Filter"));
+        final add = tester.getRect(find.byTooltip("Add Task"));
+        expect(sort.left, 16);
+        expect(sort.right, lessThanOrEqualTo(filter.left));
+        // On the same line as the add button.
+        expect(filter.bottom, closeTo(add.bottom, 0.5));
+        // Under the title, the summary, then straight to the first card, with
+        // no filter bar between them.
+        expect(
           tester.getTopLeft(card("Trip")).dy -
               tester.getBottomLeft(find.byType(TasksSummaryCard)).dy,
-          closeTo(20, 0.5));
-      await page.close(tester);
-    });
+          closeTo(20, 0.5),
+        );
+        await page.close(tester);
+      },
+    );
 
-    testWidgets("the filter shows only the tasks picked, with their counts",
-        (tester) async {
+    testWidgets("the filter shows only the tasks picked, with their counts", (
+      tester,
+    ) async {
       await page.open(tester, [
         ...plans(),
         TodoItem(
-            uuid: "stretch",
-            title: "Stretch",
-            time: const ClockTime(7, 0),
-            reminder: Reminder.daily),
+          uuid: "stretch",
+          title: "Stretch",
+          time: const ClockTime(7, 0),
+          reminder: Reminder.daily,
+        ),
       ]);
       expect(find.byIcon(Icons.filter_alt_outlined), findsOneWidget);
       await tester.tap(find.byTooltip("Filter"));
       await page.wait(tester);
       expect(find.text("SHOW"), findsOneWidget);
-      int countOf(String label) => int.parse(tester
-          .widget<Text>(find.descendant(
-              of: find.ancestor(
+      int countOf(String label) => int.parse(
+        tester
+            .widget<Text>(
+              find.descendant(
+                of: find.ancestor(
                   of: page.choice(label),
-                  matching: find.byType(GlassPopoverOption)),
-              matching: find.byWidgetPredicate((widget) =>
-                  widget is Text && int.tryParse(widget.data ?? "") != null)))
-          .data!);
-      expect({
-        for (final label in [
-          "All",
-          "Done",
-          "Undone",
-          "Daily",
-          "Weekly",
-          "Monthly",
-          "Once",
-        ])
-          label: countOf(label),
-      }, {
-        "All": 7,
-        "Done": 0,
-        "Undone": 7,
-        "Daily": 1,
-        "Weekly": 0,
-        "Monthly": 0,
-        "Once": 6,
-      });
+                  matching: find.byType(GlassPopoverOption),
+                ),
+                matching: find.byWidgetPredicate(
+                  (widget) =>
+                      widget is Text && int.tryParse(widget.data ?? "") != null,
+                ),
+              ),
+            )
+            .data!,
+      );
+      expect(
+        {
+          for (final label in [
+            "All",
+            "Done",
+            "Undone",
+            "Daily",
+            "Weekly",
+            "Monthly",
+            "Once",
+          ])
+            label: countOf(label),
+        },
+        {
+          "All": 7,
+          "Done": 0,
+          "Undone": 7,
+          "Daily": 1,
+          "Weekly": 0,
+          "Monthly": 0,
+          "Once": 6,
+        },
+      );
 
       await tester.tap(page.choice("Daily"));
       await page.wait(tester);
@@ -492,8 +526,9 @@ Trip
       await page.close(tester);
     });
 
-    testWidgets("the sort puts the tasks by due date, either way, and back",
-        (tester) async {
+    testWidgets("the sort puts the tasks by due date, either way, and back", (
+      tester,
+    ) async {
       await page.open(tester, [
         due("Later", 20),
         due("Sooner", 10),
@@ -511,9 +546,12 @@ Trip
       expect(page.cards(tester), ["Later", "Sooner", "Soonest", "Someday"]);
       expect(page.tasks.sortDirection, SortDirection.descending);
       expect(
-          page.rows.listing,
-          const TaskListing(
-              sort: TaskSort.dueDate, direction: SortDirection.descending));
+        page.rows.listing,
+        const TaskListing(
+          sort: TaskSort.dueDate,
+          direction: SortDirection.descending,
+        ),
+      );
 
       await page.pick(tester, "Sort", "Custom");
       expect(page.cards(tester), custom);
@@ -524,8 +562,9 @@ Trip
       await page.close(tester);
     });
 
-    testWidgets("sorted by due date, a card held says how to move it instead",
-        (tester) async {
+    testWidgets("sorted by due date, a card held says how to move it instead", (
+      tester,
+    ) async {
       await page.open(tester, plans());
       await page.pick(tester, "Sort", "Due Date");
       final gesture = await tester.startGesture(handle(tester, "Shop"));
@@ -536,8 +575,10 @@ Trip
       }
       await gesture.up();
       await page.wait(tester);
-      expect(find.text("To move tasks by hand, sort them by Custom"),
-          findsOneWidget);
+      expect(
+        find.text("To move tasks by hand, sort them by Custom"),
+        findsOneWidget,
+      );
       expect(page.outline, startsWith("Trip\n  Book\n    Flights\n  Pack"));
       // Holding a title still edits its task.
       await tester.longPress(find.text("Pack"));
@@ -548,29 +589,32 @@ Trip
     });
 
     testWidgets(
-        "a panel closes on a touch anywhere else, which does nothing else, "
-        "and on Back", (tester) async {
-      await page.open(tester, plans());
-      await tester.tap(find.byTooltip("Filter"));
-      await page.wait(tester);
-      expect(find.text("SHOW"), findsOneWidget);
-      await tester.tapAt(tester.getCenter(find.text("Milk")));
-      await page.wait(tester);
-      expect(find.text("SHOW"), findsNothing);
-      expect(page.task("Milk").done, isFalse);
+      "a panel closes on a touch anywhere else, which does nothing else, "
+      "and on Back",
+      (tester) async {
+        await page.open(tester, plans());
+        await tester.tap(find.byTooltip("Filter"));
+        await page.wait(tester);
+        expect(find.text("SHOW"), findsOneWidget);
+        await tester.tapAt(tester.getCenter(find.text("Milk")));
+        await page.wait(tester);
+        expect(find.text("SHOW"), findsNothing);
+        expect(page.task("Milk").done, isFalse);
 
-      await tester.tap(find.byTooltip("Sort"));
-      await page.wait(tester);
-      expect(find.text("SORT BY"), findsOneWidget);
-      expect(await tester.binding.handlePopRoute(), isTrue);
-      await page.wait(tester);
-      expect(find.text("SORT BY"), findsNothing);
-      expect(find.byType(TodoPage), findsOneWidget);
-      await page.close(tester);
-    });
+        await tester.tap(find.byTooltip("Sort"));
+        await page.wait(tester);
+        expect(find.text("SORT BY"), findsOneWidget);
+        expect(await tester.binding.handlePopRoute(), isTrue);
+        await page.wait(tester);
+        expect(find.text("SORT BY"), findsNothing);
+        expect(find.byType(TodoPage), findsOneWidget);
+        await page.close(tester);
+      },
+    );
 
-    testWidgets("a screen reader gets to the panel on the map as well",
-        (tester) async {
+    testWidgets("a screen reader gets to the panel on the map as well", (
+      tester,
+    ) async {
       final semantics = tester.ensureSemantics();
       await page.open(tester, plans());
       await page.choose(tester, "Show as Map");
@@ -590,8 +634,9 @@ Trip
       semantics.dispose();
     });
 
-    testWidgets("open as they were left, which the database keeps",
-        (tester) async {
+    testWidgets("open as they were left, which the database keeps", (
+      tester,
+    ) async {
       await page.open(
         tester,
         [
@@ -600,7 +645,9 @@ Trip
           due("Sooner", 10),
         ],
         listing: const TaskListing(
-            filter: TaskFilter.undone, sort: TaskSort.dueDate),
+          filter: TaskFilter.undone,
+          sort: TaskSort.dueDate,
+        ),
       );
       expect(page.cards(tester), ["Sooner", "Later"]);
       // Both buttons say they're on.
@@ -608,12 +655,16 @@ Trip
       await tester.tap(find.byTooltip("Sort"));
       await page.wait(tester);
       expect(
-          tester
-              .widget<GlassPopoverOption>(find.ancestor(
-                  of: page.choice("Due Date"),
-                  matching: find.byType(GlassPopoverOption)))
-              .selected,
-          isTrue);
+        tester
+            .widget<GlassPopoverOption>(
+              find.ancestor(
+                of: page.choice("Due Date"),
+                matching: find.byType(GlassPopoverOption),
+              ),
+            )
+            .selected,
+        isTrue,
+      );
       await page.close(tester);
     });
 
@@ -625,10 +676,12 @@ Trip
       await page.close(tester);
     });
 
-    testWidgets("stay while a filter is on, so it can be turned off",
-        (tester) async {
-      await page
-          .open(tester, [TodoItem(uuid: "only", title: "Only", done: true)]);
+    testWidgets("stay while a filter is on, so it can be turned off", (
+      tester,
+    ) async {
+      await page.open(tester, [
+        TodoItem(uuid: "only", title: "Only", done: true),
+      ]);
       await page.pick(tester, "Filter", "Done");
       await tester.drag(find.text("Only"), const Offset(-300, 0));
       await page.wait(tester);
@@ -665,8 +718,9 @@ Trip
     await page.close(tester);
   });
 
-  testWidgets("each view's tour ends on the menu, where the other view is",
-      (tester) async {
+  testWidgets("each view's tour ends on the menu, where the other view is", (
+    tester,
+  ) async {
     await page.open(tester, plans(), due: {PageTour.tasks, PageTour.map});
     await page.wait(tester, const Duration(seconds: 2));
     // To the last step, with none skipped for want of something to point at.
@@ -686,8 +740,10 @@ Trip
       await page.wait(tester);
     }
     expect(find.text("See Them as a Map"), findsOneWidget);
-    expect(find.textContaining("Open this menu to switch to a map"),
-        findsOneWidget);
+    expect(
+      find.textContaining("Open this menu to switch to a map"),
+      findsOneWidget,
+    );
     await tester.tap(find.text("Done"));
     await page.wait(tester);
 

@@ -41,10 +41,10 @@ class FakeLock extends LockService {
 
   @override
   Future<PasswordCheck> checkPassword(String password) async => (
-        matched: password == "1234",
-        wait: Duration.zero,
-        key: password == "1234" ? "database key" : null,
-      );
+    matched: password == "1234",
+    wait: Duration.zero,
+    key: password == "1234" ? "database key" : null,
+  );
 }
 
 class _NoDatabase implements Database {
@@ -138,35 +138,41 @@ void main() {
     navigatorKey = GlobalKey<NavigatorState>();
     await auth.unlock("1234");
 
-    await tester.pumpWidget(MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: auth),
-        ChangeNotifierProvider.value(value: tasks),
-        ChangeNotifierProvider.value(value: notes),
-      ],
-      child: AppLockGuard(
-        navigatorKey: navigatorKey,
-        child: ToastificationWrapper(
-          child: MaterialApp(
-            navigatorKey: navigatorKey,
-            theme: AppTheme.getTheme(isDarkMode: false),
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextButton(
-                        onPressed: () => showFormDialog<void>(
-                            context, const TasksOverwriteDialog()),
-                        child: const Text("Restore tasks"),
-                      ),
-                      TextButton(
-                        onPressed: () => showFormDialog<void>(
-                            context, const NotesOverwriteDialog()),
-                        child: const Text("Restore notes"),
-                      ),
-                    ],
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider.value(value: tasks),
+          ChangeNotifierProvider.value(value: notes),
+        ],
+        child: AppLockGuard(
+          navigatorKey: navigatorKey,
+          child: ToastificationWrapper(
+            child: MaterialApp(
+              navigatorKey: navigatorKey,
+              theme: AppTheme.getTheme(isDarkMode: false),
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(
+                          onPressed: () => showFormDialog<void>(
+                            context,
+                            const TasksOverwriteDialog(),
+                          ),
+                          child: const Text("Restore tasks"),
+                        ),
+                        TextButton(
+                          onPressed: () => showFormDialog<void>(
+                            context,
+                            const NotesOverwriteDialog(),
+                          ),
+                          child: const Text("Restore notes"),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -174,7 +180,7 @@ void main() {
           ),
         ),
       ),
-    ));
+    );
   }
 
   /// The app locking again as it comes back after a minute away, as
@@ -192,33 +198,35 @@ void main() {
 
   for (final kind in ["tasks", "notes"]) {
     testWidgets(
-        "a restore of $kind that ends under the lock page closes its own "
-        "dialog, not the lock page", (tester) async {
-      await openApp(tester);
-      await tester.tap(find.text("Restore $kind"));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Import"));
-      await tester.pump();
+      "a restore of $kind that ends under the lock page closes its own "
+      "dialog, not the lock page",
+      (tester) async {
+        await openApp(tester);
+        await tester.tap(find.text("Restore $kind"));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text("Import"));
+        await tester.pump();
 
-      // The user is in the file picker for over a minute, so the app locks
-      // again as it comes back, before the picker's answer gets to it.
-      await lockAgain(tester);
-      expect(find.byType(LockPage), findsOneWidget);
-      picker.picked.complete(null);
-      await tester.pumpAndSettle();
+        // The user is in the file picker for over a minute, so the app locks
+        // again as it comes back, before the picker's answer gets to it.
+        await lockAgain(tester);
+        expect(find.byType(LockPage), findsOneWidget);
+        picker.picked.complete(null);
+        await tester.pumpAndSettle();
 
-      expect(find.byType(LockPage), findsOneWidget);
-      expect(auth.status, AuthStatus.unauthenticated);
-      expect(find.text("Restore Backup", skipOffstage: false), findsNothing);
+        expect(find.byType(LockPage), findsOneWidget);
+        expect(auth.status, AuthStatus.unauthenticated);
+        expect(find.text("Restore Backup", skipOffstage: false), findsNothing);
 
-      // And the lock still comes back after it's unlocked.
-      await auth.unlock("1234");
-      await tester.pumpAndSettle();
-      expect(find.byType(LockPage), findsNothing);
-      await lockAgain(tester);
-      expect(find.byType(LockPage), findsOneWidget);
-      await waitOutToasts(tester);
-    });
+        // And the lock still comes back after it's unlocked.
+        await auth.unlock("1234");
+        await tester.pumpAndSettle();
+        expect(find.byType(LockPage), findsNothing);
+        await lockAgain(tester);
+        expect(find.byType(LockPage), findsOneWidget);
+        await waitOutToasts(tester);
+      },
+    );
   }
 
   testWidgets("only unlocking takes the lock page off", (tester) async {
@@ -232,7 +240,8 @@ void main() {
 
     // Or another page put in its place.
     navigatorKey.currentState!.pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const Text("Elsewhere")));
+      MaterialPageRoute<void>(builder: (_) => const Text("Elsewhere")),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(LockPage), findsOneWidget);
 

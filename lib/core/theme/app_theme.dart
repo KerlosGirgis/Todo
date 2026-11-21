@@ -3,8 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  static ThemeData getTheme(
-      {required bool isDarkMode, bool isAmoled = false}) {
+  static ThemeData getTheme({required bool isDarkMode, bool isAmoled = false}) {
     final amoled = isDarkMode && isAmoled;
     return ThemeData(
       scaffoldBackgroundColor: amoled ? Colors.black : null,
@@ -18,8 +17,8 @@ class AppTheme {
         amoled
             ? AppColors.amoled
             : isDarkMode
-                ? AppColors.dark
-                : AppColors.light,
+            ? AppColors.dark
+            : AppColors.light,
       ],
       useMaterial3: true,
     );

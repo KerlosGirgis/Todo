@@ -6,10 +6,15 @@ import '../../../tasks/todo_page/widgets/form_dialog.dart';
 
 /// Asks the user whether to delete something from the trash for good, with
 /// [title], and [message] saying what goes. Whether they said to.
-Future<bool> confirmDeleteForever(BuildContext context,
-    {required String title, required String message}) async {
+Future<bool> confirmDeleteForever(
+  BuildContext context, {
+  required String title,
+  required String message,
+}) async {
   final confirmed = await showFormDialog<bool>(
-      context, _ConfirmDeleteDialog(title: title, message: message));
+    context,
+    _ConfirmDeleteDialog(title: title, message: message),
+  );
   return confirmed ?? false;
 }
 

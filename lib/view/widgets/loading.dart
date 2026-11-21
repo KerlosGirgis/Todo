@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:todo/core/utils/loading_utils.dart';
+
+import '../../core/utils/loading_utils.dart';
 
 import '../../core/extensions/theme_extensions.dart';
 
@@ -26,15 +27,17 @@ class _LoadingState extends State<Loading> with SingleTickerProviderStateMixin {
 
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.1).chain(
-          CurveTween(curve: Curves.easeInOut),
-        ),
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.1,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.1, end: 1.0).chain(
-          CurveTween(curve: Curves.easeInOut),
-        ),
+        tween: Tween<double>(
+          begin: 1.1,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
         weight: 50,
       ),
     ]).animate(_controller);
@@ -42,12 +45,7 @@ class _LoadingState extends State<Loading> with SingleTickerProviderStateMixin {
     _opacityAnimation = Tween<double>(
       begin: 0.6,
       end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -55,7 +53,7 @@ class _LoadingState extends State<Loading> with SingleTickerProviderStateMixin {
     super.didChangeDependencies();
     precacheImage(const AssetImage('assets/icon.png'), context);
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
@@ -101,7 +99,8 @@ class _LoadingState extends State<Loading> with SingleTickerProviderStateMixin {
                             boxShadow: [
                               BoxShadow(
                                 color: context
-                                    .colors.floatingActionButtonBackground
+                                    .colors
+                                    .floatingActionButtonBackground
                                     .withValues(alpha: 0.2),
                                 blurRadius: shortestSide * 0.08,
                                 spreadRadius: shortestSide * 0.02,

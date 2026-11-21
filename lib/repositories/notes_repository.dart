@@ -15,15 +15,18 @@ class NotesRepository {
   }
 
   Future<List<Note>> getNotes() async {
-    List<Map<String, dynamic>> maps = await db.query('Notes', columns: [
-      'id',
-      'title',
-      'body',
-      'delta',
-      'titleColor',
-      'coverColor',
-      'protected'
-    ]);
+    List<Map<String, dynamic>> maps = await db.query(
+      'Notes',
+      columns: [
+        'id',
+        'title',
+        'body',
+        'delta',
+        'titleColor',
+        'coverColor',
+        'protected',
+      ],
+    );
     List<Note> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {
@@ -38,8 +41,12 @@ class NotesRepository {
   }
 
   Future<void> updateNote(Note item) async {
-    await db
-        .update('Notes', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+    await db.update(
+      'Notes',
+      item.toMap(),
+      where: 'id = ?',
+      whereArgs: [item.id],
+    );
   }
 
   Future<void> refreshAllNotes(List<Note> notes) async {
@@ -65,10 +72,17 @@ class NotesRepository {
 
   /// Moves [note] to the trash, with all it says, as it was at [deletedAt],
   /// and gives the entry it's there as.
-  Future<Trashed<Note>> moveToTrash(Note note,
-      {required DateTime deletedAt}) async {
-    final id = await _trash.moveIn(db, 'Notes',
-        itemId: note.id, item: note.toMap(), deletedAt: deletedAt);
+  Future<Trashed<Note>> moveToTrash(
+    Note note, {
+    required DateTime deletedAt,
+  }) async {
+    final id = await _trash.moveIn(
+      db,
+      'Notes',
+      itemId: note.id,
+      item: note.toMap(),
+      deletedAt: deletedAt,
+    );
     return Trashed(id: id, item: note, deletedAt: deletedAt);
   }
 

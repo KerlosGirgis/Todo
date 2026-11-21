@@ -34,8 +34,10 @@ extension NoteFormatting on QuillController {
       length = text.length;
     }
     formatText(range.start, length, LinkAttribute(url));
-    updateSelection(TextSelection.collapsed(offset: range.start + length),
-        ChangeSource.local);
+    updateSelection(
+      TextSelection.collapsed(offset: range.start + length),
+      ChangeSource.local,
+    );
   }
 
   /// Makes [range] plain text again, rather than a link.

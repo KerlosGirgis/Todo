@@ -23,7 +23,9 @@ const _cardGap = 12.0;
 /// by this much a task deep at first, then by less, so tasks many deep
 /// still have room for their titles.
 double _indentOf(int depth) => math.min(
-    136, depth <= 4 ? depth * _indent : 4 * _indent + (depth - 4) * 8.0);
+  136,
+  depth <= 4 ? depth * _indent : 4 * _indent + (depth - 4) * 8.0,
+);
 const _indent = 22.0;
 
 /// Why a card can't be picked up while the tasks are sorted by due date.
@@ -181,12 +183,14 @@ class _TaskListState extends State<TaskList> {
         foldedAt = node.depth;
       }
     }
-    final (titleScale, descriptionScale, descriptionLines) =
-        context.select<UserViewModel, (double, double, int)>((user) => (
-              user.user.tasksTitleSize,
-              user.user.tasksDescSize,
-              user.user.descLines,
-            ));
+    final (titleScale, descriptionScale, descriptionLines) = context
+        .select<UserViewModel, (double, double, int)>(
+          (user) => (
+            user.user.tasksTitleSize,
+            user.user.tasksDescSize,
+            user.user.descLines,
+          ),
+        );
     final byHand = tasks.sort == TaskSort.custom;
 
     TaskCard card(TaskNode node, {bool interactive = true}) {
@@ -265,7 +269,7 @@ class _TaskListState extends State<TaskList> {
                   animate: _opening || added.contains(key),
                   delay: _opening
                       ? RiseIn.stagger *
-                          (widget.listDelay + math.min(position[index], 8))
+                            (widget.listDelay + math.min(position[index], 8))
                       : Duration.zero,
                   child: Dismissible(
                     key: ValueKey(key),
@@ -274,9 +278,11 @@ class _TaskListState extends State<TaskList> {
                       DismissDirection.startToEnd: 0.25,
                     },
                     background: const TaskSubtaskBackground(
-                        alignment: AlignmentDirectional.centerStart),
+                      alignment: AlignmentDirectional.centerStart,
+                    ),
                     secondaryBackground: const TaskDeleteBackground(
-                        alignment: AlignmentDirectional.centerEnd),
+                      alignment: AlignmentDirectional.centerEnd,
+                    ),
                     confirmDismiss: (direction) async {
                       if (direction == DismissDirection.startToEnd) {
                         // The card stays, and gets a subtask.
@@ -333,11 +339,14 @@ class _FoldableState extends State<_Foldable>
     duration: const Duration(milliseconds: 280),
     value: widget.shown && !widget.unfolds ? 1 : 0,
   );
-  late final _size =
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
+  late final _size = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeInOutCubic,
+  );
   late final _fade = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.3, 1, curve: Curves.easeOut));
+    parent: _controller,
+    curve: const Interval(0.3, 1, curve: Curves.easeOut),
+  );
 
   @override
   void initState() {
@@ -417,8 +426,10 @@ class _Indented extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final padded = Padding(
-      padding:
-          EdgeInsetsDirectional.only(start: _indentOf(depth), bottom: _cardGap),
+      padding: EdgeInsetsDirectional.only(
+        start: _indentOf(depth),
+        bottom: _cardGap,
+      ),
       child: child,
     );
     if (depth == 0) return padded;
@@ -503,7 +514,8 @@ class _LiftedCard extends StatelessWidget {
                     shadows: [
                       BoxShadow(
                         color: Colors.black.withValues(
-                            alpha: (isDarkTheme ? 0.5 : 0.18) * lift),
+                          alpha: (isDarkTheme ? 0.5 : 0.18) * lift,
+                        ),
                         blurRadius: 32,
                         offset: const Offset(0, 14),
                       ),

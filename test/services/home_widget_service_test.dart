@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:todo/models/tasks_widget_snapshot.dart';
+import 'package:todo/core/tasks_widget_snapshot.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/widget_look.dart';
 import 'package:todo/models/widget_style.dart';
@@ -73,9 +73,9 @@ void main() {
       stored['widgetTextSize'] = "1.25";
       stored['useCasualFont'] = true;
       expect(
-          await service.styleOf(WidgetKind.note),
-          const WidgetStyle(
-              opacity: 0, textSize: 1.25, font: WidgetFont.casual));
+        await service.styleOf(WidgetKind.note),
+        const WidgetStyle(opacity: 0, textSize: 1.25, font: WidgetFont.casual),
+      );
       // Until it has a style of its own.
       await service.setStyle(WidgetKind.note, WidgetStyle.noteDefault);
       expect(await service.styleOf(WidgetKind.note), WidgetStyle.noteDefault);
@@ -89,9 +89,9 @@ void main() {
   });
 
   test('the tasks go to the to-do widget as their snapshot', () async {
-    final snapshot = TasksWidgetSnapshot.of(
-        [TodoItem(uuid: "a", title: "Water the plants")],
-        now: DateTime(2026, 5, 13, 12));
+    final snapshot = TasksWidgetSnapshot.of([
+      TodoItem(uuid: "a", title: "Water the plants"),
+    ], now: DateTime(2026, 5, 13, 12));
     await service.showTasks(snapshot);
     expect(stored['tasks'], snapshot.encode());
     expect(updated, ["Tasks"]);

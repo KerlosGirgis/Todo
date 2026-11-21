@@ -73,8 +73,9 @@ class NoteDocumentUtils {
         _ => "",
       };
       final text = isDivider(line) ? "$dividerText\n" : line.toPlainText();
-      lines
-          .add("${"    " * level}$marker${text.substring(0, text.length - 1)}");
+      lines.add(
+        "${"    " * level}$marker${text.substring(0, text.length - 1)}",
+      );
     }
     return lines.join("\n");
   }
@@ -125,14 +126,17 @@ class NoteDocumentUtils {
                 bold: leaf.style.containsKey(Attribute.bold.key),
                 italic: leaf.style.containsKey(Attribute.italic.key),
                 underline: leaf.style.containsKey(Attribute.underline.key),
-                strikethrough:
-                    leaf.style.containsKey(Attribute.strikeThrough.key),
+                strikethrough: leaf.style.containsKey(
+                  Attribute.strikeThrough.key,
+                ),
                 link: leaf.style.containsKey(Attribute.link.key),
                 code: leaf.style.containsKey(Attribute.inlineCode.key),
                 highlight: leaf.style.containsKey(Attribute.background.key),
-                superscript: leaf.style.attributes[Attribute.script.key] ==
+                superscript:
+                    leaf.style.attributes[Attribute.script.key] ==
                     Attribute.superscript,
-                subscript: leaf.style.attributes[Attribute.script.key] ==
+                subscript:
+                    leaf.style.attributes[Attribute.script.key] ==
                     Attribute.subscript,
               ),
         ],
@@ -162,8 +166,9 @@ class NoteDocumentUtils {
     // How far each level of the numbered list being written out has counted.
     final counts = <int, int>{};
     for (final node in document.root.children) {
-      final nodeLines =
-          node is Block ? node.children.cast<Line>() : [node as Line];
+      final nodeLines = node is Block
+          ? node.children.cast<Line>()
+          : [node as Line];
       for (final line in nodeLines) {
         final attributes = line.style.attributes;
         final level = attributes[Attribute.indent.key]?.value as int? ?? 0;
@@ -183,10 +188,10 @@ class NoteDocumentUtils {
   /// [count] as the editor numbers a list at [level]: 1, 2, 3, then a, b, c
   /// a level in, then i, ii, iii, and round again.
   static String _numeral(int count, int level) => switch (level % 3) {
-        1 => _letters(count),
-        2 => _roman(count),
-        _ => "$count",
-      };
+    1 => _letters(count),
+    2 => _roman(count),
+    _ => "$count",
+  };
 
   /// a to z, then aa, ab and on, as a spreadsheet's columns.
   static String _letters(int count) {
@@ -211,7 +216,7 @@ class NoteDocumentUtils {
       (9, "ix"),
       (5, "v"),
       (4, "iv"),
-      (1, "i")
+      (1, "i"),
     ];
     final roman = StringBuffer();
     var rest = count;

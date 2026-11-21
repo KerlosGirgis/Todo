@@ -30,9 +30,9 @@ const _orange = Color(0xffFF9500);
 
 /// The name each kind of widget goes by in its sheet.
 String widgetName(WidgetKind kind) => switch (kind) {
-      WidgetKind.tasks => "To-Do Widget",
-      WidgetKind.note => "Note Widget",
-    };
+  WidgetKind.tasks => "To-Do Widget",
+  WidgetKind.note => "Note Widget",
+};
 
 /// Opens the sheet that sets how [kind] of widget looks, once it's read in
 /// how it looks now and how the phone draws widgets. A style that isn't
@@ -73,8 +73,9 @@ class _WidgetStyleSheetState extends State<WidgetStyleSheet> {
   /// The style being tried out. It's kept here rather than on the view
   /// model, so that trying it rebuilds only the sheet, and not the settings
   /// under it.
-  late WidgetStyle _style =
-      context.read<WidgetsViewModel>().styleOf(widget.kind);
+  late WidgetStyle _style = context.read<WidgetsViewModel>().styleOf(
+    widget.kind,
+  );
 
   /// Whether the preview is in dark mode, which the widget follows the
   /// phone into, or null for as the phone is now.
@@ -94,34 +95,35 @@ class _WidgetStyleSheetState extends State<WidgetStyleSheet> {
     _set(switch (palette) {
       _Palette.background => _style.copyWith(background: argb),
       _Palette.text => _style.copyWith(textColor: argb),
-      _Palette.accent =>
-        _style.copyWith(accent: argb ?? WidgetStyle.defaultAccent),
+      _Palette.accent => _style.copyWith(
+        accent: argb ?? WidgetStyle.defaultAccent,
+      ),
     });
   }
 
   Future<void> _pickCustomColor(
-      _Palette palette, WidgetThemeColors colors) async {
+    _Palette palette,
+    WidgetThemeColors colors,
+  ) async {
     final current = Color(switch (palette) {
       _Palette.background => _style.background ?? colors.background,
       _Palette.text => _style.ink ?? colors.text,
       _Palette.accent => _style.accent,
     });
-    final picked = await pickCustomColor(
-      context,
-      current,
-      switch (palette) {
-        _Palette.background => "Background",
-        _Palette.text => "Text Color",
-        _Palette.accent => "Accent Color",
-      },
-    );
+    final picked = await pickCustomColor(context, current, switch (palette) {
+      _Palette.background => "Background",
+      _Palette.text => "Text Color",
+      _Palette.accent => "Accent Color",
+    });
     // A cancelled picker hands back the colour it started with.
     if (mounted && picked != current) _setColor(palette, picked);
   }
 
   Future<void> _apply() async {
-    final result =
-        await context.read<WidgetsViewModel>().setStyle(_kind, _style);
+    final result = await context.read<WidgetsViewModel>().setStyle(
+      _kind,
+      _style,
+    );
     if (result is Success && mounted) Navigator.pop(context);
     FeedbackToast.show(result);
   }
@@ -212,7 +214,11 @@ class _WidgetStyleSheetState extends State<WidgetStyleSheet> {
     );
     // Clear of the gesture bar, which a bottom sheet's safe area leaves in.
     final padding = EdgeInsets.fromLTRB(
-        20, 0, 20, 20 + MediaQuery.paddingOf(context).bottom);
+      20,
+      0,
+      20,
+      20 + MediaQuery.paddingOf(context).bottom,
+    );
     return LayoutBuilder(
       builder: (context, constraints) {
         // On a tall enough screen, the preview stays in sight while the
@@ -300,7 +306,8 @@ class _Header extends StatelessWidget {
                 child: TextButton(
                   onPressed: canReset ? onReset : null,
                   style: TextButton.styleFrom(
-                      foregroundColor: context.colors.moreLess),
+                    foregroundColor: context.colors.moreLess,
+                  ),
                   child: const Text("Reset"),
                 ),
               ),
@@ -349,10 +356,10 @@ class _PreviewPanel extends StatelessWidget {
       0 => _fallback,
       // One colour, from deep to light.
       1 => [
-          Color.lerp(wallpaper.first, Colors.black, 0.25)!,
-          wallpaper.first,
-          Color.lerp(wallpaper.first, Colors.white, 0.35)!,
-        ],
+        Color.lerp(wallpaper.first, Colors.black, 0.25)!,
+        wallpaper.first,
+        Color.lerp(wallpaper.first, Colors.white, 0.35)!,
+      ],
       _ => wallpaper,
     };
     return AnimatedContainer(
@@ -434,9 +441,11 @@ class _Controls extends StatelessWidget {
     final tasks = kind == WidgetKind.tasks;
     final background = style.background;
     final textColor = style.textColor;
-    final lockedNote = tasks &&
-        context
-            .select<UserViewModel, bool>((user) => user.appLock != AppLock.off);
+    final lockedNote =
+        tasks &&
+        context.select<UserViewModel, bool>(
+          (user) => user.appLock != AppLock.off,
+        );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -576,10 +585,13 @@ class _SliderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final secondary = context.colors.wB.withValues(alpha: 0.5);
     Widget end(double size) => Text(
-          "A",
-          style: TextStyle(
-              color: secondary, fontSize: size, fontWeight: FontWeight.w600),
-        );
+      "A",
+      style: TextStyle(
+        color: secondary,
+        fontSize: size,
+        fontWeight: FontWeight.w600,
+      ),
+    );
     final slider = CupertinoSlider(
       value: value.clamp(min, max),
       min: min,
@@ -634,10 +646,7 @@ class _Segment extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 17),
-            const SizedBox(width: 6),
-          ],
+          if (icon != null) ...[Icon(icon, size: 17), const SizedBox(width: 6)],
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,

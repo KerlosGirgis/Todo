@@ -4,8 +4,10 @@ import 'package:todo/core/utils/link_utils.dart';
 void main() {
   test('a web address on its own is a web page', () {
     expect(LinkUtils.linkOf("example.com"), "https://example.com");
-    expect(LinkUtils.linkOf("example.com:8080/a?b=c"),
-        "https://example.com:8080/a?b=c");
+    expect(
+      LinkUtils.linkOf("example.com:8080/a?b=c"),
+      "https://example.com:8080/a?b=c",
+    );
   });
 
   test('a link that says what it is stays as it was typed', () {

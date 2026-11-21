@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/view/widgets/loading.dart';
+
+import 'loading.dart';
 
 import '../../core/extensions/theme_extensions.dart';
 import '../../models/user_profile.dart';
@@ -16,11 +17,7 @@ class AppGate extends StatelessWidget {
   final AuthViewModel auth;
   final UserViewModel user;
 
-  const AppGate({
-    super.key,
-    required this.auth,
-    required this.user,
-  });
+  const AppGate({super.key, required this.auth, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +25,10 @@ class AppGate extends StatelessWidget {
     // it locks again: see AppLockGuard.
     if (auth.opened) {
       // A widget's page, for an app its tap opened, which never changes.
-      final launchPage =
-          Provider.of<WidgetsViewModel?>(context, listen: false)?.launchPage;
+      final launchPage = Provider.of<WidgetsViewModel?>(
+        context,
+        listen: false,
+      )?.launchPage;
       return switch (launchPage ?? user.user.startPage) {
         StartPage.tasks => const TodoPage(),
         StartPage.notes => const NotesPage(),

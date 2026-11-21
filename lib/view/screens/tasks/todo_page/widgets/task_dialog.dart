@@ -41,7 +41,7 @@ enum _ReminderChoice { off, once, repeat }
 /// month, and until when.
 class TaskDialog extends StatefulWidget {
   const TaskDialog({super.key, this.task, this.parent})
-      : assert(task == null || parent == null);
+    : assert(task == null || parent == null);
 
   /// The task to edit, or null for a new one.
   final TodoItem? task;
@@ -63,8 +63,9 @@ class _TaskDialogState extends State<TaskDialog> {
     super.initState();
     final tasks = context.read<TasksViewModel>();
     final parent = widget.parent;
-    _draft =
-        parent == null ? tasks.draft(widget.task) : tasks.subtaskDraft(parent);
+    _draft = parent == null
+        ? tasks.draft(widget.task)
+        : tasks.subtaskDraft(parent);
     _titleController = TextEditingController(text: _draft.title);
     _descriptionController = TextEditingController(text: _draft.description);
   }
@@ -105,14 +106,18 @@ class _TaskDialogState extends State<TaskDialog> {
   /// Has the user pick the day of the month a monthly task comes round on.
   Future<void> _pickMonthDay() async {
     final picked = await showFormDialog<int>(
-        context, MonthDayDialog(day: _draft.monthDay ?? 1));
+      context,
+      MonthDayDialog(day: _draft.monthDay ?? 1),
+    );
     if (picked != null) _draft.setMonthDay(picked);
   }
 
   /// Has the user pick how long the task keeps repeating.
   Future<void> _pickEnd() async {
     final picked = await showFormDialog<({DateTime? until})>(
-        context, RepeatEndDialog(draft: _draft));
+      context,
+      RepeatEndDialog(draft: _draft),
+    );
     if (picked != null) _draft.setUntil(picked.until);
   }
 
@@ -147,13 +152,13 @@ class _TaskDialogState extends State<TaskDialog> {
           title: !adding
               ? "Edit Task"
               : parent == null
-                  ? "New Task"
-                  : "New Subtask",
+              ? "New Task"
+              : "New Subtask",
           subtitle: !adding
               ? "Change its details, then save."
               : parent == null
-                  ? "What do you need to get done?"
-                  : "What does it take to get that done?",
+              ? "What do you need to get done?"
+              : "What does it take to get that done?",
           content: [
             TextField(
               controller: _titleController,
@@ -291,8 +296,9 @@ class _TaskDialogState extends State<TaskDialog> {
                       icon: Icons.event_rounded,
                       color: _red,
                       title: "Day of the Month",
-                      trailing:
-                          DisclosureValue(DateTimeUtils.ordinal(monthDay)),
+                      trailing: DisclosureValue(
+                        DateTimeUtils.ordinal(monthDay),
+                      ),
                       onTap: _pickMonthDay,
                     ),
                   SettingsTile(
@@ -395,17 +401,17 @@ class _ReminderHint extends StatelessWidget {
       ReminderStatus.inPast => ("Needs a date and time in the future", true),
       ReminderStatus.endsTooSoon => ("Ends before it comes round", true),
       ReminderStatus.ended => (
-          "Ended ${DateTimeUtils.dayInSentence(draft.until!, now)}",
-          false
-        ),
+        "Ended ${DateTimeUtils.dayInSentence(draft.until!, now)}",
+        false,
+      ),
       ReminderStatus.ready => switch (draft.rule) {
-          final rule? => (repeatSentence(rule, draft.time!, now), false),
-          null => (
-              "${DateTimeUtils.friendlyDay(draft.day!, now)} at "
-                  "${draft.time!.label}",
-              false
-            ),
-        },
+        final rule? => (repeatSentence(rule, draft.time!, now), false),
+        null => (
+          "${DateTimeUtils.friendlyDay(draft.day!, now)} at "
+              "${draft.time!.label}",
+          false,
+        ),
+      },
     };
     return Text(
       hint,
@@ -448,7 +454,8 @@ class _ParentDialog extends StatelessWidget {
         ConstrainedBox(
           // About six rows, then they scroll.
           constraints: BoxConstraints(
-              maxHeight: MediaQuery.textScalerOf(context).scale(16) * 3 + 250),
+            maxHeight: MediaQuery.textScalerOf(context).scale(16) * 3 + 250,
+          ),
           child: Material(
             color: context.colors.wB.withValues(alpha: 0.06),
             shape: const RoundedSuperellipseBorder(
@@ -528,16 +535,20 @@ class _PlaceRow extends StatelessWidget {
           highlightColor: ink.withValues(alpha: 0.06),
           child: Padding(
             padding: EdgeInsetsDirectional.fromSTEB(
-                // Less for each step once they're many, as on the list.
-                14 + 16.0 * (depth ?? 0).clamp(0, 6),
-                10,
-                12,
-                10),
+              // Less for each step once they're many, as on the list.
+              14 + 16.0 * (depth ?? 0).clamp(0, 6),
+              10,
+              12,
+              10,
+            ),
             child: Row(
               children: [
                 if (depth == null)
-                  Icon(Icons.horizontal_rule_rounded,
-                      size: 20, color: ink.withValues(alpha: 0.4))
+                  Icon(
+                    Icons.horizontal_rule_rounded,
+                    size: 20,
+                    color: ink.withValues(alpha: 0.4),
+                  )
                 else
                   CheckCircle(doneness: done ? 1 : 0, size: 20),
                 const SizedBox(width: 10),
@@ -568,8 +579,11 @@ class _PlaceRow extends StatelessWidget {
                   ),
                 ),
                 if (picked)
-                  Icon(Icons.check_rounded,
-                      size: 22, color: context.colors.moreLess),
+                  Icon(
+                    Icons.check_rounded,
+                    size: 22,
+                    color: context.colors.moreLess,
+                  ),
               ],
             ),
           ),

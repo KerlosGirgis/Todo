@@ -34,8 +34,9 @@ void main() {
     await page.wait(tester);
   }
 
-  testWidgets("each task branches off the task it's in, from the centre out",
-      (tester) async {
+  testWidgets("each task branches off the task it's in, from the centre out", (
+    tester,
+  ) async {
     await page.open(tester, plans(), view: TasksView.map);
     final hub = tester.getRect(find.byType(MapHub));
     final trip = rectOf(tester, "Trip");
@@ -60,10 +61,15 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets("on a phone turned on its side, tasks branch off both sides",
-      (tester) async {
-    await page.open(tester, plans(),
-        view: TasksView.map, size: const Size(915, 412));
+  testWidgets("on a phone turned on its side, tasks branch off both sides", (
+    tester,
+  ) async {
+    await page.open(
+      tester,
+      plans(),
+      view: TasksView.map,
+      size: const Size(915, 412),
+    );
     final hub = tester.getRect(find.byType(MapHub));
     expect(rectOf(tester, "Trip").left, greaterThan(hub.right));
     expect(rectOf(tester, "Shop").right, lessThan(hub.left));
@@ -73,8 +79,12 @@ void main() {
 
   testWidgets("a tap on a task's circle checks it off", (tester) async {
     await page.open(tester, plans(), view: TasksView.map);
-    await tester.tap(find.descendant(
-        of: node("Milk"), matching: find.bySemanticsLabel("Done")));
+    await tester.tap(
+      find.descendant(
+        of: node("Milk"),
+        matching: find.bySemanticsLabel("Done"),
+      ),
+    );
     await page.wait(tester);
     expect(page.task("Milk").done, isTrue);
     // Which finishes the task it's in.
@@ -84,8 +94,9 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets("a tap on a task brings up buttons that act on it",
-      (tester) async {
+  testWidgets("a tap on a task brings up buttons that act on it", (
+    tester,
+  ) async {
     await page.open(tester, plans(), view: TasksView.map);
     expect(find.byTooltip("Add Subtask"), findsNothing);
     await tester.tap(find.text("Shop"));
@@ -102,7 +113,9 @@ void main() {
     expect(page.outline, endsWith("Shop\n  Milk\n  Eggs"));
     // The new task is on the map, under the last of the others.
     expect(
-        rectOf(tester, "Eggs").top, greaterThan(rectOf(tester, "Milk").bottom));
+      rectOf(tester, "Eggs").top,
+      greaterThan(rectOf(tester, "Milk").bottom),
+    );
 
     // The buttons are still Shop's, and come up beside it.
     final bar = tester.getRect(find.byTooltip("Mark Done"));
@@ -130,8 +143,9 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets("a tap on the map lets go of the task picked out",
-      (tester) async {
+  testWidgets("a tap on the map lets go of the task picked out", (
+    tester,
+  ) async {
     await page.open(tester, plans(), view: TasksView.map);
     await tester.tap(find.text("Pack"));
     await page.wait(tester);
@@ -142,8 +156,9 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets("a task's knob folds its subtasks away into it, and back",
-      (tester) async {
+  testWidgets("a task's knob folds its subtasks away into it, and back", (
+    tester,
+  ) async {
     await page.open(tester, plans(), view: TasksView.map);
     final shop = rectOf(tester, "Shop").top;
     await tester.tap(find.byType(MapKnob).first);
@@ -162,8 +177,9 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets("a task dropped on another goes into it, with its subtasks",
-      (tester) async {
+  testWidgets("a task dropped on another goes into it, with its subtasks", (
+    tester,
+  ) async {
     await page.open(tester, plans(), view: TasksView.map);
     await dragNode(tester, "Book", rectOf(tester, "Shop").center);
     expect(page.outline, """
@@ -174,13 +190,16 @@ Shop
   Book
     Flights""");
     expect(
-        rectOf(tester, "Book").left, greaterThan(rectOf(tester, "Shop").right));
+      rectOf(tester, "Book").left,
+      greaterThan(rectOf(tester, "Shop").right),
+    );
     expect(tester.takeException(), isNull);
     await page.close(tester);
   });
 
-  testWidgets("a task dropped just above or below another goes next to it",
-      (tester) async {
+  testWidgets("a task dropped just above or below another goes next to it", (
+    tester,
+  ) async {
     await page.open(tester, plans(), view: TasksView.map);
     final book = rectOf(tester, "Book");
     await dragNode(tester, "Milk", book.topCenter + const Offset(0, 2));
@@ -203,8 +222,9 @@ Shop""");
     await page.close(tester);
   });
 
-  testWidgets("a task dropped on the centre is a task of its own",
-      (tester) async {
+  testWidgets("a task dropped on the centre is a task of its own", (
+    tester,
+  ) async {
     await page.open(tester, plans(), view: TasksView.map);
     await dragNode(tester, "Book", tester.getCenter(find.byType(MapHub)));
     expect(page.outline, "Trip\n  Pack\nShop\n  Milk\nBook\n  Flights");
@@ -212,8 +232,9 @@ Shop""");
     await page.close(tester);
   });
 
-  testWidgets("a task dropped on nothing, or on its own subtask, stays put",
-      (tester) async {
+  testWidgets("a task dropped on nothing, or on its own subtask, stays put", (
+    tester,
+  ) async {
     await page.open(tester, plans(), view: TasksView.map);
     const before = "Trip\n  Book\n    Flights\n  Pack\nShop\n  Milk";
     await dragNode(tester, "Book", const Offset(60, 320));
@@ -225,29 +246,37 @@ Shop""");
   });
 
   testWidgets(
-      "the bar over the map is one row, and in the corner the map's buttons "
-      "sit side by side over the sort and filter", (tester) async {
-    await page.open(tester, plans(), view: TasksView.map);
-    expect(tester.getSize(find.byType(TitleBar)).height, TitleBar.height);
-    // The map starts under it.
-    expect(rectOf(tester, "Trip").top, greaterThan(TitleBar.height));
-    final full = tester.getRect(find.byTooltip("Full Screen"));
-    final fit = tester.getRect(find.byTooltip("Show Whole Map"));
-    final sort = tester.getRect(find.byTooltip("Sort"));
-    // In a row, full screen first, lined up with the sort and filter.
-    expect(full.center.dy, fit.center.dy);
-    expect(full.left, sort.left);
-    // As far apart side by side as from the sort and filter under them.
-    expect(fit.left - full.right, closeTo(sort.top - fit.bottom, 0.5));
-    expect(tester.getRect(find.byTooltip("Filter")).bottom,
-        closeTo(tester.getRect(find.byTooltip("Add Task")).bottom, 0.5));
-    await page.close(tester);
-  });
+    "the bar over the map is one row, and in the corner the map's buttons "
+    "sit side by side over the sort and filter",
+    (tester) async {
+      await page.open(tester, plans(), view: TasksView.map);
+      expect(tester.getSize(find.byType(TitleBar)).height, TitleBar.height);
+      // The map starts under it.
+      expect(rectOf(tester, "Trip").top, greaterThan(TitleBar.height));
+      final full = tester.getRect(find.byTooltip("Full Screen"));
+      final fit = tester.getRect(find.byTooltip("Show Whole Map"));
+      final sort = tester.getRect(find.byTooltip("Sort"));
+      // In a row, full screen first, lined up with the sort and filter.
+      expect(full.center.dy, fit.center.dy);
+      expect(full.left, sort.left);
+      // As far apart side by side as from the sort and filter under them.
+      expect(fit.left - full.right, closeTo(sort.top - fit.bottom, 0.5));
+      expect(
+        tester.getRect(find.byTooltip("Filter")).bottom,
+        closeTo(tester.getRect(find.byTooltip("Add Task")).bottom, 0.5),
+      );
+      await page.close(tester);
+    },
+  );
 
   testWidgets("the filter picks which tasks the map shows", (tester) async {
     await page.open(tester, plans(), view: TasksView.map);
-    await tester.tap(find.descendant(
-        of: node("Book"), matching: find.bySemanticsLabel("Done")));
+    await tester.tap(
+      find.descendant(
+        of: node("Book"),
+        matching: find.bySemanticsLabel("Done"),
+      ),
+    );
     // Once the toast that offers to undo it, over the buttons, has gone.
     await page.wait(tester, const Duration(seconds: 6));
     await page.pick(tester, "Filter", "Undone");
@@ -269,19 +298,21 @@ Shop""");
     await page.close(tester);
   });
 
-  testWidgets("the sort puts each task's subtasks by due date on the map",
-      (tester) async {
+  testWidgets("the sort puts each task's subtasks by due date on the map", (
+    tester,
+  ) async {
     TodoItem due(String uuid, int day, [String? parent]) => TodoItem(
-        uuid: uuid, title: uuid, parent: parent, day: DateTime(2030, 1, day));
-    await page.open(
-        tester,
-        [
-          due("Trip", 9),
-          due("Pack", 8, "Trip"),
-          due("Book", 2, "Trip"),
-          due("Shop", 3),
-        ],
-        view: TasksView.map);
+      uuid: uuid,
+      title: uuid,
+      parent: parent,
+      day: DateTime(2030, 1, day),
+    );
+    await page.open(tester, [
+      due("Trip", 9),
+      due("Pack", 8, "Trip"),
+      due("Book", 2, "Trip"),
+      due("Shop", 3),
+    ], view: TasksView.map);
     expect(rectOf(tester, "Pack").top, lessThan(rectOf(tester, "Book").top));
     await page.pick(tester, "Sort", "Due Date");
     await page.wait(tester);
@@ -290,8 +321,7 @@ Shop""");
     await page.close(tester);
   });
 
-  testWidgets(
-      "sorted by due date, a task dropped on the edge of another goes "
+  testWidgets("sorted by due date, a task dropped on the edge of another goes "
       "into it, as its date says where", (tester) async {
     await page.open(tester, plans(), view: TasksView.map);
     await page.pick(tester, "Sort", "Due Date");
@@ -308,8 +338,9 @@ Shop""");
     await page.close(tester);
   });
 
-  testWidgets("with no tasks, the map says so, as the list does",
-      (tester) async {
+  testWidgets("with no tasks, the map says so, as the list does", (
+    tester,
+  ) async {
     await page.open(tester, const [], view: TasksView.map);
     expect(find.text("No Tasks"), findsOneWidget);
     expect(find.byType(MapHub), findsNothing);
@@ -326,17 +357,18 @@ Shop""");
         calls.add("${call.method} ${call.arguments}");
         return null;
       });
-      addTearDown(() =>
-          messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
       return calls;
     }
 
     /// The modes the page has put the phone's bars in, in order.
     List<String> barModes(List<String> calls) => [
-          for (final call in calls)
-            if (call.startsWith("SystemChrome.setEnabledSystemUIMode "))
-              call.split(" ").last,
-        ];
+      for (final call in calls)
+        if (call.startsWith("SystemChrome.setEnabledSystemUIMode "))
+          call.split(" ").last,
+    ];
 
     /// What's on the page's bar and in its corner, which the map covers in
     /// full screen.
@@ -347,8 +379,9 @@ Shop""");
       "the add button": find.byTooltip("Add Task"),
     };
 
-    testWidgets("gives the map the whole screen, then the page its bar back",
-        (tester) async {
+    testWidgets("gives the map the whole screen, then the page its bar back", (
+      tester,
+    ) async {
       await page.open(tester, plans(), view: TasksView.map);
       final calls = phoneCalls(tester);
       final trip = rectOf(tester, "Trip");
@@ -356,8 +389,10 @@ Shop""");
 
       await tester.tap(find.byTooltip("Full Screen"));
       await page.wait(tester);
-      aroundTheMap.forEach((what, finder) =>
-          expect(finder.hitTestable(), findsNothing, reason: what));
+      aroundTheMap.forEach(
+        (what, finder) =>
+            expect(finder.hitTestable(), findsNothing, reason: what),
+      );
       expect(barModes(calls), ["SystemUiMode.immersiveSticky"]);
       // The map stays where it was on the screen, and works as before.
       expect(rectOf(tester, "Trip"), trip);
@@ -370,17 +405,22 @@ Shop""");
 
       await tester.tap(find.byTooltip("Exit Full Screen"));
       await page.wait(tester);
-      aroundTheMap.forEach((what, finder) =>
-          expect(finder.hitTestable(), findsOneWidget, reason: what));
-      expect(barModes(calls),
-          ["SystemUiMode.immersiveSticky", "SystemUiMode.edgeToEdge"]);
+      aroundTheMap.forEach(
+        (what, finder) =>
+            expect(finder.hitTestable(), findsOneWidget, reason: what),
+      );
+      expect(barModes(calls), [
+        "SystemUiMode.immersiveSticky",
+        "SystemUiMode.edgeToEdge",
+      ]);
       expect(rectOf(tester, "Trip"), trip);
       expect(find.byTooltip("Full Screen"), findsOneWidget);
       await page.close(tester);
     });
 
-    testWidgets("Back leaves full screen, and only then the app",
-        (tester) async {
+    testWidgets("Back leaves full screen, and only then the app", (
+      tester,
+    ) async {
       await page.open(tester, plans(), view: TasksView.map);
       final calls = phoneCalls(tester);
       await tester.tap(find.byTooltip("Full Screen"));
@@ -391,19 +431,25 @@ Shop""");
       expect(find.byTooltip("Menu").hitTestable(), findsOneWidget);
       expect(find.byType(MapHub), findsOneWidget);
       expect(barModes(calls).last, "SystemUiMode.edgeToEdge");
-      expect(calls.where((call) => call.startsWith("SystemNavigator.pop")),
-          isEmpty);
+      expect(
+        calls.where((call) => call.startsWith("SystemNavigator.pop")),
+        isEmpty,
+      );
 
       await tester.binding.handlePopRoute();
-      expect(calls.where((call) => call.startsWith("SystemNavigator.pop")),
-          hasLength(1));
+      expect(
+        calls.where((call) => call.startsWith("SystemNavigator.pop")),
+        hasLength(1),
+      );
       await page.close(tester);
     });
 
-    testWidgets("the page gets its bar back once the map has nothing on it",
-        (tester) async {
-      await page.open(tester, [TodoItem(uuid: "milk", title: "Milk")],
-          view: TasksView.map);
+    testWidgets("the page gets its bar back once the map has nothing on it", (
+      tester,
+    ) async {
+      await page.open(tester, [
+        TodoItem(uuid: "milk", title: "Milk"),
+      ], view: TasksView.map);
       final calls = phoneCalls(tester);
       await tester.tap(find.byTooltip("Full Screen"));
       await page.wait(tester);
@@ -420,8 +466,9 @@ Shop""");
       await page.close(tester);
     });
 
-    testWidgets("the map's tour waits until the page has its bar back",
-        (tester) async {
+    testWidgets("the map's tour waits until the page has its bar back", (
+      tester,
+    ) async {
       await page.open(tester, plans(), due: {PageTour.map});
       await page.choose(tester, "Show as Map");
       // Before the tour starts.

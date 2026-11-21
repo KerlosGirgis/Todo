@@ -113,9 +113,9 @@ class AppColors extends ThemeExtension<AppColors> {
     final colors = Theme.of(context).extension<AppColors>();
 
     assert(
-    colors != null,
-    'AppColors extension not found. '
-        'Did you forget to add it to ThemeData.extensions?',
+      colors != null,
+      'AppColors extension not found. '
+      'Did you forget to add it to ThemeData.extensions?',
     );
 
     return colors ?? light;
@@ -143,11 +143,9 @@ class AppColors extends ThemeExtension<AppColors> {
   }) {
     return AppColors(
       floatingActionButtonBackground:
-      floatingActionButtonBackground ??
-          this.floatingActionButtonBackground,
+          floatingActionButtonBackground ?? this.floatingActionButtonBackground,
       floatingActionButtonForeground:
-      floatingActionButtonForeground ??
-          this.floatingActionButtonForeground,
+          floatingActionButtonForeground ?? this.floatingActionButtonForeground,
       wB: wB ?? this.wB,
       cardBackground: cardBackground ?? this.cardBackground,
       dialogBackground: dialogBackground ?? this.dialogBackground,
@@ -155,25 +153,20 @@ class AppColors extends ThemeExtension<AppColors> {
       subtitle: subtitle ?? this.subtitle,
       pageBackground: pageBackground ?? this.pageBackground,
       profileAlertBackground:
-      profileAlertBackground ?? this.profileAlertBackground,
+          profileAlertBackground ?? this.profileAlertBackground,
       profilePageName: profilePageName ?? this.profilePageName,
       appBarIcons: appBarIcons ?? this.appBarIcons,
       moreLess: moreLess ?? this.moreLess,
-      dialogIconContainer:
-      dialogIconContainer ?? this.dialogIconContainer,
+      dialogIconContainer: dialogIconContainer ?? this.dialogIconContainer,
       dialogIcon: dialogIcon ?? this.dialogIcon,
       dialogExitIcon: dialogExitIcon ?? this.dialogExitIcon,
-      dialogExitContainer:
-      dialogExitContainer ?? this.dialogExitContainer,
+      dialogExitContainer: dialogExitContainer ?? this.dialogExitContainer,
       systemRed: systemRed ?? this.systemRed,
     );
   }
 
   @override
-  AppColors lerp(
-      covariant ThemeExtension<AppColors>? other,
-      double t,
-      ) {
+  AppColors lerp(covariant ThemeExtension<AppColors>? other, double t) {
     if (other is! AppColors) return this;
 
     return AppColors(
@@ -189,8 +182,11 @@ class AppColors extends ThemeExtension<AppColors> {
       )!,
       wB: Color.lerp(wB, other.wB, t)!,
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
-      dialogBackground:
-          Color.lerp(dialogBackground, other.dialogBackground, t)!,
+      dialogBackground: Color.lerp(
+        dialogBackground,
+        other.dialogBackground,
+        t,
+      )!,
       dialogOutline: Color.lerp(dialogOutline, other.dialogOutline, t)!,
       subtitle: Color.lerp(subtitle, other.subtitle, t)!,
       pageBackground: Color.lerp(pageBackground, other.pageBackground, t)!,
@@ -199,36 +195,16 @@ class AppColors extends ThemeExtension<AppColors> {
         other.profileAlertBackground,
         t,
       )!,
-      profilePageName: Color.lerp(
-        profilePageName,
-        other.profilePageName,
-        t,
-      )!,
-      appBarIcons: Color.lerp(
-        appBarIcons,
-        other.appBarIcons,
-        t,
-      )!,
-      moreLess: Color.lerp(
-        moreLess,
-        other.moreLess,
-        t,
-      )!,
+      profilePageName: Color.lerp(profilePageName, other.profilePageName, t)!,
+      appBarIcons: Color.lerp(appBarIcons, other.appBarIcons, t)!,
+      moreLess: Color.lerp(moreLess, other.moreLess, t)!,
       dialogIconContainer: Color.lerp(
         dialogIconContainer,
         other.dialogIconContainer,
         t,
       )!,
-      dialogIcon: Color.lerp(
-        dialogIcon,
-        other.dialogIcon,
-        t,
-      )!,
-      dialogExitIcon: Color.lerp(
-        dialogExitIcon,
-        other.dialogExitIcon,
-        t,
-      )!,
+      dialogIcon: Color.lerp(dialogIcon, other.dialogIcon, t)!,
+      dialogExitIcon: Color.lerp(dialogExitIcon, other.dialogExitIcon, t)!,
       dialogExitContainer: Color.lerp(
         dialogExitContainer,
         other.dialogExitContainer,

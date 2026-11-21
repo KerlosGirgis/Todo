@@ -19,31 +19,31 @@ void main() {
   tearDown(() => tour.dispose());
 
   Future<void> showPage(WidgetTester tester) => tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.getTheme(isDarkMode: false),
-          home: Tour(
-            controller: tour,
-            child: Scaffold(
-              body: Column(
-                children: [
-                  const SizedBox(height: 200),
-                  SizedBox(key: first, width: 120, height: 60),
-                  const SizedBox(height: 200),
-                  SizedBox(key: second, width: 120, height: 60),
-                ],
-              ),
-            ),
+    MaterialApp(
+      theme: AppTheme.getTheme(isDarkMode: false),
+      home: Tour(
+        controller: tour,
+        child: Scaffold(
+          body: Column(
+            children: [
+              const SizedBox(height: 200),
+              SizedBox(key: first, width: 120, height: 60),
+              const SizedBox(height: 200),
+              SizedBox(key: second, width: 120, height: 60),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   TourStep step(GlobalKey target, String title, {TourDemo? demo}) => TourStep(
-        target: target,
-        icon: Icons.check_rounded,
-        title: title,
-        message: "About $title.",
-        demo: demo,
-      );
+    target: target,
+    icon: Icons.check_rounded,
+    title: title,
+    message: "About $title.",
+    demo: demo,
+  );
 
   /// Lets the spotlight and the tips get where they're going. The demos
   /// repeat for ever, so there's no settling.
@@ -52,11 +52,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
   }
 
-  testWidgets('goes from step to step, and ends after the last',
-      (tester) async {
+  testWidgets('goes from step to step, and ends after the last', (
+    tester,
+  ) async {
     await showPage(tester);
-    tour.start([step(first, "First"), step(second, "Second")],
-        onEnd: () => ended++);
+    tour.start([
+      step(first, "First"),
+      step(second, "Second"),
+    ], onEnd: () => ended++);
     await settle(tester);
     expect(find.text("First"), findsOneWidget);
     expect(find.text("Skip"), findsOneWidget);
@@ -89,8 +92,9 @@ void main() {
     expect(find.text("Second"), findsOneWidget);
   });
 
-  testWidgets('a tap on the page goes on, and Skip ends the tour',
-      (tester) async {
+  testWidgets('a tap on the page goes on, and Skip ends the tour', (
+    tester,
+  ) async {
     await showPage(tester);
     tour.start([
       step(first, "First"),
@@ -109,11 +113,14 @@ void main() {
     expect(ended, 1);
   });
 
-  testWidgets('Back ends the tour, rather than leaving the page',
-      (tester) async {
+  testWidgets('Back ends the tour, rather than leaving the page', (
+    tester,
+  ) async {
     await showPage(tester);
-    tour.start([step(first, "First"), step(second, "Second")],
-        onEnd: () => ended++);
+    tour.start([
+      step(first, "First"),
+      step(second, "Second"),
+    ], onEnd: () => ended++);
     await settle(tester);
 
     expect(await tester.binding.handlePopRoute(), isTrue);

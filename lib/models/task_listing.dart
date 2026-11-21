@@ -21,12 +21,11 @@ class TaskListing {
     TaskFilter? filter,
     TaskSort? sort,
     SortDirection? direction,
-  }) =>
-      TaskListing(
-        filter: filter ?? this.filter,
-        sort: sort ?? this.sort,
-        direction: direction ?? this.direction,
-      );
+  }) => TaskListing(
+    filter: filter ?? this.filter,
+    sort: sort ?? this.sort,
+    direction: direction ?? this.direction,
+  );
 
   /// As the database keeps it: each as its index. One it doesn't know, as
   /// a newer version's might be, is the usual one, the first.
@@ -42,10 +41,10 @@ class TaskListing {
   }
 
   Map<String, Object> toMap() => {
-        'taskFilter': filter.index,
-        'taskSort': sort.index,
-        'sortDirection': direction.index,
-      };
+    'taskFilter': filter.index,
+    'taskSort': sort.index,
+    'sortDirection': direction.index,
+  };
 
   @override
   bool operator ==(Object other) =>

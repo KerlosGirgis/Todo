@@ -5,8 +5,11 @@ import 'package:material_ui/material_ui.dart';
 /// A frosted, translucent surface in the style of Apple's glass materials:
 /// it blurs whatever is behind it, tints it, and draws a thin bright rim.
 class Glass extends StatelessWidget {
-  const Glass(
-      {super.key, required this.child, this.shape = const StadiumBorder()});
+  const Glass({
+    super.key,
+    required this.child,
+    this.shape = const StadiumBorder(),
+  });
 
   final Widget child;
   final ShapeBorder shape;
@@ -55,17 +58,21 @@ class _ShadowPainter extends CustomPainter {
     final bounds = Offset.zero & size;
     final outline = shape.getOuterPath(bounds);
     canvas.save();
-    canvas.clipPath(Path.combine(
-      PathOperation.difference,
-      Path()..addRect(bounds.inflate(_blurRadius * 3)),
-      outline,
-    ));
+    canvas.clipPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(bounds.inflate(_blurRadius * 3)),
+        outline,
+      ),
+    );
     canvas.drawPath(
       outline.shift(const Offset(0, 4)),
       Paint()
         ..color = color
         ..maskFilter = MaskFilter.blur(
-            BlurStyle.normal, Shadow.convertRadiusToSigma(_blurRadius)),
+          BlurStyle.normal,
+          Shadow.convertRadiusToSigma(_blurRadius),
+        ),
     );
     canvas.restore();
   }

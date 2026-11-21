@@ -1,8 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/core/ui/feedback_toast.dart';
-import 'package:todo/view_model/user_view_model.dart';
+
+import '../../core/ui/feedback_toast.dart';
+import '../../view_model/user_view_model.dart';
 
 import '../../core/extensions/theme_extensions.dart';
 import '../../models/avatar.dart';
@@ -12,9 +13,7 @@ import 'ringed_avatar.dart';
 const _accent = Color(0xff3D5AFE);
 
 class AppbarAvatar extends StatefulWidget {
-  const AppbarAvatar({
-    super.key,
-  });
+  const AppbarAvatar({super.key});
 
   @override
   State<AppbarAvatar> createState() => _AppbarAvatarState();
@@ -54,37 +53,43 @@ class _AppbarAvatarState extends State<AppbarAvatar> {
                     barrierLabel: MaterialLocalizations.of(context)
                         .modalBarrierDismissLabel,
                     transitionDuration: const Duration(milliseconds: 350),
-                    reverseTransitionDuration:
-                        const Duration(milliseconds: 300),
+                    reverseTransitionDuration: const Duration(
+                      milliseconds: 300,
+                    ),
                     pageBuilder: (context, animation, secondaryAnimation) =>
                         _ProfileDialog(
-                      heroTag: heroTag,
-                      avatar: user.user.avatar,
-                      name: user.user.name,
-                      verse: user.dailyVerse,
-                    ),
+                          heroTag: heroTag,
+                          avatar: user.user.avatar,
+                          name: user.user.name,
+                          verse: user.dailyVerse,
+                        ),
                     transitionsBuilder:
                         (context, animation, secondaryAnimation, child) {
-                      var curvedAnimation = CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeOutCubic,
-                          reverseCurve: Curves.easeInCubic);
-                      return FadeTransition(
-                        opacity: curvedAnimation,
-                        child: ScaleTransition(
-                          scale: Tween<double>(begin: 0.95, end: 1)
-                              .animate(curvedAnimation),
-                          child: child,
-                        ),
-                      );
-                    },
+                          var curvedAnimation = CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                            reverseCurve: Curves.easeInCubic,
+                          );
+                          return FadeTransition(
+                            opacity: curvedAnimation,
+                            child: ScaleTransition(
+                              scale: Tween<double>(
+                                begin: 0.95,
+                                end: 1,
+                              ).animate(curvedAnimation),
+                              child: child,
+                            ),
+                          );
+                        },
                   ),
                 );
               },
               child: SizedBox.square(
                 dimension: 44,
-                child:
-                    Hero(tag: heroTag, child: RingedAvatar(avatar: user.user.avatar)),
+                child: Hero(
+                  tag: heroTag,
+                  child: RingedAvatar(avatar: user.user.avatar),
+                ),
               ),
             ),
           ),
@@ -131,7 +136,10 @@ class _ProfileDialog extends StatelessWidget {
               child: SizedBox.square(
                 dimension: 152,
                 child: AvatarHalo(
-                  child: Hero(tag: heroTag, child: RingedAvatar(avatar: avatar)),
+                  child: Hero(
+                    tag: heroTag,
+                    child: RingedAvatar(avatar: avatar),
+                  ),
                 ),
               ),
             ),
@@ -171,7 +179,7 @@ class _VerseCard extends StatelessWidget {
 
     void copy() {
       Clipboard.setData(ClipboardData(text: verse.raw)).then((_) {
-        FeedbackToast.info("Verse copied to clipboard");
+        FeedbackToast.info("Verse Copied to Clipboard");
       });
     }
 

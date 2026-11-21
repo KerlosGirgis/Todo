@@ -62,24 +62,28 @@ void main() {
 
   tearDown(() => widgets.dispose());
 
-  test('reads in how the widgets look, and what the note widget shows',
-      () async {
-    phone.styles[WidgetKind.tasks] = const WidgetStyle(showDone: true);
-    phone.noteText = "Weekend plans";
-    var notified = 0;
-    widgets.addListener(() => notified++);
+  test(
+    'reads in how the widgets look, and what the note widget shows',
+    () async {
+      phone.styles[WidgetKind.tasks] = const WidgetStyle(showDone: true);
+      phone.noteText = "Weekend plans";
+      var notified = 0;
+      widgets.addListener(() => notified++);
 
-    // As they first come, until then.
-    expect(widgets.styleOf(WidgetKind.tasks), WidgetStyle.tasksDefault);
-    await widgets.load();
-    expect(
-        widgets.styleOf(WidgetKind.tasks), const WidgetStyle(showDone: true));
-    expect(widgets.styleOf(WidgetKind.note), WidgetStyle.noteDefault);
-    expect(widgets.look.radius, 20);
-    expect(widgets.canAdd, isTrue);
-    expect(widgets.noteText, "Weekend plans");
-    expect(notified, 1);
-  });
+      // As they first come, until then.
+      expect(widgets.styleOf(WidgetKind.tasks), WidgetStyle.tasksDefault);
+      await widgets.load();
+      expect(
+        widgets.styleOf(WidgetKind.tasks),
+        const WidgetStyle(showDone: true),
+      );
+      expect(widgets.styleOf(WidgetKind.note), WidgetStyle.noteDefault);
+      expect(widgets.look.radius, 20);
+      expect(widgets.canAdd, isTrue);
+      expect(widgets.noteText, "Weekend plans");
+      expect(notified, 1);
+    },
+  );
 
   test('sets a widget\'s style', () async {
     const style = WidgetStyle(background: 0xff1e1e1e, opacity: 0.8);
@@ -91,8 +95,9 @@ void main() {
   test('keeps the style it had when the new one can\'t be set', () async {
     phone.failSaving = true;
     expect(
-        await widgets.setStyle(WidgetKind.tasks, const WidgetStyle(opacity: 0)),
-        isA<Failure>());
+      await widgets.setStyle(WidgetKind.tasks, const WidgetStyle(opacity: 0)),
+      isA<Failure>(),
+    );
     expect(widgets.styleOf(WidgetKind.tasks), WidgetStyle.tasksDefault);
   });
 
@@ -136,8 +141,10 @@ void main() {
   group('a tap on a widget', () {
     test('that opened the app opens it on the widget\'s page', () {
       expect(widgets.launchPage, isNull);
-      final launched =
-          WidgetsViewModel(service: phone, launchedFrom: WidgetKind.note);
+      final launched = WidgetsViewModel(
+        service: phone,
+        launchedFrom: WidgetKind.note,
+      );
       expect(launched.launchPage, StartPage.notes);
       launched.dispose();
     });

@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../models/clock_time.dart';
 import '../../../../../models/repeat_progress.dart';
-import '../../../../../models/tasks_widget_snapshot.dart';
+import '../../../../../core/tasks_widget_snapshot.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../models/widget_look.dart';
 import '../../../../../models/widget_style.dart';
@@ -78,15 +78,15 @@ class WidgetPreview extends StatelessWidget {
         radius: look.radius,
         child: switch (kind) {
           WidgetKind.tasks => TasksWidgetContent(
-              snapshot: sampleTasks(),
-              style: style,
-              colors: colors,
-            ),
+            snapshot: sampleTasks(),
+            style: style,
+            colors: colors,
+          ),
           WidgetKind.note => NoteWidgetContent(
-              text: noteText ?? _sampleNote,
-              style: style,
-              colors: colors,
-            ),
+            text: noteText ?? _sampleNote,
+            style: style,
+            colors: colors,
+          ),
         },
       ),
     );
@@ -94,8 +94,10 @@ class WidgetPreview extends StatelessWidget {
       builder: (context, constraints) {
         final scale = math.min(
           1.0,
-          math.min(constraints.maxWidth / size.width,
-              constraints.maxHeight / size.height),
+          math.min(
+            constraints.maxWidth / size.width,
+            constraints.maxHeight / size.height,
+          ),
         );
         return Center(
           child: SizedBox(
@@ -142,24 +144,27 @@ class _Surface extends StatelessWidget {
 /// The colours a widget's text is in: its own, or the phone's.
 class _Inks {
   _Inks(WidgetStyle style, WidgetThemeColors colors, {int? phoneText})
-      : primary = Color(style.ink ?? phoneText ?? colors.text),
-        secondary = style.ink == null
-            ? Color(colors.secondaryText)
-            : Color(style.ink!).withValues(alpha: Color(style.ink!).a * 0.6);
+    : primary = Color(style.ink ?? phoneText ?? colors.text),
+      secondary = style.ink == null
+          ? Color(colors.secondaryText)
+          : Color(style.ink!).withValues(alpha: Color(style.ink!).a * 0.6);
 
   final Color primary;
   final Color secondary;
 }
 
-TextStyle _text(WidgetStyle style, double size, Color color,
-        {FontWeight weight = FontWeight.w400}) =>
-    TextStyle(
-      color: color,
-      fontSize: size * style.textSize,
-      fontWeight: weight,
-      fontFamily: style.font == WidgetFont.casual ? 'casual' : null,
-      height: 1.2,
-    );
+TextStyle _text(
+  WidgetStyle style,
+  double size,
+  Color color, {
+  FontWeight weight = FontWeight.w400,
+}) => TextStyle(
+  color: color,
+  fontSize: size * style.textSize,
+  fontWeight: weight,
+  fontFamily: style.font == WidgetFont.casual ? 'casual' : null,
+  height: 1.2,
+);
 
 /// The to-do widget's title, count and tasks, as the phone lays them out
 /// from [snapshot] at [now].
@@ -204,14 +209,22 @@ class TasksWidgetContent extends StatelessWidget {
                   "To-Do",
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: _text(style, _headerSize, inks.primary,
-                      weight: FontWeight.w700),
+                  style: _text(
+                    style,
+                    _headerSize,
+                    inks.primary,
+                    weight: FontWeight.w700,
+                  ),
                 ),
               ),
               Text(
                 "${snapshot.leftOn(now)}",
-                style:
-                    _text(style, _countSize, accent, weight: FontWeight.w700),
+                style: _text(
+                  style,
+                  _countSize,
+                  accent,
+                  weight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -267,8 +280,12 @@ class _TaskRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final details = row.details;
     return Padding(
-      padding: EdgeInsets.fromLTRB(_indent * math.min(row.depth, _maxIndents),
-          _rowPadding, 0, _rowPadding),
+      padding: EdgeInsets.fromLTRB(
+        _indent * math.min(row.depth, _maxIndents),
+        _rowPadding,
+        0,
+        _rowPadding,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -291,12 +308,17 @@ class _TaskRow extends StatelessWidget {
                   row.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: _text(style, _titleSize,
-                          row.done ? inks.secondary : inks.primary)
-                      .copyWith(
-                    decoration: row.done ? TextDecoration.lineThrough : null,
-                    decorationColor: inks.secondary,
-                  ),
+                  style:
+                      _text(
+                        style,
+                        _titleSize,
+                        row.done ? inks.secondary : inks.primary,
+                      ).copyWith(
+                        decoration: row.done
+                            ? TextDecoration.lineThrough
+                            : null,
+                        decorationColor: inks.secondary,
+                      ),
                 ),
                 if (details != null)
                   Padding(
@@ -305,8 +327,11 @@ class _TaskRow extends StatelessWidget {
                       details,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _text(style, _detailsSize,
-                          row.late ? _red : inks.secondary),
+                      style: _text(
+                        style,
+                        _detailsSize,
+                        row.late ? _red : inks.secondary,
+                      ),
                     ),
                   ),
               ],

@@ -47,8 +47,8 @@ class _RepeatEndDialogState extends State<RepeatEndDialog> {
       initialDate: day.isBefore(first)
           ? first
           : day.isAfter(last)
-              ? last
-              : day,
+          ? last
+          : day,
       firstDate: first,
       lastDate: last,
     );
@@ -84,26 +84,25 @@ class _RepeatEndDialogState extends State<RepeatEndDialog> {
               child: switch (_end.span) {
                 RepeatSpan.forever => const SizedBox(width: double.infinity),
                 RepeatSpan.forAWhile => Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: FormDialogGroup(
-                      children: [_WhileStepper(end: _end)],
-                    ),
-                  ),
+                  padding: const EdgeInsets.only(top: 16),
+                  child: FormDialogGroup(children: [_WhileStepper(end: _end)]),
+                ),
                 RepeatSpan.untilADay => Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: FormDialogGroup(
-                      children: [
-                        SettingsTile(
-                          icon: Icons.calendar_today_rounded,
-                          color: _red,
-                          title: "Last Day",
-                          trailing: DisclosureValue(
-                              DateTimeUtils.friendlyDay(_end.day, now)),
-                          onTap: _pickDay,
+                  padding: const EdgeInsets.only(top: 16),
+                  child: FormDialogGroup(
+                    children: [
+                      SettingsTile(
+                        icon: Icons.calendar_today_rounded,
+                        color: _red,
+                        title: "Last Day",
+                        trailing: DisclosureValue(
+                          DateTimeUtils.friendlyDay(_end.day, now),
                         ),
-                      ],
-                    ),
+                        onTap: _pickDay,
+                      ),
+                    ],
                   ),
+                ),
               },
             ),
             const SizedBox(height: 14),
@@ -253,9 +252,11 @@ class _TimesLeft extends StatelessWidget {
     // "today" and "tomorrow" read on their own, and a date after "on".
     String on(DateTime day) {
       final named = DateTimeUtils.dayInSentence(day, now);
-      final days = DateTime.utc(day.year, day.month, day.day)
-          .difference(DateTime.utc(now.year, now.month, now.day))
-          .inDays;
+      final days = DateTime.utc(
+        day.year,
+        day.month,
+        day.day,
+      ).difference(DateTime.utc(now.year, now.month, now.day)).inDays;
       return days <= 1 ? named : "on $named";
     }
 
@@ -263,21 +264,21 @@ class _TimesLeft extends StatelessWidget {
     final (text, warning) = times == null
         ? ("It keeps coming round until you change it.", false)
         : last == null
-            ? ("It would stop before it comes round.", true)
-            : times.count == 1
-                ? ("It comes round just once, ${on(last)}.", false)
-                : (
-                    "It comes round ${times.count} times, the last "
-                        "${on(last)}.",
-                    false
-                  );
+        ? ("It would stop before it comes round.", true)
+        : times.count == 1
+        ? ("It comes round just once, ${on(last)}.", false)
+        : (
+            "It comes round ${times.count} times, the last "
+                "${on(last)}.",
+            false,
+          );
     return Text(
       text,
       style: TextStyle(
         color: warning
             ? (Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xffFF9F0A)
-                : const Color(0xffC93400))
+                  ? const Color(0xffFF9F0A)
+                  : const Color(0xffC93400))
             : context.colors.wB.withValues(alpha: 0.55),
         fontSize: 13.5,
         height: 1.3,

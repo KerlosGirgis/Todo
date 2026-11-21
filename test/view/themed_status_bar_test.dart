@@ -10,19 +10,25 @@ void main() {
     (true, Brightness.light),
   ]) {
     testWidgets(
-        "the status bar's icons read on a ${dark ? "dark" : "light"} page",
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.getTheme(isDarkMode: dark),
-        home: const ThemedStatusBar(child: SizedBox()),
-      ));
-      final style = tester
-          .widget<AnnotatedRegion<SystemUiOverlayStyle>>(find.descendant(
-              of: find.byType(ThemedStatusBar),
-              matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>)))
-          .value;
-      expect(style.statusBarIconBrightness, icons);
-      expect(style.statusBarColor, Colors.transparent);
-    });
+      "the status bar's icons read on a ${dark ? "dark" : "light"} page",
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.getTheme(isDarkMode: dark),
+            home: const ThemedStatusBar(child: SizedBox()),
+          ),
+        );
+        final style = tester
+            .widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+              find.descendant(
+                of: find.byType(ThemedStatusBar),
+                matching: find.byType(AnnotatedRegion<SystemUiOverlayStyle>),
+              ),
+            )
+            .value;
+        expect(style.statusBarIconBrightness, icons);
+        expect(style.statusBarColor, Colors.transparent);
+      },
+    );
   }
 }

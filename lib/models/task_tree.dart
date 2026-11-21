@@ -29,13 +29,12 @@ class TaskBranch {
   }
 
   Map<String, Object?> toMap() => {
-        ...task.toMap(),
-        if (subtasks.isNotEmpty)
-          'subtasks': [
-            for (final subtask in subtasks)
-              {...subtask.toMap(), 'id': subtask.id},
-          ],
-      };
+    ...task.toMap(),
+    if (subtasks.isNotEmpty)
+      'subtasks': [
+        for (final subtask in subtasks) {...subtask.toMap(), 'id': subtask.id},
+      ],
+  };
 }
 
 /// A task where it stands among the others: in the task it's a subtask of,
@@ -125,10 +124,15 @@ class TaskTree {
     final byUuid = <String, TaskNode>{};
     final shared = <String, int>{};
     for (final task in tasks) {
-      final count =
-          shared.update(task.uuid, (count) => count + 1, ifAbsent: () => 0);
-      final node =
-          TaskNode._(task, count == 0 ? task.uuid : "${task.uuid}#$count");
+      final count = shared.update(
+        task.uuid,
+        (count) => count + 1,
+        ifAbsent: () => 0,
+      );
+      final node = TaskNode._(
+        task,
+        count == 0 ? task.uuid : "${task.uuid}#$count",
+      );
       nodes.add(node);
       // A subtask of tasks that share a uuid is the first one's.
       if (task.uuid.isNotEmpty) byUuid.putIfAbsent(task.uuid, () => node);
@@ -263,9 +267,11 @@ class TaskTree {
     if (!done) {
       if (node.task.done) changed.add(node);
       var child = node;
-      for (var parent = node._parent;
-          parent != null && child.countsFor(parent);
-          child = parent, parent = parent._parent) {
+      for (
+        var parent = node._parent;
+        parent != null && child.countsFor(parent);
+        child = parent, parent = parent._parent
+      ) {
         if (parent.task.done) changed.add(parent);
       }
       return changed;
@@ -275,12 +281,16 @@ class TaskTree {
     }
     final marked = changed.toSet();
     var child = node;
-    for (var parent = node._parent;
-        parent != null && child.countsFor(parent) && !parent.task.done;
-        child = parent, parent = parent._parent) {
+    for (
+      var parent = node._parent;
+      parent != null && child.countsFor(parent) && !parent.task.done;
+      child = parent, parent = parent._parent
+    ) {
       final within = parent;
-      final nothingLeft = within._children.every((each) =>
-          !each.countsFor(within) || each.task.done || marked.contains(each));
+      final nothingLeft = within._children.every(
+        (each) =>
+            !each.countsFor(within) || each.task.done || marked.contains(each),
+      );
       if (!nothingLeft) break;
       changed.add(within);
       marked.add(within);
@@ -312,8 +322,11 @@ class TaskTree {
   /// [parent] with the tasks in it, or out on its own for null: ahead of
   /// [before] among the tasks there, or after them all. Null if that's where
   /// it is already.
-  List<TodoItem>? moving(TaskNode node,
-      {required TaskNode? parent, TaskNode? before}) {
+  List<TodoItem>? moving(
+    TaskNode node, {
+    required TaskNode? parent,
+    TaskNode? before,
+  }) {
     assert(parent == null || !parent.isOrIsIn(node));
     final from = node._parent;
     final others = [

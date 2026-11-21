@@ -10,18 +10,20 @@ import '../../../../widgets/check_circle.dart';
 
 /// A note's text as the editor draws it, at the user's text [size] and in
 /// the casual font if they've chosen it.
-TextStyle noteBodyStyle(BuildContext context,
-        {required double size, required bool casualFont}) =>
-    TextStyle(
-      fontFamily: casualFont ? 'casual' : 'arial',
-      fontWeight: casualFont ? FontWeight.w600 : FontWeight.w400,
-      color: context.colors.wB,
-      fontSize: 26 * size,
-      height: 1.4,
-      // As the theme spaces the app's text, which a list's numbers and
-      // bullets pick up beside the text they lead.
-      leadingDistribution: TextLeadingDistribution.even,
-    );
+TextStyle noteBodyStyle(
+  BuildContext context, {
+  required double size,
+  required bool casualFont,
+}) => TextStyle(
+  fontFamily: casualFont ? 'casual' : 'arial',
+  fontWeight: casualFont ? FontWeight.w600 : FontWeight.w400,
+  color: context.colors.wB,
+  fontSize: 26 * size,
+  height: 1.4,
+  // As the theme spaces the app's text, which a list's numbers and
+  // bullets pick up beside the text they lead.
+  leadingDistribution: TextLeadingDistribution.even,
+);
 
 /// How the editor draws a note's formatting, around [body], its plain text:
 /// titles and headings larger and bolder, the smallest headings smaller
@@ -32,26 +34,34 @@ DefaultStyles noteStyles(BuildContext context, TextStyle body) {
   final ink = body.color!;
   final fontSize = body.fontSize!;
   final link = context.colors.moreLess;
-  DefaultTextBlockStyle heading(double scale, FontWeight weight,
-          {required double spaceAbove, Color? color}) =>
-      DefaultTextBlockStyle(
-        body.copyWith(
-          color: color,
-          fontSize: fontSize * scale,
-          fontWeight: weight,
-          height: 1.25,
-          letterSpacing: -0.02 * fontSize * scale,
-        ),
-        HorizontalSpacing.zero,
-        VerticalSpacing(fontSize * spaceAbove, fontSize * 0.1),
-        VerticalSpacing.zero,
-        null,
-      );
+  DefaultTextBlockStyle heading(
+    double scale,
+    FontWeight weight, {
+    required double spaceAbove,
+    Color? color,
+  }) => DefaultTextBlockStyle(
+    body.copyWith(
+      color: color,
+      fontSize: fontSize * scale,
+      fontWeight: weight,
+      height: 1.25,
+      letterSpacing: -0.02 * fontSize * scale,
+    ),
+    HorizontalSpacing.zero,
+    VerticalSpacing(fontSize * spaceAbove, fontSize * 0.1),
+    VerticalSpacing.zero,
+    null,
+  );
   // Evenly spaced, rather than drawn closer as a heading's letters are.
   const code = TextStyle(fontFamily: 'monospace', letterSpacing: 0);
   return DefaultStyles(
-    paragraph: DefaultTextBlockStyle(body, HorizontalSpacing.zero,
-        VerticalSpacing.zero, VerticalSpacing.zero, null),
+    paragraph: DefaultTextBlockStyle(
+      body,
+      HorizontalSpacing.zero,
+      VerticalSpacing.zero,
+      VerticalSpacing.zero,
+      null,
+    ),
     h1: heading(1.42, FontWeight.w700, spaceAbove: 0.5),
     h2: heading(1.2, FontWeight.w700, spaceAbove: 0.4),
     h3: heading(1.06, FontWeight.w700, spaceAbove: 0.3),
@@ -59,19 +69,25 @@ DefaultStyles noteStyles(BuildContext context, TextStyle body) {
     // Markdown's smallest headings are.
     h4: heading(1, FontWeight.w700, spaceAbove: 0.25),
     h5: heading(0.92, FontWeight.w700, spaceAbove: 0.2),
-    h6: heading(0.85, FontWeight.w700,
-        spaceAbove: 0.2, color: ink.withValues(alpha: 0.6)),
+    h6: heading(
+      0.85,
+      FontWeight.w700,
+      spaceAbove: 0.2,
+      color: ink.withValues(alpha: 0.6),
+    ),
     placeHolder: DefaultTextBlockStyle(
-        body.copyWith(color: ink.withValues(alpha: 0.3)),
-        HorizontalSpacing.zero,
-        VerticalSpacing.zero,
-        VerticalSpacing.zero,
-        null),
+      body.copyWith(color: ink.withValues(alpha: 0.3)),
+      HorizontalSpacing.zero,
+      VerticalSpacing.zero,
+      VerticalSpacing.zero,
+      null,
+    ),
     // Bolder than the casual font, which is already semibold.
     bold: TextStyle(
-        fontWeight: body.fontWeight == FontWeight.w600
-            ? FontWeight.w800
-            : FontWeight.w700),
+      fontWeight: body.fontWeight == FontWeight.w600
+          ? FontWeight.w800
+          : FontWeight.w700,
+    ),
     link: TextStyle(
       color: link,
       decoration: TextDecoration.underline,
@@ -101,8 +117,13 @@ DefaultStyles noteStyles(BuildContext context, TextStyle body) {
       ),
     ),
     // Bullets and numbers in the text's own style.
-    leading: DefaultTextBlockStyle(body, HorizontalSpacing.zero,
-        VerticalSpacing.zero, VerticalSpacing.zero, null),
+    leading: DefaultTextBlockStyle(
+      body,
+      HorizontalSpacing.zero,
+      VerticalSpacing.zero,
+      VerticalSpacing.zero,
+      null,
+    ),
     lists: DefaultListBlockStyle(
       // A list's lines keep their paragraph's or heading's style.
       const TextStyle(),
@@ -130,7 +151,8 @@ DefaultStyles noteStyles(BuildContext context, TextStyle body) {
 /// or dark, rather than in the plain yellow it's kept in, which would drown
 /// out white text on a dark page.
 TextStyle Function(Attribute attribute) highlightStyleBuilder(
-    BuildContext context) {
+  BuildContext context,
+) {
   final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
   final marker = isDarkTheme
       ? const Color(0xffFFD60A).withValues(alpha: 0.34)
@@ -187,7 +209,7 @@ TextSpanBuilder checkedLinesSpanBuilder(TextStyle body) {
         color: faded,
         // Underlined text stays underlined, too.
         decoration: TextDecoration.combine([
-          if (decoration != null) decoration,
+          ?decoration,
           TextDecoration.lineThrough,
         ]),
         decorationColor: faded,
@@ -195,7 +217,13 @@ TextSpanBuilder checkedLinesSpanBuilder(TextStyle body) {
       );
     }
     return defaultSpanBuilder(
-        context, node, nodeOffset, text, style, recognizer);
+      context,
+      node,
+      nodeOffset,
+      text,
+      style,
+      recognizer,
+    );
   };
 }
 
@@ -210,8 +238,7 @@ class _CheckboxBuilder implements QuillCheckboxBuilder {
     required BuildContext context,
     required bool isChecked,
     required ValueChanged<bool> onChanged,
-  }) =>
-      _Checkbox(body: body, checked: isChecked, onChanged: onChanged);
+  }) => _Checkbox(body: body, checked: isChecked, onChanged: onChanged);
 }
 
 /// A check that ticks itself off, or fades back to a ring, as it's tapped.

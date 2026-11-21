@@ -136,21 +136,27 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     final textRight = gutterRight + _textInset;
     // How far up the page the toolbar, and the formatting panel over it
     // while it's open, cover the text.
-    final toolbarCover = EditorToolbar.height +
+    final toolbarCover =
+        EditorToolbar.height +
         (_formatting ? EditorToolbar.panelHeight : 0) +
         _toolbarGap +
         padding.bottom;
     final (autoSave, showCount, casualFont, textSize, titleSize) = context
-        .select<UserViewModel, (bool, bool, bool, double, double)>((user) => (
-              user.user.autoSave,
-              user.user.wordCount,
-              user.user.casualFont,
-              user.user.notesTextSize,
-              user.user.notesTitleSize,
-            ));
+        .select<UserViewModel, (bool, bool, bool, double, double)>(
+          (user) => (
+            user.user.autoSave,
+            user.user.wordCount,
+            user.user.casualFont,
+            user.user.notesTextSize,
+            user.user.notesTitleSize,
+          ),
+        );
     final note = _editor.note;
-    final bodyStyle =
-        noteBodyStyle(context, size: textSize, casualFont: casualFont);
+    final bodyStyle = noteBodyStyle(
+      context,
+      size: textSize,
+      casualFont: casualFont,
+    );
     return ThemedStatusBar(
       child: Scaffold(
         backgroundColor: context.colors.pageBackground,
@@ -179,13 +185,18 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                       padding: EdgeInsets.only(right: padding.right),
                       child: GlassMenu(items: _menuItems()),
                     ),
-                    titleRevealOffset: _titleTop +
+                    titleRevealOffset:
+                        _titleTop +
                         NoteTitle.titleScrolledAway(context, titleSize),
                   ),
                 ),
                 SliverPadding(
-                  padding:
-                      EdgeInsets.fromLTRB(textLeft, _titleTop, textRight, 0),
+                  padding: EdgeInsets.fromLTRB(
+                    textLeft,
+                    _titleTop,
+                    textRight,
+                    0,
+                  ),
                   sliver: SliverToBoxAdapter(
                     child: HeroMode(
                       enabled: !_deleted,
@@ -194,15 +205,20 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                   ),
                 ),
                 SliverPadding(
-                  padding:
-                      EdgeInsets.fromLTRB(textLeft, _titleGap, textRight, 0),
+                  padding: EdgeInsets.fromLTRB(
+                    textLeft,
+                    _titleGap,
+                    textRight,
+                    0,
+                  ),
                   sliver: SliverToBoxAdapter(
                     // Once the page has mostly covered the notes behind it.
                     child: RiseIn(
                       delay: RiseIn.stagger * 2,
                       child: Directionality(
-                        textDirection:
-                            _rtl ? TextDirection.rtl : TextDirection.ltr,
+                        textDirection: _rtl
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
                         // For raised and lowered text, which the editor sets
                         // letter by letter in the style around it.
                         child: DefaultTextStyle.merge(
@@ -218,10 +234,12 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               autoFocus: note.body.isEmpty,
                               placeholder: "Start writing…",
                               customStyles: noteStyles(context, bodyStyle),
-                              customStyleBuilder:
-                                  highlightStyleBuilder(context),
-                              textSpanBuilder:
-                                  checkedLinesSpanBuilder(bodyStyle),
+                              customStyleBuilder: highlightStyleBuilder(
+                                context,
+                              ),
+                              textSpanBuilder: checkedLinesSpanBuilder(
+                                bodyStyle,
+                              ),
                               embedBuilders: [NoteDividerBuilder(bodyStyle)],
                               // A link opens as the link dialog meant it.
                               // Quill would take one it doesn't know, such
@@ -233,7 +251,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               showCodeBlockLineNumbers: false,
                               textSelectionThemeData:
                                   const legacy.TextSelectionThemeData(
-                                      cursorColor: _accent),
+                                    cursorColor: _accent,
+                                  ),
                               // Keeps the line being written clear of the
                               // toolbar.
                               scrollBottomInset: toolbarCover + 12,
@@ -291,24 +310,26 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   }
 
   List<GlassMenuItem> _menuItems() => [
-        GlassMenuItem(
-          icon: Icons.add_to_home_screen_rounded,
-          tooltip: "Show on Widget",
-          onPressed: _showOnWidget,
-        ),
-        GlassMenuItem(
-          icon: Icons.delete_rounded,
-          tooltip: "Delete Note",
-          color: context.colors.systemRed,
-          onPressed: _delete,
-        ),
-      ];
+    GlassMenuItem(
+      icon: Icons.add_to_home_screen_rounded,
+      tooltip: "Show on Widget",
+      onPressed: _showOnWidget,
+    ),
+    GlassMenuItem(
+      icon: Icons.delete_rounded,
+      tooltip: "Delete Note",
+      color: context.colors.systemRed,
+      onPressed: _delete,
+    ),
+  ];
 
   void _changed() {
     final rtl = _isRtl(_controller.document.toPlainText());
     if (rtl != _rtl) setState(() => _rtl = rtl);
-    _editor.edit(_controller.document.toDelta().toJson(),
-        autoSave: context.read<UserViewModel>().user.autoSave);
+    _editor.edit(
+      _controller.document.toDelta().toJson(),
+      autoSave: context.read<UserViewModel>().user.autoSave,
+    );
   }
 
   void _focusChanged() {
@@ -321,8 +342,9 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   /// and brings the keyboard back to carry on writing.
   void _toggleFormatting() {
     setState(() => _formatting = !_formatting);
-    SystemChannels.textInput
-        .invokeMethod<void>(_formatting ? 'TextInput.hide' : 'TextInput.show');
+    SystemChannels.textInput.invokeMethod<void>(
+      _formatting ? 'TextInput.hide' : 'TextInput.show',
+    );
   }
 
   /// Changes the link the cursor's on, or takes it off, or links the text
@@ -333,15 +355,18 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     final selection = _controller.selection;
     final range =
         link?.range ?? TextRange(start: selection.start, end: selection.end);
-    final text =
-        _controller.document.getPlainText(range.start, range.end - range.start);
+    final text = _controller.document.getPlainText(
+      range.start,
+      range.end - range.start,
+    );
     final change = await showFormDialog<LinkChange>(
       context,
       LinkDialog(
         url: link?.url,
         text: text,
         // A link over more than a line, or a rule, keeps the text it has.
-        textEditable: !text.contains("\n") &&
+        textEditable:
+            !text.contains("\n") &&
             !text.contains(Embed.kObjectReplacementCharacter),
       ),
     );
@@ -357,7 +382,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   }
 
   Future<void> _saveChanges() async {
-    HapticFeedback.lightImpact();
+    unawaited(HapticFeedback.lightImpact());
     await _editor.save();
   }
 
@@ -372,7 +397,8 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   Future<void> _delete() async {
     final notes = context.read<NotesViewModel>();
     final result = await _editor.delete(
-        askForPassword: noteLockPasswordPrompt(context));
+      askForPassword: noteLockPasswordPrompt(context),
+    );
     switch (result) {
       case Denied(:final message):
         FeedbackToast.error(message);

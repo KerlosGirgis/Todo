@@ -22,12 +22,12 @@ const _filters = <TaskFilter, (String, IconData)>{
 
 /// How [sort] reads, [direction] first.
 String _sortLabel(TaskSort sort, SortDirection direction) => switch (sort) {
-      TaskSort.custom => "Custom",
-      TaskSort.dueDate => switch (direction) {
-          SortDirection.ascending => "Due Date, Earliest First",
-          SortDirection.descending => "Due Date, Latest First",
-        },
-    };
+  TaskSort.custom => "Custom",
+  TaskSort.dueDate => switch (direction) {
+    SortDirection.ascending => "Due Date, Earliest First",
+    SortDirection.descending => "Due Date, Latest First",
+  },
+};
 
 enum _Panel { sort, filter }
 
@@ -63,8 +63,11 @@ class _SortFilterButtonsState extends State<SortFilterButtons> {
 
   /// What was chosen as the panel opened, which it shows until it's gone:
   /// a choice closes it, rather than moving its check as it fades.
-  (TaskFilter, TaskSort, SortDirection) _chosen =
-      (TaskFilter.all, TaskSort.custom, SortDirection.ascending);
+  (TaskFilter, TaskSort, SortDirection) _chosen = (
+    TaskFilter.all,
+    TaskSort.custom,
+    SortDirection.ascending,
+  );
 
   void _openPanel(_Panel panel) {
     final tasks = context.read<TasksViewModel>();
@@ -81,9 +84,10 @@ class _SortFilterButtonsState extends State<SortFilterButtons> {
 
   @override
   Widget build(BuildContext context) {
-    final (filter, sort, direction) =
-        context.select<TasksViewModel, (TaskFilter, TaskSort, SortDirection)>(
-            (tasks) => (tasks.filter, tasks.sort, tasks.sortDirection));
+    final (filter, sort, direction) = context
+        .select<TasksViewModel, (TaskFilter, TaskSort, SortDirection)>(
+          (tasks) => (tasks.filter, tasks.sort, tasks.sortDirection),
+        );
     final ink = context.colors.wB;
     final (chosenFilter, chosenSort, chosenDirection) = _chosen;
     return GlassPopover(
@@ -95,20 +99,20 @@ class _SortFilterButtonsState extends State<SortFilterButtons> {
       },
       panel: (context) => switch (_shown) {
         _Panel.sort => _SortPanel(
-            sort: chosenSort,
-            direction: chosenDirection,
-            onSort: (sort, direction) {
-              _close();
-              widget.onSort(sort, direction);
-            },
-          ),
+          sort: chosenSort,
+          direction: chosenDirection,
+          onSort: (sort, direction) {
+            _close();
+            widget.onSort(sort, direction);
+          },
+        ),
         _Panel.filter => _FilterPanel(
-            filter: chosenFilter,
-            onFilter: (filter) {
-              _close();
-              widget.onFilter(filter);
-            },
-          ),
+          filter: chosenFilter,
+          onFilter: (filter) {
+            _close();
+            widget.onFilter(filter);
+          },
+        ),
       },
       child: Glass(
         child: Row(
@@ -294,8 +298,9 @@ class _FilterPanel extends StatelessWidget {
       return GlassPopoverOption(
         icon: icon,
         label: label,
-        count:
-            context.select<TasksViewModel, int>((tasks) => tasks.countOf(each)),
+        count: context.select<TasksViewModel, int>(
+          (tasks) => tasks.countOf(each),
+        ),
         selected: each == filter,
         onTap: () => onFilter(each),
       );

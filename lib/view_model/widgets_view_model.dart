@@ -14,8 +14,8 @@ import '../services/home_widget_service.dart';
 class WidgetsViewModel with ChangeNotifier {
   /// [launchedFrom] is the widget a tap on which opened the app, if one did.
   WidgetsViewModel({HomeWidgetService? service, WidgetKind? launchedFrom})
-      : _service = service ?? HomeWidgetService(),
-        launchPage = launchedFrom == null ? null : pageFor(launchedFrom) {
+    : _service = service ?? HomeWidgetService(),
+      launchPage = launchedFrom == null ? null : pageFor(launchedFrom) {
     _taps = _service.taps.listen(
       (kind) => _pageRequests.add(pageFor(kind)),
       // A widget's trouble, which the app carries on without.
@@ -36,9 +36,9 @@ class WidgetsViewModel with ChangeNotifier {
 
   /// The page a tap on [kind] of widget opens: its own.
   static StartPage pageFor(WidgetKind kind) => switch (kind) {
-        WidgetKind.tasks => StartPage.tasks,
-        WidgetKind.note => StartPage.notes,
-      };
+    WidgetKind.tasks => StartPage.tasks,
+    WidgetKind.note => StartPage.notes,
+  };
 
   /// The page a tap on a widget opened the app on, which it opens on in
   /// place of the start page.

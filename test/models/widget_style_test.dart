@@ -4,18 +4,20 @@ import 'package:todo/models/widget_style.dart';
 
 void main() {
   group('as it first comes', () {
-    test('the to-do widget is on the phone\'s background, with what\'s left',
-        () {
-      const style = WidgetStyle.tasksDefault;
-      expect(style.background, isNull);
-      expect(style.opacity, 1);
-      expect(style.textColor, isNull);
-      expect(style.accent, 0xff3D5AFE);
-      expect(style.textSize, 1);
-      expect(style.font, WidgetFont.regular);
-      expect(style.showDone, isFalse);
-      expect(WidgetStyle.defaultFor(WidgetKind.tasks), style);
-    });
+    test(
+      'the to-do widget is on the phone\'s background, with what\'s left',
+      () {
+        const style = WidgetStyle.tasksDefault;
+        expect(style.background, isNull);
+        expect(style.opacity, 1);
+        expect(style.textColor, isNull);
+        expect(style.accent, 0xff3D5AFE);
+        expect(style.textSize, 1);
+        expect(style.font, WidgetFont.regular);
+        expect(style.showDone, isFalse);
+        expect(WidgetStyle.defaultFor(WidgetKind.tasks), style);
+      },
+    );
 
     test('the note widget has no background, as it never had', () {
       expect(WidgetStyle.noteDefault.opacity, 0);
@@ -47,8 +49,9 @@ void main() {
     });
 
     test('with what it lacks as the kind of widget first comes', () {
-      final note = WidgetStyle.fromJson({'textSize': 1.5},
-          defaults: WidgetStyle.noteDefault);
+      final note = WidgetStyle.fromJson({
+        'textSize': 1.5,
+      }, defaults: WidgetStyle.noteDefault);
       expect(note, WidgetStyle.noteDefault.copyWith(textSize: 1.5));
       expect(WidgetStyle.fromJson({}), WidgetStyle.tasksDefault);
     });
@@ -87,12 +90,16 @@ void main() {
   });
 
   test('the note widget\'s style from before keeps its size and font', () {
-    expect(WidgetStyle.legacyNote(textSize: "1.50", casualFont: true),
-        const WidgetStyle(opacity: 0, textSize: 1.5, font: WidgetFont.casual));
+    expect(
+      WidgetStyle.legacyNote(textSize: "1.50", casualFont: true),
+      const WidgetStyle(opacity: 0, textSize: 1.5, font: WidgetFont.casual),
+    );
     expect(WidgetStyle.legacyNote(), WidgetStyle.noteDefault);
     expect(WidgetStyle.legacyNote(textSize: "big").textSize, 1);
-    expect(WidgetStyle.legacyNote(textSize: "9").textSize,
-        WidgetStyle.maxTextSize);
+    expect(
+      WidgetStyle.legacyNote(textSize: "9").textSize,
+      WidgetStyle.maxTextSize,
+    );
   });
 
   group('the text colour', () {
@@ -103,21 +110,33 @@ void main() {
 
     test('stands out against a background of its own that shows', () {
       expect(
-          const WidgetStyle(background: 0xffffffff).ink, WidgetStyle.darkInk);
+        const WidgetStyle(background: 0xffffffff).ink,
+        WidgetStyle.darkInk,
+      );
       expect(
-          const WidgetStyle(background: 0xffFFCC00).ink, WidgetStyle.darkInk);
+        const WidgetStyle(background: 0xffFFCC00).ink,
+        WidgetStyle.darkInk,
+      );
       expect(
-          const WidgetStyle(background: 0xff1e1e1e).ink, WidgetStyle.lightInk);
+        const WidgetStyle(background: 0xff1e1e1e).ink,
+        WidgetStyle.lightInk,
+      );
       expect(
-          const WidgetStyle(background: 0xff3D5AFE).ink, WidgetStyle.lightInk);
+        const WidgetStyle(background: 0xff3D5AFE).ink,
+        WidgetStyle.lightInk,
+      );
     });
 
     test('is the phone\'s on its background, or where little shows', () {
       expect(const WidgetStyle().ink, isNull);
       expect(
-          const WidgetStyle(background: 0xffffffff, opacity: 0.45).ink, isNull);
-      expect(const WidgetStyle(background: 0xffffffff, opacity: 0.5).ink,
-          WidgetStyle.darkInk);
+        const WidgetStyle(background: 0xffffffff, opacity: 0.45).ink,
+        isNull,
+      );
+      expect(
+        const WidgetStyle(background: 0xffffffff, opacity: 0.5).ink,
+        WidgetStyle.darkInk,
+      );
     });
 
     test('goes by the same measure as Flutter\'s', () {

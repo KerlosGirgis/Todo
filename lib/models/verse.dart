@@ -25,8 +25,10 @@ class Verse {
   /// "song of solomon 2:4" -> "Song of Solomon 2:4"
   static String _capitalize(String reference) => reference
       .split(" ")
-      .map((word) => word.isEmpty || word == "of"
-          ? word
-          : word[0].toUpperCase() + word.substring(1))
+      .map(
+        (word) => word.isEmpty || word == "of"
+            ? word
+            : word[0].toUpperCase() + word.substring(1),
+      )
       .join(" ");
 }

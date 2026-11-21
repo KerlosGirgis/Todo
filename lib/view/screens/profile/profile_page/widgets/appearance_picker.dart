@@ -15,10 +15,12 @@ class AppearancePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        context.select<UserViewModel, bool>((user) => user.user.darkTheme);
-    final amoled =
-        context.select<UserViewModel, bool>((user) => user.user.amoledTheme);
+    final isDark = context.select<UserViewModel, bool>(
+      (user) => user.user.darkTheme,
+    );
+    final amoled = context.select<UserViewModel, bool>(
+      (user) => user.user.amoledTheme,
+    );
     void choose(bool dark) => context.read<UserViewModel>().setDarkTheme(dark);
 
     return Padding(
@@ -158,13 +160,13 @@ class _PhoneMock extends StatelessWidget {
     };
     final ink = colors.wB;
     Widget line(double width, double height, double alpha) => Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: ink.withValues(alpha: alpha),
-            borderRadius: BorderRadius.circular(height / 2),
-          ),
-        );
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: ink.withValues(alpha: alpha),
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+    );
 
     return Container(
       width: 76,
@@ -220,7 +222,9 @@ class _PhoneMock extends StatelessWidget {
                       border: index == 0
                           ? null
                           : Border.all(
-                              width: 1, color: ink.withValues(alpha: 0.3)),
+                              width: 1,
+                              color: ink.withValues(alpha: 0.3),
+                            ),
                     ),
                   ),
                   const SizedBox(width: 5),

@@ -15,9 +15,11 @@ class ProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (done, remaining) = context.select<TasksViewModel, (int, int)>(
-        (tasks) => (tasks.finishedTasksCount, tasks.unfinishedTasksCount));
-    final notes =
-        context.select<NotesViewModel, int>((notes) => notes.notes.length);
+      (tasks) => (tasks.finishedTasksCount, tasks.unfinishedTasksCount),
+    );
+    final notes = context.select<NotesViewModel, int>(
+      (notes) => notes.notes.length,
+    );
     final total = done + remaining;
     final progress = total == 0 ? 0.0 : done / total;
     final (headline, detail) = describeTaskProgress(done, total);
@@ -82,11 +84,17 @@ class ProgressCard extends StatelessWidget {
           IntrinsicHeight(
             child: Row(
               children: [
-                Expanded(child: _Stat(count: done, label: "Completed")),
+                Expanded(
+                  child: _Stat(count: done, label: "Completed"),
+                ),
                 _divider(hairline),
-                Expanded(child: _Stat(count: remaining, label: "Remaining")),
+                Expanded(
+                  child: _Stat(count: remaining, label: "Remaining"),
+                ),
                 _divider(hairline),
-                Expanded(child: _Stat(count: notes, label: "Notes")),
+                Expanded(
+                  child: _Stat(count: notes, label: "Notes"),
+                ),
               ],
             ),
           ),
@@ -96,12 +104,12 @@ class ProgressCard extends StatelessWidget {
   }
 
   Widget _divider(Color color) => VerticalDivider(
-        width: 0.5,
-        thickness: 0.5,
-        indent: 14,
-        endIndent: 14,
-        color: color,
-      );
+    width: 0.5,
+    thickness: 0.5,
+    indent: 14,
+    endIndent: 14,
+    color: color,
+  );
 }
 
 /// A headline for how far through their [total] tasks the user is, with a

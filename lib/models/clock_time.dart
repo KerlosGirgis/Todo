@@ -2,8 +2,8 @@
 /// and a [minute].
 class ClockTime {
   const ClockTime(this.hour, this.minute)
-      : assert(hour >= 0 && hour < 24),
-        assert(minute >= 0 && minute < 60);
+    : assert(hour >= 0 && hour < 24),
+      assert(minute >= 0 && minute < 60);
 
   final int hour;
   final int minute;
@@ -12,8 +12,10 @@ class ClockTime {
   /// once wrote it on phones set to a 24-hour clock. Null when there's no
   /// time, or one that won't read as one.
   static ClockTime? tryParse(String text) {
-    final match = RegExp(r'^(\d{1,2}):(\d{2})\s*(AM|PM)?$', caseSensitive: false)
-        .firstMatch(text.trim());
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})\s*(AM|PM)?$',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
     if (match == null) return null;
     var hour = int.parse(match.group(1)!);
     final minute = int.parse(match.group(2)!);

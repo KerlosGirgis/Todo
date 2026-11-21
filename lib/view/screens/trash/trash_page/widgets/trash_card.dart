@@ -79,8 +79,8 @@ class TrashNoteCard extends StatelessWidget {
               ],
             )
           : text.isEmpty
-              ? null
-              : Text(text),
+          ? null
+          : Text(text),
       deletedAt: entry.deletedAt,
       onRestore: onRestore,
       onDelete: onDelete,
@@ -89,11 +89,10 @@ class TrashNoteCard extends StatelessWidget {
 }
 
 /// The first line of [text] with anything in it, trimmed.
-String _firstLine(String text) =>
-    text.split("\n").map((line) => line.trim()).firstWhere(
-          (line) => line.isNotEmpty,
-          orElse: () => "",
-        );
+String _firstLine(String text) => text
+    .split("\n")
+    .map((line) => line.trim())
+    .firstWhere((line) => line.isNotEmpty, orElse: () => "");
 
 /// When something was deleted, as of [now]: "Deleted today at 9:30 PM",
 /// "Deleted yesterday", "Deleted 3 days ago", then "Deleted Oct 24", or
@@ -206,8 +205,9 @@ class _TrashCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: IconTheme.merge(
-                          data:
-                              IconThemeData(color: ink.withValues(alpha: 0.55)),
+                          data: IconThemeData(
+                            color: ink.withValues(alpha: 0.55),
+                          ),
                           child: DefaultTextStyle.merge(
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

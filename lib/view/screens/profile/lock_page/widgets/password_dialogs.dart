@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -12,20 +14,20 @@ import 'password_field.dart';
 
 /// How the App Lock's password is asked for, saying what for in [subtitle]:
 /// from [context]'s page, if it's still open by then.
-PasswordPrompt passwordPrompt(BuildContext context,
-        {required String subtitle}) =>
-    () async {
-      if (!context.mounted) return null;
-      return showPasswordDialog(context, subtitle: subtitle);
-    };
+PasswordPrompt passwordPrompt(
+  BuildContext context, {
+  required String subtitle,
+}) => () async {
+  if (!context.mounted) return null;
+  return showPasswordDialog(context, subtitle: subtitle);
+};
 
 /// How a locked note asks for the App Lock's password in place of the
 /// fingerprint, on a phone that can't take one.
 PasswordPrompt noteLockPasswordPrompt(BuildContext context) => passwordPrompt(
-      context,
-      subtitle:
-          "Your fingerprint isn't available, so enter your password instead.",
-    );
+  context,
+  subtitle: "Your fingerprint isn't available, so enter your password instead.",
+);
 
 /// How a new password for the App Lock is asked for: from [context]'s page,
 /// if it's still open by then.
@@ -37,7 +39,8 @@ NewPasswordPrompt newPasswordPrompt(BuildContext context) =>
         _NewPasswordDialog(
           title: "New Password",
           subtitle: "You'll need it each time the app opens.",
-          warning: "Pick one you'll remember: there's no way to reset it if "
+          warning:
+              "Pick one you'll remember: there's no way to reset it if "
               "you forget it.",
           minLength: minLength,
         ),
@@ -46,7 +49,8 @@ NewPasswordPrompt newPasswordPrompt(BuildContext context) =>
 
 /// How a backup asks for the password to lock it with: from [context]'s
 /// page, if it's still open by then.
-NewBackupPasswordPrompt newBackupPasswordPrompt(BuildContext context) => ({
+NewBackupPasswordPrompt newBackupPasswordPrompt(BuildContext context) =>
+    ({
       required int minLength,
       required Future<Result> Function(String password) lock,
     }) async {
@@ -56,7 +60,8 @@ NewBackupPasswordPrompt newBackupPasswordPrompt(BuildContext context) => ({
         _NewPasswordDialog(
           title: "Backup Password",
           subtitle: "You'll need it to restore this backup.",
-          warning: "Pick one you'll remember: without it, there's no way to "
+          warning:
+              "Pick one you'll remember: without it, there's no way to "
               "open the backup.",
           minLength: minLength,
           save: lock,
@@ -83,8 +88,10 @@ BackupPasswordPrompt backupPasswordPrompt(BuildContext context) =>
 
 /// Asks for the App Lock's password, saying what for in [subtitle], and
 /// hands it back once it's right, or null if the user cancels.
-Future<String?> showPasswordDialog(BuildContext context,
-    {required String subtitle}) {
+Future<String?> showPasswordDialog(
+  BuildContext context, {
+  required String subtitle,
+}) {
   return showFormDialog<String>(
     context,
     _PasswordDialog(
@@ -124,7 +131,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
     final result = await widget.check(password);
     if (!mounted) return;
     if (result is Failure) {
-      HapticFeedback.heavyImpact();
+      unawaited(HapticFeedback.heavyImpact());
       _controller.clear();
       setState(() {
         _checking = false;
@@ -161,8 +168,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
           builder: (context, child) => ProfileButton(
             // A backup's password takes a few seconds to check.
             label: _checking ? "Checking…" : "Continue",
-            onPressed:
-                _controller.text.isEmpty || _checking ? null : _submit,
+            onPressed: _controller.text.isEmpty || _checking ? null : _submit,
           ),
         ),
       ],
@@ -218,8 +224,8 @@ class _NewPasswordDialogState extends State<_NewPasswordDialog> {
     final error = password.length < minLength
         ? "Use at least $minLength characters"
         : password != _confirmation.text
-            ? "The passwords don't match"
-            : null;
+        ? "The passwords don't match"
+        : null;
     if (error != null) {
       setState(() => _error = error);
       return;
@@ -291,9 +297,8 @@ class _NewPasswordDialogState extends State<_NewPasswordDialog> {
           listenable: Listenable.merge([_password, _confirmation]),
           builder: (context, child) => ProfileButton(
             label: _saving ? widget.saving : "Save",
-            onPressed: _password.text.isEmpty ||
-                    _confirmation.text.isEmpty ||
-                    _saving
+            onPressed:
+                _password.text.isEmpty || _confirmation.text.isEmpty || _saving
                 ? null
                 : _submit,
           ),

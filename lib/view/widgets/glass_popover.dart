@@ -47,7 +47,8 @@ class GlassPopover extends StatefulWidget {
 class _GlassPopoverState extends State<GlassPopover>
     with SingleTickerProviderStateMixin {
   static const _shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(20)));
+    borderRadius: BorderRadius.all(Radius.circular(20)),
+  );
 
   /// The room between the panel and what it opens from, and between the
   /// panel and the edges of the screen.
@@ -134,14 +135,18 @@ class _GlassPopoverState extends State<GlassPopover>
   /// the screen turns.
   Widget _buildOverlay(BuildContext context, OverlayChildLayoutInfo info) {
     final anchor = MatrixUtils.transformRect(
-        info.childPaintTransform, Offset.zero & info.childSize);
+      info.childPaintTransform,
+      Offset.zero & info.childSize,
+    );
     final screen = info.overlaySize;
     final padding = MediaQuery.paddingOf(context);
     final rightToLeft = Directionality.of(context) == TextDirection.rtl;
     // Wider for larger text, by as much as its choices' names grow.
     final textScale = MediaQuery.textScalerOf(context).scale(15.5) / 15.5;
-    final width =
-        math.min(widget.width * textScale, screen.width - 2 * _margin);
+    final width = math.min(
+      widget.width * textScale,
+      screen.width - 2 * _margin,
+    );
     final left = (rightToLeft ? anchor.right - width : anchor.left)
         .clamp(_margin, math.max(_margin, screen.width - _margin - width))
         .toDouble();
@@ -161,8 +166,8 @@ class _GlassPopoverState extends State<GlassPopover>
             child: IgnorePointer(
               ignoring: !widget.open,
               child: Semantics(
-                label:
-                    MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                label: MaterialLocalizations.of(context)
+                    .modalBarrierDismissLabel,
                 onTap: widget.onClose,
                 child: Listener(
                   behavior: HitTestBehavior.opaque,
@@ -178,7 +183,8 @@ class _GlassPopoverState extends State<GlassPopover>
             bottom: down ? null : screen.height - anchor.top + _gap,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                  maxHeight: math.max(0.0, down ? below : above)),
+                maxHeight: math.max(0.0, down ? below : above),
+              ),
               child: FadeTransition(
                 opacity: _curve,
                 // Out of the corner nearest what it opens from.
@@ -279,9 +285,11 @@ class GlassPopoverOption extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Icon(icon,
-                    size: 20,
-                    color: selected ? accent : ink.withValues(alpha: 0.7)),
+                Icon(
+                  icon,
+                  size: 20,
+                  color: selected ? accent : ink.withValues(alpha: 0.7),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(

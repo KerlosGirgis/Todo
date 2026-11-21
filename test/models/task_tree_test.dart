@@ -7,28 +7,29 @@ import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/trashed.dart';
 
 /// A task named for its uuid, in the task with the uuid [parent].
-TodoItem task(String uuid,
-        {String? parent,
-        bool done = false,
-        bool daily = false,
-        bool folded = false,
-        int? id}) =>
-    TodoItem(
-      id: id,
-      uuid: uuid,
-      title: uuid,
-      parent: parent,
-      done: done,
-      folded: folded,
-      time: daily ? const ClockTime(7, 0) : null,
-      reminder: daily ? Reminder.daily : Reminder.none,
-    );
+TodoItem task(
+  String uuid, {
+  String? parent,
+  bool done = false,
+  bool daily = false,
+  bool folded = false,
+  int? id,
+}) => TodoItem(
+  id: id,
+  uuid: uuid,
+  title: uuid,
+  parent: parent,
+  done: done,
+  folded: folded,
+  time: daily ? const ClockTime(7, 0) : null,
+  reminder: daily ? Reminder.daily : Reminder.none,
+);
 
 /// The tree as an outline: each task's uuid, two spaces in for each task
 /// it's inside of.
-String outline(TaskTree tree) => [
-      for (final node in tree.nodes) "${"  " * node.depth}${node.task.uuid}",
-    ].join("\n");
+String outline(TaskTree tree) =>
+    [for (final node in tree.nodes) "${"  " * node.depth}${node.task.uuid}"]
+        .join("\n");
 
 void main() {
   /// A trip to plan, with shopping to do on the side:
@@ -41,14 +42,14 @@ void main() {
   ///     shop
   ///       milk
   List<TodoItem> plans() => [
-        task("trip"),
-        task("book", parent: "trip"),
-        task("flights", parent: "book"),
-        task("hotel", parent: "book"),
-        task("pack", parent: "trip"),
-        task("shop"),
-        task("milk", parent: "shop"),
-      ];
+    task("trip"),
+    task("book", parent: "trip"),
+    task("flights", parent: "book"),
+    task("hotel", parent: "book"),
+    task("pack", parent: "trip"),
+    task("shop"),
+    task("milk", parent: "shop"),
+  ];
 
   group('TaskTree', () {
     test('puts each task in the task its parent names', () {
@@ -66,10 +67,16 @@ shop
       expect(book.parent!.task.uuid, "trip");
       expect(book.depth, 1);
       expect(book.children.map((node) => node.task.uuid), ["flights", "hotel"]);
-      expect(tree["hotel"]!.ancestors.map((node) => node.task.uuid),
-          ["book", "trip"]);
-      expect(tree["trip"]!.descendants.map((node) => node.task.uuid),
-          ["book", "flights", "hotel", "pack"]);
+      expect(tree["hotel"]!.ancestors.map((node) => node.task.uuid), [
+        "book",
+        "trip",
+      ]);
+      expect(tree["trip"]!.descendants.map((node) => node.task.uuid), [
+        "book",
+        "flights",
+        "hotel",
+        "pack",
+      ]);
     });
 
     test('lists subtasks in their order, wherever their task is listed', () {
@@ -83,8 +90,10 @@ shop
     });
 
     test("a task whose parent isn't there is a task of its own", () {
-      final tree =
-          TaskTree([task("a", parent: "gone"), task("b", parent: "a")]);
+      final tree = TaskTree([
+        task("a", parent: "gone"),
+        task("b", parent: "a"),
+      ]);
       expect(outline(tree), "a\n  b");
       expect(tree["a"]!.task.parent, "gone");
     });
@@ -101,18 +110,20 @@ shop
       expect(outline(ring), "c\n  a\n    b");
     });
 
-    test('tells tasks that share a uuid apart, the first holding the subtasks',
-        () {
-      final tree = TaskTree([
-        task("same", id: 1),
-        task("same", id: 2),
-        task("sub", parent: "same"),
-      ]);
-      expect(tree.nodes.map((node) => node.key), ["same", "sub", "same#1"]);
-      expect(tree.nodeOf(task("same", id: 2))!.key, "same#1");
-      expect(tree.nodeOf(task("same", id: 1))!.children, hasLength(1));
-      expect(tree.nodeOf(task("nowhere")), isNull);
-    });
+    test(
+      'tells tasks that share a uuid apart, the first holding the subtasks',
+      () {
+        final tree = TaskTree([
+          task("same", id: 1),
+          task("same", id: 2),
+          task("sub", parent: "same"),
+        ]);
+        expect(tree.nodes.map((node) => node.key), ["same", "sub", "same#1"]);
+        expect(tree.nodeOf(task("same", id: 2))!.key, "same#1");
+        expect(tree.nodeOf(task("same", id: 1))!.children, hasLength(1));
+        expect(tree.nodeOf(task("nowhere")), isNull);
+      },
+    );
 
     test('counts the tasks in a task, and the done ones, however deep', () {
       final tree = TaskTree([
@@ -131,8 +142,12 @@ shop
     test('a branch is a task with every task in it, in order', () {
       final branch = TaskTree(plans())["trip"]!.branch;
       expect(branch.task.uuid, "trip");
-      expect(branch.subtasks.map((each) => each.uuid),
-          ["book", "flights", "hotel", "pack"]);
+      expect(branch.subtasks.map((each) => each.uuid), [
+        "book",
+        "flights",
+        "hotel",
+        "pack",
+      ]);
       expect(branch.all, hasLength(5));
     });
   });
@@ -216,8 +231,11 @@ shop
   });
 
   group('marking a task done', () {
-    List<String> marking(List<TodoItem> tasks, String uuid,
-        {required bool done}) {
+    List<String> marking(
+      List<TodoItem> tasks,
+      String uuid, {
+      required bool done,
+    }) {
       final tree = TaskTree(tasks);
       return [
         for (final node in tree.marking(tree[uuid]!, done: done))
@@ -226,8 +244,11 @@ shop
     }
 
     test('marks every task in it done, it first', () {
-      expect(
-          marking(plans(), "book", done: true), ["book", "flights", "hotel"]);
+      expect(marking(plans(), "book", done: true), [
+        "book",
+        "flights",
+        "hotel",
+      ]);
       expect(marking(plans(), "milk", done: true), ["milk", "shop"]);
     });
 
@@ -256,12 +277,14 @@ shop
       expect(marking(plans(), "flights", done: true), ["flights"]);
     });
 
-    test('not done again leaves the tasks it is in to do, not the ones in it',
-        () {
-      final tasks = [for (final each in plans()) each.copyWith(done: true)];
-      expect(marking(tasks, "book", done: false), ["book", "trip"]);
-      expect(marking(tasks, "trip", done: false), ["trip"]);
-    });
+    test(
+      'not done again leaves the tasks it is in to do, not the ones in it',
+      () {
+        final tasks = [for (final each in plans()) each.copyWith(done: true)];
+        expect(marking(tasks, "book", done: false), ["book", "trip"]);
+        expect(marking(tasks, "trip", done: false), ["trip"]);
+      },
+    );
 
     test('a daily task in one that is not leaves that one alone', () {
       final tasks = [
@@ -271,7 +294,7 @@ shop
       expect(marking(tasks, "stretch", done: false), ["stretch"]);
       final undone = [
         task("trip"),
-        task("stretch", parent: "trip", daily: true)
+        task("stretch", parent: "trip", daily: true),
       ];
       expect(marking(undone, "stretch", done: true), ["stretch"]);
       // The other way round, it counts: the day's routine is done with it.
@@ -293,13 +316,13 @@ shop
 
     test('a repeating task counts only in one that repeats on its days', () {
       TodoItem weekly(String uuid, Set<int> days, {String? parent}) => TodoItem(
-            uuid: uuid,
-            title: uuid,
-            parent: parent,
-            time: const ClockTime(7, 0),
-            reminder: Reminder.weekly,
-            weekdays: days,
-          );
+        uuid: uuid,
+        title: uuid,
+        parent: parent,
+        time: const ClockTime(7, 0),
+        reminder: Reminder.weekly,
+        weekdays: days,
+      );
       final gym = [
         weekly("gym", {DateTime.monday, DateTime.thursday}),
         weekly("warm up", {DateTime.thursday, DateTime.monday}, parent: "gym"),
@@ -313,39 +336,42 @@ shop
 
   group('doneAheadOfSubtasks', () {
     List<String> ahead(List<TodoItem> tasks) => [
-          for (final node in TaskTree(tasks).doneAheadOfSubtasks)
-            node.task.uuid,
-        ];
+      for (final node in TaskTree(tasks).doneAheadOfSubtasks) node.task.uuid,
+    ];
 
     test('finds the done tasks with a task in them still to do', () {
       expect(
-          ahead([
-            task("trip", done: true),
-            task("book", parent: "trip", done: true),
-            task("hotel", parent: "book"),
-            task("shop", done: true),
-            task("milk", parent: "shop", done: true),
-          ]),
-          ["book", "trip"]);
+        ahead([
+          task("trip", done: true),
+          task("book", parent: "trip", done: true),
+          task("hotel", parent: "book"),
+          task("shop", done: true),
+          task("milk", parent: "shop", done: true),
+        ]),
+        ["book", "trip"],
+      );
       expect(ahead(plans()), isEmpty);
     });
 
     test('lets a daily task be to do in a done task that is not daily', () {
       expect(
-          ahead([
-            task("trip", done: true),
-            task("stretch", parent: "trip", daily: true),
-          ]),
-          isEmpty);
+        ahead([
+          task("trip", done: true),
+          task("stretch", parent: "trip", daily: true),
+        ]),
+        isEmpty,
+      );
     });
   });
 
   group('moving a task', () {
     String? moved(String uuid, {String? into, String? before}) {
       final tree = TaskTree(plans());
-      final tasks = tree.moving(tree[uuid]!,
-          parent: into == null ? null : tree[into],
-          before: before == null ? null : tree[before]);
+      final tasks = tree.moving(
+        tree[uuid]!,
+        parent: into == null ? null : tree[into],
+        before: before == null ? null : tree[before],
+      );
       return tasks == null ? null : outline(TaskTree(tasks));
     }
 
@@ -384,8 +410,11 @@ trip
       final tasks = tree.moving(tree["hotel"]!, parent: null)!;
       expect(tasks.last.uuid, "hotel");
       expect(tasks.last.parent, isNull);
-      expect(TaskTree(tasks).roots.map((node) => node.task.uuid),
-          ["trip", "shop", "hotel"]);
+      expect(TaskTree(tasks).roots.map((node) => node.task.uuid), [
+        "trip",
+        "shop",
+        "hotel",
+      ]);
     });
 
     test('to where it already is changes nothing', () {
@@ -403,10 +432,11 @@ trip
         task("hotel", parent: "book", id: 6, done: true),
       ]);
       final row = Trashed.toRow(
-          kind: TrashKind.task,
-          itemId: branch.task.id,
-          item: branch.toMap(),
-          deletedAt: DateTime(2026, 5, 13));
+        kind: TrashKind.task,
+        itemId: branch.task.id,
+        item: branch.toMap(),
+        deletedAt: DateTime(2026, 5, 13),
+      );
       final entry = Trashed.fromRow({...row, 'id': 1}, TaskBranch.fromMap)!;
       expect(entry.item.task.id, 3);
       expect(entry.item.task.toMap(), branch.task.toMap());

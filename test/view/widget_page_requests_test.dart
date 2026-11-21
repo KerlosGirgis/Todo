@@ -49,16 +49,16 @@ class _TodoPageState extends State<_TodoPage>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: TextButton(
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (context) => const AlertDialog(title: Text("Edit Task")),
-            ),
-            child: const Text("Open a dialog"),
-          ),
+    body: Center(
+      child: TextButton(
+        onPressed: () => showDialog<void>(
+          context: context,
+          builder: (context) => const AlertDialog(title: Text("Edit Task")),
         ),
-      );
+        child: const Text("Open a dialog"),
+      ),
+    ),
+  );
 }
 
 void main() {
@@ -105,8 +105,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets("a tap on the other page's widget goes over to it",
-      (tester) async {
+  testWidgets("a tap on the other page's widget goes over to it", (
+    tester,
+  ) async {
     await showPage(tester);
     await tap(tester, WidgetKind.tasks);
     expect(opened, isEmpty);
@@ -114,8 +115,9 @@ void main() {
     expect(opened, ["notes"]);
   });
 
-  testWidgets("not from under a dialog the user is in the middle of",
-      (tester) async {
+  testWidgets("not from under a dialog the user is in the middle of", (
+    tester,
+  ) async {
     await showPage(tester);
     await tester.tap(find.text("Open a dialog"));
     await tester.pumpAndSettle();
@@ -142,8 +144,7 @@ void main() {
     expect(opened, ["notes"]);
   });
 
-  testWidgets(
-      "a tap on its own widget while it's locked asks for nothing "
+  testWidgets("a tap on its own widget while it's locked asks for nothing "
       "more", (tester) async {
     await showPage(tester);
     auth.status = AuthStatus.unauthenticated;

@@ -120,7 +120,7 @@ class UserProfile {
       notesTitleSize: size('notesTitleSize'),
       tasksView:
           TasksView.values.elementAtOrNull(map['tasksView'] as int? ?? 0) ??
-              TasksView.list,
+          TasksView.list,
     );
   }
 

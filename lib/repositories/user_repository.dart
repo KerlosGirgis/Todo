@@ -1,8 +1,9 @@
 import 'package:sqflite_sqlcipher/sqflite.dart';
+
 import '../models/user_profile.dart';
 import '../services/database_service.dart';
 
-class UserRepository{
+class UserRepository {
   Database get db => DatabaseService.db;
 
   Future<void> insertUser(UserProfile user) {
@@ -10,24 +11,27 @@ class UserRepository{
   }
 
   Future<List<UserProfile>> getUser() async {
-    List<Map<String, dynamic>> maps = await db.query('User', columns: [
-      'id',
-      'name',
-      'pic',
-      'theme',
-      'amoled',
-      'autoSave',
-      'casual',
-      'verse',
-      'count',
-      'notesTextSize',
-      'startPage',
-      'descLines',
-      'notesTitleSize',
-      'tasksTitleSize',
-      'tasksDescSize',
-      'tasksView',
-    ]);
+    List<Map<String, dynamic>> maps = await db.query(
+      'User',
+      columns: [
+        'id',
+        'name',
+        'pic',
+        'theme',
+        'amoled',
+        'autoSave',
+        'casual',
+        'verse',
+        'count',
+        'notesTextSize',
+        'startPage',
+        'descLines',
+        'notesTitleSize',
+        'tasksTitleSize',
+        'tasksDescSize',
+        'tasksView',
+      ],
+    );
     List<UserProfile> items = [];
     if (maps.isNotEmpty) {
       for (var element in maps) {
@@ -38,8 +42,11 @@ class UserRepository{
   }
 
   Future<void> updateUser(UserProfile item) async {
-    await db
-        .update('User', item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+    await db.update(
+      'User',
+      item.toMap(),
+      where: 'id = ?',
+      whereArgs: [item.id],
+    );
   }
-
 }

@@ -39,7 +39,10 @@ class LargeTitleBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, child) {
@@ -123,8 +126,9 @@ class TitleBar extends StatelessWidget {
               filter: ui.ImageFilter.blur(sigmaX: 24, sigmaY: 24),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: context.colors.pageBackground
-                      .withValues(alpha: 0.8 * frost),
+                  color: context.colors.pageBackground.withValues(
+                    alpha: 0.8 * frost,
+                  ),
                   border: Border(
                     bottom: BorderSide(
                       width: 0.5,
@@ -144,10 +148,11 @@ class TitleBar extends StatelessWidget {
               height: topInset + height,
               child: Padding(
                 padding: EdgeInsets.only(
-                    top: topInset,
-                    bottom: _rowGap,
-                    left: leading == null ? 0 : 16,
-                    right: 16),
+                  top: topInset,
+                  bottom: _rowGap,
+                  left: leading == null ? 0 : 16,
+                  right: 16,
+                ),
                 child: NavigationToolbar(
                   leading: leading,
                   middle: Opacity(
@@ -168,7 +173,7 @@ class TitleBar extends StatelessWidget {
                 ),
               ),
             ),
-            if (bottom != null) bottom,
+            ?bottom,
           ],
         ),
       ],
@@ -204,7 +209,7 @@ class LargeTitle extends StatelessWidget {
               ),
             ),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );

@@ -1,7 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:todo/view_model/notes_view_model.dart';
+
+import '../../../../../view_model/notes_view_model.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../models/note.dart';
@@ -13,9 +14,7 @@ import 'note_card.dart';
 /// Puts the notes in a new order, by dragging their titles up and down a
 /// list on the same surface as the dialogs' settings.
 class ReorderNotesDialog extends StatelessWidget {
-  const ReorderNotesDialog({
-    super.key,
-  });
+  const ReorderNotesDialog({super.key});
 
   static const _shape = RoundedSuperellipseBorder(
     borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -27,8 +26,10 @@ class ReorderNotesDialog extends StatelessWidget {
     final count = notes.notes.length;
     // The rows, filled like the settings around them, and opaque, so a row
     // picked up still reads over the others.
-    final surface = Color.alphaBlend(context.colors.wB.withValues(alpha: 0.06),
-        context.colors.dialogBackground);
+    final surface = Color.alphaBlend(
+      context.colors.wB.withValues(alpha: 0.06),
+      context.colors.dialogBackground,
+    );
     return FormDialog(
       icon: Icons.swap_vert_rounded,
       title: "Reorder Notes",
@@ -53,7 +54,8 @@ class ReorderNotesDialog extends StatelessWidget {
           ConstrainedBox(
             // Scrolls once there are more notes than fit comfortably.
             constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(context).height * 0.45),
+              maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+            ),
             child: Material(
               color: surface,
               shape: _shape,
@@ -70,15 +72,21 @@ class ReorderNotesDialog extends StatelessWidget {
                   animation: animation,
                   color: surface,
                   child: _NoteRow(
-                      note: notes.notes[index], index: index, divided: false),
+                    note: notes.notes[index],
+                    index: index,
+                    divided: false,
+                  ),
                 ),
                 itemBuilder: (context, index) {
                   final note = notes.notes[index];
                   return ReorderableDelayedDragStartListener(
                     key: ValueKey(note.id),
                     index: index,
-                    child:
-                        _NoteRow(note: note, index: index, divided: index > 0),
+                    child: _NoteRow(
+                      note: note,
+                      index: index,
+                      divided: index > 0,
+                    ),
                   );
                 },
               ),
@@ -187,8 +195,9 @@ class _LiftedRow extends StatelessWidget {
               shape: ReorderNotesDialog._shape,
               shadows: [
                 BoxShadow(
-                  color: Colors.black
-                      .withValues(alpha: (isDarkTheme ? 0.5 : 0.18) * lift),
+                  color: Colors.black.withValues(
+                    alpha: (isDarkTheme ? 0.5 : 0.18) * lift,
+                  ),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),

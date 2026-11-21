@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:todo/core/result.dart';
-import 'package:todo/models/app_lock.dart';
-import 'package:todo/services/authentication_service.dart';
-import 'package:todo/services/database_service.dart';
-import 'package:todo/services/device_service.dart';
-import 'package:todo/services/lock_service.dart';
-import 'package:todo/services/verse_service.dart';
-import 'package:todo/view_model/user_view_model.dart';
+
+import '../core/result.dart';
+import '../models/app_lock.dart';
+import '../services/authentication_service.dart';
+import '../services/database_service.dart';
+import '../services/device_service.dart';
+import '../services/lock_service.dart';
+import '../services/verse_service.dart';
+import 'user_view_model.dart';
 
 enum AuthStatus {
   initializing,
@@ -19,7 +20,7 @@ enum AuthStatus {
 }
 
 class AuthViewModel with ChangeNotifier {
-  /// [onOpened] reads in what the app's pages show, once the app has opened.
+  /// `onOpened` reads in what the app's pages show, once the app has opened.
   AuthViewModel(
     this._userViewModel, {
     AuthenticationService? authService,
@@ -27,13 +28,12 @@ class AuthViewModel with ChangeNotifier {
     DatabaseService? databaseService,
     DeviceService? deviceService,
     VerseService? verseService,
-    Future<void> Function()? onOpened,
-  })  : _authService = authService ?? AuthenticationService(),
-        _lockService = lockService ?? LockService(),
-        _dbService = databaseService ?? DatabaseService(),
-        _deviceService = deviceService ?? DeviceService(),
-        _verseService = verseService ?? VerseService(),
-        _onOpened = onOpened;
+    this._onOpened,
+  }) : _authService = authService ?? AuthenticationService(),
+       _lockService = lockService ?? LockService(),
+       _dbService = databaseService ?? DatabaseService(),
+       _deviceService = deviceService ?? DeviceService(),
+       _verseService = verseService ?? VerseService();
 
   AuthStatus _status = AuthStatus.unauthenticated;
   AuthStatus get status => _status;
@@ -82,10 +82,10 @@ class AuthViewModel with ChangeNotifier {
     _status = !await _unlocksAsItOpens()
         ? AuthStatus.unauthenticated
         : await _open()
-            ? AuthStatus.authenticated
-            // Says so, for the user to try again, rather than opening for
-            // good.
-            : AuthStatus.failed;
+        ? AuthStatus.authenticated
+        // Says so, for the user to try again, rather than opening for
+        // good.
+        : AuthStatus.failed;
     notifyListeners();
   }
 
@@ -151,8 +151,10 @@ class AuthViewModel with ChangeNotifier {
       ..reset()
       ..start();
     _awaySinceBoot = null;
-    _deviceService.sinceBoot().then((time) => _awaySinceBoot = time,
-        onError: (Object e) {});
+    _deviceService.sinceBoot().then(
+      (time) => _awaySinceBoot = time,
+      onError: (Object e) {},
+    );
   }
 
   /// Called as the app comes back: locks it again, if it has a lock, once

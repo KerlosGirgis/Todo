@@ -43,9 +43,9 @@ String repeatChipLabel(Recurrence recurrence) {
     RepeatEvery.week when _isOnly(days, _weekend) => "Weekends",
     RepeatEvery.week when days.length == 1 => "Weekly",
     RepeatEvery.week => [
-        for (final day in _inOrder(days))
-          DateTimeUtils.weekdayName(day, short: true),
-      ].join(", "),
+      for (final day in _inOrder(days))
+        DateTimeUtils.weekdayName(day, short: true),
+    ].join(", "),
   };
 }
 
@@ -61,30 +61,29 @@ String repeatSentence(Recurrence recurrence, ClockTime time, DateTime now) {
       "Every month on the ${DateTimeUtils.ordinal(recurrence.monthDay!)}",
     RepeatEvery.week when days.length == 7 => "Every day",
     RepeatEvery.week when _isOnly(days, _workWeek) => "Every weekday",
-    RepeatEvery.week => "Every ${_listed([
-            for (final day in _inOrder(days))
-              DateTimeUtils.weekdayName(day, short: days.length > 2),
-          ])}",
+    RepeatEvery.week =>
+      "Every ${_listed([for (final day in _inOrder(days)) DateTimeUtils.weekdayName(day, short: days.length > 2)])}",
   };
   final until = recurrence.until;
-  final end =
-      until == null ? "" : " until ${DateTimeUtils.dayInSentence(until, now)}";
+  final end = until == null
+      ? ""
+      : " until ${DateTimeUtils.dayInSentence(until, now)}";
   return "$when at ${time.label}$end";
 }
 
 /// How many times in a row a task that comes round as [recurrence] has it
 /// has been done, [count]: "5-day streak", "3-week streak", "2-month
 /// streak", or "4 in a row" for one that comes round on a few days a week.
-String streakLabel(Recurrence recurrence, int count) =>
-    switch (recurrence.every) {
-      RepeatEvery.day => "$count-day streak",
-      RepeatEvery.month => "$count-month streak",
-      RepeatEvery.week when recurrence.weekdays.length == 7 =>
-        "$count-day streak",
-      RepeatEvery.week when recurrence.weekdays.length == 1 =>
-        "$count-week streak",
-      RepeatEvery.week => "$count in a row",
-    };
+String streakLabel(
+  Recurrence recurrence,
+  int count,
+) => switch (recurrence.every) {
+  RepeatEvery.day => "$count-day streak",
+  RepeatEvery.month => "$count-month streak",
+  RepeatEvery.week when recurrence.weekdays.length == 7 => "$count-day streak",
+  RepeatEvery.week when recurrence.weekdays.length == 1 => "$count-week streak",
+  RepeatEvery.week => "$count in a row",
+};
 
 /// When [recurrence] stops, for a task's chip, as of [now]: "Until Oct 24",
 /// "Ends Today", or "Ended" once its last time has gone. Null while it

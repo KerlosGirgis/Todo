@@ -22,24 +22,26 @@ typedef PasswordCheck = ({bool matched, Duration wait, String? key});
 /// Makes the key that locks the database's key from [password]: PBKDF2,
 /// salted with [salt], over [iterations] rounds, for 32 bytes.
 typedef KeyFromPassword = Future<List<int>> Function(
-    String password, List<int> salt, int iterations);
+  String password,
+  List<int> salt,
+  int iterations,
+);
 
 class LockService {
   LockService()
-      : _bootTime = DeviceService().bootTime,
-        _keyFromPassword = _keyFromPasswordOnPhone,
-        _iterations = 100000;
+    : _bootTime = DeviceService().bootTime,
+      _keyFromPassword = _keyFromPasswordOnPhone,
+      _iterations = 100000;
 
   /// For tests, whose waits go by [bootTime], a clock of their own, and
   /// which have no phone to make keys from passwords on, so make them in
-  /// Dart, over as few [iterations] as they can wait for.
+  /// Dart, over as few `iterations` as they can wait for.
   @visibleForTesting
-  LockService.withClock(Future<BootTime> Function() bootTime,
-      {int iterations = 1000,
-      KeyFromPassword keyFromPassword = keyFromPasswordInDart})
-      : _bootTime = bootTime,
-        _keyFromPassword = keyFromPassword,
-        _iterations = iterations;
+  LockService.withClock(
+    Future<BootTime> Function() bootTime, {
+    this._iterations = 1000,
+    this._keyFromPassword = keyFromPasswordInDart,
+  }) : _bootTime = bootTime;
 
   final _storage = const FlutterSecureStorage();
   final _keys = KeyService();
@@ -214,20 +216,31 @@ class LockService {
   /// The database's key in [locked], made by [_lock], if [password] is the
   /// one it was locked with; null if it isn't.
   Future<String?> _unlock(String password, String locked) async {
-    if (locked.split(':')
-        case ['lock-key', final iterations, final salt, final box]) {
-      final secretKey = SecretKey(await _keyFromPassword(
-          password, base64.decode(salt), int.parse(iterations)));
+    if (locked.split(':') case [
+      'lock-key',
+      final iterations,
+      final salt,
+      final box,
+    ]) {
+      final secretKey = SecretKey(
+        await _keyFromPassword(
+          password,
+          base64.decode(salt),
+          int.parse(iterations),
+        ),
+      );
       try {
-        return utf8.decode(await _cipher.decrypt(
-          SecretBox.fromConcatenation(
-            base64.decode(box),
-            nonceLength: _cipher.nonceLength,
-            macLength: _cipher.macAlgorithm.macLength,
+        return utf8.decode(
+          await _cipher.decrypt(
+            SecretBox.fromConcatenation(
+              base64.decode(box),
+              nonceLength: _cipher.nonceLength,
+              macLength: _cipher.macAlgorithm.macLength,
+            ),
+            secretKey: secretKey,
+            aad: _header,
           ),
-          secretKey: secretKey,
-          aad: _header,
-        ));
+        );
       } on SecretBoxAuthenticationError {
         return null;
       }
@@ -262,8 +275,9 @@ class LockService {
   }
 
   Future<void> _retryAfter(BootTime now, Duration wait) => _storage.write(
-      key: _retryAtKey,
-      value: '${now.boot}:${(now.sinceBoot + wait).inMilliseconds}');
+    key: _retryAtKey,
+    value: '${now.boot}:${(now.sinceBoot + wait).inMilliseconds}',
+  );
 
   Future<void> _forgetFailures() async {
     await _storage.delete(key: _failuresKey);
@@ -279,11 +293,18 @@ class LockService {
   /// saved before they locked the database's key:
   /// `pbkdf2-sha256:<iterations>:<salt>:<hash>`.
   static Future<bool> _matches(String password, String saved) async {
-    if (saved.split(':')
-        case ['pbkdf2-sha256', final iterations, final salt, final hash]) {
+    if (saved.split(':') case [
+      'pbkdf2-sha256',
+      final iterations,
+      final salt,
+      final hash,
+    ]) {
       final expected = base64.decode(hash);
-      final actual =
-          await _stretch(password, base64.decode(salt), int.parse(iterations));
+      final actual = await _stretch(
+        password,
+        base64.decode(salt),
+        int.parse(iterations),
+      );
       if (actual.length != expected.length) return false;
       // Every byte is compared, however early they differ, so that how long
       // it takes gives nothing away.
@@ -298,29 +319,36 @@ class LockService {
 
   /// [pbkdf2] in the background, as it's slow on purpose.
   static Future<Uint8List> _stretch(
-          String password, List<int> salt, int iterations) =>
-      Isolate.run(() => pbkdf2(utf8.encode(password), salt, iterations));
+    String password,
+    List<int> salt,
+    int iterations,
+  ) => Isolate.run(() => pbkdf2(utf8.encode(password), salt, iterations));
 
   /// The key [password] makes on the phone, in its own code: PBKDF2, several
   /// times as fast there as in Dart, then an HMAC whose key the phone's
   /// keystore keeps and never lets out, so that a password can only be
   /// guessed on the phone itself, and slowly, not on a copy of its data.
   static Future<List<int>> _keyFromPasswordOnPhone(
-          String password, List<int> salt, int iterations) async =>
-      (await _channel.invokeMethod<Uint8List>('keyFromPassword', {
-        'password': password,
-        'salt': Uint8List.fromList(salt),
-        'iterations': iterations,
-      }))!;
+    String password,
+    List<int> salt,
+    int iterations,
+  ) async => (await _channel.invokeMethod<Uint8List>('keyFromPassword', {
+    'password': password,
+    'salt': Uint8List.fromList(salt),
+    'iterations': iterations,
+  }))!;
 
   /// The same in Dart, for tests, with an HMAC key of its own in place of
   /// the phone's.
   @visibleForTesting
   static Future<List<int>> keyFromPasswordInDart(
-          String password, List<int> salt, int iterations) async =>
-      Hmac(sha256, utf8.encode('phone'))
-          .convert(pbkdf2(utf8.encode(password), salt, iterations))
-          .bytes;
+    String password,
+    List<int> salt,
+    int iterations,
+  ) async => Hmac(
+    sha256,
+    utf8.encode('phone'),
+  ).convert(pbkdf2(utf8.encode(password), salt, iterations)).bytes;
 }
 
 /// PBKDF2 with HMAC-SHA256 (RFC 8018), for a key of one block: 32 bytes.

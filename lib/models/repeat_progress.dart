@@ -3,8 +3,8 @@
 /// it, is for its recurrence to say.
 class RepeatProgress {
   RepeatProgress({DateTime? since, Iterable<DateTime> doneDays = const []})
-      : since = since == null ? null : _dateOnly(since),
-        doneDays = Set.unmodifiable(doneDays.map(_dateOnly));
+    : since = since == null ? null : _dateOnly(since),
+      doneDays = Set.unmodifiable(doneDays.map(_dateOnly));
 
   /// No days at all, as for a task that's never repeated.
   static final none = RepeatProgress();
@@ -25,8 +25,9 @@ class RepeatProgress {
     final date = _dateOnly(day);
     return RepeatProgress(
       since: since,
-      doneDays:
-          done ? {...doneDays, date} : doneDays.where((each) => each != date),
+      doneDays: done
+          ? {...doneDays, date}
+          : doneDays.where((each) => each != date),
     );
   }
 
@@ -40,12 +41,12 @@ class RepeatProgress {
   /// done as "2026-05-12,2026-05-13", oldest first. Each is empty without
   /// any, as are older tasks and backups, from before tasks had them.
   factory RepeatProgress.fromMap(Map<String, dynamic> map) => RepeatProgress(
-        since: DateTime.tryParse(map['since'] as String? ?? ""),
-        doneDays: (map['doneDays'] as String? ?? "")
-            .split(",")
-            .map((day) => DateTime.tryParse(day.trim()))
-            .nonNulls,
-      );
+    since: DateTime.tryParse(map['since'] as String? ?? ""),
+    doneDays: (map['doneDays'] as String? ?? "")
+        .split(",")
+        .map((day) => DateTime.tryParse(day.trim()))
+        .nonNulls,
+  );
 
   Map<String, Object> toMap() {
     final since = this.since;
@@ -57,7 +58,8 @@ class RepeatProgress {
 }
 
 /// [day] as tasks keep a day: "2026-05-13".
-String storedDay(DateTime day) => "${day.year.toString().padLeft(4, "0")}-"
+String storedDay(DateTime day) =>
+    "${day.year.toString().padLeft(4, "0")}-"
     "${day.month.toString().padLeft(2, "0")}-"
     "${day.day.toString().padLeft(2, "0")}";
 

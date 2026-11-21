@@ -47,9 +47,9 @@ class MapNodeBit {
 /// is laid out from the tasks' sizes, before any of them is built.
 class MapNodeStyle {
   MapNodeStyle.of(BuildContext context)
-      : _base = DefaultTextStyle.of(context).style,
-        _scaler = MediaQuery.textScalerOf(context),
-        _direction = Directionality.of(context);
+    : _base = DefaultTextStyle.of(context).style,
+      _scaler = MediaQuery.textScalerOf(context),
+      _direction = Directionality.of(context);
 
   final TextStyle _base;
   final TextScaler _scaler;
@@ -77,20 +77,24 @@ class MapNodeStyle {
   static const titleGap = 4.0;
 
   /// A task of its own stands out a little from the tasks in it.
-  TextStyle titleOf(TaskNode node) => _base.merge(TextStyle(
-        fontSize: node.depth == 0 ? 15.5 : 14.5,
-        fontWeight: node.depth == 0 ? FontWeight.w700 : FontWeight.w600,
-        height: 1.22,
-        letterSpacing: -0.2,
-      ));
+  TextStyle titleOf(TaskNode node) => _base.merge(
+    TextStyle(
+      fontSize: node.depth == 0 ? 15.5 : 14.5,
+      fontWeight: node.depth == 0 ? FontWeight.w700 : FontWeight.w600,
+      height: 1.22,
+      letterSpacing: -0.2,
+    ),
+  );
 
-  TextStyle get bit => _base.merge(const TextStyle(
-        fontSize: 11.5,
-        fontWeight: FontWeight.w600,
-        height: 1.15,
-        letterSpacing: 0,
-        fontFeatures: [FontFeature.tabularFigures()],
-      ));
+  TextStyle get bit => _base.merge(
+    const TextStyle(
+      fontSize: 11.5,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+      letterSpacing: 0,
+      fontFeatures: [FontFeature.tabularFigures()],
+    ),
+  );
 
   /// What the map says under [node]'s title, as of [now]: when it's for,
   /// that it repeats or reminds, and how many of its subtasks are done.
@@ -111,8 +115,10 @@ class MapNodeStyle {
       else if (task.reminder == Reminder.once)
         const MapNodeBit(Icons.notifications_active_rounded),
       if (node.subtaskCount > 0)
-        MapNodeBit(Icons.account_tree_rounded,
-            "${node.doneSubtaskCount}/${node.subtaskCount}"),
+        MapNodeBit(
+          Icons.account_tree_rounded,
+          "${node.doneSubtaskCount}/${node.subtaskCount}",
+        ),
     ];
   }
 
@@ -150,7 +156,9 @@ class MapNodeStyle {
     }
     return Size(
       math.max(
-          _minWidth, padding.left + check + checkGap + width + padding.right),
+        _minWidth,
+        padding.left + check + checkGap + width + padding.right,
+      ),
       math.max(_minHeight, padding.vertical + height),
     );
   }
@@ -208,14 +216,16 @@ class MapNodeCard extends StatelessWidget {
     final surface = isDarkTheme ? context.colors.cardBackground : Colors.white;
     final fill = top
         ? Color.alphaBlend(
-            color.withValues(alpha: isDarkTheme ? 0.2 : 0.12), surface)
+            color.withValues(alpha: isDarkTheme ? 0.2 : 0.12),
+            surface,
+          )
         : surface;
     final ringed = selected || targeted;
     final edge = ringed
         ? accent
         : top
-            ? color.withValues(alpha: isDarkTheme ? 0.6 : 0.5)
-            : ink.withValues(alpha: isDarkTheme ? 0.14 : 0.09);
+        ? color.withValues(alpha: isDarkTheme ? 0.6 : 0.5)
+        : ink.withValues(alpha: isDarkTheme ? 0.14 : 0.09);
     return TweenAnimationBuilder<double>(
       // Eases between the to-do and done looks, as a card does.
       tween: Tween(end: task.done ? 1.0 : 0.0),
@@ -239,8 +249,9 @@ class MapNodeCard extends StatelessWidget {
                 ),
               if (lifted)
                 BoxShadow(
-                  color:
-                      Colors.black.withValues(alpha: isDarkTheme ? 0.5 : 0.2),
+                  color: Colors.black.withValues(
+                    alpha: isDarkTheme ? 0.5 : 0.2,
+                  ),
                   blurRadius: 24,
                   offset: const Offset(0, 10),
                 )
@@ -275,7 +286,9 @@ class MapNodeCard extends StatelessWidget {
                     ),
                     child: Center(
                       child: CheckCircle(
-                          doneness: doneness, size: MapNodeStyle.check),
+                        doneness: doneness,
+                        size: MapNodeStyle.check,
+                      ),
                     ),
                   ),
                 ),
@@ -297,7 +310,9 @@ class MapNodeCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           textWidthBasis: TextWidthBasis.longestLine,
-                          style: style.titleOf(node).copyWith(
+                          style: style
+                              .titleOf(node)
+                              .copyWith(
                                 color: fade(1, 0.4),
                                 decoration: doneness > 0
                                     ? TextDecoration.lineThrough
@@ -306,21 +321,24 @@ class MapNodeCard extends StatelessWidget {
                                 // as no colour, drawing the line in the
                                 // text's.
                                 decorationColor: ink.withValues(
-                                    alpha: math.max(0.4 * doneness, 1 / 255)),
+                                  alpha: math.max(0.4 * doneness, 1 / 255),
+                                ),
                                 decorationThickness: 1.5,
                               ),
                         ),
                       ),
                       if (bits.isNotEmpty)
                         Padding(
-                          padding:
-                              const EdgeInsets.only(top: MapNodeStyle.titleGap),
+                          padding: const EdgeInsets.only(
+                            top: MapNodeStyle.titleGap,
+                          ),
                           child: _Bits(
                             bits: bits,
                             style: style.bit,
                             color: ink.withValues(alpha: 0.55 * strength),
-                            urgent: context.colors.systemRed
-                                .withValues(alpha: strength),
+                            urgent: context.colors.systemRed.withValues(
+                              alpha: strength,
+                            ),
                           ),
                         ),
                     ],
@@ -350,11 +368,11 @@ class _Bits extends StatelessWidget {
   final Color urgent;
 
   Widget _words(String label, MapNodeBit bit) => Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: style.copyWith(color: bit.urgent ? urgent : color),
-      );
+    label,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: style.copyWith(color: bit.urgent ? urgent : color),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -363,8 +381,11 @@ class _Bits extends StatelessWidget {
       children: [
         for (final (index, bit) in bits.indexed) ...[
           if (index > 0) const SizedBox(width: MapNodeStyle.bitsGap),
-          Icon(bit.icon,
-              size: MapNodeStyle.bitIcon, color: bit.urgent ? urgent : color),
+          Icon(
+            bit.icon,
+            size: MapNodeStyle.bitIcon,
+            color: bit.urgent ? urgent : color,
+          ),
           if (bit.label case final label?) ...[
             const SizedBox(width: MapNodeStyle.bitGap),
             // Only the first gives way when they don't all fit: when the
@@ -474,8 +495,8 @@ class MapKnob extends StatelessWidget {
       button: true,
       label: folded
           ? (count == 1
-              ? "1 subtask folded away"
-              : "$count subtasks folded away")
+                ? "1 subtask folded away"
+                : "$count subtasks folded away")
           : "Subtasks",
       hint: folded ? "Shows the subtasks" : "Folds the subtasks away",
       excludeSemantics: true,

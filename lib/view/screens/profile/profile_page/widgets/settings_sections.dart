@@ -35,10 +35,12 @@ class AppearanceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark =
-        context.select<UserViewModel, bool>((user) => user.user.darkTheme);
-    final amoled =
-        context.select<UserViewModel, bool>((user) => user.user.amoledTheme);
+    final dark = context.select<UserViewModel, bool>(
+      (user) => user.user.darkTheme,
+    );
+    final amoled = context.select<UserViewModel, bool>(
+      (user) => user.user.amoledTheme,
+    );
     return SettingsGroup(
       title: "Appearance",
       children: [
@@ -78,10 +80,14 @@ class GeneralSection extends StatelessWidget {
               if (page != null) user.setStartPage(page);
             },
             children: const {
-              StartPage.tasks:
-                  _Segment(icon: Icons.checklist_rounded, label: "To-Do"),
-              StartPage.notes:
-                  _Segment(icon: Icons.sticky_note_2_rounded, label: "Notes"),
+              StartPage.tasks: _Segment(
+                icon: Icons.checklist_rounded,
+                label: "To-Do",
+              ),
+              StartPage.notes: _Segment(
+                icon: Icons.sticky_note_2_rounded,
+                label: "Notes",
+              ),
             },
           ),
         ),
@@ -153,8 +159,10 @@ class _AppLockTileState extends State<_AppLockTile> {
       icon: Icons.lock_rounded,
       color: _green,
       title: "App Lock",
-      subtitle: const Text("Needed each time the app opens, and after a "
-          "minute away"),
+      subtitle: const Text(
+        "Needed each time the app opens, and after a "
+        "minute away",
+      ),
       bottom: CupertinoSlidingSegmentedControl<AppLock>(
         groupValue: _changingTo ?? lock,
         onValueChanged: (lock) {
@@ -194,15 +202,15 @@ class _ChangePasswordTile extends StatelessWidget {
 /// Null if the user cancels.
 Future<Result?> _changeAppLock(BuildContext context, AppLock lock) {
   return context.read<UserViewModel>().changeAppLock(
-        lock,
-        askForPassword: passwordPrompt(
-          context,
-          subtitle: lock == AppLock.password
-              ? "Enter your current password first."
-              : "Enter your password to change the App Lock.",
-        ),
-        askForNewPassword: newPasswordPrompt(context),
-      );
+    lock,
+    askForPassword: passwordPrompt(
+      context,
+      subtitle: lock == AppLock.password
+          ? "Enter your current password first."
+          : "Enter your password to change the App Lock.",
+    ),
+    askForNewPassword: newPasswordPrompt(context),
+  );
 }
 
 class TasksSection extends StatelessWidget {
@@ -225,8 +233,10 @@ class TasksSection extends StatelessWidget {
               if (view != null) user.setTasksView(view);
             },
             children: const {
-              TasksView.list:
-                  _Segment(icon: Icons.view_agenda_rounded, label: "List"),
+              TasksView.list: _Segment(
+                icon: Icons.view_agenda_rounded,
+                label: "List",
+              ),
               TasksView.map: _Segment(icon: Icons.hub_rounded, label: "Map"),
             },
           ),
@@ -442,10 +452,7 @@ class _Segment extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 17),
-            const SizedBox(width: 6),
-          ],
+          if (icon != null) ...[Icon(icon, size: 17), const SizedBox(width: 6)],
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,

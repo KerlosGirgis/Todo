@@ -7,7 +7,7 @@ class DateTimeUtils {
     bool isDaysSingular = duration.inDays == 1;
     bool isHoursSingular = duration.inHours == 1;
     bool isMinutesSingular = duration.inMinutes == 1;
-    if(duration.inDays > 0){
+    if (duration.inDays > 0) {
       return "${duration.inDays} ${isDaysSingular ? 'day' : 'days'} , ${twoDigits(duration.inHours.remainder(24))} ${isHoursSingular ? 'hour' : 'hours'} , $twoDigitMinutes ${isMinutesSingular ? 'minute' : 'minutes'}";
     }
     if (duration.inHours == 0) {
@@ -47,7 +47,12 @@ class DateTimeUtils {
   static String ordinal(int day) {
     final suffix = switch (day % 100) {
       11 || 12 || 13 => "th",
-      _ => switch (day % 10) { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" },
+      _ => switch (day % 10) {
+        1 => "st",
+        2 => "nd",
+        3 => "rd",
+        _ => "th",
+      },
     };
     return "$day$suffix";
   }
@@ -56,8 +61,9 @@ class DateTimeUtils {
   /// "Monday", or "Mon" when [short].
   static String weekdayName(int weekday, {bool short = false}) =>
       // January 2024 began on a Monday.
-      (short ? DateFormat.E() : DateFormat.EEEE())
-          .format(DateTime(2024, 1, weekday));
+      (short ? DateFormat.E() : DateFormat.EEEE()).format(
+        DateTime(2024, 1, weekday),
+      );
 
   static String _dateLabel(DateTime date, DateTime now) => date.year == now.year
       ? DateFormat("EEE, MMM d").format(date)
@@ -65,8 +71,9 @@ class DateTimeUtils {
 
   /// How many days [date] is from [now]'s day, counted in UTC, where every
   /// day is 24 hours long.
-  static int _daysFrom(DateTime now, DateTime date) =>
-      DateTime.utc(date.year, date.month, date.day)
-          .difference(DateTime.utc(now.year, now.month, now.day))
-          .inDays;
+  static int _daysFrom(DateTime now, DateTime date) => DateTime.utc(
+    date.year,
+    date.month,
+    date.day,
+  ).difference(DateTime.utc(now.year, now.month, now.day)).inDays;
 }

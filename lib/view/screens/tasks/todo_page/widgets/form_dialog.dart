@@ -18,9 +18,10 @@ Future<T?> showFormDialog<T>(BuildContext context, Widget dialog) {
     pageBuilder: (context, animation, secondaryAnimation) => dialog,
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final curvedAnimation = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic);
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
       return FadeTransition(
         opacity: curvedAnimation,
         child: ScaleTransition(
@@ -121,10 +122,7 @@ class FormDialog extends StatelessWidget {
                 const _CloseButton(),
               ],
             ),
-            if (content.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              ...content,
-            ],
+            if (content.isNotEmpty) ...[const SizedBox(height: 20), ...content],
             const SizedBox(height: 20),
             Row(
               children: [
@@ -213,8 +211,10 @@ class _CloseButton extends StatelessWidget {
 
 /// The look of a [FormDialog]'s text fields: filled, with the accent around
 /// the one being typed in, as on the profile page's name dialog.
-InputDecoration formFieldDecoration(BuildContext context,
-    {required String hint}) {
+InputDecoration formFieldDecoration(
+  BuildContext context, {
+  required String hint,
+}) {
   final shape = OutlineInputBorder(
     borderRadius: BorderRadius.circular(14),
     borderSide: BorderSide.none,

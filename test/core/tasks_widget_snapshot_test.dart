@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/models/clock_time.dart';
 import 'package:todo/models/repeat_progress.dart';
 import 'package:todo/models/task_sort.dart';
-import 'package:todo/models/tasks_widget_snapshot.dart';
+import 'package:todo/core/tasks_widget_snapshot.dart';
 import 'package:todo/models/todo_item.dart';
 
 /// Noon on a Wednesday.
@@ -20,8 +20,10 @@ void main() {
         TodoItem(uuid: "d", title: "D", parent: "a"),
         TodoItem(uuid: "e", title: "E"),
       ], now: now);
-      expect([for (final task in snapshot.tasks) task.title],
-          ["A", "D", "B", "E"]);
+      expect(
+        [for (final task in snapshot.tasks) task.title],
+        ["A", "D", "B", "E"],
+      );
       expect([for (final task in snapshot.tasks) task.parent], [-1, 0, -1, -1]);
       // The folded one's still counts.
       expect(snapshot.total, 5);
@@ -34,19 +36,25 @@ void main() {
         TodoItem(uuid: "y", title: "Y", day: DateTime(2026, 5, 14)),
         TodoItem(uuid: "z", title: "Z"),
       ];
-      List<String> titles(TasksWidgetSnapshot snapshot) =>
-          [for (final task in snapshot.tasks) task.title];
+      List<String> titles(TasksWidgetSnapshot snapshot) => [
+        for (final task in snapshot.tasks) task.title,
+      ];
       expect(titles(TasksWidgetSnapshot.of(tasks, now: now)), ["X", "Y", "Z"]);
       expect(
-          titles(
-              TasksWidgetSnapshot.of(tasks, now: now, sort: TaskSort.dueDate)),
-          ["Y", "X", "Z"]);
+        titles(TasksWidgetSnapshot.of(tasks, now: now, sort: TaskSort.dueDate)),
+        ["Y", "X", "Z"],
+      );
       expect(
-          titles(TasksWidgetSnapshot.of(tasks,
-              now: now,
-              sort: TaskSort.dueDate,
-              direction: SortDirection.descending)),
-          ["X", "Y", "Z"]);
+        titles(
+          TasksWidgetSnapshot.of(
+            tasks,
+            now: now,
+            sort: TaskSort.dueDate,
+            direction: SortDirection.descending,
+          ),
+        ),
+        ["X", "Y", "Z"],
+      );
     });
 
     test('stop at a hundred, though all of them count', () {
@@ -67,7 +75,9 @@ void main() {
           time: const ClockTime(7, 0),
           reminder: Reminder.daily,
           progress: RepeatProgress(
-              since: DateTime(2026, 5, 1), doneDays: [DateTime(2026, 5, 13)]),
+            since: DateTime(2026, 5, 1),
+            doneDays: [DateTime(2026, 5, 13)],
+          ),
         ),
       ], now: now);
       final run = snapshot.tasks.single;
@@ -89,7 +99,9 @@ void main() {
           reminder: Reminder.weekly,
           weekdays: const {DateTime.monday},
           progress: RepeatProgress(
-              since: DateTime(2026, 5, 1), doneDays: [DateTime(2026, 5, 11)]),
+            since: DateTime(2026, 5, 1),
+            doneDays: [DateTime(2026, 5, 11)],
+          ),
         ),
       ], now: now);
       final review = snapshot.tasks.single;
@@ -116,15 +128,19 @@ void main() {
       ], now: now);
       final plants = snapshot.tasks.single;
       expect(plants.due, DateTime(2026, 5, 13, 18));
-      expect(plants.when.take(3),
-          ["Today, 6:00 PM", "Yesterday, 6:00 PM", "Wed, May 13, 6:00 PM"]);
+      expect(plants.when.take(3), [
+        "Today, 6:00 PM",
+        "Yesterday, 6:00 PM",
+        "Wed, May 13, 6:00 PM",
+      ]);
       expect(snapshot.rowsOn(now, showDone: false).single.late, isFalse);
       expect(
-          snapshot
-              .rowsOn(DateTime(2026, 5, 13, 18, 1), showDone: false)
-              .single
-              .late,
-          isTrue);
+        snapshot
+            .rowsOn(DateTime(2026, 5, 13, 18, 1), showDone: false)
+            .single
+            .late,
+        isTrue,
+      );
     });
   });
 
@@ -145,26 +161,25 @@ void main() {
 
     test('are each as deep in as the tasks it\'s in that are listed', () {
       final rows = snapshot.rowsOn(now, showDone: true);
-      expect([
-        for (final row in rows) (row.title, row.depth, row.done)
-      ], [
-        ("Pack", 0, true),
-        ("Stretch", 1, false),
-        ("Socks", 2, true),
-        ("Shirts", 3, false),
-      ]);
+      expect(
+        [for (final row in rows) (row.title, row.depth, row.done)],
+        [
+          ("Pack", 0, true),
+          ("Stretch", 1, false),
+          ("Socks", 2, true),
+          ("Shirts", 3, false),
+        ],
+      );
       expect(rows[1].details, "8:00 AM · Daily");
       expect(rows[0].details, isNull);
     });
 
     test('leave out the tasks that are done, unless they\'re shown', () {
       final rows = snapshot.rowsOn(now, showDone: false);
-      expect([
-        for (final row in rows) (row.title, row.depth)
-      ], [
-        ("Stretch", 0),
-        ("Shirts", 1),
-      ]);
+      expect(
+        [for (final row in rows) (row.title, row.depth)],
+        [("Stretch", 0), ("Shirts", 1)],
+      );
     });
 
     test('go by the last day once the week has gone', () {
@@ -176,10 +191,14 @@ void main() {
   });
 
   test('while the App Lock is on, only how many are left', () {
-    final snapshot = TasksWidgetSnapshot.of([
-      TodoItem(uuid: "a", title: "Secret plan"),
-      TodoItem(uuid: "b", title: "Done already", done: true),
-    ], now: now, locked: true);
+    final snapshot = TasksWidgetSnapshot.of(
+      [
+        TodoItem(uuid: "a", title: "Secret plan"),
+        TodoItem(uuid: "b", title: "Done already", done: true),
+      ],
+      now: now,
+      locked: true,
+    );
     expect(snapshot.locked, isTrue);
     expect(snapshot.tasks, isEmpty);
     expect(snapshot.left, List.filled(7, 1));

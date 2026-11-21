@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/clock_time.dart';
 import 'package:todo/models/task_sort.dart';
-import 'package:todo/models/tasks_widget_snapshot.dart';
+import 'package:todo/core/tasks_widget_snapshot.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/services/home_widget_service.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
@@ -48,8 +48,9 @@ void main() {
   /// Lets the widget be shown the tasks, as it is once a change is made.
   Future<void> settle() => Future<void>.delayed(Duration.zero);
 
-  List<String> titles() =>
-      [for (final task in widget.shown.last.tasks) task.title];
+  List<String> titles() => [
+    for (final task in widget.shown.last.tasks) task.title,
+  ];
 
   test('is shown the tasks once they\'re read in, and not before', () async {
     await repository.insertItem(TodoItem(uuid: "a", title: "Water the plants"));
@@ -84,9 +85,11 @@ void main() {
 
   test('lists them as the to-do page sorts them', () async {
     await repository.insertItem(
-        TodoItem(uuid: "x", title: "Later", day: DateTime(2026, 5, 20)));
+      TodoItem(uuid: "x", title: "Later", day: DateTime(2026, 5, 20)),
+    );
     await repository.insertItem(
-        TodoItem(uuid: "y", title: "Sooner", day: DateTime(2026, 5, 14)));
+      TodoItem(uuid: "y", title: "Sooner", day: DateTime(2026, 5, 14)),
+    );
     await tasks.get();
     await settle();
     expect(titles(), ["Later", "Sooner"]);
@@ -95,8 +98,7 @@ void main() {
     expect(titles(), ["Sooner", "Later"]);
   });
 
-  test(
-      'only gets how many are left while the App Lock is on, and the '
+  test('only gets how many are left while the App Lock is on, and the '
       'tasks again once it\'s off', () async {
     await repository.insertItem(TodoItem(uuid: "a", title: "Secret plan"));
     lock.lock = AppLock.password;

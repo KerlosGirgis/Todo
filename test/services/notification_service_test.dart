@@ -23,23 +23,27 @@ void main() {
 
     test("the phone's time zone", () async {
       await NotificationService.followPhoneTimeZone(
-          device: FakeDevice("Africa/Cairo"));
+        device: FakeDevice("Africa/Cairo"),
+      );
       expect(NotificationService().timeZone, "Africa/Cairo");
     });
 
     test("UTC, for a time zone there's no record of", () async {
       await NotificationService.followPhoneTimeZone(
-          device: FakeDevice("Mars/Olympus"));
+        device: FakeDevice("Mars/Olympus"),
+      );
       expect(NotificationService().timeZone, tz.UTC.name);
     });
   });
 
-  test("remembers how the reminders' ids were made, as 0 before it did",
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    final notifications = NotificationService();
-    expect(await notifications.remindersIdVersion(), 0);
-    await notifications.setRemindersIdVersion(1);
-    expect(await notifications.remindersIdVersion(), 1);
-  });
+  test(
+    "remembers how the reminders' ids were made, as 0 before it did",
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final notifications = NotificationService();
+      expect(await notifications.remindersIdVersion(), 0);
+      await notifications.setRemindersIdVersion(1);
+      expect(await notifications.remindersIdVersion(), 1);
+    },
+  );
 }

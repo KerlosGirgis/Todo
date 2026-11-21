@@ -18,9 +18,13 @@ class FeedbackToast {
 
   static void info(String message) {
     _show(
-        message,
-        ToastificationType.custom(
-            "info", Color(0xff1E1E1E), Icons.info_outline_rounded));
+      message,
+      ToastificationType.custom(
+        "info",
+        Color(0xff1E1E1E),
+        Icons.info_outline_rounded,
+      ),
+    );
   }
 
   /// Shows how [result] went, if there's a result to show: none when the
@@ -105,10 +109,7 @@ class FeedbackToast {
 
   static void _show(String message, ToastificationType type) {
     toastification.show(
-      title: Text(
-        message,
-        style: TextStyle(fontSize: 17),
-      ),
+      title: Text(message, style: TextStyle(fontSize: 17)),
       type: type,
       autoCloseDuration: const Duration(seconds: 3),
       dragToClose: true,

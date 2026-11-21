@@ -38,20 +38,26 @@ void main() {
     title: "Stretch",
     time: const ClockTime(7, 0),
     reminder: Reminder.daily,
-    progress:
-        RepeatProgress(since: daysAgo(3), doneDays: [daysAgo(2), daysAgo(1)]),
+    progress: RepeatProgress(
+      since: daysAgo(3),
+      doneDays: [daysAgo(2), daysAgo(1)],
+    ),
   );
 
-  testWidgets("a daily task's card shows its week and its streak",
-      (tester) async {
+  testWidgets("a daily task's card shows its week and its streak", (
+    tester,
+  ) async {
     await showCard(tester, stretch);
     expect(find.text("2-day streak"), findsOneWidget);
-    expect(cardEndingIn("Last 7 days: 2 done, 1 missed, today still to do"),
-        findsOneWidget);
+    expect(
+      cardEndingIn("Last 7 days: 2 done, 1 missed, today still to do"),
+      findsOneWidget,
+    );
   });
 
-  testWidgets("checking it off counts today, as the card has it",
-      (tester) async {
+  testWidgets("checking it off counts today, as the card has it", (
+    tester,
+  ) async {
     await showCard(tester, stretch.copyWith(done: true));
     await tester.pumpAndSettle();
     expect(find.text("3-day streak"), findsOneWidget);
@@ -59,14 +65,17 @@ void main() {
   });
 
   testWidgets("other tasks' cards show neither", (tester) async {
-    await showCard(tester,
-        TodoItem(uuid: "u", title: "Call", time: const ClockTime(9, 0)));
+    await showCard(
+      tester,
+      TodoItem(uuid: "u", title: "Call", time: const ClockTime(9, 0)),
+    );
     expect(find.textContaining("streak"), findsNothing);
     expect(find.bySemanticsLabel(RegExp("Last 7 days")), findsNothing);
   });
 
-  testWidgets("a weekly task's card shows its days, its end and its run",
-      (tester) async {
+  testWidgets("a weekly task's card shows its days, its end and its run", (
+    tester,
+  ) async {
     final now = DateTime.now();
     final today = daysAgo(0);
     final days = {today.weekday, daysAgo(3).weekday};
@@ -80,25 +89,35 @@ void main() {
         weekdays: days,
         until: daysAgo(-10),
         progress: RepeatProgress(
-            since: daysAgo(10), doneDays: [daysAgo(7), daysAgo(3)]),
+          since: daysAgo(10),
+          doneDays: [daysAgo(7), daysAgo(3)],
+        ),
       ),
     );
     expect(
-        find.text([
+      find.text(
+        [
           for (final day in days.toList()..sort())
             DateTimeUtils.weekdayName(day, short: true),
-        ].join(", ")),
-        findsOneWidget);
-    expect(find.text("Until ${DateTimeUtils.shortDay(daysAgo(-10), now)}"),
-        findsOneWidget);
+        ].join(", "),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text("Until ${DateTimeUtils.shortDay(daysAgo(-10), now)}"),
+      findsOneWidget,
+    );
     expect(find.text("2 in a row"), findsOneWidget);
     expect(find.text("Today, 6:00 PM"), findsOneWidget);
-    expect(cardEndingIn("Last 7 days: 1 done, 0 missed, today still to do"),
-        findsOneWidget);
+    expect(
+      cardEndingIn("Last 7 days: 1 done, 0 missed, today still to do"),
+      findsOneWidget,
+    );
   });
 
-  testWidgets("a monthly task's card shows its last six months",
-      (tester) async {
+  testWidgets("a monthly task's card shows its last six months", (
+    tester,
+  ) async {
     await showCard(
       tester,
       TodoItem(
@@ -111,12 +130,15 @@ void main() {
       ),
     );
     expect(find.text("Monthly"), findsOneWidget);
-    expect(cardEndingIn("Last 6 months: 0 done, 0 missed, today still to do"),
-        findsOneWidget);
+    expect(
+      cardEndingIn("Last 6 months: 0 done, 0 missed, today still to do"),
+      findsOneWidget,
+    );
   });
 
-  testWidgets("a task that has stopped repeating says it's ended",
-      (tester) async {
+  testWidgets("a task that has stopped repeating says it's ended", (
+    tester,
+  ) async {
     await showCard(
       tester,
       TodoItem(

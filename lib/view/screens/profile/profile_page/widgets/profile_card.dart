@@ -44,8 +44,9 @@ class ProfileCard extends StatelessWidget {
         shape: _shape.copyWith(
           side: BorderSide(
             width: 0.5,
-            color:
-                context.colors.wB.withValues(alpha: isDarkTheme ? 0.08 : 0.05),
+            color: context.colors.wB.withValues(
+              alpha: isDarkTheme ? 0.08 : 0.05,
+            ),
           ),
         ),
         child: child,

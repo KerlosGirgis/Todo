@@ -8,8 +8,10 @@ import 'package:todo/core/ui/feedback_toast.dart';
 void main() {
   /// Lets [duration] go by a frame at a time, as it does on a phone, for
   /// the toasts' animations: a single pump would draw only their first frame.
-  Future<void> wait(WidgetTester tester,
-      [Duration duration = const Duration(seconds: 1)]) async {
+  Future<void> wait(
+    WidgetTester tester, [
+    Duration duration = const Duration(seconds: 1),
+  ]) async {
     const frame = Duration(milliseconds: 50);
     for (var waited = Duration.zero; waited < duration; waited += frame) {
       await tester.pump(frame);
@@ -19,16 +21,17 @@ void main() {
   /// A page under the toasts, as the app has them: laid out above its
   /// MaterialApp.
   Future<void> showApp(WidgetTester tester) => tester.pumpWidget(
-        ToastificationWrapper(
-          child: MaterialApp(
-            theme: AppTheme.getTheme(isDarkMode: false),
-            home: const Scaffold(),
-          ),
-        ),
-      );
+    ToastificationWrapper(
+      child: MaterialApp(
+        theme: AppTheme.getTheme(isDarkMode: false),
+        home: const Scaffold(),
+      ),
+    ),
+  );
 
-  testWidgets("a deletion's Undo puts it back, and closes the toast",
-      (tester) async {
+  testWidgets("a deletion's Undo puts it back, and closes the toast", (
+    tester,
+  ) async {
     await showApp(tester);
     var undone = 0;
     FeedbackToast.deleted("Task moved to Trash", onUndo: () => undone++);
@@ -42,8 +45,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets("a newer deletion's toast takes the last one's place",
-      (tester) async {
+  testWidgets("a newer deletion's toast takes the last one's place", (
+    tester,
+  ) async {
     await showApp(tester);
     var undone = <String>[];
     FeedbackToast.deleted("First", onUndo: () => undone.add("First"));
@@ -67,8 +71,9 @@ void main() {
     expect(undone, 0);
   });
 
-  testWidgets("a result shows as it went, and nothing shows without one",
-      (tester) async {
+  testWidgets("a result shows as it went, and nothing shows without one", (
+    tester,
+  ) async {
     await showApp(tester);
     FeedbackToast.show(null);
     await wait(tester);
@@ -82,16 +87,19 @@ void main() {
     expect(find.text("Couldn't save the task"), findsNothing);
   });
 
-  testWidgets(
-      "a result that changed more than was asked comes with an Undo, "
+  testWidgets("a result that changed more than was asked comes with an Undo, "
       "which says how taking it back went", (tester) async {
     await showApp(tester);
     var undone = 0;
     FeedbackToast.show(
-        Undoable("Task done, with its 2 subtasks", undo: () async {
-      undone++;
-      return const Failure("Couldn't undo that");
-    }));
+      Undoable(
+        "Task done, with its 2 subtasks",
+        undo: () async {
+          undone++;
+          return const Failure("Couldn't undo that");
+        },
+      ),
+    );
     await wait(tester);
     expect(find.text("Task done, with its 2 subtasks"), findsOneWidget);
 

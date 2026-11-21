@@ -30,12 +30,17 @@ class AvatarPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final current =
-        context.select<UserViewModel, Avatar>((user) => user.user.avatar);
+    final current = context.select<UserViewModel, Avatar>(
+      (user) => user.user.avatar,
+    );
     return SingleChildScrollView(
       // Clear of the gesture bar, which a bottom sheet's safe area leaves in.
       padding: EdgeInsets.fromLTRB(
-          20, 0, 20, 20 + MediaQuery.paddingOf(context).bottom),
+        20,
+        0,
+        20,
+        20 + MediaQuery.paddingOf(context).bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -172,12 +177,17 @@ class _AvatarOption extends StatelessWidget {
                         // Cut out of whatever it overlaps by the sheet's
                         // own colour.
                         border: Border.all(
-                            color: context.colors.dialogBackground, width: 2),
+                          color: context.colors.dialogBackground,
+                          width: 2,
+                        ),
                       ),
                       child: const Padding(
                         padding: EdgeInsets.all(2),
-                        child: Icon(Icons.check_rounded,
-                            size: 14, color: Colors.white),
+                        child: Icon(
+                          Icons.check_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

@@ -165,8 +165,10 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     duration: const Duration(milliseconds: 460),
     value: 1,
   )..addStatusListener(_changeStatus);
-  late final _eased =
-      CurvedAnimation(parent: _change, curve: Curves.easeInOutCubic);
+  late final _eased = CurvedAnimation(
+    parent: _change,
+    curve: Curves.easeInOutCubic,
+  );
 
   /// Takes the view from where it is to where it's been asked to go.
   late final _glide = AnimationController(
@@ -293,7 +295,8 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
       twoSided: _wide,
       sizeOf: (node) {
         final nodeBits = bits[node.key]!;
-        final drawn = "${node.depth == 0}\n${node.task.title}\n"
+        final drawn =
+            "${node.depth == 0}\n${node.task.title}\n"
             "${nodeBits.map((bit) => "${bit.icon.codePoint}:${bit.label}").join(",")}";
         return _sizes[drawn] ??= style.sizeOf(node, nodeBits);
       },
@@ -305,7 +308,8 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     final shift = first ? Offset.zero : layout.hub - before.hub;
     // Often only what the tasks say has changed, as one's checked off, and
     // they're all where they were going already: then they carry on there.
-    final settled = !first &&
+    final settled =
+        !first &&
         layout.places.length == before.places.length &&
         layout.places.entries.every((entry) {
           final was = before.places[entry.key]?.rect.shift(shift);
@@ -333,9 +337,11 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
       if (at == null) {
         // Out of the task it's in, if that was there, or the nearest task
         // around that one that was, or else the centre.
-        for (var around = place.parent;
-            around != null && at == null;
-            around = layout.places[around]?.parent) {
+        for (
+          var around = place.parent;
+          around != null && at == null;
+          around = layout.places[around]?.parent
+        ) {
           at = current[around];
         }
         at ??= layout.hub;
@@ -352,13 +358,21 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     for (final MapEntry(:key, value: place) in before.places.entries) {
       if (first || layout.places.containsKey(key)) continue;
       Offset? into;
-      for (var around = place.parent;
-          around != null && into == null;
-          around = before.places[around]?.parent) {
+      for (
+        var around = place.parent;
+        around != null && into == null;
+        around = before.places[around]?.parent
+      ) {
         into = layout.places[around]?.rect.center;
       }
-      ghosts.add(_Ghost(place, _bits[key] ?? const [],
-          from: current[key]!, to: into ?? layout.hub));
+      ghosts.add(
+        _Ghost(
+          place,
+          _bits[key] ?? const [],
+          from: current[key]!,
+          to: into ?? layout.hub,
+        ),
+      );
       changed = true;
     }
     if (shift != Offset.zero) {
@@ -471,8 +485,10 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     final dy = toShow(shown.top, shown.bottom, seen.top, seen.bottom);
     if (dx == 0 && dy == 0) return;
     final translation = view.getTranslation();
-    _glideTo(view.clone()
-      ..setTranslationRaw(translation.x + dx, translation.y + dy, 0));
+    _glideTo(
+      view.clone()
+        ..setTranslationRaw(translation.x + dx, translation.y + dy, 0),
+    );
   }
 
   /// Brings the map back if it's been dragged right out of sight, once
@@ -500,8 +516,10 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     final over = task.top - gap - MapToolbar.height;
     final top = over >= seen.top ? over : task.bottom + gap;
     return Offset(
-      (task.center.dx - MapToolbar.width / 2)
-          .clamp(seen.left, math.max(seen.left, seen.right - MapToolbar.width)),
+      (task.center.dx - MapToolbar.width / 2).clamp(
+        seen.left,
+        math.max(seen.left, seen.right - MapToolbar.width),
+      ),
       top.clamp(seen.top, math.max(seen.top, seen.bottom - MapToolbar.height)),
     );
   }
@@ -587,10 +605,10 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
         !byHand
             ? _Where.into
             : part < 0.28
-                ? _Where.before
-                : part > 0.72
-                    ? _Where.after
-                    : _Where.into,
+            ? _Where.before
+            : part > 0.72
+            ? _Where.after
+            : _Where.into,
       );
     }
     return nearest;
@@ -658,8 +676,11 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
       return 0;
     }
 
-    final by = Offset(push(at.dx, from.dx, seen.left, seen.right),
-            push(at.dy, from.dy, seen.top, seen.bottom)) *
+    final by =
+        Offset(
+          push(at.dx, from.dx, seen.left, seen.right),
+          push(at.dy, from.dy, seen.top, seen.bottom),
+        ) *
         (560 * seconds.clamp(0.0, 0.05));
     if (by == Offset.zero) return;
     final view = _view.value.clone();
@@ -690,8 +711,9 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
                   painter: MapGridPainter(
                     view: _view,
                     hub: _layout.hub,
-                    color: context.colors.wB
-                        .withValues(alpha: isDarkTheme ? 0.11 : 0.09),
+                    color: context.colors.wB.withValues(
+                      alpha: isDarkTheme ? 0.11 : 0.09,
+                    ),
                   ),
                 ),
               ),
@@ -763,16 +785,23 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
                 animation: Listenable.merge([_carriedAt, _view]),
                 builder: (context, child) {
                   final view = _view.value;
-                  final middle =
-                      MatrixUtils.transformPoint(view, _carriedAt.value + grip);
-                  final height = (_layout.places[key]?.rect.height ?? 0) *
+                  final middle = MatrixUtils.transformPoint(
+                    view,
+                    _carriedAt.value + grip,
+                  );
+                  final height =
+                      (_layout.places[key]?.rect.height ?? 0) *
                       view.getMaxScaleOnAxis();
                   final seen = _seen;
                   return Positioned(
-                    left: (middle.dx - _DropHint.width / 2).clamp(seen.left,
-                        math.max(seen.left, seen.right - _DropHint.width)),
-                    top: math.max(seen.top,
-                        middle.dy - height / 2 - 14 - _DropHint.height),
+                    left: (middle.dx - _DropHint.width / 2).clamp(
+                      seen.left,
+                      math.max(seen.left, seen.right - _DropHint.width),
+                    ),
+                    top: math.max(
+                      seen.top,
+                      middle.dy - height / 2 - 14 - _DropHint.height,
+                    ),
                     width: _DropHint.width,
                     height: _DropHint.height,
                     child: child!,
@@ -791,14 +820,16 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
                 builder: (context, child) {
                   final place = _layout.places[selected.key];
                   if (place == null) return const SizedBox.shrink();
-                  final at = _toolbarAt(MatrixUtils.transformRect(
-                    _view.value,
-                    Rect.fromCenter(
-                      center: _centerOf(selected.key),
-                      width: place.rect.width,
-                      height: place.rect.height,
+                  final at = _toolbarAt(
+                    MatrixUtils.transformRect(
+                      _view.value,
+                      Rect.fromCenter(
+                        center: _centerOf(selected.key),
+                        width: place.rect.width,
+                        height: place.rect.height,
+                      ),
                     ),
-                  ));
+                  );
                   return Positioned(left: at.dx, top: at.dy, child: child!);
                 },
                 child: MapToolbar(
@@ -838,23 +869,24 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     final spots = <MapSpot>[];
     final links = <MapLink>[];
 
-    children.add(GestureDetector(
-      key: const ValueKey("hub"),
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _glideTo(_viewOf(smallest: _smallestWhole)),
-      child: KeyedSubtree(
-        key: widget.hubKey,
-        child: MapHub(
-          done: widget.tasks.finishedTasksCount,
-          total: total,
-          targeted: target != null && target.key == null,
+    children.add(
+      GestureDetector(
+        key: const ValueKey("hub"),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _glideTo(_viewOf(smallest: _smallestWhole)),
+        child: KeyedSubtree(
+          key: widget.hubKey,
+          child: MapHub(
+            done: widget.tasks.finishedTasksCount,
+            total: total,
+            targeted: target != null && target.key == null,
+          ),
         ),
       ),
-    ));
-    spots.add(MapSpot(
-      size: const Size.square(MapLayout.hubRadius * 2),
-      to: layout.hub,
-    ));
+    );
+    spots.add(
+      MapSpot(size: const Size.square(MapLayout.hubRadius * 2), to: layout.hub),
+    );
 
     var index = 0;
     for (final MapEntry(:key, value: place) in layout.places.entries) {
@@ -865,53 +897,63 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
       final from = _from[key];
       final entering = _entering.contains(key);
       final parent = place.parent == null ? null : layout.places[place.parent];
-      children.add(Semantics(
-        key: ValueKey(key),
-        container: true,
-        selected: key == _selected,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => _select(key),
-          onLongPressStart: (details) => _pickUp(key, details.globalPosition),
-          onLongPressMoveUpdate: (details) => _carry(details.globalPosition),
-          onLongPressEnd: (details) => _drop(),
-          onLongPressCancel: _letGo,
-          child: KeyedSubtree(
-            key: index == 0 ? widget.nodeKey : null,
-            child: MapNodeCard(
-              node: node,
-              bits: _bits[key] ?? const [],
-              style: style,
-              color: color,
-              selected: key == _selected,
-              targeted: target?.key == key && target?.where == _Where.into,
-              onCheck: () => _toggle(task),
+      children.add(
+        Semantics(
+          key: ValueKey(key),
+          container: true,
+          selected: key == _selected,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _select(key),
+            onLongPressStart: (details) => _pickUp(key, details.globalPosition),
+            onLongPressMoveUpdate: (details) => _carry(details.globalPosition),
+            onLongPressEnd: (details) => _drop(),
+            onLongPressCancel: _letGo,
+            child: KeyedSubtree(
+              key: index == 0 ? widget.nodeKey : null,
+              child: MapNodeCard(
+                node: node,
+                bits: _bits[key] ?? const [],
+                style: style,
+                color: color,
+                selected: key == _selected,
+                targeted: target?.key == key && target?.where == _Where.into,
+                onCheck: () => _toggle(task),
+              ),
             ),
           ),
         ),
-      ));
-      spots.add(MapSpot(
-        size: place.rect.size,
-        to: place.rect.center,
-        from: from,
-        entering: entering,
-        dim: going ? 0.35 : 1,
-      ));
-      links.add(MapLink(
-        size: place.rect.size,
-        to: place.rect.center,
-        from: from,
-        parentSize: parent?.rect.size,
-        parentTo: parent?.rect.center ?? layout.hub,
-        parentFrom: parent == null ? null : _from[place.parent],
-        onLeft: place.onLeft,
-        color: color,
-        width: switch (node.depth) { 0 => 3.2, 1 => 2.5, _ => 2.0 },
-        strength: (task.done ? 0.35 : 1) * (going ? 0.35 : 1),
-        entering: entering,
-        // Its subtasks' branches start at its knob, a little way out.
-        stem: node.children.isNotEmpty,
-      ));
+      );
+      spots.add(
+        MapSpot(
+          size: place.rect.size,
+          to: place.rect.center,
+          from: from,
+          entering: entering,
+          dim: going ? 0.35 : 1,
+        ),
+      );
+      links.add(
+        MapLink(
+          size: place.rect.size,
+          to: place.rect.center,
+          from: from,
+          parentSize: parent?.rect.size,
+          parentTo: parent?.rect.center ?? layout.hub,
+          parentFrom: parent == null ? null : _from[place.parent],
+          onLeft: place.onLeft,
+          color: color,
+          width: switch (node.depth) {
+            0 => 3.2,
+            1 => 2.5,
+            _ => 2.0,
+          },
+          strength: (task.done ? 0.35 : 1) * (going ? 0.35 : 1),
+          entering: entering,
+          // Its subtasks' branches start at its knob, a little way out.
+          stem: node.children.isNotEmpty,
+        ),
+      );
       index++;
     }
 
@@ -920,73 +962,83 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
       final node = place.node;
       if (node.children.isEmpty) continue;
       final task = node.task;
-      final knob = MapLayout.knobOf(place.rect, onLeft: place.onLeft) -
+      final knob =
+          MapLayout.knobOf(place.rect, onLeft: place.onLeft) -
           place.rect.center;
       final from = _from[key];
-      children.add(MapKnob(
-        key: ValueKey("knob:$key"),
-        folded: task.folded,
-        count: node.descendants.length,
-        color: mapBranchColor(place.branch, isDarkTheme: isDarkTheme),
-        onTap: () {
-          HapticFeedback.selectionClick();
-          widget.tasks.setFolded(task, !task.folded);
-        },
-      ));
-      spots.add(MapSpot(
-        size: const Size.square(MapKnob.touch),
-        to: place.rect.center + knob,
-        from: from == null ? null : from + knob,
-        entering: _entering.contains(key),
-        dim: carried != null && carried.branch.contains(key) ? 0.35 : 1,
-      ));
+      children.add(
+        MapKnob(
+          key: ValueKey("knob:$key"),
+          folded: task.folded,
+          count: node.descendants.length,
+          color: mapBranchColor(place.branch, isDarkTheme: isDarkTheme),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            widget.tasks.setFolded(task, !task.folded);
+          },
+        ),
+      );
+      spots.add(
+        MapSpot(
+          size: const Size.square(MapKnob.touch),
+          to: place.rect.center + knob,
+          from: from == null ? null : from + knob,
+          entering: _entering.contains(key),
+          dim: carried != null && carried.branch.contains(key) ? 0.35 : 1,
+        ),
+      );
     }
 
     for (final ghost in _ghosts) {
       final place = ghost.place;
       final color = mapBranchColor(place.branch, isDarkTheme: isDarkTheme);
-      children.add(IgnorePointer(
-        key: ValueKey("ghost:${place.node.key}"),
-        child: ExcludeSemantics(
-          child: MapNodeCard(
-            node: place.node,
-            bits: ghost.bits,
-            style: style,
-            color: color,
+      children.add(
+        IgnorePointer(
+          key: ValueKey("ghost:${place.node.key}"),
+          child: ExcludeSemantics(
+            child: MapNodeCard(
+              node: place.node,
+              bits: ghost.bits,
+              style: style,
+              color: color,
+            ),
           ),
         ),
-      ));
-      spots.add(MapSpot(
-        size: place.rect.size,
-        to: ghost.to,
-        from: ghost.from,
-        leaving: true,
-      ));
+      );
+      spots.add(
+        MapSpot(
+          size: place.rect.size,
+          to: ghost.to,
+          from: ghost.from,
+          leaving: true,
+        ),
+      );
     }
 
     if (carried != null) {
       final place = layout.places[carried.key]!;
-      children.add(IgnorePointer(
-        key: const ValueKey("carried"),
-        child: ExcludeSemantics(
-          child: MapNodeCard(
-            node: place.node,
-            bits: _bits[carried.key] ?? const [],
-            style: style,
-            color: mapBranchColor(place.branch, isDarkTheme: isDarkTheme),
-            lifted: true,
+      children.add(
+        IgnorePointer(
+          key: const ValueKey("carried"),
+          child: ExcludeSemantics(
+            child: MapNodeCard(
+              node: place.node,
+              bits: _bits[carried.key] ?? const [],
+              style: style,
+              color: mapBranchColor(place.branch, isDarkTheme: isDarkTheme),
+              lifted: true,
+            ),
           ),
         ),
-      ));
-      spots.add(MapSpot(
-        size: place.rect.size,
-        to: carried.grip,
-        carried: true,
-      ));
+      );
+      spots.add(
+        MapSpot(size: place.rect.size, to: carried.grip, carried: true),
+      );
     }
 
-    final beside =
-        target == null || target.where == _Where.into ? null : target;
+    final beside = target == null || target.where == _Where.into
+        ? null
+        : target;
     return SizedBox.fromSize(
       size: layout.size,
       child: CustomPaint(
@@ -1070,7 +1122,8 @@ class _DropHint extends StatelessWidget {
                 style: TextStyle(
                   // Whichever reads on the accent, which is light on dark
                   // pages.
-                  color: ThemeData.estimateBrightnessForColor(accent) ==
+                  color:
+                      ThemeData.estimateBrightnessForColor(accent) ==
                           Brightness.dark
                       ? Colors.white
                       : Colors.black,

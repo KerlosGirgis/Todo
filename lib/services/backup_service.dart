@@ -25,7 +25,10 @@ class WrongBackupKindException implements Exception {
 /// Turns a password into a backup's key: PBKDF2-HMAC-SHA256 of [password],
 /// salted with [salt], over [iterations] rounds, for 32 bytes.
 typedef _Stretch = Future<List<int>> Function(
-    String password, List<int> salt, int iterations);
+  String password,
+  List<int> salt,
+  int iterations,
+);
 
 /// Backup files: the user's tasks or notes as JSON, locked with a password
 /// they choose, as a file can end up anywhere once it's out of the app.
@@ -37,9 +40,7 @@ typedef _Stretch = Future<List<int>> Function(
 /// are authenticated along with the records, so changing them leaves the
 /// file unopenable.
 class BackupService {
-  BackupService()
-      : iterations = 600000,
-        _stretch = _stretchOnPhone;
+  BackupService() : iterations = 600000, _stretch = _stretchOnPhone;
 
   /// For tests, which have no phone to stretch passwords on, so do it in
   /// Dart, over as few [iterations] as they can wait for.
@@ -69,9 +70,11 @@ class BackupService {
 
   /// [records], as a backup file of [kind], locked with a new password that
   /// [askForPassword] gets from the user. Null if they cancel.
-  Future<Uint8List?> write(List<Map<String, Object?>> records,
-      {required BackupKind kind,
-      required NewBackupPasswordPrompt askForPassword}) async {
+  Future<Uint8List?> write(
+    List<Map<String, Object?>> records, {
+    required BackupKind kind,
+    required NewBackupPasswordPrompt askForPassword,
+  }) async {
     Uint8List? file;
     final locked = await askForPassword(
       minLength: minPasswordLength,
@@ -90,20 +93,28 @@ class BackupService {
     return locked ? file : null;
   }
 
-  Future<Uint8List> _seal(List<Map<String, Object?>> records,
-      {required BackupKind kind, required String password}) async {
+  Future<Uint8List> _seal(
+    List<Map<String, Object?>> records, {
+    required BackupKind kind,
+    required String password,
+  }) async {
     final random = Random.secure();
     final salt = List<int>.generate(16, (_) => random.nextInt(256));
-    final box = await _encrypt(utf8.encode(jsonEncode(records)),
-        await _stretch(password, salt, iterations), _header(kind));
-    return utf8.encode(jsonEncode({
-      'format': _format,
-      'version': _version,
-      'kind': kind.name,
-      'salt': base64.encode(salt),
-      'iterations': iterations,
-      'data': base64.encode(box.concatenation()),
-    }));
+    final box = await _encrypt(
+      utf8.encode(jsonEncode(records)),
+      await _stretch(password, salt, iterations),
+      _header(kind),
+    );
+    return utf8.encode(
+      jsonEncode({
+        'format': _format,
+        'version': _version,
+        'kind': kind.name,
+        'salt': base64.encode(salt),
+        'iterations': iterations,
+        'data': base64.encode(box.concatenation()),
+      }),
+    );
   }
 
   /// The records in [bytes], a backup file of [kind]: straight away for one
@@ -112,9 +123,11 @@ class BackupService {
   ///
   /// Throws a [WrongBackupKindException] for a backup of the other kind, and
   /// a [FormatException] for a file that isn't a backup.
-  Future<List<dynamic>?> read(Uint8List bytes,
-      {required BackupKind kind,
-      required BackupPasswordPrompt askForPassword}) async {
+  Future<List<dynamic>?> read(
+    Uint8List bytes, {
+    required BackupKind kind,
+    required BackupPasswordPrompt askForPassword,
+  }) async {
     final file = jsonDecode(utf8.decode(bytes));
     // From before backups were locked: the records as they were.
     if (file is List) return file;
@@ -141,7 +154,10 @@ class BackupService {
     final opened = await askForPassword((password) async {
       try {
         json = await _decrypt(
-            box, await _stretch(password, salt, iterations), _header(kind));
+          box,
+          await _stretch(password, salt, iterations),
+          _header(kind),
+        );
         return const Success("Backup Unlocked");
       } on SecretBoxAuthenticationError {
         // Or the file's been changed since, which can't be told apart.
@@ -160,25 +176,44 @@ class BackupService {
 
   // AES-GCM in the background, as a big backup would hold up the page.
   static Future<SecretBox> _encrypt(
-          List<int> json, List<int> key, List<int> header) =>
-      Isolate.run(() => AesGcm.with256bits()
-          .encrypt(json, secretKey: SecretKey(key), aad: header));
+    List<int> json,
+    List<int> key,
+    List<int> header,
+  ) => Isolate.run(
+    () => AesGcm.with256bits().encrypt(
+      json,
+      secretKey: SecretKey(key),
+      aad: header,
+    ),
+  );
 
   static Future<List<int>> _decrypt(
-          SecretBox box, List<int> key, List<int> header) =>
-      Isolate.run(() => AesGcm.with256bits()
-          .decrypt(box, secretKey: SecretKey(key), aad: header));
+    SecretBox box,
+    List<int> key,
+    List<int> header,
+  ) => Isolate.run(
+    () => AesGcm.with256bits().decrypt(
+      box,
+      secretKey: SecretKey(key),
+      aad: header,
+    ),
+  );
 
   static Future<List<int>> _stretchOnPhone(
-          String password, List<int> salt, int iterations) async =>
-      (await _channel.invokeMethod<Uint8List>('pbkdf2', {
-        'password': password,
-        'salt': Uint8List.fromList(salt),
-        'iterations': iterations,
-      }))!;
+    String password,
+    List<int> salt,
+    int iterations,
+  ) async => (await _channel.invokeMethod<Uint8List>('pbkdf2', {
+    'password': password,
+    'salt': Uint8List.fromList(salt),
+    'iterations': iterations,
+  }))!;
 
   static Future<List<int>> _stretchInDart(
-      String password, List<int> salt, int iterations) async {
+    String password,
+    List<int> salt,
+    int iterations,
+  ) async {
     final key = await DartPbkdf2(
       macAlgorithm: DartHmac.sha256(),
       iterations: iterations,

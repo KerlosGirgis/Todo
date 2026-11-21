@@ -81,7 +81,7 @@ LockService newLock() =>
 /// A lock that can't be read, as when the phone's secure storage fails.
 class UnreadableLock extends LockService {
   UnreadableLock()
-      : super.withClock(() async => (boot: 1, sinceBoot: Duration.zero));
+    : super.withClock(() async => (boot: 1, sinceBoot: Duration.zero));
 
   @override
   Future<AppLock> getLock() async => throw StateError("Can't read the lock");
@@ -132,9 +132,9 @@ class PassingFingerprint extends AuthenticationService {
   PassingFingerprint() : super(lockService: newLock());
 
   @override
-  Future<FingerprintCheck> checkFingerprint(
-          {String reason = 'Please authenticate'}) async =>
-      FingerprintCheck.passed;
+  Future<FingerprintCheck> checkFingerprint({
+    String reason = 'Please authenticate',
+  }) async => FingerprintCheck.passed;
 }
 
 class FakeVerses implements VerseService {
@@ -188,8 +188,7 @@ void main() {
       expect(notified, 0);
     });
 
-    test('the handwritten font is saved, and only when it changes',
-        () async {
+    test('the handwritten font is saved, and only when it changes', () async {
       await user.setCasualFont(true);
       expect(user.user.casualFont, isTrue);
       expect(repository.rows.single.casualFont, isTrue);
@@ -207,15 +206,26 @@ void main() {
     });
 
     test('take text sizes from a quarter to twice the size', () async {
-      expect(await user.setNotesTextSize(UserViewModel.maxTextSize),
-          isA<Success>());
-      expect(await user.setTasksTitleSize(UserViewModel.minTextSize),
-          isA<Success>());
+      expect(
+        await user.setNotesTextSize(UserViewModel.maxTextSize),
+        isA<Success>(),
+      );
+      expect(
+        await user.setTasksTitleSize(UserViewModel.minTextSize),
+        isA<Success>(),
+      );
       expect(await user.setTasksDescSize(2.125), isA<Failure>());
       expect(await user.setNotesTitleSize(0.125), isA<Failure>());
       expect(user.user.notesTextSize, 2);
       expect(user.user.tasksTitleSize, 0.25);
       expect(user.user.tasksDescSize, 1);
+    });
+
+    test("save a text size only when it changes", () async {
+      expect(await user.setNotesTitleSize(1), isNull);
+      expect(repository.updates, 0);
+      expect(await user.setNotesTitleSize(1.5), isA<Success>());
+      expect(repository.updates, 1);
     });
   });
 
@@ -242,47 +252,53 @@ void main() {
       expect(reopened.shownTasksView, TasksView.list);
     });
 
-    test('picked in the settings is saved, and shows over the menu\'s',
-        () async {
-      user.showTasksAs(TasksView.map);
-      await user.setTasksView(TasksView.map);
-      expect(user.user.tasksView, TasksView.map);
-      expect(repository.rows.single.tasksView, TasksView.map);
-
-      user.showTasksAs(TasksView.list);
-      await user.setTasksView(TasksView.list);
-      expect(user.user.tasksView, TasksView.list);
-      expect(user.shownTasksView, TasksView.list);
-      expect(repository.updates, 2);
-
-      // The saved view again, though it's unchanged.
-      user.showTasksAs(TasksView.map);
-      var notified = 0;
-      user.addListener(() => notified++);
-      await user.setTasksView(TasksView.list);
-      expect(user.shownTasksView, TasksView.list);
-      expect(notified, 1);
-      expect(repository.updates, 2);
-
-      // Nothing to change.
-      await user.setTasksView(TasksView.list);
-      expect(notified, 1);
-    });
-  });
-
-  test("says why the profile couldn't be made, rather than half making it",
+    test(
+      'picked in the settings is saved, and shows over the menu\'s',
       () async {
-    final fresh = UserViewModel(
-      repository: FakeUserRepository()..failInserts = true,
-      lockService: newLock(),
-      deviceService: device,
-      databaseService: FakeDatabase(),
+        user.showTasksAs(TasksView.map);
+        await user.setTasksView(TasksView.map);
+        expect(user.user.tasksView, TasksView.map);
+        expect(repository.rows.single.tasksView, TasksView.map);
+
+        user.showTasksAs(TasksView.list);
+        await user.setTasksView(TasksView.list);
+        expect(user.user.tasksView, TasksView.list);
+        expect(user.shownTasksView, TasksView.list);
+        expect(repository.updates, 2);
+
+        // The saved view again, though it's unchanged.
+        user.showTasksAs(TasksView.map);
+        var notified = 0;
+        user.addListener(() => notified++);
+        await user.setTasksView(TasksView.list);
+        expect(user.shownTasksView, TasksView.list);
+        expect(notified, 1);
+        expect(repository.updates, 2);
+
+        // Nothing to change.
+        await user.setTasksView(TasksView.list);
+        expect(notified, 1);
+      },
     );
-    await expectLater(
-        fresh.get(),
-        throwsA(isA<StateError>()
-            .having((e) => e.message, 'message', "Disk full")));
   });
+
+  test(
+    "says why the profile couldn't be made, rather than half making it",
+    () async {
+      final fresh = UserViewModel(
+        repository: FakeUserRepository()..failInserts = true,
+        lockService: newLock(),
+        deviceService: device,
+        databaseService: FakeDatabase(),
+      );
+      await expectLater(
+        fresh.get(),
+        throwsA(
+          isA<StateError>().having((e) => e.message, 'message', "Disk full"),
+        ),
+      );
+    },
+  );
 
   group('a photo of their own', () {
     const first = PhotoAvatar("/data/app_flutter/first.jpg");
@@ -304,8 +320,7 @@ void main() {
       await withPhotos.pickPhoto();
     });
 
-    test(
-        "takes the place of the one before, which is deleted once the "
+    test("takes the place of the one before, which is deleted once the "
         "profile has the new one", () async {
       expect(withPhotos.user.avatar, first);
       // The bundled one it took the place of is no file of its own.
@@ -351,14 +366,15 @@ void main() {
     });
 
     test("won't take an empty name", () async {
-      expect((await user.rename("   ") as Failure).message,
-          "Name can't be empty");
+      expect(
+        (await user.rename("   ") as Failure).message,
+        "Name can't be empty",
+      );
       expect(repository.updates, 0);
     });
 
     test('counts characters as the name field does', () async {
-      expect(await user.rename("a" * UserViewModel.maxNameLength),
-          isA<Info>());
+      expect(await user.rename("a" * UserViewModel.maxNameLength), isA<Info>());
       expect(await user.rename("a" * 21), isA<Failure>());
       // One character to the field, though seven code points.
       expect(await user.rename("👨‍👩‍👧‍👦" * 20), isA<Info>());
@@ -375,8 +391,11 @@ void main() {
     test('locks with a new password, without asking for one first', () async {
       final changes = <AppLock>[];
       final subscription = newLock().changes.listen(changes.add);
-      final result = await user.changeAppLock(AppLock.password,
-          askForPassword: refuse, askForNewPassword: newPassword);
+      final result = await user.changeAppLock(
+        AppLock.password,
+        askForPassword: refuse,
+        askForNewPassword: newPassword,
+      );
       expect((result as Success).message, "Password Lock Enabled");
       expect(user.appLock, AppLock.password);
       expect(await newLock().getLock(), AppLock.password);
@@ -389,27 +408,37 @@ void main() {
 
     group('with a password lock', () {
       setUp(() async {
-        await user.changeAppLock(AppLock.password,
-            askForPassword: refuse, askForNewPassword: newPassword);
+        await user.changeAppLock(
+          AppLock.password,
+          askForPassword: refuse,
+          askForNewPassword: newPassword,
+        );
       });
 
-      test('asks for the password, and does nothing if it is cancelled',
-          () async {
-        var asked = 0;
-        final result = await user.changeAppLock(AppLock.off,
+      test(
+        'asks for the password, and does nothing if it is cancelled',
+        () async {
+          var asked = 0;
+          final result = await user.changeAppLock(
+            AppLock.off,
             askForPassword: () async {
               asked++;
               return null;
             },
-            askForNewPassword: newPassword);
-        expect(result, isNull);
-        expect(asked, 1);
-        expect(user.appLock, AppLock.password);
-      });
+            askForNewPassword: newPassword,
+          );
+          expect(result, isNull);
+          expect(asked, 1);
+          expect(user.appLock, AppLock.password);
+        },
+      );
 
       test('turns off with the password', () async {
-        final result = await user.changeAppLock(AppLock.off,
-            askForPassword: () async => "1234", askForNewPassword: newPassword);
+        final result = await user.changeAppLock(
+          AppLock.off,
+          askForPassword: () async => "1234",
+          askForNewPassword: newPassword,
+        );
         expect((result as Info).message, "Lock Disabled");
         expect(user.appLock, AppLock.off);
         expect(await unlockedKey(), dbKey);
@@ -425,33 +454,42 @@ void main() {
           databaseService: FakeDatabase(),
         );
         await fingerprint.loadAppLock();
-        final result = await fingerprint.changeAppLock(AppLock.fingerprint,
-            askForPassword: () async => "1234", askForNewPassword: newPassword);
+        final result = await fingerprint.changeAppLock(
+          AppLock.fingerprint,
+          askForPassword: () async => "1234",
+          askForNewPassword: newPassword,
+        );
         expect((result as Success).message, "Fingerprint Lock Enabled");
         expect(await newLock().getLock(), AppLock.fingerprint);
         expect(await unlockedKey(), dbKey);
       });
 
       test("doesn't change for a wrong password", () async {
-        final result = await user.changeAppLock(AppLock.password,
-            askForPassword: () async => "0000",
-            askForNewPassword: newPassword);
-        expect((result as Failure).message, "Authentication Failed");
+        final result = await user.changeAppLock(
+          AppLock.password,
+          askForPassword: () async => "0000",
+          askForNewPassword: newPassword,
+        );
+        expect((result as Failure).message, "Authentication failed");
       });
 
       test('changes the password', () async {
-        final result = await user.changeAppLock(AppLock.password,
-            askForPassword: () async => "1234",
-            askForNewPassword: ({required minLength}) async => "4321");
+        final result = await user.changeAppLock(
+          AppLock.password,
+          askForPassword: () async => "1234",
+          askForNewPassword: ({required minLength}) async => "4321",
+        );
         expect((result as Success).message, "Password Changed");
         expect((await newLock().checkPassword("4321")).key, dbKey);
         expect((await newLock().checkPassword("1234")).matched, isFalse);
       });
 
       test("won't take a new password that's too short", () async {
-        final result = await user.changeAppLock(AppLock.password,
-            askForPassword: () async => "1234",
-            askForNewPassword: ({required minLength}) async => "12");
+        final result = await user.changeAppLock(
+          AppLock.password,
+          askForPassword: () async => "1234",
+          askForNewPassword: ({required minLength}) async => "12",
+        );
         expect((result as Failure).message, "Use at least 4 characters");
       });
     });
@@ -459,9 +497,11 @@ void main() {
 
   group('the App Lock', () {
     test('is what the lock page asks for', () async {
-      await user.changeAppLock(AppLock.password,
-          askForPassword: () async => null,
-          askForNewPassword: ({required minLength}) async => "1234");
+      await user.changeAppLock(
+        AppLock.password,
+        askForPassword: () async => null,
+        askForNewPassword: ({required minLength}) async => "1234",
+      );
       final fresh = UserViewModel(
         repository: repository,
         lockService: newLock(),
@@ -475,11 +515,12 @@ void main() {
       expect(auth.lock, AppLock.password);
     });
 
-    test('opens the database with the key only its password unlocks',
-        () async {
-      await user.changeAppLock(AppLock.password,
-          askForPassword: () async => null,
-          askForNewPassword: ({required minLength}) async => "1234");
+    test('opens the database with the key only its password unlocks', () async {
+      await user.changeAppLock(
+        AppLock.password,
+        askForPassword: () async => null,
+        askForNewPassword: ({required minLength}) async => "1234",
+      );
       final database = FakeDatabase();
       final auth = AuthViewModel(
         UserViewModel(
@@ -500,85 +541,92 @@ void main() {
       expect(database.openedWith, dbKey);
     });
 
-    test("says so when the database won't open, and opens it on a try after",
-        () async {
-      final database = FakeDatabase()..failToOpen = true;
-      final auth = AuthViewModel(
-        UserViewModel(
-          repository: repository,
+    test(
+      "says so when the database won't open, and opens it on a try after",
+      () async {
+        final database = FakeDatabase()..failToOpen = true;
+        final auth = AuthViewModel(
+          UserViewModel(
+            repository: repository,
+            lockService: newLock(),
+            deviceService: device,
+            databaseService: database,
+          ),
           lockService: newLock(),
-          deviceService: device,
           databaseService: database,
-        ),
-        lockService: newLock(),
-        databaseService: database,
-        verseService: FakeVerses(),
-      );
-      await auth.initializeApp();
-      expect(auth.status, AuthStatus.failed);
-      expect(auth.opened, isFalse);
+          verseService: FakeVerses(),
+        );
+        await auth.initializeApp();
+        expect(auth.status, AuthStatus.failed);
+        expect(auth.opened, isFalse);
 
-      database.failToOpen = false;
-      await auth.retryAuthentication();
-      expect(auth.status, AuthStatus.authenticated);
-      expect(auth.opened, isTrue);
-      expect(database.opens, 2);
-    });
-
-    test("has what the pages show read in once it opens, and only the once",
-        () async {
-      final database = FakeDatabase()..failToOpen = true;
-      var reads = 0;
-      final auth = AuthViewModel(
-        UserViewModel(
-          repository: repository,
-          lockService: newLock(),
-          deviceService: device,
-          databaseService: database,
-        ),
-        lockService: newLock(),
-        databaseService: database,
-        verseService: FakeVerses(),
-        onOpened: () async => reads++,
-      );
-      await auth.initializeApp();
-      expect(reads, 0);
-
-      database.failToOpen = false;
-      await auth.retryAuthentication();
-      expect(reads, 1);
-
-      // Locked again and let back in, it's open already.
-      await auth.initializeApp();
-      expect(auth.status, AuthStatus.authenticated);
-      expect(reads, 1);
-    });
-
-    test("opens all the same when what the pages show can't be read in",
-        () async {
-      final auth = AuthViewModel(
-        UserViewModel(
-          repository: repository,
-          lockService: newLock(),
-          deviceService: device,
-          databaseService: FakeDatabase(),
-        ),
-        lockService: newLock(),
-        databaseService: FakeDatabase(),
-        verseService: FakeVerses(),
-        onOpened: () => throw StateError("Can't read the tasks"),
-      );
-      await auth.initializeApp();
-      expect(auth.status, AuthStatus.authenticated);
-      expect(auth.opened, isTrue);
-    });
+        database.failToOpen = false;
+        await auth.retryAuthentication();
+        expect(auth.status, AuthStatus.authenticated);
+        expect(auth.opened, isTrue);
+        expect(database.opens, 2);
+      },
+    );
 
     test(
-        "stays at the lock page when the right password's database won't "
+      "has what the pages show read in once it opens, and only the once",
+      () async {
+        final database = FakeDatabase()..failToOpen = true;
+        var reads = 0;
+        final auth = AuthViewModel(
+          UserViewModel(
+            repository: repository,
+            lockService: newLock(),
+            deviceService: device,
+            databaseService: database,
+          ),
+          lockService: newLock(),
+          databaseService: database,
+          verseService: FakeVerses(),
+          onOpened: () async => reads++,
+        );
+        await auth.initializeApp();
+        expect(reads, 0);
+
+        database.failToOpen = false;
+        await auth.retryAuthentication();
+        expect(reads, 1);
+
+        // Locked again and let back in, it's open already.
+        await auth.initializeApp();
+        expect(auth.status, AuthStatus.authenticated);
+        expect(reads, 1);
+      },
+    );
+
+    test(
+      "opens all the same when what the pages show can't be read in",
+      () async {
+        final auth = AuthViewModel(
+          UserViewModel(
+            repository: repository,
+            lockService: newLock(),
+            deviceService: device,
+            databaseService: FakeDatabase(),
+          ),
+          lockService: newLock(),
+          databaseService: FakeDatabase(),
+          verseService: FakeVerses(),
+          onOpened: () => throw StateError("Can't read the tasks"),
+        );
+        await auth.initializeApp();
+        expect(auth.status, AuthStatus.authenticated);
+        expect(auth.opened, isTrue);
+      },
+    );
+
+    test("stays at the lock page when the right password's database won't "
         "open, for another try, which isn't a wrong password", () async {
-      await user.changeAppLock(AppLock.password,
-          askForPassword: () async => null,
-          askForNewPassword: ({required minLength}) async => "1234");
+      await user.changeAppLock(
+        AppLock.password,
+        askForPassword: () async => null,
+        askForNewPassword: ({required minLength}) async => "1234",
+      );
       final database = FakeDatabase()..failToOpen = true;
       final auth = AuthViewModel(
         UserViewModel(
@@ -593,12 +641,16 @@ void main() {
       );
       await auth.initializeApp();
       final result = await auth.unlock("1234");
-      expect((result as Failure).message,
-          "Couldn't open your tasks and notes. Try again.");
+      expect(
+        (result as Failure).message,
+        "Couldn't open your tasks and notes. Try again.",
+      );
       expect(auth.status, AuthStatus.unauthenticated);
       expect(auth.opened, isFalse);
       expect(
-          await const FlutterSecureStorage().read(key: 'lockFailures'), isNull);
+        await const FlutterSecureStorage().read(key: 'lockFailures'),
+        isNull,
+      );
 
       database.failToOpen = false;
       expect(await auth.unlock("1234"), isA<Success>());
@@ -606,26 +658,32 @@ void main() {
       expect(database.openedWith, dbKey);
     });
 
-    test('asks for its password only when the app is locked with one',
-        () async {
-      final auth = AuthenticationService(lockService: newLock());
-      var asked = 0;
-      Future<String?> ask() async {
-        asked++;
-        return "1234";
-      }
+    test(
+      'asks for its password only when the app is locked with one',
+      () async {
+        final auth = AuthenticationService(lockService: newLock());
+        var asked = 0;
+        Future<String?> ask() async {
+          asked++;
+          return "1234";
+        }
 
-      expect(await auth.passAppLock(ask), (passed: true, password: null));
-      expect(asked, 0);
-      await user.changeAppLock(AppLock.password,
+        expect(await auth.passAppLock(ask), (passed: true, password: null));
+        expect(asked, 0);
+        await user.changeAppLock(
+          AppLock.password,
           askForPassword: () async => null,
-          askForNewPassword: ({required minLength}) async => "1234");
-      expect(await auth.passAppLock(ask), (passed: true, password: "1234"));
-      expect(asked, 1);
-      expect(await auth.passAppLock(() async => null), isNull);
-      expect(await auth.passAppLock(() async => "0000"),
-          (passed: false, password: "0000"));
-    });
+          askForNewPassword: ({required minLength}) async => "1234",
+        );
+        expect(await auth.passAppLock(ask), (passed: true, password: "1234"));
+        expect(asked, 1);
+        expect(await auth.passAppLock(() async => null), isNull);
+        expect(await auth.passAppLock(() async => "0000"), (
+          passed: false,
+          password: "0000",
+        ));
+      },
+    );
 
     test("doesn't let the user through when it can't be read", () async {
       final auth = AuthenticationService(lockService: UnreadableLock());

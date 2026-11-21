@@ -31,12 +31,15 @@ void main() {
     expect(await TourViewModel().isDue(PageTour.notes), isFalse);
   });
 
-  test('a tour is due again for those who saw an older version of it',
-      () async {
-    SharedPreferences.setMockInitialValues(
-        {'tour.tasks': PageTour.tasks.version - 1});
-    expect(await TourViewModel().isDue(PageTour.tasks), isTrue);
-  });
+  test(
+    'a tour is due again for those who saw an older version of it',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'tour.tasks': PageTour.tasks.version - 1,
+      });
+      expect(await TourViewModel().isDue(PageTour.tasks), isTrue);
+    },
+  );
 
   test('asking for the tips again makes every tour due, and says so', () async {
     final tours = TourViewModel();

@@ -15,7 +15,8 @@ class TasksSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (done, remaining) = context.select<TasksViewModel, (int, int)>(
-        (tasks) => (tasks.finishedTasksCount, tasks.unfinishedTasksCount));
+      (tasks) => (tasks.finishedTasksCount, tasks.unfinishedTasksCount),
+    );
     final total = done + remaining;
     final (headline, detail) = describeTaskProgress(done, total);
     return ProfileCard(

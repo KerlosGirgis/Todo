@@ -33,9 +33,9 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
           askForBackupPassword: backupPasswordPrompt(context),
         )
         .then((result) {
-      if (mounted) closeFormDialog(context);
-      FeedbackToast.show(result);
-    });
+          if (mounted) closeFormDialog(context);
+          FeedbackToast.show(result);
+        });
   }
 
   @override

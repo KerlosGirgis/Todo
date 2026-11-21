@@ -17,10 +17,10 @@ enum Reminder {
 
   /// The reminder of a task that comes round [every] day, week or month.
   static Reminder repeating(RepeatEvery every) => switch (every) {
-        RepeatEvery.day => daily,
-        RepeatEvery.week => weekly,
-        RepeatEvery.month => monthly,
-      };
+    RepeatEvery.day => daily,
+    RepeatEvery.week => weekly,
+    RepeatEvery.month => monthly,
+  };
 }
 
 class TodoItem {
@@ -42,18 +42,19 @@ class TodoItem {
     RepeatProgress? progress,
     String? parent,
     this.folded = false,
-  })  : day = day == null || reminder.repeats ? null : _date(day),
-        weekdays = reminder == Reminder.weekly
-            ? Set.unmodifiable(weekdays.where(Recurrence.isWeekday))
-            : const <int>{},
-        monthDay = reminder == Reminder.monthly &&
-                monthDay != null &&
-                Recurrence.isMonthDay(monthDay)
-            ? monthDay
-            : null,
-        until = until == null || !reminder.repeats ? null : _date(until),
-        progress = progress ?? RepeatProgress.none,
-        parent = parent == null || parent.isEmpty ? null : parent;
+  }) : day = day == null || reminder.repeats ? null : _date(day),
+       weekdays = reminder == Reminder.weekly
+           ? Set.unmodifiable(weekdays.where(Recurrence.isWeekday))
+           : const <int>{},
+       monthDay =
+           reminder == Reminder.monthly &&
+               monthDay != null &&
+               Recurrence.isMonthDay(monthDay)
+           ? monthDay
+           : null,
+       until = until == null || !reminder.repeats ? null : _date(until),
+       progress = progress ?? RepeatProgress.none,
+       parent = parent == null || parent.isEmpty ? null : parent;
 
   final int? id;
 
@@ -99,10 +100,16 @@ class TodoItem {
   /// doesn't, as for one whose reminder lacks the days it goes by.
   late final Recurrence? recurrence = switch (reminder) {
     Reminder.daily => Recurrence.daily(since: progress.since, until: until),
-    Reminder.weekly when weekdays.isNotEmpty =>
-      Recurrence.weekly(weekdays, since: progress.since, until: until),
-    Reminder.monthly when monthDay != null =>
-      Recurrence.monthly(monthDay!, since: progress.since, until: until),
+    Reminder.weekly when weekdays.isNotEmpty => Recurrence.weekly(
+      weekdays,
+      since: progress.since,
+      until: until,
+    ),
+    Reminder.monthly when monthDay != null => Recurrence.monthly(
+      monthDay!,
+      since: progress.since,
+      until: until,
+    ),
     _ => null,
   };
 
@@ -136,7 +143,9 @@ class TodoItem {
     }
     final occurrence = occurrenceOn(today) ?? today;
     return copyWith(
-        done: done, progress: progress.withDay(occurrence, done: done));
+      done: done,
+      progress: progress.withDay(occurrence, done: done),
+    );
   }
 
   /// The task as a subtask of the one with the uuid [parent], or as a task
@@ -146,20 +155,20 @@ class TodoItem {
   /// The task coming round as [rule] has it: on its days, with its last day,
   /// and with [progress] as its record. It has no day of its own then.
   TodoItem repeatingAs(Recurrence rule, {RepeatProgress? progress}) => TodoItem(
-        id: id,
-        uuid: uuid,
-        title: title,
-        desc: desc,
-        done: done,
-        time: time,
-        reminder: Reminder.repeating(rule.every),
-        weekdays: rule.weekdays,
-        monthDay: rule.monthDay,
-        until: rule.until,
-        progress: progress ?? this.progress,
-        parent: parent,
-        folded: folded,
-      );
+    id: id,
+    uuid: uuid,
+    title: title,
+    desc: desc,
+    done: done,
+    time: time,
+    reminder: Reminder.repeating(rule.every),
+    weekdays: rule.weekdays,
+    monthDay: rule.monthDay,
+    until: rule.until,
+    progress: progress ?? this.progress,
+    parent: parent,
+    folded: folded,
+  );
 
   /// When the task is due: at its time on its day, or as its day ends when
   /// it has no time. Null when it has no day, as a repeating task has none.
@@ -195,16 +204,15 @@ class TodoItem {
     Reminder? reminder,
     RepeatProgress? progress,
     bool? folded,
-  }) =>
-      _copy(
-        id: id,
-        uuid: uuid,
-        done: done,
-        reminder: reminder,
-        progress: progress,
-        parent: parent,
-        folded: folded,
-      );
+  }) => _copy(
+    id: id,
+    uuid: uuid,
+    done: done,
+    reminder: reminder,
+    progress: progress,
+    parent: parent,
+    folded: folded,
+  );
 
   /// A copy with what's given in place of its own, and [parent] whatever it
   /// is: null takes the task out of the one it's in.

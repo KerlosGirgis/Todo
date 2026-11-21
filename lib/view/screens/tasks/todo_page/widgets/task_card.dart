@@ -223,7 +223,8 @@ class _TaskCardState extends State<TaskCard> {
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                       decorationColor: ink.withValues(
-                          alpha: math.max(0.38 * doneness, 1 / 255)),
+                        alpha: math.max(0.38 * doneness, 1 / 255),
+                      ),
                       decorationThickness: 1.5,
                     ),
                   ),
@@ -302,8 +303,9 @@ class _TaskCardState extends State<TaskCard> {
     // The whole description style, as ReadMoreText measures the link with
     // this alone: without the size, it would make too little room for it.
     final linkStyle = style.copyWith(
-      color: context.colors.moreLess
-          .withValues(alpha: lerpDouble(1, 0.5, doneness)),
+      color: context.colors.moreLess.withValues(
+        alpha: lerpDouble(1, 0.5, doneness),
+      ),
       fontWeight: FontWeight.w600,
     );
     return ReadMoreText(
@@ -321,8 +323,13 @@ class _TaskCardState extends State<TaskCard> {
 
   /// When the task is due, how it repeats and until when, and for how many
   /// times in a row it's been done.
-  List<Widget> _chips(BuildContext context, double doneness, DateTime now,
-      Recurrence? recurrence, RepeatProgress progress) {
+  List<Widget> _chips(
+    BuildContext context,
+    double doneness,
+    DateTime now,
+    Recurrence? recurrence,
+    RepeatProgress progress,
+  ) {
     final task = widget.task;
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
@@ -342,8 +349,9 @@ class _TaskCardState extends State<TaskCard> {
       overdue,
     )!;
     final plain = ink.withValues(alpha: 0.6 * strength);
-    final plainTint =
-        ink.withValues(alpha: (isDarkTheme ? 0.08 : 0.05) * strength);
+    final plainTint = ink.withValues(
+      alpha: (isDarkTheme ? 0.08 : 0.05) * strength,
+    );
     return [
       if (when != null)
         _Chip(
@@ -380,8 +388,9 @@ class _TaskCardState extends State<TaskCard> {
           icon: Icons.local_fire_department_rounded,
           label: streakLabel(recurrence, streak),
           color: orange.withValues(alpha: strength),
-          tint:
-              orange.withValues(alpha: (isDarkTheme ? 0.18 : 0.12) * strength),
+          tint: orange.withValues(
+            alpha: (isDarkTheme ? 0.18 : 0.12) * strength,
+          ),
         ),
     ];
   }
@@ -424,13 +433,16 @@ class _RecentTimes extends StatelessWidget {
         slots.where((slot) => slot.status == status).length;
     final stillToDo = current != null && !progress.isDoneOn(current);
     // Big enough for its initial at the user's text size.
-    final size =
-        math.max(24.0, MediaQuery.textScalerOf(context).scale(11.5) + 11);
+    final size = math.max(
+      24.0,
+      MediaQuery.textScalerOf(context).scale(11.5) + 11,
+    );
     return Semantics(
-      label: "Last ${monthly ? "$_months months" : "$_days days"}: "
+      label:
+          "Last ${monthly ? "$_months months" : "$_days days"}: "
           "${count(DayStatus.done)} done, ${count(DayStatus.missed)} missed"
           "${stillToDo ? ", ${DateTimeUtils.dayInSentence(current, today)} "
-              "still to do" : ""}",
+                    "still to do" : ""}",
       excludeSemantics: true,
       child: Align(
         alignment: AlignmentDirectional.centerStart,
@@ -469,8 +481,11 @@ class _RecentTimes extends StatelessWidget {
     final last = current != null && current.isAfter(today) ? current : today;
     return [
       for (var back = _days - 1; back >= 0; back--)
-        _slot(DateTime(last.year, last.month, last.day - back),
-            DateFormat("EEEEE"), current),
+        _slot(
+          DateTime(last.year, last.month, last.day - back),
+          DateFormat("EEEEE"),
+          current,
+        ),
     ];
   }
 
@@ -487,19 +502,22 @@ class _RecentTimes extends StatelessWidget {
           (
             letter: letter.format(month),
             status: DayStatus.untracked,
-            current: false
+            current: false,
           )
         else
-          _slot(DateTime(last.year, last.month - back, monthDay), letter,
-              current),
+          _slot(
+            DateTime(last.year, last.month - back, monthDay),
+            letter,
+            current,
+          ),
     ];
   }
 
   _Slot _slot(DateTime day, DateFormat letter, DateTime? current) => (
-        letter: letter.format(day),
-        status: recurrence.statusOf(day, today, done: progress.doneDays),
-        current: day == current,
-      );
+    letter: letter.format(day),
+    status: recurrence.statusOf(day, today, done: progress.doneDays),
+    current: day == current,
+  );
 }
 
 /// A day, or a month, of [_RecentTimes]: its initial, how it went, and
@@ -533,13 +551,13 @@ class _DayDot extends StatelessWidget {
     final (ring, letterColor) = switch (status) {
       DayStatus.due => (accent, accent),
       DayStatus.missed => (
-          ink.withValues(alpha: isDarkTheme ? 0.3 : 0.22),
-          ink.withValues(alpha: 0.5)
-        ),
+        ink.withValues(alpha: isDarkTheme ? 0.3 : 0.22),
+        ink.withValues(alpha: 0.5),
+      ),
       DayStatus.done || DayStatus.untracked => (
-          ink.withValues(alpha: 0),
-          ink.withValues(alpha: 0.25)
-        ),
+        ink.withValues(alpha: 0),
+        ink.withValues(alpha: 0.25),
+      ),
     };
     return CustomPaint(
       painter: _DayDotPainter(ring: ring, fill: fill),
@@ -658,14 +676,20 @@ class _SubtasksRow extends StatelessWidget {
                   turns: folded ? -0.25 : 0,
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOutCubic,
-                  child:
-                      Icon(Icons.expand_more_rounded, size: 20, color: color),
+                  child: Icon(
+                    Icons.expand_more_rounded,
+                    size: 20,
+                    color: color,
+                  ),
                 )
               else
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child:
-                      Icon(Icons.account_tree_rounded, size: 14, color: color),
+                  child: Icon(
+                    Icons.account_tree_rounded,
+                    size: 14,
+                    color: color,
+                  ),
                 ),
               const SizedBox(width: 2),
               Flexible(
@@ -694,8 +718,9 @@ class _SubtasksRow extends StatelessWidget {
                   builder: (context, value, child) => CustomPaint(
                     painter: _BarPainter(
                       progress: value,
-                      track: context.colors.wB
-                          .withValues(alpha: isDarkTheme ? 0.14 : 0.09),
+                      track: context.colors.wB.withValues(
+                        alpha: isDarkTheme ? 0.14 : 0.09,
+                      ),
                       strength: strength,
                     ),
                   ),
@@ -726,11 +751,17 @@ class _BarPainter extends CustomPainter {
     final radius = Radius.circular(size.height / 2);
     final bar = Offset.zero & size;
     canvas.drawRRect(
-        RRect.fromRectAndRadius(bar, radius), Paint()..color = track);
+      RRect.fromRectAndRadius(bar, radius),
+      Paint()..color = track,
+    );
     if (progress <= 0) return;
     // Never shorter than a dot.
     final filled = Rect.fromLTWH(
-        0, 0, math.max(size.height, size.width * progress), size.height);
+      0,
+      0,
+      math.max(size.height, size.width * progress),
+      size.height,
+    );
     canvas.drawRRect(
       RRect.fromRectAndRadius(filled, radius),
       Paint()
@@ -944,7 +975,8 @@ class _ReminderButton extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: accent.withValues(
-                    alpha: on ? (isDarkTheme ? 0.18 : 0.12) : 0),
+                  alpha: on ? (isDarkTheme ? 0.18 : 0.12) : 0,
+                ),
               ),
               child: Icon(
                 on

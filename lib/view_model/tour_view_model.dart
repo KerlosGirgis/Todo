@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:todo/services/tour_service.dart';
+
+import '../services/tour_service.dart';
 
 /// The pages the app shows the user around, each with the version of its
 /// tour: raising one shows that tour again, to everyone, after an update that

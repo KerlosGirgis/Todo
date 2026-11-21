@@ -9,7 +9,7 @@ import 'map_layout.dart';
 /// from the map's centre, which stays put as the map around it changes.
 class MapGridPainter extends CustomPainter {
   MapGridPainter({required this.view, required this.hub, required this.color})
-      : super(repaint: view);
+    : super(repaint: view);
 
   final TransformationController view;
   final Offset hub;
@@ -135,7 +135,11 @@ class MapFlowDelegate extends FlowDelegate {
           ..translateByDouble(middle.dx, middle.dy, 0, 1)
           ..scaleByDouble(scale, scale, 1, 1)
           ..translateByDouble(
-              -spot.size.width / 2, -spot.size.height / 2, 0, 1),
+            -spot.size.width / 2,
+            -spot.size.height / 2,
+            0,
+            1,
+          ),
         opacity: opacity.clamp(0.0, 1.0),
       );
     }
@@ -215,7 +219,10 @@ class MapBranchesPainter extends CustomPainter {
       final from = link.from;
       final middle = from == null ? link.to : Offset.lerp(from, link.to, t)!;
       final rect = Rect.fromCenter(
-          center: middle, width: link.size.width, height: link.size.height);
+        center: middle,
+        width: link.size.width,
+        height: link.size.height,
+      );
       final parentFrom = link.parentFrom;
       final parentMiddle = parentFrom == null
           ? link.parentTo
@@ -224,13 +231,17 @@ class MapBranchesPainter extends CustomPainter {
       final start = parentSize == null
           // Off the centre's edge, on the task's side of it.
           ? parentMiddle.translate(
-              link.onLeft ? -MapLayout.hubRadius : MapLayout.hubRadius, 0)
+              link.onLeft ? -MapLayout.hubRadius : MapLayout.hubRadius,
+              0,
+            )
           : MapLayout.knobOf(
               Rect.fromCenter(
-                  center: parentMiddle,
-                  width: parentSize.width,
-                  height: parentSize.height),
-              onLeft: link.onLeft);
+                center: parentMiddle,
+                width: parentSize.width,
+                height: parentSize.height,
+              ),
+              onLeft: link.onLeft,
+            );
       final end = MapLayout.innerOf(rect, onLeft: link.onLeft);
       final alpha = link.strength * (link.entering ? t : 1);
       paint
@@ -241,13 +252,22 @@ class MapBranchesPainter extends CustomPainter {
         Path()
           ..moveTo(start.dx, start.dy)
           ..cubicTo(
-              start.dx + bend, start.dy, end.dx - bend, end.dy, end.dx, end.dy),
+            start.dx + bend,
+            start.dy,
+            end.dx - bend,
+            end.dy,
+            end.dx,
+            end.dy,
+          ),
         paint,
       );
       if (link.stem) {
         final knob = MapLayout.knobOf(rect, onLeft: link.onLeft);
         canvas.drawLine(
-            link.onLeft ? rect.centerLeft : rect.centerRight, knob, paint);
+          link.onLeft ? rect.centerLeft : rect.centerRight,
+          knob,
+          paint,
+        );
       }
     }
   }

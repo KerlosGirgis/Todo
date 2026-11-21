@@ -385,7 +385,9 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
     // As it's drawn, which may be smaller or bigger than it's laid out, as
     // on a map that's zoomed.
     return MatrixUtils.transformRect(
-        box.getTransformTo(overlay), Offset.zero & box.size);
+      box.getTransformTo(overlay),
+      Offset.zero & box.size,
+    );
   }
 
   /// Where the finger touches [demo]'s copy, from the copy's top left corner
@@ -397,7 +399,9 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
     final part = demo.touch?.currentContext?.findRenderObject();
     if (part is RenderBox && part.attached && part.hasSize) {
       area = MatrixUtils.transformRect(
-          part.getTransformTo(copy), Offset.zero & part.size);
+        part.getTransformTo(copy),
+        Offset.zero & part.size,
+      );
     }
     return demo.touchAlignment.withinRect(area) + demo.touchOffset;
   }
@@ -426,7 +430,11 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
       down = math.max(down, y);
     }
     return Rect.fromLTRB(
-        spot.left, spot.top + up, spot.right, spot.bottom + down);
+      spot.left,
+      spot.top + up,
+      spot.right,
+      spot.bottom + down,
+    );
   }
 
   Rect? _holeAt(double t) {
@@ -494,7 +502,8 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
                         radius: _radiusAt(t),
                         dim: dim,
                         fill: background.withValues(
-                            alpha: background.a * _fillAt(t)),
+                          alpha: background.a * _fillAt(t),
+                        ),
                       ),
                     );
                   },
@@ -519,8 +528,8 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
     final at = step.demo == null
         ? _leavingAt
         : target == null
-            ? null
-            : _placeOf(demo!, target);
+        ? null
+        : _placeOf(demo!, target);
     if (demo == null || at == null) return const SizedBox.shrink();
     final leaving = step.demo == null;
     return AnimatedBuilder(
@@ -530,16 +539,20 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
         final opacity = leaving
             ? 1 - t
             : _hadDemo
-                ? 1.0
-                : t;
+            ? 1.0
+            : t;
         if (opacity <= 0) return const SizedBox.shrink();
         final copy = _copy;
         final frame = leaving || _beats.isEmpty
             ? _Frame()
             : _frameAt(
-                _beats, _demo.value * _beatsLength, copy?.size ?? at.size);
+                _beats,
+                _demo.value * _beatsLength,
+                copy?.size ?? at.size,
+              );
         final touch = _touch;
-        final scale = (1 - (1 - demo.pressedScale) * frame.pressed) *
+        final scale =
+            (1 - (1 - demo.pressedScale) * frame.pressed) *
             (1 + 0.03 * frame.lift);
         return Stack(
           children: [
@@ -569,7 +582,9 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
                         child: KeyedSubtree(
                           key: _copyContentKey,
                           child: demo.builder(
-                              context, TourPose(acted: frame.acted)),
+                            context,
+                            TourPose(acted: frame.acted),
+                          ),
                         ),
                       ),
                     ),
@@ -581,7 +596,10 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
               Positioned(
                 left: copy.left + touch.dx + frame.at.dx - _Finger.size / 2,
                 top: copy.top + touch.dy + frame.at.dy - _Finger.size / 2,
-                child: Opacity(opacity: opacity, child: _Finger(frame: frame)),
+                child: Opacity(
+                  opacity: opacity,
+                  child: _Finger(frame: frame),
+                ),
               ),
           ],
         );
@@ -599,10 +617,8 @@ class _TourState extends State<Tour> with TickerProviderStateMixin {
       reverseDuration: const Duration(milliseconds: 200),
       switchInCurve: const Interval(0.4, 1, curve: Curves.easeOut),
       switchOutCurve: Curves.easeIn,
-      layoutBuilder: (current, previous) => Stack(
-        fit: StackFit.expand,
-        children: [...previous, if (current != null) current],
-      ),
+      layoutBuilder: (current, previous) =>
+          Stack(fit: StackFit.expand, children: [...previous, ?current]),
       child: reach == null
           ? const SizedBox.shrink()
           : _TipPlacement(
@@ -647,7 +663,8 @@ class _SpotlightPainter extends CustomPainter {
     }
     final outline = RoundedSuperellipseBorder(
       borderRadius: BorderRadius.all(
-          Radius.circular(math.min(radius, hole.shortestSide / 2))),
+        Radius.circular(math.min(radius, hole.shortestSide / 2)),
+      ),
     ).getOuterPath(hole);
     canvas.drawPath(
       Path()
@@ -677,8 +694,11 @@ class _SpotlightPainter extends CustomPainter {
 /// [child] with the shadow of a card picked up off a list, deepening with
 /// [lift], under its [radius] corners.
 class _Lifted extends StatelessWidget {
-  const _Lifted(
-      {required this.lift, required this.radius, required this.child});
+  const _Lifted({
+    required this.lift,
+    required this.radius,
+    required this.child,
+  });
 
   final double lift;
   final double radius;
@@ -696,8 +716,9 @@ class _Lifted extends StatelessWidget {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black
-                      .withValues(alpha: (isDarkTheme ? 0.5 : 0.18) * lift),
+                  color: Colors.black.withValues(
+                    alpha: (isDarkTheme ? 0.5 : 0.18) * lift,
+                  ),
                   blurRadius: 32,
                   offset: const Offset(0, 14),
                 ),
@@ -770,54 +791,54 @@ enum _Move {
 /// The beats of acting out [gestures], one after another, with a pause
 /// before and after them all.
 List<_Beat> _beatsOf(List<TourGesture> gestures) => [
-      const _Beat(_Move.rest, 450),
-      const _Beat(_Move.arrive, 320),
-      for (final (index, gesture) in gestures.indexed) ...[
-        if (index > 0) const _Beat(_Move.rest, 250),
-        ...switch (gesture) {
-          TourGesture.tap => const [
-              _Beat(_Move.press, 130),
-              _Beat(_Move.tapUp, 400),
-              _Beat(_Move.rest, 650),
-            ],
-          TourGesture.hold => const [
-              _Beat(_Move.press, 130),
-              _Beat(_Move.hold, 600),
-              _Beat(_Move.fire, 380),
-              _Beat(_Move.release, 220),
-              _Beat(_Move.rest, 500),
-            ],
-          TourGesture.drag => const [
-              _Beat(_Move.press, 130),
-              _Beat(_Move.hold, 450),
-              _Beat(_Move.pickUp, 280),
-              _Beat(_Move.carry, 600, by: Offset(0, 1)),
-              _Beat(_Move.rest, 250),
-              _Beat(_Move.carry, 600, by: Offset(0, -1)),
-              _Beat(_Move.putDown, 260),
-              _Beat(_Move.release, 220),
-              _Beat(_Move.rest, 400),
-            ],
-          TourGesture.swipe => const [
-              _Beat(_Move.press, 120),
-              _Beat(_Move.carry, 520, by: Offset(-0.45, 0)),
-              _Beat(_Move.fling, 280),
-              _Beat(_Move.rest, 650),
-              _Beat(_Move.restore, 560),
-              _Beat(_Move.rest, 300),
-            ],
-          TourGesture.pull => const [
-              _Beat(_Move.press, 120),
-              _Beat(_Move.carry, 520, by: Offset(0.36, 0)),
-              _Beat(_Move.rest, 320),
-              _Beat(_Move.springBack, 420),
-              _Beat(_Move.rest, 450),
-            ],
-        },
+  const _Beat(_Move.rest, 450),
+  const _Beat(_Move.arrive, 320),
+  for (final (index, gesture) in gestures.indexed) ...[
+    if (index > 0) const _Beat(_Move.rest, 250),
+    ...switch (gesture) {
+      TourGesture.tap => const [
+        _Beat(_Move.press, 130),
+        _Beat(_Move.tapUp, 400),
+        _Beat(_Move.rest, 650),
       ],
-      const _Beat(_Move.leave, 300),
-      const _Beat(_Move.rest, 700),
-    ];
+      TourGesture.hold => const [
+        _Beat(_Move.press, 130),
+        _Beat(_Move.hold, 600),
+        _Beat(_Move.fire, 380),
+        _Beat(_Move.release, 220),
+        _Beat(_Move.rest, 500),
+      ],
+      TourGesture.drag => const [
+        _Beat(_Move.press, 130),
+        _Beat(_Move.hold, 450),
+        _Beat(_Move.pickUp, 280),
+        _Beat(_Move.carry, 600, by: Offset(0, 1)),
+        _Beat(_Move.rest, 250),
+        _Beat(_Move.carry, 600, by: Offset(0, -1)),
+        _Beat(_Move.putDown, 260),
+        _Beat(_Move.release, 220),
+        _Beat(_Move.rest, 400),
+      ],
+      TourGesture.swipe => const [
+        _Beat(_Move.press, 120),
+        _Beat(_Move.carry, 520, by: Offset(-0.45, 0)),
+        _Beat(_Move.fling, 280),
+        _Beat(_Move.rest, 650),
+        _Beat(_Move.restore, 560),
+        _Beat(_Move.rest, 300),
+      ],
+      TourGesture.pull => const [
+        _Beat(_Move.press, 120),
+        _Beat(_Move.carry, 520, by: Offset(0.36, 0)),
+        _Beat(_Move.rest, 320),
+        _Beat(_Move.springBack, 420),
+        _Beat(_Move.rest, 450),
+      ],
+    },
+  ],
+  const _Beat(_Move.leave, 300),
+  const _Beat(_Move.rest, 700),
+];
 
 /// Where the finger and the copy are, at a moment of a demo.
 class _Frame {
@@ -875,7 +896,10 @@ void _act(_Beat beat, double t, _Frame frame, Size size) {
     case _Move.arrive:
       frame.finger = Curves.easeOut.transform(t);
       frame.at = Offset.lerp(
-          const Offset(18, 26), Offset.zero, Curves.easeOutCubic.transform(t))!;
+        const Offset(18, 26),
+        Offset.zero,
+        Curves.easeOutCubic.transform(t),
+      )!;
     case _Move.press:
       final down = Curves.easeOut.transform(t);
       frame
@@ -908,8 +932,10 @@ void _act(_Beat beat, double t, _Frame frame, Size size) {
         ..pressed = 1 - lift
         ..ringShown = 1 - lift;
     case _Move.carry:
-      final by = Offset(beat.by.dx * size.width,
-          beat.by.dy * math.min(size.height, _Beat._maxCarry));
+      final by = Offset(
+        beat.by.dx * size.width,
+        beat.by.dy * math.min(size.height, _Beat._maxCarry),
+      );
       final moved = by * Curves.easeInOutCubic.transform(t);
       frame
         ..at += moved
@@ -927,8 +953,11 @@ void _act(_Beat beat, double t, _Frame frame, Size size) {
     case _Move.fling:
       final away = Curves.easeIn.transform(t);
       frame
-        ..moved = Offset.lerp(frame.moved,
-            Offset(size.width * 1.1 * frame.moved.dx.sign, 0), away)!
+        ..moved = Offset.lerp(
+          frame.moved,
+          Offset(size.width * 1.1 * frame.moved.dx.sign, 0),
+          away,
+        )!
         ..at += Offset(-28 * t, 0)
         ..finger *= 1 - Curves.easeOut.transform(t)
         ..down = 1 - t
@@ -943,7 +972,10 @@ void _act(_Beat beat, double t, _Frame frame, Size size) {
       if (t > 0) frame.acted++;
       frame
         ..moved = Offset.lerp(
-            frame.moved, Offset.zero, Curves.easeOutCubic.transform(t))!
+          frame.moved,
+          Offset.zero,
+          Curves.easeOutCubic.transform(t),
+        )!
         // Covered again once the copy is back over it.
         ..behind = t < 1 ? 1 : 0
         ..down = 1 - Curves.easeOut.transform(part(0, 0.4))
@@ -1018,8 +1050,11 @@ class _FingerPainter extends CustomPainter {
       final ringPaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3;
-      canvas.drawCircle(center, _radius + 8,
-          ringPaint..color = Colors.white.withValues(alpha: 0.3 * ringAlpha));
+      canvas.drawCircle(
+        center,
+        _radius + 8,
+        ringPaint..color = Colors.white.withValues(alpha: 0.3 * ringAlpha),
+      );
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: _radius + 8),
         -math.pi / 2,
@@ -1077,7 +1112,7 @@ class _TipPlacement extends StatelessWidget {
   /// Builds the tip, with its arrow [arrowX] from its left edge, pointing up
   /// at the spot from under it, or down from over it.
   final Widget Function(BuildContext context, double arrowX, bool pointsUp)
-      builder;
+  builder;
 
   /// The room between the tip's arrow and the spotlight, and between the tip
   /// and the screen's edges.
@@ -1091,8 +1126,11 @@ class _TipPlacement extends StatelessWidget {
     final minLeft = _margin + padding.left;
     final maxRight = size.width - _margin - padding.right;
     final width = math.min(maxRight - minLeft, 380.0);
-    final left = clampDouble(spot.center.dx - width / 2, minLeft,
-        math.max(minLeft, maxRight - width));
+    final left = clampDouble(
+      spot.center.dx - width / 2,
+      minLeft,
+      math.max(minLeft, maxRight - width),
+    );
     final pointsUp =
         size.height - padding.bottom - spot.bottom >= spot.top - padding.top;
     return CustomSingleChildLayout(
@@ -1139,8 +1177,10 @@ class _TipLayout extends SingleChildLayoutDelegate {
     final top = below
         ? spot.bottom + _TipPlacement._gap
         : spot.top - _TipPlacement._gap - childSize.height;
-    return Offset(left,
-        top.clamp(minTop, math.max(minTop, maxBottom - childSize.height)));
+    return Offset(
+      left,
+      top.clamp(minTop, math.max(minTop, maxBottom - childSize.height)),
+    );
   }
 
   @override
@@ -1206,7 +1246,11 @@ class _Tip extends StatelessWidget {
         ),
         child: Padding(
           padding: EdgeInsets.fromLTRB(
-              16, 16 + (pointsUp ? arrow : 0), 12, 12 + (pointsUp ? 0 : arrow)),
+            16,
+            16 + (pointsUp ? arrow : 0),
+            12,
+            12 + (pointsUp ? 0 : arrow),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1365,8 +1409,9 @@ class _TipButton extends StatelessWidget {
             onTap: onPressed,
             customBorder: shape,
             splashFactory: NoSplash.splashFactory,
-            highlightColor:
-                (filled ? Colors.white : ink).withValues(alpha: 0.12),
+            highlightColor: (filled ? Colors.white : ink).withValues(
+              alpha: 0.12,
+            ),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 40, minWidth: 64),
               child: Padding(
@@ -1376,8 +1421,9 @@ class _TipButton extends StatelessWidget {
                   child: Text(
                     label,
                     style: TextStyle(
-                      color:
-                          filled ? Colors.white : ink.withValues(alpha: 0.55),
+                      color: filled
+                          ? Colors.white
+                          : ink.withValues(alpha: 0.55),
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1411,16 +1457,24 @@ class _TipBorder extends ShapeBorder {
 
   @override
   EdgeInsetsGeometry get dimensions => EdgeInsets.only(
-        top: pointsUp ? arrowHeight : 0,
-        bottom: pointsUp ? 0 : arrowHeight,
-      );
+    top: pointsUp ? arrowHeight : 0,
+    bottom: pointsUp ? 0 : arrowHeight,
+  );
 
   Path _outline(Rect rect) {
     final body = pointsUp
         ? Rect.fromLTRB(
-            rect.left, rect.top + arrowHeight, rect.right, rect.bottom)
+            rect.left,
+            rect.top + arrowHeight,
+            rect.right,
+            rect.bottom,
+          )
         : Rect.fromLTRB(
-            rect.left, rect.top, rect.right, rect.bottom - arrowHeight);
+            rect.left,
+            rect.top,
+            rect.right,
+            rect.bottom - arrowHeight,
+          );
     // Clear of the corners, which it would otherwise stick out of.
     const inset = _radius + _arrowWidth / 2;
     final x =

@@ -20,7 +20,8 @@ List<TourStep> mapTour({
       target: hub,
       icon: Icons.hub_rounded,
       title: "Your Tasks as a Map",
-      message: "Tasks branch off the centre, and their subtasks branch off "
+      message:
+          "Tasks branch off the centre, and their subtasks branch off "
           "them. Drag the map to move around it, and pinch to zoom.",
       radius: MapLayout.hubRadius + 8,
       padding: 8,
@@ -29,7 +30,8 @@ List<TourStep> mapTour({
       target: node,
       icon: Icons.touch_app_rounded,
       title: "Work on a Task",
-      message: "Tap a task's circle to check it off. Tap the task itself "
+      message:
+          "Tap a task's circle to check it off. Tap the task itself "
           "for buttons that add a subtask to it, edit it, set its reminder "
           "or delete it.",
       radius: 16,
@@ -39,7 +41,8 @@ List<TourStep> mapTour({
       target: node,
       icon: Icons.open_with_rounded,
       title: "Move a Task",
-      message: "Press and hold a task, then drop it on another to put it "
+      message:
+          "Press and hold a task, then drop it on another to put it "
           "inside, or just above or below one to put it next to it. Its "
           "subtasks go with it.",
       radius: 16,
@@ -56,7 +59,8 @@ List<TourStep> mapTour({
       target: fullScreen,
       icon: Icons.open_in_full_rounded,
       title: "Go Full Screen",
-      message: "Need more room? This gives the map the whole screen. Tap it "
+      message:
+          "Need more room? This gives the map the whole screen. Tap it "
           "again, or go back, to leave full screen.",
       radius: 19,
     ),
@@ -64,7 +68,8 @@ List<TourStep> mapTour({
       target: sortFilter,
       icon: Icons.filter_alt_rounded,
       title: "Sort and Filter",
-      message: "Pick which tasks the map shows, such as just the undone or "
+      message:
+          "Pick which tasks the map shows, such as just the undone or "
           "the weekly ones, and sort them by due date. The list goes by "
           "the same choices.",
       radius: 19,
@@ -73,7 +78,8 @@ List<TourStep> mapTour({
       target: menu,
       icon: Icons.view_agenda_rounded,
       title: "Back to the List",
-      message: "Switch between the map and the list from this menu. They "
+      message:
+          "Switch between the map and the list from this menu. They "
           "show the same tasks.",
       radius: 19,
     ),

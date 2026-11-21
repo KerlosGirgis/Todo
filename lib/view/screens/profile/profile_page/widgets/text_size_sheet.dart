@@ -33,19 +33,19 @@ enum TextSizeSetting {
   final String label;
 
   double saved(UserViewModel user) => switch (this) {
-        taskTitle => user.user.tasksTitleSize,
-        taskDescription => user.user.tasksDescSize,
-        noteTitle => user.user.notesTitleSize,
-        noteBody => user.user.notesTextSize,
-      };
+    taskTitle => user.user.tasksTitleSize,
+    taskDescription => user.user.tasksDescSize,
+    noteTitle => user.user.notesTitleSize,
+    noteBody => user.user.notesTextSize,
+  };
 
-  /// Saves [size].
-  Future<Result> apply(UserViewModel user, double size) => switch (this) {
-        taskTitle => user.setTasksTitleSize(size),
-        taskDescription => user.setTasksDescSize(size),
-        noteTitle => user.setNotesTitleSize(size),
-        noteBody => user.setNotesTextSize(size),
-      };
+  /// Saves [size]. Null when it's the size already.
+  Future<Result?> apply(UserViewModel user, double size) => switch (this) {
+    taskTitle => user.setTasksTitleSize(size),
+    taskDescription => user.setTasksDescSize(size),
+    noteTitle => user.setNotesTitleSize(size),
+    noteBody => user.setNotesTextSize(size),
+  };
 }
 
 /// 1.125 -> "112.5%"
@@ -99,7 +99,11 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
     return SingleChildScrollView(
       // Clear of the gesture bar, which a bottom sheet's safe area leaves in.
       padding: EdgeInsets.fromLTRB(
-          20, 0, 20, 20 + MediaQuery.paddingOf(context).bottom),
+        20,
+        0,
+        20,
+        20 + MediaQuery.paddingOf(context).bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -127,9 +131,10 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
               Text(
                 "A",
                 style: TextStyle(
-                    color: secondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600),
+                  color: secondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -137,25 +142,28 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
                   value: size,
                   min: UserViewModel.minTextSize,
                   max: UserViewModel.maxTextSize,
-                  divisions: ((UserViewModel.maxTextSize -
-                              UserViewModel.minTextSize) /
-                          UserViewModel.textSizeStep)
-                      .round(),
+                  divisions:
+                      ((UserViewModel.maxTextSize - UserViewModel.minTextSize) /
+                              UserViewModel.textSizeStep)
+                          .round(),
                   activeColor: _accent,
                   // Snapped to the steps the divisions stand for, so the
                   // value reads cleanly and matches the saved one exactly.
-                  onChanged: (value) => setState(() => _size =
-                      (value / UserViewModel.textSizeStep).round() *
-                          UserViewModel.textSizeStep),
+                  onChanged: (value) => setState(
+                    () => _size =
+                        (value / UserViewModel.textSizeStep).round() *
+                        UserViewModel.textSizeStep,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Text(
                 "A",
                 style: TextStyle(
-                    color: secondary,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w600),
+                  color: secondary,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -179,10 +187,12 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
                     opacity: size == 1 ? 0 : 1,
                     duration: const Duration(milliseconds: 150),
                     child: TextButton(
-                      onPressed:
-                          size == 1 ? null : () => setState(() => _size = 1),
+                      onPressed: size == 1
+                          ? null
+                          : () => setState(() => _size = 1),
                       style: TextButton.styleFrom(
-                          foregroundColor: context.colors.moreLess),
+                        foregroundColor: context.colors.moreLess,
+                      ),
                       child: const Text("Reset"),
                     ),
                   ),
@@ -210,8 +220,11 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
 /// A copy of where the text appears, drawn at the draft [size], with any
 /// other text on it at its saved size.
 class _Preview extends StatelessWidget {
-  const _Preview(
-      {required this.setting, required this.size, required this.user});
+  const _Preview({
+    required this.setting,
+    required this.size,
+    required this.user,
+  });
 
   final TextSizeSetting setting;
   final double size;
@@ -222,14 +235,22 @@ class _Preview extends StatelessWidget {
     final saved = user.user;
     final casualFont = saved.casualFont;
     return switch (setting) {
-      TextSizeSetting.taskTitle =>
-        _TaskPreview(titleSize: size, descSize: saved.tasksDescSize),
-      TextSizeSetting.taskDescription =>
-        _TaskPreview(titleSize: saved.tasksTitleSize, descSize: size),
-      TextSizeSetting.noteTitle =>
-        _NoteCardPreview(titleSize: size, casualFont: casualFont),
-      TextSizeSetting.noteBody =>
-        _NoteBodyPreview(size: size, casualFont: casualFont),
+      TextSizeSetting.taskTitle => _TaskPreview(
+        titleSize: size,
+        descSize: saved.tasksDescSize,
+      ),
+      TextSizeSetting.taskDescription => _TaskPreview(
+        titleSize: saved.tasksTitleSize,
+        descSize: size,
+      ),
+      TextSizeSetting.noteTitle => _NoteCardPreview(
+        titleSize: size,
+        casualFont: casualFont,
+      ),
+      TextSizeSetting.noteBody => _NoteBodyPreview(
+        size: size,
+        casualFont: casualFont,
+      ),
     };
   }
 }
@@ -366,9 +387,11 @@ final _sampleNote = Note(
 const _sampleText =
     "Farmers market in the morning, then a long walk by the river.";
 
-const _samplePreview = NotePreview(lines: [
-  NotePreviewLine(runs: [NotePreviewRun(_sampleText)]),
-]);
+const _samplePreview = NotePreview(
+  lines: [
+    NotePreviewLine(runs: [NotePreviewRun(_sampleText)]),
+  ],
+);
 
 /// A note's text as the editor draws it, in as many whole lines as fit, so
 /// that a large size never cuts a line off part way through.
@@ -394,8 +417,10 @@ class _NoteBodyPreview extends StatelessWidget {
             child: Text(
               "Today I finally sorted out my notes. Everything has a place "
               "now, and it feels good.",
-              maxLines:
-                  math.max(1, (constraints.maxHeight / lineHeight).floor()),
+              maxLines: math.max(
+                1,
+                (constraints.maxHeight / lineHeight).floor(),
+              ),
               overflow: TextOverflow.fade,
               style: style,
             ),

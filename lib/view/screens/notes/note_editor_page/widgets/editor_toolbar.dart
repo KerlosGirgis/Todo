@@ -112,10 +112,8 @@ class EditorToolbar extends StatelessWidget {
               const SizedBox(width: 12),
               ValueListenableBuilder(
                 valueListenable: unsaved,
-                builder: (context, unsaved, child) => _SaveButton(
-                  saved: !unsaved,
-                  onPressed: onSave,
-                ),
+                builder: (context, unsaved, child) =>
+                    _SaveButton(saved: !unsaved, onPressed: onSave),
               ),
             ],
           ],
@@ -181,16 +179,18 @@ class _Capsule extends StatelessWidget {
                             icon: Icons.undo_rounded,
                             tooltip: "Undo",
                             onPressed: canUndo
-                                ? () => controller
-                                    .changeWithoutKeyboard(controller.undo)
+                                ? () => controller.changeWithoutKeyboard(
+                                    controller.undo,
+                                  )
                                 : null,
                           ),
                           _ToolbarButton(
                             icon: Icons.redo_rounded,
                             tooltip: "Redo",
                             onPressed: canRedo
-                                ? () => controller
-                                    .changeWithoutKeyboard(controller.redo)
+                                ? () => controller.changeWithoutKeyboard(
+                                    controller.redo,
+                                  )
                                 : null,
                           ),
                           if (writing) ...[
@@ -383,8 +383,9 @@ class _CountState extends State<_Count> {
             child: ListenableBuilder(
               listenable: widget.controller,
               builder: (context, child) {
-                final count =
-                    _countOf(widget.controller.document.toPlainText());
+                final count = _countOf(
+                  widget.controller.document.toPlainText(),
+                );
                 final noun = _characters ? "character" : "word";
                 return Text(
                   "${_thousands.format(count)} "

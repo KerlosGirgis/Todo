@@ -55,9 +55,9 @@ const _tourDelay = Duration(milliseconds: 900);
 /// The page's margins either side: clear of a camera cutout on a phone
 /// turned on its side, and a comfortable width on large screens.
 (double, double) _gutters(double width, EdgeInsets padding) => (
-      math.max(16 + padding.left, (width - 1040) / 2),
-      math.max(16 + padding.right, (width - 1040) / 2),
-    );
+  math.max(16 + padding.left, (width - 1040) / 2),
+  math.max(16 + padding.right, (width - 1040) / 2),
+);
 
 /// How big each card is in the grid on this screen, so that a card drawn
 /// elsewhere, like the settings' preview of the title size, is as big and
@@ -67,8 +67,7 @@ Size noteCardSize(BuildContext context) {
   final (left, right) = _gutters(width, MediaQuery.paddingOf(context));
   final gridWidth = width - left - right;
   // As the grid's delegate shares the width out between its columns.
-  final columns =
-      math.max(1, (gridWidth / (_maxCardWidth + _cardGap)).ceil());
+  final columns = math.max(1, (gridWidth / (_maxCardWidth + _cardGap)).ceil());
   final cardWidth =
       math.max(0.0, gridWidth - _cardGap * (columns - 1)) / columns;
   return Size(cardWidth, cardWidth / _cardAspectRatio);
@@ -193,14 +192,19 @@ class _NotesPageState extends State<NotesPage>
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final (gutterLeft, gutterRight) =
-        _gutters(MediaQuery.sizeOf(context).width, padding);
+    final (gutterLeft, gutterRight) = _gutters(
+      MediaQuery.sizeOf(context).width,
+      padding,
+    );
     // The last cards scroll clear of the buttons, or of the keyboard while
     // searching.
-    final bottomInset = math.max(PageActionButtons.height + 24 + padding.bottom,
-        MediaQuery.viewInsetsOf(context).bottom + 24);
-    final hasNotes =
-        context.select<NotesViewModel, bool>((notes) => notes.notes.isNotEmpty);
+    final bottomInset = math.max(
+      PageActionButtons.height + 24 + padding.bottom,
+      MediaQuery.viewInsetsOf(context).bottom + 24,
+    );
+    final hasNotes = context.select<NotesViewModel, bool>(
+      (notes) => notes.notes.isNotEmpty,
+    );
     return ThemedStatusBar(
       child: Tour(
         controller: _tour,
@@ -229,8 +233,10 @@ class _NotesPageState extends State<NotesPage>
                   controller: _scrollController,
                   trailing: Padding(
                     padding: EdgeInsets.only(right: padding.right),
-                    child:
-                        PageBarActions(items: _menuItems(), menuKey: _menuKey),
+                    child: PageBarActions(
+                      items: _menuItems(),
+                      menuKey: _menuKey,
+                    ),
                   ),
                   titleRevealOffset: _NotesHeader.scrolledAway,
                 ),
@@ -266,7 +272,11 @@ class _NotesPageState extends State<NotesPage>
                 _NoteGridSliver(
                   query: _query,
                   padding: EdgeInsets.fromLTRB(
-                      gutterLeft, _gridTop, gutterRight, bottomInset),
+                    gutterLeft,
+                    _gridTop,
+                    gutterRight,
+                    bottomInset,
+                  ),
                   gridDelay: _gridDelay,
                   onOpen: _openNote,
                   onEdit: _editNote,
@@ -280,34 +290,34 @@ class _NotesPageState extends State<NotesPage>
   }
 
   List<GlassMenuItem> _menuItems() => [
-        GlassMenuItem(
-          icon: Icons.swap_vert_rounded,
-          tooltip: "Reorder Notes",
-          onPressed: () =>
-              showFormDialog<void>(context, const ReorderNotesDialog()),
-        ),
-        GlassMenuItem(
-          icon: Icons.settings_backup_restore_rounded,
-          tooltip: "Restore Backup",
-          onPressed: () =>
-              showFormDialog<void>(context, const NotesOverwriteDialog()),
-        ),
-        GlassMenuItem(
-          icon: Icons.backup_rounded,
-          tooltip: "Back Up Notes",
-          onPressed: _backUp,
-        ),
-        GlassMenuItem(
-          icon: Icons.delete_outline_rounded,
-          tooltip: "Trash",
-          onPressed: _openTrash,
-        ),
-        GlassMenuItem(
-          icon: Icons.settings_rounded,
-          tooltip: "Settings",
-          onPressed: _openSettings,
-        ),
-      ];
+    GlassMenuItem(
+      icon: Icons.swap_vert_rounded,
+      tooltip: "Reorder Notes",
+      onPressed: () =>
+          showFormDialog<void>(context, const ReorderNotesDialog()),
+    ),
+    GlassMenuItem(
+      icon: Icons.settings_backup_restore_rounded,
+      tooltip: "Restore Backup",
+      onPressed: () =>
+          showFormDialog<void>(context, const NotesOverwriteDialog()),
+    ),
+    GlassMenuItem(
+      icon: Icons.backup_rounded,
+      tooltip: "Back Up Notes",
+      onPressed: _backUp,
+    ),
+    GlassMenuItem(
+      icon: Icons.delete_outline_rounded,
+      tooltip: "Trash",
+      onPressed: _openTrash,
+    ),
+    GlassMenuItem(
+      icon: Icons.settings_rounded,
+      tooltip: "Settings",
+      onPressed: _openSettings,
+    ),
+  ];
 
   void _search(String query) {
     // Cards a search brings back show up straight away.
@@ -321,8 +331,10 @@ class _NotesPageState extends State<NotesPage>
   void _backUp() {
     Provider.of<NotesViewModel>(context, listen: false)
         .backup(
-          askForPassword: passwordPrompt(context,
-              subtitle: "Enter your password to back up your notes."),
+          askForPassword: passwordPrompt(
+            context,
+            subtitle: "Enter your password to back up your notes.",
+          ),
           askForBackupPassword: newBackupPasswordPrompt(context),
         )
         .then(FeedbackToast.show);
@@ -330,15 +342,19 @@ class _NotesPageState extends State<NotesPage>
 
   void _addNote() {
     _searchFocusNode.unfocus();
-    final draft =
-        Provider.of<NotesViewModel>(context, listen: false).newDraft();
+    final draft = Provider.of<NotesViewModel>(
+      context,
+      listen: false,
+    ).newDraft();
     showFormDialog<void>(context, NoteDialog(draft: draft));
   }
 
   /// Opens [note] in the editor, once its lock lets the user through.
   Future<void> _openNote(Note note) async {
-    final access = await Provider.of<NotesViewModel>(context, listen: false)
-        .open(note, askForPassword: noteLockPasswordPrompt(context));
+    final access = await Provider.of<NotesViewModel>(
+      context,
+      listen: false,
+    ).open(note, askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) {
       if (access case Granted(value: final editor)) editor.dispose();
       return;
@@ -354,9 +370,12 @@ class _NotesPageState extends State<NotesPage>
             reverseTransitionDuration: const Duration(milliseconds: 400),
             pageBuilder: (context, animation, secondaryAnimation) =>
                 NoteEditorPage(editor: editor),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    _EditorFade(animation: animation, child: child),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) => _EditorFade(animation: animation, child: child),
           ),
         );
     }
@@ -365,8 +384,10 @@ class _NotesPageState extends State<NotesPage>
   /// Opens the dialog that changes [note]'s title, colours and lock, once
   /// its lock lets the user through.
   Future<void> _editNote(Note note) async {
-    final access = await Provider.of<NotesViewModel>(context, listen: false)
-        .edit(note, askForPassword: noteLockPasswordPrompt(context));
+    final access = await Provider.of<NotesViewModel>(
+      context,
+      listen: false,
+    ).edit(note, askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) {
       if (access case Granted(value: final draft)) draft.dispose();
       return;
@@ -375,7 +396,7 @@ class _NotesPageState extends State<NotesPage>
       case Denied(:final message):
         FeedbackToast.error(message);
       case Granted(value: final draft):
-        showFormDialog<void>(context, NoteDialog(draft: draft));
+        unawaited(showFormDialog<void>(context, NoteDialog(draft: draft)));
     }
   }
 
@@ -392,11 +413,14 @@ class _NotesPageState extends State<NotesPage>
             const TodoPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
             SlideTransition(
-          position: animation.drive(
-              Tween(begin: const Offset(1, 0), end: Offset.zero)
-                  .chain(CurveTween(curve: Curves.ease))),
-          child: child,
-        ),
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.ease)),
+              ),
+              child: child,
+            ),
       ),
     );
   }
@@ -448,11 +472,9 @@ class _NotesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (count, locked) =
-        context.select<NotesViewModel, (int, int)>((notes) => (
-              notes.notes.length,
-              notes.lockedCount,
-            ));
+    final (count, locked) = context.select<NotesViewModel, (int, int)>(
+      (notes) => (notes.notes.length, notes.lockedCount),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

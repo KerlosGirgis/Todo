@@ -71,7 +71,8 @@ class _CheckPainter extends CustomPainter {
 
     // Grows in from the middle, swelling a little past full size on the
     // way, so it pops.
-    final fillRadius = radius * (0.6 + 0.4 * doneness) +
+    final fillRadius =
+        radius * (0.6 + 0.4 * doneness) +
         radius * 0.12 * math.sin(math.pi * doneness);
     final opacity = math.min(1.0, doneness * 1.6);
     final rect = Rect.fromCircle(center: center, radius: fillRadius);

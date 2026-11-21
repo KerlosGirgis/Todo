@@ -18,7 +18,8 @@ class DeviceService {
   /// How long the phone has been on, counting the time it's slept, which
   /// turning its clock back can't change.
   Future<Duration> sinceBoot() async => Duration(
-      milliseconds: (await _channel.invokeMethod<int>('elapsedRealtime'))!);
+    milliseconds: (await _channel.invokeMethod<int>('elapsedRealtime'))!,
+  );
 
   /// The same, and which start of the phone it counts from: a restart starts
   /// it again, from another [BootTime.boot].

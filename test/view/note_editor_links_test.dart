@@ -26,28 +26,33 @@ class FakeHomeWidget extends HomeWidgetService {
 }
 
 void main() {
-  testWidgets("the editor opens links as the link dialog wrote them",
-      (tester) async {
+  testWidgets("the editor opens links as the link dialog wrote them", (
+    tester,
+  ) async {
     final notes = NotesViewModel(
       repository: FakeNotesRepository(),
       homeWidgetService: FakeHomeWidget(),
     );
     await notes.get();
-    final access =
-        await notes.open(notes.notes.single, askForPassword: () async => null);
+    final access = await notes.open(
+      notes.notes.single,
+      askForPassword: () async => null,
+    );
     final editor = (access as Granted<NoteEditorViewModel>).value;
 
-    await tester.pumpWidget(ChangeNotifierProvider(
-      create: (_) => UserViewModel(),
-      child: MaterialApp(
-        theme: AppTheme.getTheme(isDarkMode: false),
-        localizationsDelegates: const [FlutterQuillLocalizations.delegate],
-        builder: (context, child) =>
-            // ignore: deprecated_member_use
-            MaterialUiCompatibilityBridge(child: child!),
-        home: NoteEditorPage(editor: editor),
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => UserViewModel(),
+        child: MaterialApp(
+          theme: AppTheme.getTheme(isDarkMode: false),
+          localizationsDelegates: const [FlutterQuillLocalizations.delegate],
+          builder: (context, child) =>
+              // ignore: deprecated_member_use
+              MaterialUiCompatibilityBridge(child: child!),
+          home: NoteEditorPage(editor: editor),
+        ),
       ),
-    ));
+    );
 
     // Quill opens a link through this, and on its own would put https://
     // before any it doesn't know.

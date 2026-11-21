@@ -46,8 +46,10 @@ void main() {
   /// Puts [task] in the trash, as deleted at [deletedAt].
   Future<void> trashTask(TodoItem task, DateTime deletedAt) async {
     final id = await taskRows.insertItem(task);
-    await taskRows.moveToTrash(TaskBranch(task.copyWith(id: id)),
-        deletedAt: deletedAt);
+    await taskRows.moveToTrash(
+      TaskBranch(task.copyWith(id: id)),
+      deletedAt: deletedAt,
+    );
   }
 
   /// Puts [note] in the trash, as deleted at [deletedAt].
@@ -58,8 +60,10 @@ void main() {
 
   /// Lets [duration] go by a frame at a time, as it does on a phone, for
   /// the animations in it: a single pump would draw only their first frame.
-  Future<void> wait(WidgetTester tester,
-      [Duration duration = const Duration(seconds: 1)]) async {
+  Future<void> wait(
+    WidgetTester tester, [
+    Duration duration = const Duration(seconds: 1),
+  ]) async {
     const frame = Duration(milliseconds: 50);
     for (var waited = Duration.zero; waited < duration; waited += frame) {
       await tester.pump(frame);
@@ -67,18 +71,20 @@ void main() {
   }
 
   Future<void> openTrash(WidgetTester tester, TrashKind kind) async {
-    await tester.pumpWidget(MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: tasks),
-        ChangeNotifierProvider.value(value: notes),
-      ],
-      child: ToastificationWrapper(
-        child: MaterialApp(
-          theme: AppTheme.getTheme(isDarkMode: false),
-          home: TrashPage(kind: kind),
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: tasks),
+          ChangeNotifierProvider.value(value: notes),
+        ],
+        child: ToastificationWrapper(
+          child: MaterialApp(
+            theme: AppTheme.getTheme(isDarkMode: false),
+            home: TrashPage(kind: kind),
+          ),
         ),
       ),
-    ));
+    );
     // The trash is read in, then its cards rise in.
     await wait(tester, const Duration(seconds: 2));
   }
@@ -93,28 +99,33 @@ void main() {
 
   /// The button with [tooltip] on the card titled [title].
   Finder buttonOn(String title, String tooltip) => find.descendant(
-        of: find.ancestor(
-          of: find.text(title),
-          matching: find.byWidgetPredicate(
-              (widget) => widget is TrashTaskCard || widget is TrashNoteCard),
-        ),
-        matching: find.byTooltip(tooltip),
-      );
+    of: find.ancestor(
+      of: find.text(title),
+      matching: find.byWidgetPredicate(
+        (widget) => widget is TrashTaskCard || widget is TrashNoteCard,
+      ),
+    ),
+    matching: find.byTooltip(tooltip),
+  );
 
-  testWidgets("lists the deleted tasks, the last first, and puts one back",
-      (tester) async {
+  testWidgets("lists the deleted tasks, the last first, and puts one back", (
+    tester,
+  ) async {
     await trashTask(TodoItem(uuid: "shop", title: "Shop"), daysAgo(3));
     await trashTask(
-        TodoItem(uuid: "call", title: "Call", desc: "About the trip\nSoon"),
-        daysAgo(0, 9, 30));
+      TodoItem(uuid: "call", title: "Call", desc: "About the trip\nSoon"),
+      daysAgo(0, 9, 30),
+    );
     await openTrash(tester, TrashKind.task);
 
     expect(find.text("2 TASKS"), findsOneWidget);
     expect(find.text("About the trip"), findsOneWidget);
     expect(find.text("Deleted today at 9:30 AM"), findsOneWidget);
     expect(find.text("Deleted 3 days ago"), findsOneWidget);
-    expect(tester.getTopLeft(find.text("Call")).dy,
-        lessThan(tester.getTopLeft(find.text("Shop")).dy));
+    expect(
+      tester.getTopLeft(find.text("Call")).dy,
+      lessThan(tester.getTopLeft(find.text("Shop")).dy),
+    );
 
     await tester.tap(buttonOn("Call", "Restore"));
     await wait(tester);
@@ -126,8 +137,9 @@ void main() {
     await finish(tester);
   });
 
-  testWidgets("deletes a task for good only once the user says to",
-      (tester) async {
+  testWidgets("deletes a task for good only once the user says to", (
+    tester,
+  ) async {
     await trashTask(TodoItem(uuid: "shop", title: "Shop"), daysAgo(1));
     await openTrash(tester, TrashKind.task);
     expect(find.text("Deleted yesterday"), findsOneWidget);
@@ -149,14 +161,17 @@ void main() {
     await finish(tester);
   });
 
-  testWidgets("switches to the notes, a locked one without its text",
-      (tester) async {
+  testWidgets("switches to the notes, a locked one without its text", (
+    tester,
+  ) async {
     await trashNote(
-        const Note(id: 1, title: "Plans", body: "\nWalk by the river"),
-        daysAgo(2));
+      const Note(id: 1, title: "Plans", body: "\nWalk by the river"),
+      daysAgo(2),
+    );
     await trashNote(
-        const Note(id: 2, title: "Diary", body: "secret", locked: true),
-        daysAgo(2));
+      const Note(id: 2, title: "Diary", body: "secret", locked: true),
+      daysAgo(2),
+    );
     await openTrash(tester, TrashKind.task);
     expect(find.text("No Deleted Tasks"), findsOneWidget);
     expect(find.text("2 NOTES"), findsOneWidget);
@@ -171,8 +186,9 @@ void main() {
     await finish(tester);
   });
 
-  testWidgets("Delete All empties what's on view, once the user says to",
-      (tester) async {
+  testWidgets("Delete All empties what's on view, once the user says to", (
+    tester,
+  ) async {
     await trashNote(const Note(id: 1, title: "Plans"), daysAgo(2));
     await trashNote(const Note(id: 2, title: "Ideas"), daysAgo(1));
     await trashTask(TodoItem(uuid: "shop", title: "Shop"), daysAgo(1));
@@ -184,9 +200,12 @@ void main() {
     await wait(tester);
     expect(find.text("Delete All Notes?"), findsOneWidget);
     expect(
-        find.text("The 2 notes in the Trash will be deleted for good. This "
-            "can't be undone."),
-        findsOneWidget);
+      find.text(
+        "The 2 notes in the Trash will be deleted for good. This "
+        "can't be undone.",
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.text("Delete"));
     await wait(tester);
     expect(noteRows.trash, isEmpty);

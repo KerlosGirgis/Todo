@@ -30,8 +30,9 @@ void main() {
     await page.wait(tester);
   }
 
-  testWidgets("a task can repeat on days of the week, for a while",
-      (tester) async {
+  testWidgets("a task can repeat on days of the week, for a while", (
+    tester,
+  ) async {
     await page.open(tester, const []);
     await startTask(tester, "Gym");
     expect(find.text("Weekly"), findsNothing);
@@ -58,8 +59,10 @@ void main() {
     await tester.tap(find.text("Done"));
     await page.wait(tester);
     final until = RepeatUnit.weeks.lastDay(today(), 5);
-    expect(find.text(DateTimeUtils.friendlyDay(until, DateTime.now())),
-        findsOneWidget);
+    expect(
+      find.text(DateTimeUtils.friendlyDay(until, DateTime.now())),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text("Add"));
     await page.wait(tester);
@@ -67,8 +70,10 @@ void main() {
     expect(gym.reminder, Reminder.weekly);
     expect(gym.weekdays, contains(DateTime.monday));
     expect(gym.until, until);
-    expect(find.text("Until ${DateTimeUtils.shortDay(until, DateTime.now())}"),
-        findsOneWidget);
+    expect(
+      find.text("Until ${DateTimeUtils.shortDay(until, DateTime.now())}"),
+      findsOneWidget,
+    );
     await page.close(tester);
   });
 
@@ -105,8 +110,9 @@ void main() {
         time: const ClockTime(19, 30),
         reminder: Reminder.daily,
         until: today().subtract(const Duration(days: 3)),
-        progress:
-            RepeatProgress(since: today().subtract(const Duration(days: 10))),
+        progress: RepeatProgress(
+          since: today().subtract(const Duration(days: 10)),
+        ),
       ),
     ]);
     await tester.longPress(find.text("Physio"));
@@ -129,8 +135,9 @@ void main() {
     await page.close(tester);
   });
 
-  testWidgets("a repeating task can be set back to repeat for good",
-      (tester) async {
+  testWidgets("a repeating task can be set back to repeat for good", (
+    tester,
+  ) async {
     await page.open(tester, [
       TodoItem(
         uuid: "pills",
