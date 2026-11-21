@@ -32,13 +32,19 @@ void main() async {
   final launchedFrom = await _launchingWidget();
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => UserViewModel()),
-    ChangeNotifierProvider(create: (context) {
-      return AuthViewModel(Provider.of<UserViewModel>(context, listen: false))
-        ..initializeApp();
-    }),
     // From the start, to follow the App Lock, which the reminders go by.
     ChangeNotifierProvider(create: (_) => TasksViewModel(), lazy: false),
     ChangeNotifierProvider(create: (_) => NotesViewModel()),
+    ChangeNotifierProvider(create: (context) {
+      final tasks = context.read<TasksViewModel>();
+      final notes = context.read<NotesViewModel>();
+      return AuthViewModel(
+        context.read<UserViewModel>(),
+        // Whichever page the app opens on: the to-do widget shows the tasks
+        // as they are, and the settings count the tasks and the notes.
+        onOpened: () => Future.wait([tasks.get(), notes.get()]),
+      )..initializeApp();
+    }),
     ChangeNotifierProvider(create: (_) => TourViewModel()),
     ChangeNotifierProvider(
         create: (_) => WidgetsViewModel(launchedFrom: launchedFrom)),

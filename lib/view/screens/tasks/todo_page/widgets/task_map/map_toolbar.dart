@@ -5,10 +5,6 @@ import '../../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../../models/todo_item.dart';
 import '../../../../../widgets/glass.dart';
 
-/// iOS's system red, a touch brighter on dark pages, as there.
-Color _systemRed(bool isDarkTheme) =>
-    isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
-
 /// The buttons that act on the task picked out, on a glass bar that comes
 /// up beside it: they check it off, add a subtask to it, edit it, set its
 /// reminder and delete it.
@@ -37,7 +33,6 @@ class MapToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
     final accent = context.colors.moreLess;
     final reminds = task.reminder != Reminder.none;
@@ -89,7 +84,7 @@ class MapToolbar extends StatelessWidget {
                 _ToolButton(
                   icon: Icons.delete_outline_rounded,
                   tooltip: "Delete",
-                  color: _systemRed(isDarkTheme),
+                  color: context.colors.systemRed,
                   onPressed: onDelete,
                 ),
               ],

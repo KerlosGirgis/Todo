@@ -79,21 +79,13 @@ class _NoteDialogState extends State<NoteDialog> {
     final result = await _draft.setLocked(locked,
         askForPassword: noteLockPasswordPrompt(context));
     if (!mounted) return;
-    result?.when(
-      onSuccess: (_) {},
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );
+    FeedbackToast.show(result);
   }
 
   Future<void> _save() async {
     Navigator.of(context).pop();
     final result = await _draft.save();
-    result.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );
+    FeedbackToast.show(result);
   }
 
   @override

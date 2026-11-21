@@ -203,11 +203,7 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
   Future<void> _apply(UserViewModel user) async {
     final result = await widget.setting.apply(user, _size);
     if (result is Success && mounted) Navigator.pop(context);
-    result.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );
+    FeedbackToast.show(result);
   }
 }
 

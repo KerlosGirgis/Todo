@@ -17,10 +17,6 @@ import '../../../../widgets/check_circle.dart';
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);
 
-/// iOS's system red, a touch brighter on dark pages, as there.
-Color _systemRed(bool isDarkTheme) =>
-    isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
-
 /// iOS's system orange on dark pages, and a deeper one that reads on light
 /// ones.
 Color _orange(bool isDarkTheme) =>
@@ -338,7 +334,7 @@ class _TaskCardState extends State<TaskCard> {
     final when = taskWhenLabel(task, now);
     // Red once it's overdue, as in Reminders, until it's done.
     final overdue = task.isPastDue(now) ? 1 - doneness : 0.0;
-    final red = _systemRed(isDarkTheme);
+    final red = context.colors.systemRed;
     final whenColor = Color.lerp(ink.withValues(alpha: 0.6), red, overdue)!;
     final whenTint = Color.lerp(
       ink.withValues(alpha: isDarkTheme ? 0.08 : 0.05),
@@ -764,10 +760,9 @@ class TaskDeleteBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return _SwipeBackground(
       alignment: alignment,
-      color: _systemRed(isDarkTheme),
+      color: context.colors.systemRed,
       icon: Icons.delete_rounded,
       label: "Delete",
     );

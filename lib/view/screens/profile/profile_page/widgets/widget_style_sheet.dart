@@ -123,7 +123,7 @@ class _WidgetStyleSheetState extends State<WidgetStyleSheet> {
     final result =
         await context.read<WidgetsViewModel>().setStyle(_kind, _style);
     if (result is Success && mounted) Navigator.pop(context);
-    _showResult(result);
+    FeedbackToast.show(result);
   }
 
   /// Adds a widget, styled as the sheet has it, to the home screen, once
@@ -132,10 +132,10 @@ class _WidgetStyleSheetState extends State<WidgetStyleSheet> {
     final widgets = context.read<WidgetsViewModel>();
     if (_style != widgets.styleOf(_kind)) {
       final result = await widgets.setStyle(_kind, _style);
-      if (result is! Success) return _showResult(result);
+      if (result is! Success) return FeedbackToast.show(result);
     }
     if (mounted) Navigator.pop(context);
-    _showResult(await widgets.add(_kind));
+    FeedbackToast.show(await widgets.add(_kind));
   }
 
   @override
@@ -656,10 +656,3 @@ class _Segment extends StatelessWidget {
     );
   }
 }
-
-/// Shows how [result] went, if there's a result to show.
-void _showResult(Result? result) => result?.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );

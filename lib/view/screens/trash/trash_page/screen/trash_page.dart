@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
@@ -17,6 +16,7 @@ import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../../widgets/themed_status_bar.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../widgets/confirm_delete_dialog.dart';
 import '../widgets/empty_trash.dart';
@@ -29,10 +29,6 @@ const _cardGap = 12.0;
 
 /// The room above the list's first card.
 const _listTop = 20.0;
-
-/// iOS's system red, a touch brighter on dark pages, as there.
-Color _systemRed(bool isDarkTheme) =>
-    isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
 
 /// The trash page, sliding in from the side, with the deleted [kind] in
 /// view.
@@ -94,7 +90,6 @@ class _TrashPageState extends State<TrashPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final padding = MediaQuery.paddingOf(context);
     final width = MediaQuery.sizeOf(context).width;
     // Clear of a camera cutout on a phone turned on its side, and a
@@ -108,14 +103,7 @@ class _TrashPageState extends State<TrashPage> {
     final count = _kind == TrashKind.task ? tasks : notes;
     final listPadding = EdgeInsets.fromLTRB(
         gutterLeft, _listTop, gutterRight, 24 + padding.bottom);
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      // There's no app bar to pick the status bar's icons, so they're set here.
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isDarkTheme ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
-      ),
+    return ThemedStatusBar(
       child: Scaffold(
         backgroundColor: context.colors.pageBackground,
         body: CustomScrollView(
@@ -141,7 +129,7 @@ class _TrashPageState extends State<TrashPage> {
                     ? null
                     : Padding(
                         padding: EdgeInsets.only(right: padding.right),
-                        child: GlassMenu(items: _menuItems(isDarkTheme)),
+                        child: GlassMenu(items: _menuItems()),
                       ),
                 titleRevealOffset: _TrashHeader.scrolledAway,
               ),
@@ -206,7 +194,7 @@ class _TrashPageState extends State<TrashPage> {
     );
   }
 
-  List<GlassMenuItem> _menuItems(bool isDarkTheme) => [
+  List<GlassMenuItem> _menuItems() => [
         GlassMenuItem(
           icon: Icons.restore_from_trash_rounded,
           tooltip: "Restore All",
@@ -215,7 +203,7 @@ class _TrashPageState extends State<TrashPage> {
         GlassMenuItem(
           icon: Icons.delete_sweep_rounded,
           tooltip: "Delete All",
-          color: _systemRed(isDarkTheme),
+          color: context.colors.systemRed,
           onPressed: _deleteAll,
         ),
       ];
@@ -224,12 +212,12 @@ class _TrashPageState extends State<TrashPage> {
 
   Future<void> _restoreTask(Trashed<TaskBranch> entry) async {
     final tasks = Provider.of<TasksViewModel>(context, listen: false);
-    _showResult(await tasks.restoreFromTrash(entry));
+    FeedbackToast.show(await tasks.restoreFromTrash(entry));
   }
 
   Future<void> _restoreNote(Trashed<Note> entry) async {
     final notes = Provider.of<NotesViewModel>(context, listen: false);
-    _showResult(await notes.restoreFromTrash(entry));
+    FeedbackToast.show(await notes.restoreFromTrash(entry));
   }
 
   /// Deletes [entry]'s task for good, with the tasks in it, once the user
@@ -248,7 +236,7 @@ class _TrashPageState extends State<TrashPage> {
             "for good. This can't be undone.",
       },
     );
-    if (confirmed) _showResult(await tasks.deleteForever(entry));
+    if (confirmed) FeedbackToast.show(await tasks.deleteForever(entry));
   }
 
   /// Deletes [entry]'s note for good, once the user says to, and once its
@@ -263,7 +251,7 @@ class _TrashPageState extends State<TrashPage> {
           "be undone.",
     );
     if (confirmed) {
-      _showResult(
+      FeedbackToast.show(
           await notes.deleteForever(entry, askForPassword: askForPassword));
     }
   }
@@ -279,7 +267,7 @@ class _TrashPageState extends State<TrashPage> {
         result = await Provider.of<NotesViewModel>(context, listen: false)
             .restoreAllFromTrash();
     }
-    _showResult(result);
+    FeedbackToast.show(result);
   }
 
   /// Deletes every task, or every note, as the page shows, for good, once
@@ -303,19 +291,12 @@ class _TrashPageState extends State<TrashPage> {
               "can't be undone.",
     );
     if (!confirmed) return;
-    _showResult(switch (kind) {
+    FeedbackToast.show(switch (kind) {
       TrashKind.task => await tasks.emptyTrash(),
       TrashKind.note => await notes.emptyTrash(askForPassword: askForPassword),
     });
   }
 }
-
-/// Shows how [result] went.
-void _showResult(Result result) => result.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );
 
 /// How many tasks and notes are in the trash, over the page's large title,
 /// which scrolls away under the bar.

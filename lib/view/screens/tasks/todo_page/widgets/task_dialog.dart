@@ -129,11 +129,7 @@ class _TaskDialogState extends State<TaskDialog> {
     final tasks = context.read<TasksViewModel>();
     Navigator.of(context).pop();
     final result = await tasks.save(_draft);
-    result.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );
+    FeedbackToast.show(result);
   }
 
   @override

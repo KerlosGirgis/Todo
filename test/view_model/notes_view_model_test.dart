@@ -18,6 +18,9 @@ class FakeNotesRepository extends NotesRepository {
   var _nextId = 1;
   bool failUpdates = false;
 
+  /// Whether reading the notes fails, as when the database won't read.
+  bool failReads = false;
+
   Note _withId(Note note) => Note.fromMap({...note.toMap(), 'id': _nextId++});
 
   @override
@@ -25,6 +28,7 @@ class FakeNotesRepository extends NotesRepository {
 
   @override
   Future<List<Note>> getNotes() async {
+    if (failReads) throw StateError("Can't read the notes");
     reads++;
     return List.of(rows);
   }
@@ -105,8 +109,15 @@ class FakeAuth extends AuthenticationService {
 class FakeLock extends LockService {
   FakeLock() : super.withClock(() => throw StateError("No waits"));
 
+  /// Whether what the app is locked with can't be read, as when the phone's
+  /// secure storage fails.
+  bool unreadable = false;
+
   @override
-  Future<AppLock> getLock() async => AppLock.off;
+  Future<AppLock> getLock() async {
+    if (unreadable) throw StateError("Can't read the lock");
+    return AppLock.off;
+  }
 }
 
 class FakeHomeWidget extends HomeWidgetService {
@@ -139,6 +150,7 @@ const formatted = [
 void main() {
   late FakeNotesRepository repository;
   late FakeAuth auth;
+  late FakeLock lock;
   late FakeHomeWidget homeWidget;
   late NotesViewModel notes;
 
@@ -147,11 +159,12 @@ void main() {
   setUp(() async {
     repository = FakeNotesRepository();
     auth = FakeAuth();
+    lock = FakeLock();
     homeWidget = FakeHomeWidget();
     notes = NotesViewModel(
       repository: repository,
       authService: auth,
-      lockService: FakeLock(),
+      lockService: lock,
       homeWidgetService: homeWidget,
     );
     repository.rows.addAll([
@@ -198,6 +211,19 @@ void main() {
       auth.fingerprint = FingerprintCheck.failed;
       final access = await notes.edit(shown("Diary"), askForPassword: noPassword);
       expect((access as Denied).message, "Authentication Failed");
+    });
+
+    test("don't open without a fingerprint when the App Lock can't be read",
+        () async {
+      auth.fingerprint = FingerprintCheck.unavailable;
+      lock.unreadable = true;
+      var asked = 0;
+      final access = await notes.open(shown("Diary"), askForPassword: () async {
+        asked++;
+        return "1234";
+      });
+      expect((access as Denied).message, "Authentication Failed");
+      expect(asked, 0);
     });
 
     test("open without asking when they're not locked", () async {
@@ -500,6 +526,20 @@ void main() {
       expect(await editor.delete(askForPassword: noPassword), isA<Denied>());
       expect(repository.rows.map((note) => note.title), ["Open", "Diary"]);
       expect(repository.trash, isEmpty);
+    });
+
+    test(
+        "moves the note to the trash though the notes can't be read in "
+        "after it", () async {
+      final editor = await openNote("Open");
+      repository.failReads = true;
+      expect(await editor.delete(askForPassword: noPassword),
+          isA<Granted<Trashed<Note>>>());
+
+      repository.failReads = false;
+      await notes.get();
+      expect(notes.notes.map((note) => note.title), ["Diary"]);
+      expect(notes.trash.single.item.title, "Open");
     });
   });
 }

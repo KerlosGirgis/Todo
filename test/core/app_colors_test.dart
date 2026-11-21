@@ -26,6 +26,12 @@ void main() {
         BorderSide.strokeAlignOutside);
   });
 
+  test("iOS's system red is a touch brighter on dark pages", () {
+    expect(AppColors.light.systemRed, const Color(0xffFF3B30));
+    expect(AppColors.dark.systemRed, const Color(0xffFF453A));
+    expect(AppColors.amoled.systemRed, AppColors.dark.systemRed);
+  });
+
   test('switching to AMOLED black brings the outline in', () {
     expect(AppColors.dark.lerp(AppColors.amoled, 1).dialogSide,
         AppColors.amoled.dialogSide);

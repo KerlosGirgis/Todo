@@ -31,10 +31,6 @@ Color mapBranchColor(int branch, {required bool isDarkTheme}) {
   return isDarkTheme ? dark : light;
 }
 
-/// iOS's system red, a touch brighter on dark pages, as there.
-Color _systemRed(bool isDarkTheme) =>
-    isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
-
 /// A few words about a task under its title on the map, after an icon, or
 /// the icon alone.
 class MapNodeBit {
@@ -323,7 +319,7 @@ class MapNodeCard extends StatelessWidget {
                             bits: bits,
                             style: style.bit,
                             color: ink.withValues(alpha: 0.55 * strength),
-                            urgent: _systemRed(isDarkTheme)
+                            urgent: context.colors.systemRed
                                 .withValues(alpha: strength),
                           ),
                         ),

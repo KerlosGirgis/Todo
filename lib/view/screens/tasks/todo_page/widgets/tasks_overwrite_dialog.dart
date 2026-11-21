@@ -31,11 +31,7 @@ class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
             askForBackupPassword: backupPasswordPrompt(context))
         .then((result) {
       if (mounted) closeFormDialog(context);
-      result?.when(
-        onSuccess: FeedbackToast.success,
-        onFailure: FeedbackToast.error,
-        onInfo: FeedbackToast.info,
-      );
+      FeedbackToast.show(result);
     });
   }
 

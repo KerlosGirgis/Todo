@@ -68,11 +68,7 @@ class _EditNameDialogState extends State<EditNameDialog> {
     if (!mounted) return;
     // Open still, to fix the name, when it won't do.
     if (result is! Failure) Navigator.of(context).pop();
-    result.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );
+    FeedbackToast.show(result);
   }
 
   @override

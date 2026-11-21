@@ -74,6 +74,18 @@ class NotesViewModel with ChangeNotifier {
     }
   }
 
+  /// Reads the notes in again once a change has been saved, or has failed,
+  /// to show them as they now are. Should that fail, they're shown as they
+  /// were until they're next read in: the change has gone through, or the
+  /// user has been told it hasn't, either way.
+  Future<void> _reload() async {
+    try {
+      await get();
+    } catch (e) {
+      // Shown as they were, until they're next read in.
+    }
+  }
+
   /// Shows the pages the notes as they are now.
   void _publish() {
     _shown = [
@@ -168,7 +180,7 @@ class NotesViewModel with ChangeNotifier {
           coverColor: coverColor,
           locked: locked,
         ));
-        await get();
+        await _reload();
         return Info("Note Added");
       }
       await _notesRepository.updateNote(note.copyWith(
@@ -178,7 +190,7 @@ class NotesViewModel with ChangeNotifier {
         locked: locked,
       ));
       if (locked) await _takeOffWidget(note.id);
-      await get();
+      await _reload();
       return Info("Note Updated");
     } catch (e) {
       return Failure("Couldn't save the note");
@@ -309,8 +321,8 @@ class NotesViewModel with ChangeNotifier {
       return const Denied("Couldn't delete the note");
     }
     await _takeOffWidget(note.id);
-    await get();
-    await getTrash();
+    await _reload();
+    await _reloadTrash();
     return Granted(_shownInTrash(trashed));
   }
 
@@ -318,6 +330,16 @@ class NotesViewModel with ChangeNotifier {
   Future<void> getTrash() async {
     _trash = await _notesRepository.getTrash();
     _publishTrash();
+  }
+
+  /// Reads in the trash again once it's changed, as [_reload] does the
+  /// notes.
+  Future<void> _reloadTrash() async {
+    try {
+      await getTrash();
+    } catch (e) {
+      // Shown as it was, until it's next read in.
+    }
   }
 
   /// Shows the trash page the notes in the trash as they are now.
@@ -350,8 +372,8 @@ class NotesViewModel with ChangeNotifier {
     } catch (e) {
       return Failure("Couldn't restore the note");
     }
-    await getTrash();
-    await get();
+    await _reloadTrash();
+    await _reload();
     if (id == null) return Info("That note isn't in the Trash anymore");
     return Success("Note Restored");
   }
@@ -376,8 +398,8 @@ class NotesViewModel with ChangeNotifier {
     } catch (e) {
       allBack = false;
     }
-    await getTrash();
-    await get();
+    await _reloadTrash();
+    await _reload();
     if (!allBack) {
       return Failure(restored == 0
           ? "Couldn't restore the notes"
@@ -406,7 +428,7 @@ class NotesViewModel with ChangeNotifier {
     } catch (e) {
       return Failure("Couldn't delete the note");
     }
-    await getTrash();
+    await _reloadTrash();
     return Info("Note Deleted Forever");
   }
 
@@ -429,7 +451,7 @@ class NotesViewModel with ChangeNotifier {
     } catch (e) {
       return Failure("Couldn't delete the notes");
     }
-    await getTrash();
+    await _reloadTrash();
     return Info(trash.length == 1
         ? "1 Note Deleted Forever"
         : "${trash.length} Notes Deleted Forever");
@@ -449,7 +471,7 @@ class NotesViewModel with ChangeNotifier {
     // Rewriting the table gives every note a new id, so the notes are read
     // back in: the ids held before would now point at other notes. The
     // widget's too.
-    await get();
+    await _reload();
     if (onWidget != null) await _followOnWidget(onWidget);
   }
 
@@ -535,7 +557,7 @@ class NotesViewModel with ChangeNotifier {
       }
       // Replacing the notes deleted the one on the widget, whichever it was.
       if (overwrite) await _clearWidget();
-      await get();
+      await _reload();
       return Success("Data Restored");
     } on WrongBackupKindException {
       return Failure("That's a backup of tasks, not notes");
@@ -568,7 +590,14 @@ class NotesViewModel with ChangeNotifier {
       case FingerprintCheck.lockedOut:
         return Failure("Too many tries. Try your fingerprint again later.");
       case FingerprintCheck.unavailable:
-        if (await _lockService.getLock() != AppLock.password) {
+        final AppLock lock;
+        try {
+          lock = await _lockService.getLock();
+        } catch (e) {
+          // Not without telling which password to ask for.
+          return Failure("Authentication Failed");
+        }
+        if (lock != AppLock.password) {
           return Failure(
               "Fingerprint isn't available. Set an App Lock password instead.");
         }

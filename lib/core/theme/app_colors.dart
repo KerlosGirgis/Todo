@@ -26,6 +26,10 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color dialogExitIcon;
   final Color dialogExitContainer;
 
+  /// iOS's system red, a touch brighter on dark pages, as there: for what
+  /// deletes, and for what's overdue.
+  final Color systemRed;
+
   const AppColors({
     required this.floatingActionButtonBackground,
     required this.floatingActionButtonForeground,
@@ -43,6 +47,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.dialogIcon,
     required this.dialogExitIcon,
     required this.dialogExitContainer,
+    required this.systemRed,
   });
 
   static const light = AppColors(
@@ -62,6 +67,7 @@ class AppColors extends ThemeExtension<AppColors> {
     dialogIcon: Color(0xff3D5AFE),
     dialogExitIcon: Color(0xff424242),
     dialogExitContainer: Color(0xffE0E0E0),
+    systemRed: Color(0xffFF3B30),
   );
 
   static final dark = AppColors(
@@ -81,6 +87,7 @@ class AppColors extends ThemeExtension<AppColors> {
     dialogIcon: Colors.white,
     dialogExitIcon: Colors.white,
     dialogExitContainer: const Color(0xff404040),
+    systemRed: const Color(0xffFF453A),
   );
 
   static final amoled = dark.copyWith(
@@ -132,6 +139,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? dialogIcon,
     Color? dialogExitIcon,
     Color? dialogExitContainer,
+    Color? systemRed,
   }) {
     return AppColors(
       floatingActionButtonBackground:
@@ -157,6 +165,7 @@ class AppColors extends ThemeExtension<AppColors> {
       dialogExitIcon: dialogExitIcon ?? this.dialogExitIcon,
       dialogExitContainer:
       dialogExitContainer ?? this.dialogExitContainer,
+      systemRed: systemRed ?? this.systemRed,
     );
   }
 
@@ -225,6 +234,7 @@ class AppColors extends ThemeExtension<AppColors> {
         other.dialogExitContainer,
         t,
       )!,
+      systemRed: Color.lerp(systemRed, other.systemRed, t)!,
     );
   }
 }

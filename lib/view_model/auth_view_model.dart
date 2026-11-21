@@ -19,6 +19,7 @@ enum AuthStatus {
 }
 
 class AuthViewModel with ChangeNotifier {
+  /// [onOpened] reads in what the app's pages show, once the app has opened.
   AuthViewModel(
     this._userViewModel, {
     AuthenticationService? authService,
@@ -26,11 +27,13 @@ class AuthViewModel with ChangeNotifier {
     DatabaseService? databaseService,
     DeviceService? deviceService,
     VerseService? verseService,
+    Future<void> Function()? onOpened,
   })  : _authService = authService ?? AuthenticationService(),
         _lockService = lockService ?? LockService(),
         _dbService = databaseService ?? DatabaseService(),
         _deviceService = deviceService ?? DeviceService(),
-        _verseService = verseService ?? VerseService();
+        _verseService = verseService ?? VerseService(),
+        _onOpened = onOpened;
 
   AuthStatus _status = AuthStatus.unauthenticated;
   AuthStatus get status => _status;
@@ -65,6 +68,10 @@ class AuthViewModel with ChangeNotifier {
   /// Loaded as the app unlocks, as the home page opens on the user's start
   /// page, in their theme. It also has what the app is locked with.
   final UserViewModel _userViewModel;
+
+  /// Reads in what the app's pages show, whichever page it opens on, as
+  /// the home screen's widgets and the settings show it too: see [_open].
+  final Future<void> Function()? _onOpened;
 
   Future<void> initializeApp() async {
     // One at a time, as the fingerprint can only be asked for once at a
@@ -205,9 +212,10 @@ class AuthViewModel with ChangeNotifier {
 
   /// Opens the app the first time it's unlocked: the database, with [key],
   /// the one the App Lock's password unlocked, if it's locked with one, then
-  /// the verses and the profile. Whether it's open; not when the database
-  /// won't open, as when its key is gone, which is left for the user to try
-  /// again rather than opening for good.
+  /// the verses and the profile, and then has [_onOpened] read in what the
+  /// pages show. Whether it's open; not when the database won't open, as
+  /// when its key is gone, which is left for the user to try again rather
+  /// than opening for good.
   Future<bool> _open({String? key}) async {
     if (_opened) return true;
     try {
@@ -221,6 +229,9 @@ class AuthViewModel with ChangeNotifier {
       return false;
     }
     _opened = true;
+    // Not waited for, as the page the app opens on reads in its own, nor
+    // keeping the app from opening should it fail.
+    if (_onOpened case final onOpened?) Future.sync(onOpened).ignore();
     return true;
   }
 }

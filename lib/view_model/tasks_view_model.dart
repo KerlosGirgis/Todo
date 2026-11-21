@@ -231,6 +231,18 @@ class TasksViewModel with ChangeNotifier {
     }
   }
 
+  /// Reads the tasks in again once a change has been saved, or has failed,
+  /// to show them as they now are. Should that fail, they're shown as they
+  /// were until they're next read in: the change has gone through, or the
+  /// user has been told it hasn't, either way.
+  Future<void> _reload() async {
+    try {
+      await get();
+    } catch (e) {
+      // Shown as they were, until they're next read in.
+    }
+  }
+
   /// Brings each repeating task up to date if a new day has begun since the
   /// tasks were: at midnight, or as the app comes back after it. A daily
   /// task starts over, not done yet, as does one that comes round today.
@@ -439,7 +451,7 @@ class TasksViewModel with ChangeNotifier {
     }
     // Rewriting the table gives every task a new id, so the tasks are read
     // back in: the ids held before would now point at other tasks.
-    await get();
+    await _reload();
     return result;
   }
 
@@ -467,7 +479,7 @@ class TasksViewModel with ChangeNotifier {
     } catch (e) {
       // They stay done.
     }
-    await get();
+    await _reload();
   }
 
   /// Folds [task]'s subtasks away, on the list and on the map, or brings
@@ -483,7 +495,7 @@ class TasksViewModel with ChangeNotifier {
     try {
       await _tasksRepository.updateItem(changed);
     } catch (e) {
-      await get();
+      await _reload();
     }
   }
 
@@ -524,8 +536,12 @@ class TasksViewModel with ChangeNotifier {
         uuid: const UuidV4().generate(),
         parent: parent?.uuid,
       );
-      added = added.copyWith(id: await _tasksRepository.insertItem(added));
-      await get();
+      try {
+        added = added.copyWith(id: await _tasksRepository.insertItem(added));
+      } catch (e) {
+        return const Failure("Couldn't add the task");
+      }
+      await _reload();
       // Unfolded, so the new task shows.
       if (parent != null) await setFolded(parent, false);
       final result = await switch (rule) {
@@ -552,14 +568,19 @@ class TasksViewModel with ChangeNotifier {
       parent: task.parent,
       folded: task.folded,
     );
-    await _tasksRepository.updateItem(updated);
+    try {
+      await _tasksRepository.updateItem(updated);
+    } catch (e) {
+      // As it was, reminder and all.
+      return const Failure("Couldn't save the task");
+    }
     try {
       // Whichever it had, in case it's been turned off, or it's changed.
       await _cancelReminders(task);
     } catch (e) {
       // It gets its own all the same.
     }
-    await get();
+    await _reload();
     final result = await switch (rule) {
       final rule? => _repeat(updated, rule, progress: progress),
       _ when reminder == Reminder.once => _remindOnce(updated),
@@ -593,7 +614,7 @@ class TasksViewModel with ChangeNotifier {
       trashed = await _tasksRepository.moveToTrash(branch, deletedAt: _now());
     } catch (e) {
       // Back on the list, as they're still there.
-      await get();
+      await _reload();
       return null;
     }
     for (final each in branch.all) {
@@ -604,8 +625,8 @@ class TasksViewModel with ChangeNotifier {
         // It's in the trash all the same.
       }
     }
-    _trash = await _tasksRepository.getTrash();
-    await get();
+    await _reloadTrash();
+    await _reload();
     return trashed;
   }
 
@@ -613,6 +634,16 @@ class TasksViewModel with ChangeNotifier {
   Future<void> getTrash() async {
     _trash = await _tasksRepository.getTrash();
     notifyListeners();
+  }
+
+  /// Reads in the trash again once it's changed, as [_reload] does the
+  /// tasks.
+  Future<void> _reloadTrash() async {
+    try {
+      await getTrash();
+    } catch (e) {
+      // Shown as it was, until it's next read in.
+    }
   }
 
   /// Puts the task [entry] holds back on the list, with the tasks in it,
@@ -625,8 +656,8 @@ class TasksViewModel with ChangeNotifier {
     } catch (e) {
       return Failure("Couldn't restore the task");
     }
-    await getTrash();
-    await get();
+    await _reloadTrash();
+    await _reload();
     if (branch == null) return Info("That task isn't in the Trash anymore");
     final reminded = await _remindAgain(branch.all);
     await _settle();
@@ -658,8 +689,8 @@ class TasksViewModel with ChangeNotifier {
     } catch (e) {
       allBack = false;
     }
-    await getTrash();
-    await get();
+    await _reloadTrash();
+    await _reload();
     final remindersSet = await _remindAgain([
       for (final branch in restored) ...branch.all,
     ]);
@@ -684,7 +715,7 @@ class TasksViewModel with ChangeNotifier {
     } catch (e) {
       return Failure("Couldn't delete the task");
     }
-    await getTrash();
+    await _reloadTrash();
     return Info("Task Deleted Forever");
   }
 
@@ -699,7 +730,7 @@ class TasksViewModel with ChangeNotifier {
     } catch (e) {
       return Failure("Couldn't delete the tasks");
     }
-    await getTrash();
+    await _reloadTrash();
     return Info(
         count == 1 ? "1 Task Deleted Forever" : "$count Tasks Deleted Forever");
   }
@@ -767,6 +798,20 @@ class TasksViewModel with ChangeNotifier {
         node == null ? const <TaskNode>[] : _tree.marking(node, done: done);
     final changing =
         node == null ? [task] : [for (final each in nodes) each.task];
+    // Before they're marked, as the time that stands for a repeating task
+    // may be another once it's done.
+    final said = done
+        ? (task.repeats ? "Done for ${_occasionOf(task)}" : "Task done")
+        : "Task undone";
+    try {
+      await _tasksRepository.updateItems([
+        for (final each in changing) each.marked(done: done, today: today),
+      ]);
+    } catch (e) {
+      // None of them is marked, so they keep their reminders.
+      return const Failure("Couldn't update the task");
+    }
+    // Only now that they're marked: had that failed, they'd keep reminding.
     for (final each in changing) {
       if (!done || each.repeats || each.reminder == Reminder.none) continue;
       try {
@@ -775,15 +820,7 @@ class TasksViewModel with ChangeNotifier {
         // It's done all the same.
       }
     }
-    // Before they're marked, as the time that stands for a repeating task
-    // may be another once it's done.
-    final said = done
-        ? (task.repeats ? "Done for ${_occasionOf(task)}" : "Task done")
-        : "Task undone";
-    await _tasksRepository.updateItems([
-      for (final each in changing) each.marked(done: done, today: today),
-    ]);
-    await get();
+    await _reload();
     if (node == null || changing.length < 2) {
       return done ? Success(said) : Info(said);
     }
@@ -833,10 +870,10 @@ class TasksViewModel with ChangeNotifier {
                 done: was.done, reminder: was.reminder, progress: was.progress),
       ];
       await _tasksRepository.updateItems(restored);
-      await get();
     } catch (e) {
       return Failure("Couldn't undo that");
     }
+    await _reload();
     if (!await _remindAgain(restored)) {
       return Failure("Undone, but not every reminder could be set");
     }
@@ -931,7 +968,7 @@ class TasksViewModel with ChangeNotifier {
       } catch (e) {
         return Failure("Restore failed. Data rolled back safely.");
       }
-      await get();
+      await _reload();
       final result = await _setRestoredReminders(newTasks, replaced: overwrite);
       await _settle();
       return result;
@@ -1060,7 +1097,7 @@ class TasksViewModel with ChangeNotifier {
           );
           await _tasksRepository
               .updateItem(task.copyWith(done: false, reminder: Reminder.once));
-          await get();
+          await _reload();
           final remaining = "Time remaining:\n "
               "${DateTimeUtils.durationToString(scheduledTime.difference(_now()))}";
           return Info(task.done ? "Task undone. $remaining" : remaining);
@@ -1090,7 +1127,7 @@ class TasksViewModel with ChangeNotifier {
       await _scheduleReminder(repeating);
       // Without its day, as a repeating task has none.
       await _tasksRepository.updateItem(repeating);
-      await get();
+      await _reload();
       // One whose last time has gone has nothing more to remind of.
       return repeating.recurrence!.hasEndedBy(today)
           ? Info("Task Updated")
@@ -1118,7 +1155,7 @@ class TasksViewModel with ChangeNotifier {
       await _cancelReminders(task);
       await _tasksRepository
           .updateItem(task.copyWith(reminder: Reminder.none));
-      await get();
+      await _reload();
       return Info("Notification Disabled");
     } catch (e) {
       return Failure("Failed to disable notification");

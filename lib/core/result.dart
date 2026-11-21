@@ -1,26 +1,11 @@
 sealed class Result {
   const Result();
-
-  void when({
-    required void Function(String message) onSuccess,
-    required void Function(String message) onFailure,
-    required void Function(String message) onInfo,
-  });
 }
 
 class Success extends Result {
   final String message;
 
   const Success(this.message);
-
-  @override
-  void when({
-    required void Function(String message) onSuccess,
-    required void Function(String message) onFailure,
-    required void Function(String message) onInfo,
-  }) {
-    onSuccess(message);
-  }
 }
 
 /// A [Success] that changed more than was asked of it, as marking a task
@@ -37,30 +22,12 @@ class Failure extends Result {
   final String message;
 
   const Failure(this.message);
-
-  @override
-  void when({
-    required void Function(String message) onSuccess,
-    required void Function(String message) onFailure,
-    required void Function(String message) onInfo,
-  }) {
-    onFailure(message);
-  }
 }
 
 class Info extends Result {
   final String message;
 
   const Info(this.message);
-
-  @override
-  void when({
-    required void Function(String message) onSuccess,
-    required void Function(String message) onFailure,
-    required void Function(String message) onInfo,
-  }) {
-    onInfo(message);
-  }
 }
 
 /// What came of asking for something behind a lock: the thing, once the lock

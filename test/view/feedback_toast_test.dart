@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:toastification/toastification.dart';
+import 'package:todo/core/result.dart';
 import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/core/ui/feedback_toast.dart';
 
@@ -64,5 +65,41 @@ void main() {
     await wait(tester, const Duration(seconds: 7));
     expect(find.text("Note moved to Trash"), findsNothing);
     expect(undone, 0);
+  });
+
+  testWidgets("a result shows as it went, and nothing shows without one",
+      (tester) async {
+    await showApp(tester);
+    FeedbackToast.show(null);
+    await wait(tester);
+    expect(find.byType(Text), findsNothing);
+
+    FeedbackToast.show(const Failure("Couldn't save the task"));
+    await wait(tester);
+    expect(find.text("Couldn't save the task"), findsOneWidget);
+    expect(find.text("Undo"), findsNothing);
+    await wait(tester, const Duration(seconds: 4));
+    expect(find.text("Couldn't save the task"), findsNothing);
+  });
+
+  testWidgets(
+      "a result that changed more than was asked comes with an Undo, "
+      "which says how taking it back went", (tester) async {
+    await showApp(tester);
+    var undone = 0;
+    FeedbackToast.show(
+        Undoable("Task done, with its 2 subtasks", undo: () async {
+      undone++;
+      return const Failure("Couldn't undo that");
+    }));
+    await wait(tester);
+    expect(find.text("Task done, with its 2 subtasks"), findsOneWidget);
+
+    await tester.tap(find.text("Undo"));
+    await wait(tester);
+    expect(undone, 1);
+    expect(find.text("Task done, with its 2 subtasks"), findsNothing);
+    expect(find.text("Couldn't undo that"), findsOneWidget);
+    await wait(tester, const Duration(seconds: 4));
   });
 }

@@ -7,7 +7,6 @@ import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/task_filters.dart';
 import '../../../../../models/task_sort.dart';
@@ -17,11 +16,12 @@ import '../../../../../models/user_profile.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
-import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
+import '../../../../widgets/page_bar_actions.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../../widgets/themed_status_bar.dart';
 import '../../../../widgets/tour.dart';
 import '../../../../widgets/widget_page_requests.dart';
 import '../../../notes/notes_page/screen/notes_page.dart';
@@ -297,19 +297,11 @@ class _TodoPageState extends State<TodoPage>
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final view =
         context.select<UserViewModel, TasksView>((user) => user.shownTasksView);
     final fullScreen = _fullScreen && view == TasksView.map;
     final padding = MediaQuery.paddingOf(context);
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      // There's no app bar to pick the status bar's icons, so they're set here.
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isDarkTheme ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
-      ),
+    return ThemedStatusBar(
       child: PopScope(
         // Back leaves full screen, rather than the app.
         canPop: !fullScreen,
@@ -399,7 +391,7 @@ class _TodoPageState extends State<TodoPage>
             child: TitleBar(
               title: _title,
               topInset: padding.top,
-              trailing: _BarActions(
+              trailing: PageBarActions(
                   items: _menuItems(TasksView.map), menuKey: _menuKey),
             ),
           ),
@@ -426,7 +418,7 @@ class _TodoPageState extends State<TodoPage>
             title: _title,
             topInset: padding.top,
             controller: _scrollController,
-            trailing: _BarActions(
+            trailing: PageBarActions(
                 items: _menuItems(TasksView.list), menuKey: _menuKey),
             titleRevealOffset: _TodoHeader.scrolledAway,
           ),
@@ -511,7 +503,7 @@ class _TodoPageState extends State<TodoPage>
               subtitle: "Enter your password to back up your tasks."),
           askForBackupPassword: newBackupPasswordPrompt(context),
         )
-        .then(_showResult);
+        .then(FeedbackToast.show);
   }
 
   void _addTask() => showFormDialog<void>(context, const TaskDialog());
@@ -539,40 +531,7 @@ class _TodoPageState extends State<TodoPage>
     );
   }
 
-  void _openSettings() {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const ProfilePage(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            SlideTransition(
-          position: animation.drive(
-              Tween(begin: const Offset(0, 1), end: Offset.zero)
-                  .chain(CurveTween(curve: Curves.ease))),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-/// Shows how [result] went, if there's a result to show: none when the user
-/// cancels. One that changed more than was asked of it comes with an Undo
-/// that takes it all back.
-void _showResult(Result? result) {
-  if (result case Undoable(:final message, :final undo)) {
-    FeedbackToast.undoable(
-      message,
-      onUndo: () => undo().then(FeedbackToast.undone),
-    );
-    return;
-  }
-  result?.when(
-    onSuccess: FeedbackToast.success,
-    onFailure: FeedbackToast.error,
-    onInfo: FeedbackToast.info,
-  );
+  void _openSettings() => Navigator.push(context, profileRoute());
 }
 
 /// Moves [task] to the trash, with the tasks in it, as its card has been
@@ -734,7 +693,7 @@ class _TaskMapPane extends StatelessWidget {
       onEdit: onEdit,
       onAddSubtask: onAddSubtask,
       onDelete: (task) => _moveToTrash(tasks, task),
-      onResult: _showResult,
+      onResult: FeedbackToast.show,
       fullScreen: fullScreen,
       onFullScreen: onFullScreen,
       // Over the sort and filter buttons, as far apart as the map's own.
@@ -743,27 +702,6 @@ class _TaskMapPane extends StatelessWidget {
       nodeKey: nodeKey,
       fitKey: fitKey,
       fullScreenKey: fullScreenKey,
-    );
-  }
-}
-
-/// The menu, with the switch between the list and the map and the tasks'
-/// less frequent actions, and the avatar, at the end of the bar.
-class _BarActions extends StatelessWidget {
-  const _BarActions({required this.items, required this.menuKey});
-
-  final List<GlassMenuItem> items;
-  final GlobalKey menuKey;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GlassMenu(key: menuKey, items: items),
-        const SizedBox(width: 10),
-        const AppbarAvatar(),
-      ],
     );
   }
 }
@@ -879,7 +817,7 @@ class _TaskListSliver extends StatelessWidget {
         onEdit: onEdit,
         onAddSubtask: onAddSubtask,
         onDelete: (task) => _moveToTrash(tasks, task),
-        onResult: _showResult,
+        onResult: FeedbackToast.show,
         firstCardKey: firstCardKey,
       ),
     );

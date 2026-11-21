@@ -20,6 +20,7 @@ import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../../widgets/themed_status_bar.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
 import '../widgets/editor_toolbar.dart';
@@ -41,10 +42,6 @@ const _textInset = 6.0;
 
 /// The toolbar's gap above the bottom of the page, or the keyboard.
 const _toolbarGap = 12.0;
-
-/// iOS's system red, a touch brighter on dark pages, as there.
-Color _systemRed(bool isDarkTheme) =>
-    isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
 
 /// Where a note is read and written: its title at the head of its text, on
 /// the page itself, with the tools for writing in a glass toolbar that rides
@@ -129,7 +126,6 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final padding = MediaQuery.paddingOf(context);
     final width = MediaQuery.sizeOf(context).width;
     // Clear of a camera cutout on a phone turned on its side, and lines a
@@ -155,14 +151,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     final note = _editor.note;
     final bodyStyle =
         noteBodyStyle(context, size: textSize, casualFont: casualFont);
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      // There's no app bar to pick the status bar's icons, so they're set here.
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isDarkTheme ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
-      ),
+    return ThemedStatusBar(
       child: Scaffold(
         backgroundColor: context.colors.pageBackground,
         body: Stack(
@@ -188,7 +177,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                     ),
                     trailing: Padding(
                       padding: EdgeInsets.only(right: padding.right),
-                      child: GlassMenu(items: _menuItems(isDarkTheme)),
+                      child: GlassMenu(items: _menuItems()),
                     ),
                     titleRevealOffset: _titleTop +
                         NoteTitle.titleScrolledAway(context, titleSize),
@@ -301,7 +290,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     );
   }
 
-  List<GlassMenuItem> _menuItems(bool isDarkTheme) => [
+  List<GlassMenuItem> _menuItems() => [
         GlassMenuItem(
           icon: Icons.add_to_home_screen_rounded,
           tooltip: "Show on Widget",
@@ -310,7 +299,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
         GlassMenuItem(
           icon: Icons.delete_rounded,
           tooltip: "Delete Note",
-          color: _systemRed(isDarkTheme),
+          color: context.colors.systemRed,
           onPressed: _delete,
         ),
       ];
@@ -375,11 +364,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   /// Shows the note's saved text on the home screen's widget.
   Future<void> _showOnWidget() async {
     final result = await _editor.showOnWidget();
-    result.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );
+    FeedbackToast.show(result);
   }
 
   /// Moves the note to the trash and closes it, saying so with an Undo that

@@ -141,7 +141,7 @@ class _AppLockTileState extends State<_AppLockTile> {
   Future<void> _change(AppLock lock) async {
     if (_changingTo != null) return;
     setState(() => _changingTo = lock);
-    _showResult(await _changeAppLock(context, lock));
+    FeedbackToast.show(await _changeAppLock(context, lock));
     // Back to the lock the app has, if the change didn't go through.
     if (mounted) setState(() => _changingTo = null);
   }
@@ -184,7 +184,7 @@ class _ChangePasswordTile extends StatelessWidget {
         color: _green,
         title: "Change Password",
         onTap: () async =>
-            _showResult(await _changeAppLock(context, AppLock.password)),
+            FeedbackToast.show(await _changeAppLock(context, AppLock.password)),
       ),
     );
   }
@@ -347,7 +347,7 @@ class _ClearNoteWidgetTileState extends State<_ClearNoteWidgetTile> {
   }
 
   Future<void> _clear() async =>
-      _showResult(await context.read<WidgetsViewModel>().clearNote());
+      FeedbackToast.show(await context.read<WidgetsViewModel>().clearNote());
 
   @override
   Widget build(BuildContext context) {
@@ -457,11 +457,3 @@ class _Segment extends StatelessWidget {
     );
   }
 }
-
-/// Shows how [result] went, if there's a result to show: none when the user
-/// cancels.
-void _showResult(Result? result) => result?.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );

@@ -30,15 +30,24 @@ class FakeTasksRepository extends TasksRepository {
   TodoItem _withId(TodoItem task) => TodoItem.fromMap(
       {...task.toMap(), 'id': _nextId++});
 
+  /// Whether adding or changing tasks fails, as when the disk is full, and
+  /// whether reading them does.
+  bool failWrites = false;
+  bool failReads = false;
+
   @override
   Future<int> insertItem(TodoItem item) async {
+    if (failWrites) throw StateError("Disk full");
     final row = _withId(item);
     rows.add(row);
     return row.id!;
   }
 
   @override
-  Future<List<TodoItem>> getItems() async => List.of(rows);
+  Future<List<TodoItem>> getItems() async {
+    if (failReads) throw StateError("Can't read the tasks");
+    return List.of(rows);
+  }
 
   /// How the tasks were last listed, as its table keeps it, and whether
   /// keeping it fails, as when the disk is full.
@@ -60,12 +69,15 @@ class FakeTasksRepository extends TasksRepository {
 
   @override
   Future<void> updateItem(TodoItem item) async {
+    if (failWrites) throw StateError("Disk full");
     final index = rows.indexWhere((row) => row.id == item.id);
     if (index != -1) rows[index] = item;
   }
 
+  /// All of them or, as the real one does when it fails, none.
   @override
   Future<void> updateItems(Iterable<TodoItem> items) async {
+    if (failWrites) throw StateError("Disk full");
     for (final item in items) {
       await updateItem(item);
     }
@@ -499,6 +511,27 @@ void main() {
       expect(task("Late").reminder, Reminder.none);
       expect(notifications.once, isEmpty);
     });
+
+    test("says so when a task can't be added, rather than failing", () async {
+      repository.failWrites = true;
+      final result = await add("Call");
+      expect((result as Failure).message, "Couldn't add the task");
+      expect(tasks.items, isEmpty);
+    });
+
+    test(
+        "says so when a change can't be saved, and the task keeps its "
+        "reminder", () async {
+      await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
+      repository.failWrites = true;
+      final draft = tasks.draft(task("Call"))
+        ..setTitle("Call mum")
+        ..setReminder(Reminder.none);
+      final result = await tasks.save(draft);
+      expect((result as Failure).message, "Couldn't save the task");
+      expect(task("Call").reminder, Reminder.once);
+      expect(notifications.once, hasLength(1));
+    });
   });
 
   group('commands', () {
@@ -512,6 +545,32 @@ void main() {
       expect(await tasks.toggleDone(task("Call")), isA<Info>());
       await tasks.get();
       expect(task("Call").done, isFalse);
+    });
+
+    test("says so when a task can't be marked done, and it keeps reminding",
+        () async {
+      await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
+      repository.failWrites = true;
+      final result = await tasks.toggleDone(task("Call"));
+      expect((result as Failure).message, "Couldn't update the task");
+      expect(task("Call").done, isFalse);
+      expect(task("Call").reminder, Reminder.once);
+      expect(notifications.once, hasLength(1));
+    });
+
+    test("says how a change went though the tasks can't be read in after it",
+        () async {
+      await add("Call");
+      await add("Shop");
+      repository.failReads = true;
+      expect(await tasks.toggleDone(task("Call")), isA<Success>());
+      expect(await tasks.delete(task("Shop")), isNotNull);
+
+      repository.failReads = false;
+      await tasks.get();
+      expect(tasks.items.map((task) => (task.title, task.done)), [
+        ("Call", true),
+      ]);
     });
 
     test('the bell turns a one-time reminder on, then off', () async {

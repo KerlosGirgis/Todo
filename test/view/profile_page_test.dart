@@ -77,7 +77,7 @@ void main() {
         ),
       ),
     ));
-    // The counts are read in, and the sections rise into place.
+    // The sections rise into place.
     await wait(tester, const Duration(seconds: 2));
 
     // The profile is as wide as the screen lets it be, clear of the cutout.

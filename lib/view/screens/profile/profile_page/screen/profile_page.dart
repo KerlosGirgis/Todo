@@ -1,20 +1,32 @@
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../../../view_model/notes_view_model.dart';
-import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/large_title.dart';
+import '../../../../widgets/themed_status_bar.dart';
 import '../widgets/aurora.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/progress_card.dart';
 import '../widgets/settings_sections.dart';
+
+/// The settings, under the user's profile, sliding up over the page they're
+/// opened from.
+Route<void> profileRoute() => PageRouteBuilder<void>(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const ProfilePage(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          SlideTransition(
+        position: animation.drive(
+            Tween(begin: const Offset(0, 1), end: Offset.zero)
+                .chain(CurveTween(curve: Curves.ease))),
+        child: child,
+      ),
+    );
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
@@ -29,17 +41,6 @@ class ProfilePageState extends State<ProfilePage> {
   final _scrollController = ScrollController();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // The progress card's counts, which are otherwise only loaded by the
-      // tasks' and notes' own pages.
-      Provider.of<TasksViewModel>(context, listen: false).get();
-      Provider.of<NotesViewModel>(context, listen: false).get();
-    });
-  }
-
-  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
@@ -47,15 +48,7 @@ class ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      // There's no app bar to pick the status bar's icons, so they're set here.
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isDarkTheme ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
-      ),
+    return ThemedStatusBar(
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: context.colors.pageBackground,

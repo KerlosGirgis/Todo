@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
@@ -13,13 +12,13 @@ import '../../../../../models/note_preview.dart';
 import '../../../../../models/trashed.dart';
 import '../../../../../models/user_profile.dart';
 import '../../../../../view_model/notes_view_model.dart';
-import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
-import '../../../../widgets/appbar_avatar.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
+import '../../../../widgets/page_bar_actions.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../../widgets/themed_status_bar.dart';
 import '../../../../widgets/tour.dart';
 import '../../../../widgets/widget_page_requests.dart';
 import '../../../profile/lock_page/widgets/password_dialogs.dart';
@@ -129,9 +128,6 @@ class _NotesPageState extends State<NotesPage>
     _tours = Provider.of<TourViewModel>(context, listen: false)
       ..addListener(_toursReplayed);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // The tasks too, for the to-do widget on the home screen, which shows
-      // them as they are, whichever page the app opens on.
-      Provider.of<TasksViewModel?>(context, listen: false)?.get().ignore();
       final tourDue = _tours.isDue(PageTour.notes);
       var touring = false;
       try {
@@ -196,7 +192,6 @@ class _NotesPageState extends State<NotesPage>
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final padding = MediaQuery.paddingOf(context);
     final (gutterLeft, gutterRight) =
         _gutters(MediaQuery.sizeOf(context).width, padding);
@@ -206,14 +201,7 @@ class _NotesPageState extends State<NotesPage>
         MediaQuery.viewInsetsOf(context).bottom + 24);
     final hasNotes =
         context.select<NotesViewModel, bool>((notes) => notes.notes.isNotEmpty);
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      // There's no app bar to pick the status bar's icons, so they're set here.
-      value: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isDarkTheme ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDarkTheme ? Brightness.dark : Brightness.light,
-      ),
+    return ThemedStatusBar(
       child: Tour(
         controller: _tour,
         child: Scaffold(
@@ -241,7 +229,8 @@ class _NotesPageState extends State<NotesPage>
                   controller: _scrollController,
                   trailing: Padding(
                     padding: EdgeInsets.only(right: padding.right),
-                    child: _BarActions(items: _menuItems(), menuKey: _menuKey),
+                    child:
+                        PageBarActions(items: _menuItems(), menuKey: _menuKey),
                   ),
                   titleRevealOffset: _NotesHeader.scrolledAway,
                 ),
@@ -336,7 +325,7 @@ class _NotesPageState extends State<NotesPage>
               subtitle: "Enter your password to back up your notes."),
           askForBackupPassword: newBackupPasswordPrompt(context),
         )
-        .then(_showResult);
+        .then(FeedbackToast.show);
   }
 
   void _addNote() {
@@ -412,22 +401,7 @@ class _NotesPageState extends State<NotesPage>
     );
   }
 
-  void _openSettings() {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const ProfilePage(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            SlideTransition(
-          position: animation.drive(
-              Tween(begin: const Offset(0, 1), end: Offset.zero)
-                  .chain(CurveTween(curve: Curves.ease))),
-          child: child,
-        ),
-      ),
-    );
-  }
+  void _openSettings() => Navigator.push(context, profileRoute());
 }
 
 /// The note's editor fading in over the notes while the note's title flies
@@ -461,35 +435,6 @@ class _EditorFadeState extends State<_EditorFade> {
   @override
   Widget build(BuildContext context) =>
       FadeTransition(opacity: _opacity, child: widget.child);
-}
-
-/// Shows how [result] went, if there's a result to show: none when the user
-/// cancels.
-void _showResult(Result? result) => result?.when(
-      onSuccess: FeedbackToast.success,
-      onFailure: FeedbackToast.error,
-      onInfo: FeedbackToast.info,
-    );
-
-/// The menu of the notes' less frequent actions, and the avatar, at the end
-/// of the bar.
-class _BarActions extends StatelessWidget {
-  const _BarActions({required this.items, required this.menuKey});
-
-  final List<GlassMenuItem> items;
-  final GlobalKey menuKey;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GlassMenu(key: menuKey, items: items),
-        const SizedBox(width: 10),
-        const AppbarAvatar(),
-      ],
-    );
-  }
 }
 
 /// How many notes there are, over the page's large title, which scrolls

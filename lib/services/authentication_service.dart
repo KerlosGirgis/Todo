@@ -79,9 +79,15 @@ class AuthenticationService {
 
   /// Lets the user through the App Lock, as [passesAppLock] does, asking
   /// them with [askForPassword] for the password of an app locked with one.
-  /// Null if they cancel.
+  /// Null if they cancel. Not when the lock can't be checked.
   Future<AppLockPass?> passAppLock(PasswordPrompt askForPassword) async {
-    if (await _lockService.getLock() != AppLock.password) {
+    final AppLock lock;
+    try {
+      lock = await _lockService.getLock();
+    } catch (e) {
+      return (passed: false, password: null);
+    }
+    if (lock != AppLock.password) {
       return (passed: await passesAppLock(), password: null);
     }
     final password = await askForPassword();

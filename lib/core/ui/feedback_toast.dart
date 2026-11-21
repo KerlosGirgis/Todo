@@ -23,6 +23,24 @@ class FeedbackToast {
             "info", Color(0xff1E1E1E), Icons.info_outline_rounded));
   }
 
+  /// Shows how [result] went, if there's a result to show: none when the
+  /// user cancelled. One that changed more than was asked of it, an
+  /// [Undoable], comes with an Undo that takes it all back.
+  static void show(Result? result) {
+    switch (result) {
+      case null:
+        break;
+      case Undoable(:final message, :final undo):
+        undoable(message, onUndo: () => undo().then(undone));
+      case Success(:final message):
+        success(message);
+      case Failure(:final message):
+        error(message);
+      case Info(:final message):
+        info(message);
+    }
+  }
+
   /// Shows [message], about something just moved to the trash, with an Undo
   /// button that puts it back with [onUndo]. Only the last deletion's shows:
   /// the next one replaces it, as the trash has the rest.

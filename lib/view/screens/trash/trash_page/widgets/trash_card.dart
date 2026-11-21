@@ -10,10 +10,6 @@ import '../../../../widgets/check_circle.dart';
 import '../../../notes/notes_page/widgets/note_card.dart';
 import '../../../tasks/todo_page/widgets/task_card.dart';
 
-/// iOS's system red, a touch brighter on dark pages, as there.
-Color _systemRed(bool isDarkTheme) =>
-    isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30);
-
 /// A task in the trash: its check and title as its card had them, the start
 /// of its description, how many subtasks are there with it, when it was
 /// deleted, and buttons that put it back or delete it for good.
@@ -251,7 +247,7 @@ class _TrashCard extends StatelessWidget {
               _RoundButton(
                 icon: Icons.delete_forever_rounded,
                 tooltip: "Delete Forever",
-                color: _systemRed(isDarkTheme),
+                color: context.colors.systemRed,
                 onPressed: onDelete,
               ),
             ],

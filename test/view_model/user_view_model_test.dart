@@ -44,6 +44,15 @@ class FakeDevice extends DeviceService {
 LockService newLock() =>
     LockService.withClock(() async => (boot: 1, sinceBoot: Duration.zero));
 
+/// A lock that can't be read, as when the phone's secure storage fails.
+class UnreadableLock extends LockService {
+  UnreadableLock()
+      : super.withClock(() async => (boot: 1, sinceBoot: Duration.zero));
+
+  @override
+  Future<AppLock> getLock() async => throw StateError("Can't read the lock");
+}
+
 /// The database's key, as the app made it.
 const dbKey =
     "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
@@ -408,6 +417,54 @@ void main() {
       expect(database.opens, 2);
     });
 
+    test("has what the pages show read in once it opens, and only the once",
+        () async {
+      final database = FakeDatabase()..failToOpen = true;
+      var reads = 0;
+      final auth = AuthViewModel(
+        UserViewModel(
+          repository: repository,
+          lockService: newLock(),
+          deviceService: device,
+          databaseService: database,
+        ),
+        lockService: newLock(),
+        databaseService: database,
+        verseService: FakeVerses(),
+        onOpened: () async => reads++,
+      );
+      await auth.initializeApp();
+      expect(reads, 0);
+
+      database.failToOpen = false;
+      await auth.retryAuthentication();
+      expect(reads, 1);
+
+      // Locked again and let back in, it's open already.
+      await auth.initializeApp();
+      expect(auth.status, AuthStatus.authenticated);
+      expect(reads, 1);
+    });
+
+    test("opens all the same when what the pages show can't be read in",
+        () async {
+      final auth = AuthViewModel(
+        UserViewModel(
+          repository: repository,
+          lockService: newLock(),
+          deviceService: device,
+          databaseService: FakeDatabase(),
+        ),
+        lockService: newLock(),
+        databaseService: FakeDatabase(),
+        verseService: FakeVerses(),
+        onOpened: () => throw StateError("Can't read the tasks"),
+      );
+      await auth.initializeApp();
+      expect(auth.status, AuthStatus.authenticated);
+      expect(auth.opened, isTrue);
+    });
+
     test(
         "stays at the lock page when the right password's database won't "
         "open, for another try, which isn't a wrong password", () async {
@@ -460,6 +517,17 @@ void main() {
       expect(await auth.passAppLock(() async => null), isNull);
       expect(await auth.passAppLock(() async => "0000"),
           (passed: false, password: "0000"));
+    });
+
+    test("doesn't let the user through when it can't be read", () async {
+      final auth = AuthenticationService(lockService: UnreadableLock());
+      var asked = 0;
+      final pass = await auth.passAppLock(() async {
+        asked++;
+        return "1234";
+      });
+      expect(pass, (passed: false, password: null));
+      expect(asked, 0);
     });
   });
 }
