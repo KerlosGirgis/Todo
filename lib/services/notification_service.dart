@@ -9,9 +9,6 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  static Future<void> onDidReceiveNotification(
-      NotificationResponse notificationResponse) async {}
-
   static Future<void> init() async {
     const AndroidInitializationSettings androidInitializationSettings =
         AndroidInitializationSettings("@mipmap/launcher_icon");
@@ -23,10 +20,9 @@ class NotificationService {
       android: androidInitializationSettings,
       iOS: iOSInitializationSettings,
     );
+    // A tap on a reminder only opens the app, so there's no handler for it.
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
-      onDidReceiveNotificationResponse: onDidReceiveNotification,
-      onDidReceiveBackgroundNotificationResponse: onDidReceiveNotification,
     );
 
     await flutterLocalNotificationsPlugin
@@ -76,25 +72,6 @@ class NotificationService {
   Future<void> setRemindersIdVersion(int version) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_idVersionKey, version);
-  }
-
-  Future<void> showInstantNotification(String title, String body) async {
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: AndroidNotificationDetails(
-          'instant_notification_channel_id',
-          'Instant Notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails());
-
-    await flutterLocalNotificationsPlugin.show(
-      id: 0,
-      title: title,
-      body: body,
-      notificationDetails: platformChannelSpecifics,
-      payload: 'instant_notification',
-    );
   }
 
   Future<void> scheduleNotification(

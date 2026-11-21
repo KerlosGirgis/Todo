@@ -20,8 +20,6 @@ class UserRepository{
       'casual',
       'verse',
       'count',
-      'finished',
-      'unFinished',
       'notesTextSize',
       'startPage',
       'descLines',

@@ -42,8 +42,6 @@ class UserViewModel with ChangeNotifier {
       casualFont: false,
       showVerse: true,
       wordCount: false,
-      finished: 0,
-      unfinished: 0,
       notesTextSize: 1,
       startPage: StartPage.tasks,
       descLines: 2,
@@ -203,9 +201,6 @@ class UserViewModel with ChangeNotifier {
 
   Future<void> setShowVerse(bool showVerse) => _set(
       showVerse == user.showVerse, () => user.copyWith(showVerse: showVerse));
-
-  Future<void> resetPlot() =>
-      _save(user.copyWith(unfinished: 0, finished: 0));
 
   /// Changes what the app is locked with to [lock], once the lock it has now
   /// lets the user through: their fingerprint, or the password

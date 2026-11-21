@@ -1,4 +1,3 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:todo/services/key_service.dart';
 
@@ -14,7 +13,6 @@ class DatabaseService {
   static String? _key;
   String? get key => _key;
 
-  final secureStorage = const FlutterSecureStorage();
   static const int _databaseVersion = 11;
 
   /// Opens the database with [key], which the App Lock's password unlocked,
@@ -61,6 +59,9 @@ class DatabaseService {
       folded INTEGER
     )
     ''');
+    // `finished` and `unFinished` aren't used anymore: the tasks are counted
+    // as they are. They're still made, as older builds of the app read them,
+    // and may open a database made now.
     await db.execute('''
     CREATE TABLE User(
       id INTEGER PRIMARY KEY,

@@ -19,8 +19,6 @@ class UserProfile {
     required this.casualFont,
     required this.showVerse,
     required this.wordCount,
-    required this.finished,
-    required this.unfinished,
     required this.notesTextSize,
     required this.startPage,
     required this.descLines,
@@ -47,8 +45,6 @@ class UserProfile {
 
   /// Whether the note editor counts the words.
   final bool wordCount;
-  final int finished;
-  final int unfinished;
 
   /// Text sizes, as multiples of the default ones.
   final double notesTextSize;
@@ -73,8 +69,6 @@ class UserProfile {
     bool? casualFont,
     bool? showVerse,
     bool? wordCount,
-    int? finished,
-    int? unfinished,
     double? notesTextSize,
     StartPage? startPage,
     int? descLines,
@@ -93,8 +87,6 @@ class UserProfile {
       casualFont: casualFont ?? this.casualFont,
       showVerse: showVerse ?? this.showVerse,
       wordCount: wordCount ?? this.wordCount,
-      finished: finished ?? this.finished,
-      unfinished: unfinished ?? this.unfinished,
       notesTextSize: notesTextSize ?? this.notesTextSize,
       startPage: startPage ?? this.startPage,
       descLines: descLines ?? this.descLines,
@@ -118,8 +110,6 @@ class UserProfile {
       casualFont: map['casual'] == 1,
       showVerse: map['verse'] == 1,
       wordCount: map['count'] == 1,
-      finished: map['finished'] as int? ?? 0,
-      unfinished: map['unFinished'] as int? ?? 0,
       notesTextSize: size('notesTextSize'),
       startPage: (map['startPage'] as int? ?? 0) == 0
           ? StartPage.tasks
@@ -144,8 +134,6 @@ class UserProfile {
       'casual': casualFont ? 1 : 0,
       'verse': showVerse ? 1 : 0,
       'count': wordCount ? 1 : 0,
-      'finished': finished,
-      'unFinished': unfinished,
       'notesTextSize': notesTextSize,
       'startPage': startPage.index,
       'descLines': descLines,

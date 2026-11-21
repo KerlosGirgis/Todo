@@ -13,8 +13,6 @@ void main() {
     'casual': 0,
     'verse': 1,
     'count': 0,
-    'finished': 0,
-    'unFinished': 0,
     'notesTextSize': 1.25,
     'startPage': 1,
     'descLines': 2,
