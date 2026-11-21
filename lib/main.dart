@@ -105,11 +105,7 @@ class MyApp extends StatelessWidget {
               builder: (context, child) =>
                   // ignore: deprecated_member_use
                   MaterialUiCompatibilityBridge(child: child!),
-              home: Consumer2<AuthViewModel, UserViewModel>(
-                builder: (context, auth, user, _) {
-                  return AppGate(auth: auth, user: user);
-                },
-              ),
+              home: const AppGate(),
             ),
           );
         },

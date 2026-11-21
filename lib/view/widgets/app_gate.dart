@@ -6,30 +6,31 @@ import 'loading.dart';
 import '../../core/extensions/theme_extensions.dart';
 import '../../models/user_profile.dart';
 import '../../view_model/auth_view_model.dart';
-import '../../view_model/user_view_model.dart';
 import '../../view_model/widgets_view_model.dart';
 import '../screens/notes/notes_page/screen/notes_page.dart';
 import '../screens/profile/lock_page/screen/lock_page.dart';
 import '../screens/profile/profile_page/widgets/profile_button.dart';
 import '../screens/tasks/todo_page/screen/todo_page.dart';
 
+/// The app's home: the lock page, or what it shows while it opens, or
+/// can't, then the page it opens on.
 class AppGate extends StatelessWidget {
-  final AuthViewModel auth;
-  final UserViewModel user;
-
-  const AppGate({super.key, required this.auth, required this.user});
+  const AppGate({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthViewModel>();
     // Once the app has opened, it stays open under the lock page whenever
     // it locks again: see AppLockGuard.
     if (auth.opened) {
-      // A widget's page, for an app its tap opened, which never changes.
+      // A widget's page, for an app its tap opened, or else the start page
+      // the app opened with. Neither changes while the app runs, so a start
+      // page picked in the settings doesn't swap the page under them.
       final launchPage = Provider.of<WidgetsViewModel?>(
         context,
         listen: false,
       )?.launchPage;
-      return switch (launchPage ?? user.user.startPage) {
+      return switch (launchPage ?? auth.openedOn) {
         StartPage.tasks => const TodoPage(),
         StartPage.notes => const NotesPage(),
       };

@@ -2,14 +2,29 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:toastification/toastification.dart';
 import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/models/app_lock.dart';
+import 'package:todo/models/user_profile.dart';
 import 'package:todo/services/lock_service.dart';
+import 'package:todo/services/tour_service.dart';
+import 'package:todo/view/screens/notes/notes_page/screen/notes_page.dart';
 import 'package:todo/view/screens/profile/lock_page/screen/lock_page.dart';
+import 'package:todo/view/screens/profile/profile_page/widgets/settings_group.dart';
+import 'package:todo/view/screens/tasks/todo_page/screen/todo_page.dart';
 import 'package:todo/view/widgets/app_gate.dart';
 import 'package:todo/view_model/auth_view_model.dart';
+import 'package:todo/view_model/notes_view_model.dart';
+import 'package:todo/view_model/tasks_view_model.dart';
+import 'package:todo/view_model/tour_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
+import '../view_model/notes_view_model_test.dart'
+    as notes_test
+    show FakeAuth, FakeHomeWidget, FakeLock, FakeNotesRepository;
+import '../view_model/tasks_view_model_test.dart'
+    show FakeLock, FakeNotifications, FakeTasksRepository;
 import '../view_model/user_view_model_test.dart'
     show FakeDatabase, FakeDevice, FakeUserRepository, FakeVerses, newLock;
 
@@ -61,13 +76,118 @@ void main() {
         value: auth,
         child: MaterialApp(
           theme: AppTheme.getTheme(isDarkMode: false),
-          home: Consumer<AuthViewModel>(
-            builder: (context, auth, _) => AppGate(auth: auth, user: user),
-          ),
+          home: const AppGate(),
         ),
       ),
     );
   }
+
+  /// Lets [duration] go by a frame at a time, as it does on a phone, for
+  /// the animations in it: a single pump would draw only their first frame.
+  Future<void> wait(
+    WidgetTester tester, [
+    Duration duration = const Duration(seconds: 1),
+  ]) async {
+    const frame = Duration(milliseconds: 50);
+    for (var waited = Duration.zero; waited < duration; waited += frame) {
+      await tester.pump(frame);
+    }
+  }
+
+  testWidgets(
+    "a start page picked in the settings is for the next start: the page "
+    "the app opened on stays under them",
+    (tester) async {
+      tester.view.physicalSize = const Size(412, 915) * 2;
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      // Every tour seen, so none starts over the page.
+      SharedPreferences.setMockInitialValues({
+        for (final tour in PageTour.values) 'tour.${tour.name}': tour.version,
+      });
+      // A database that opens, this time.
+      database.failToOpen = false;
+      final lock = newLock();
+      final device = FakeDevice();
+      user = UserViewModel(
+        repository: FakeUserRepository(),
+        lockService: lock,
+        deviceService: device,
+        databaseService: database,
+      );
+      auth = AuthViewModel(
+        user,
+        lockService: lock,
+        databaseService: database,
+        deviceService: device,
+        verseService: FakeVerses(),
+      );
+      final tasks = TasksViewModel(
+        repository: FakeTasksRepository(),
+        notificationService: FakeNotifications(),
+        lockService: FakeLock(),
+      );
+      final notes = NotesViewModel(
+        repository: notes_test.FakeNotesRepository(),
+        authService: notes_test.FakeAuth(),
+        lockService: notes_test.FakeLock(),
+        homeWidgetService: notes_test.FakeHomeWidget(),
+      );
+      await auth.initializeApp();
+      // The app as main.dart puts it together, opening on the to-do page.
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: user),
+            ChangeNotifierProvider.value(value: tasks),
+            ChangeNotifierProvider.value(value: notes),
+            ChangeNotifierProvider.value(value: auth),
+            ChangeNotifierProvider(
+              create: (_) => TourViewModel(service: TourService()),
+            ),
+          ],
+          child: ToastificationWrapper(
+            child: MaterialApp(
+              theme: AppTheme.getTheme(isDarkMode: false),
+              home: const AppGate(),
+            ),
+          ),
+        ),
+      );
+      await wait(tester, const Duration(seconds: 2));
+      expect(find.byType(TodoPage), findsOneWidget);
+
+      // The settings, from the page's menu, where Notes becomes the start
+      // page.
+      await tester.tap(find.byTooltip("Menu"));
+      await wait(tester);
+      await tester.tap(find.byTooltip("Settings"));
+      await wait(tester, const Duration(seconds: 2));
+      final notesSegment = find.descendant(
+        of: find.widgetWithText(SettingsTile, "Start Page"),
+        matching: find.text("Notes"),
+      );
+      await tester.scrollUntilVisible(
+        notesSegment,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await wait(tester);
+      await tester.tap(notesSegment);
+      await wait(tester);
+      expect(user.user.startPage, StartPage.notes);
+
+      // Back on the page they came from, as it was.
+      expect(await tester.binding.handlePopRoute(), isTrue);
+      await wait(tester);
+      expect(find.byType(TodoPage), findsOneWidget);
+      expect(find.byType(NotesPage), findsNothing);
+
+      await tester.pumpWidget(const SizedBox());
+      tasks.dispose();
+      notes.dispose();
+    },
+  );
 
   testWidgets(
     "a database that won't open says so, rather than opening for good, "

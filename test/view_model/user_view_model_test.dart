@@ -620,6 +620,50 @@ void main() {
       },
     );
 
+    test(
+      "opens on the start page the profile had as it opened, and stays on it "
+      "while it runs: one picked since is for the next start",
+      () async {
+        await user.setStartPage(StartPage.notes);
+        final opening = UserViewModel(
+          repository: repository,
+          lockService: newLock(),
+          deviceService: device,
+          databaseService: FakeDatabase(),
+        );
+        final auth = AuthViewModel(
+          opening,
+          lockService: newLock(),
+          databaseService: FakeDatabase(),
+          verseService: FakeVerses(),
+        );
+        await auth.initializeApp();
+        expect(auth.openedOn, StartPage.notes);
+
+        await opening.setStartPage(StartPage.tasks);
+        expect(auth.openedOn, StartPage.notes);
+
+        // Locked again and let back in, it's open already, on that page.
+        await auth.initializeApp();
+        expect(auth.openedOn, StartPage.notes);
+
+        // The next start opens on the one picked.
+        final next = AuthViewModel(
+          UserViewModel(
+            repository: repository,
+            lockService: newLock(),
+            deviceService: device,
+            databaseService: FakeDatabase(),
+          ),
+          lockService: newLock(),
+          databaseService: FakeDatabase(),
+          verseService: FakeVerses(),
+        );
+        await next.initializeApp();
+        expect(next.openedOn, StartPage.tasks);
+      },
+    );
+
     test("stays at the lock page when the right password's database won't "
         "open, for another try, which isn't a wrong password", () async {
       await user.changeAppLock(

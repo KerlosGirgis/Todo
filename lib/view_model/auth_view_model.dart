@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../core/result.dart';
 import '../models/app_lock.dart';
+import '../models/user_profile.dart';
 import '../services/authentication_service.dart';
 import '../services/database_service.dart';
 import '../services/device_service.dart';
@@ -42,6 +43,14 @@ class AuthViewModel with ChangeNotifier {
   /// are open, under the lock page whenever it locks again.
   bool _opened = false;
   bool get opened => _opened;
+
+  /// The page the app opened on: the start page the profile had as the app
+  /// first opened, which the home page keeps to while the app runs. A start
+  /// page picked in the settings since is for the next time the app starts,
+  /// so the page under the settings stays as it was. The to-do page until
+  /// the app has opened.
+  StartPage get openedOn => _openedOn;
+  StartPage _openedOn = StartPage.tasks;
 
   /// What the app is locked with, which the lock page asks for.
   AppLock get lock => _userViewModel.appLock;
@@ -214,10 +223,10 @@ class AuthViewModel with ChangeNotifier {
 
   /// Opens the app the first time it's unlocked: the database, with [key],
   /// the one the App Lock's password unlocked, if it's locked with one, then
-  /// the verses and the profile, and then has [_onOpened] read in what the
-  /// pages show. Whether it's open; not when the database won't open, as
-  /// when its key is gone, which is left for the user to try again rather
-  /// than opening for good.
+  /// the verses and the profile, whose start page it opens on, and then has
+  /// [_onOpened] read in what the pages show. Whether it's open; not when the
+  /// database won't open, as when its key is gone, which is left for the
+  /// user to try again rather than opening for good.
   Future<bool> _open({String? key}) async {
     if (_opened) return true;
     try {
@@ -231,6 +240,7 @@ class AuthViewModel with ChangeNotifier {
       return false;
     }
     _opened = true;
+    _openedOn = _userViewModel.user.startPage;
     // Not waited for, as the page the app opens on reads in its own, nor
     // keeping the app from opening should it fail.
     if (_onOpened case final onOpened?) Future.sync(onOpened).ignore();
