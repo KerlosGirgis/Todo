@@ -117,7 +117,10 @@ class _ProfileDialog extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       constraints: const BoxConstraints(minWidth: 280, maxWidth: 400),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(28),
+        side: context.colors.dialogSide,
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 36, 24, 24),
         child: Column(

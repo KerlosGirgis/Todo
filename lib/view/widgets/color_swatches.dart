@@ -408,8 +408,9 @@ Future<Color> pickCustomColor(
     selectedPickerTypeColor: _accent,
     backgroundColor: context.colors.dialogBackground,
     surfaceTintColor: Colors.transparent,
-    shape: const RoundedSuperellipseBorder(
-      borderRadius: BorderRadius.all(Radius.circular(28)),
+    shape: RoundedSuperellipseBorder(
+      borderRadius: const BorderRadius.all(Radius.circular(28)),
+      side: context.colors.dialogSide,
     ),
     barrierColor: Colors.black54,
     actionButtons: ColorPickerActionButtons(

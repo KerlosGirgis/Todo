@@ -85,8 +85,12 @@ class TitleBar extends StatelessWidget {
     this.bottom,
   });
 
-  /// How tall the bar is under the status bar, without its [bottom].
-  static const height = 48.0;
+  /// How tall the bar is under the status bar, without its [bottom]: its row
+  /// of buttons and title, and a little room under them, so the tallest of
+  /// them, the avatar, doesn't sit on the hairline.
+  static const height = _rowHeight + _rowGap;
+  static const _rowHeight = 48.0;
+  static const _rowGap = 6.0;
 
   final String title;
 
@@ -140,7 +144,10 @@ class TitleBar extends StatelessWidget {
               height: topInset + height,
               child: Padding(
                 padding: EdgeInsets.only(
-                    top: topInset, left: leading == null ? 0 : 16, right: 16),
+                    top: topInset,
+                    bottom: _rowGap,
+                    left: leading == null ? 0 : 16,
+                    right: 16),
                 child: NavigationToolbar(
                   leading: leading,
                   middle: Opacity(

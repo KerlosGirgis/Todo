@@ -86,8 +86,9 @@ class _EditNameDialogState extends State<EditNameDialog> {
       surfaceTintColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       constraints: const BoxConstraints(minWidth: 280, maxWidth: 400),
-      shape: const RoundedSuperellipseBorder(
-        borderRadius: BorderRadius.all(Radius.circular(28)),
+      shape: RoundedSuperellipseBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(28)),
+        side: context.colors.dialogSide,
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),

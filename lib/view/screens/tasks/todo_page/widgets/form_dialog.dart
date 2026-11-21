@@ -78,8 +78,9 @@ class FormDialog extends StatelessWidget {
       surfaceTintColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       constraints: const BoxConstraints(minWidth: 280, maxWidth: 440),
-      shape: const RoundedSuperellipseBorder(
-        borderRadius: BorderRadius.all(Radius.circular(28)),
+      shape: RoundedSuperellipseBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(28)),
+        side: context.colors.dialogSide,
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

@@ -17,8 +17,9 @@ Future<void> showAvatarPicker(BuildContext context) {
     useSafeArea: true,
     showDragHandle: true,
     backgroundColor: context.colors.dialogBackground,
-    shape: const RoundedSuperellipseBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+    shape: RoundedSuperellipseBorder(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      side: context.colors.sheetSide,
     ),
     builder: (context) => const AvatarPickerSheet(),
   );

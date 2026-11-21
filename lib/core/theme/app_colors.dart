@@ -7,10 +7,14 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color wB;
   final Color cardBackground;
 
-  /// What dialogs and sheets are filled with: the cards' colour, but a
-  /// lighter one in AMOLED black, whose cards are too near the page for a
-  /// dialog over it to stand out.
+  /// What dialogs and sheets are filled with: the cards' colour, near black
+  /// in AMOLED black too, where a [dialogOutline] sets them off the page.
   final Color dialogBackground;
+
+  /// A hairline round dialogs and sheets where their colour alone is too
+  /// near the page's for them to stand out: in AMOLED black. It's clear in
+  /// the other themes. Their shapes draw it as [dialogSide] or [sheetSide].
+  final Color dialogOutline;
   final Color subtitle;
   final Color pageBackground;
   final Color profileAlertBackground;
@@ -28,6 +32,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.wB,
     required this.cardBackground,
     required this.dialogBackground,
+    required this.dialogOutline,
     required this.subtitle,
     required this.pageBackground,
     required this.profileAlertBackground,
@@ -46,6 +51,7 @@ class AppColors extends ThemeExtension<AppColors> {
     wB: Colors.black,
     cardBackground: Color(0xffF5F5F5),
     dialogBackground: Color(0xffF5F5F5),
+    dialogOutline: Colors.transparent,
     subtitle: Color(0xff424242),
     pageBackground: Color(0xffEDEDED),
     profileAlertBackground: Colors.grey,
@@ -64,6 +70,7 @@ class AppColors extends ThemeExtension<AppColors> {
     wB: Colors.white,
     cardBackground: const Color(0xff1E1E1E),
     dialogBackground: const Color(0xff1E1E1E),
+    dialogOutline: Colors.transparent,
     subtitle: Colors.grey.shade200,
     pageBackground: const Color(0xff121212),
     profileAlertBackground: Colors.grey.shade800.withValues(alpha: .8),
@@ -79,9 +86,20 @@ class AppColors extends ThemeExtension<AppColors> {
   static final amoled = dark.copyWith(
     pageBackground: Colors.black,
     cardBackground: const Color(0xff0D0D0D),
-    // iOS's raised grey, which its own dialogs and sheets have over black.
-    dialogBackground: const Color(0xff1C1C1E),
+    dialogBackground: const Color(0xff0D0D0D),
+    dialogOutline: Colors.white.withValues(alpha: 0.14),
   );
+
+  /// The edge for a dialog's shape: [dialogOutline], just inside it, as a
+  /// [Material] that clips its content clips its border too. None where the
+  /// outline is clear.
+  BorderSide get dialogSide =>
+      dialogOutline.a == 0 ? BorderSide.none : BorderSide(color: dialogOutline);
+
+  /// The edge for a sheet's shape: [dialogSide], but just outside it, so the
+  /// sheet's lower edge falls off the screen. Sheets don't clip.
+  BorderSide get sheetSide =>
+      dialogSide.copyWith(strokeAlign: BorderSide.strokeAlignOutside);
 
   /// Safe accessor
   static AppColors of(BuildContext context) {
@@ -103,6 +121,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? wB,
     Color? cardBackground,
     Color? dialogBackground,
+    Color? dialogOutline,
     Color? subtitle,
     Color? pageBackground,
     Color? profileAlertBackground,
@@ -124,6 +143,7 @@ class AppColors extends ThemeExtension<AppColors> {
       wB: wB ?? this.wB,
       cardBackground: cardBackground ?? this.cardBackground,
       dialogBackground: dialogBackground ?? this.dialogBackground,
+      dialogOutline: dialogOutline ?? this.dialogOutline,
       subtitle: subtitle ?? this.subtitle,
       pageBackground: pageBackground ?? this.pageBackground,
       profileAlertBackground:
@@ -162,6 +182,7 @@ class AppColors extends ThemeExtension<AppColors> {
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
       dialogBackground:
           Color.lerp(dialogBackground, other.dialogBackground, t)!,
+      dialogOutline: Color.lerp(dialogOutline, other.dialogOutline, t)!,
       subtitle: Color.lerp(subtitle, other.subtitle, t)!,
       pageBackground: Color.lerp(pageBackground, other.pageBackground, t)!,
       profileAlertBackground: Color.lerp(

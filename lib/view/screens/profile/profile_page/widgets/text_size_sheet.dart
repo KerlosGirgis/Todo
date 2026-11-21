@@ -65,8 +65,9 @@ Future<void> showTextSizeSheet(BuildContext context, TextSizeSetting setting) {
     useSafeArea: true,
     showDragHandle: true,
     backgroundColor: context.colors.dialogBackground,
-    shape: const RoundedSuperellipseBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+    shape: RoundedSuperellipseBorder(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      side: context.colors.sheetSide,
     ),
     builder: (context) => TextSizeSheet(setting: setting),
   );
