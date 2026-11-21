@@ -206,18 +206,24 @@ class TasksViewModel with ChangeNotifier {
     _awaitNewDay();
     // Reminders set in another time zone, or before reminders went by the
     // phone's, keep to another clock, and a one-time one from back then goes
-    // off again every year, so they're all set afresh. Otherwise, a reminder
-    // set before reminders went by the App Lock, or one whose change of lock
-    // didn't get to it, may still say which task it's for.
+    // off again every year. Ones set under ids made another way can't be
+    // found by their tasks to be cancelled. So they're all set afresh.
+    // Otherwise, a reminder set before reminders went by the App Lock, or one
+    // whose change of lock didn't get to it, may still say which task it's
+    // for.
     if (!_remindersChecked) {
       _remindersChecked = true;
       try {
         final timeZone = _notificationService.timeZone;
-        if (await _notificationService.remindersTimeZone() != timeZone) {
+        if (await _notificationService.remindersTimeZone() != timeZone ||
+            await _notificationService.remindersIdVersion() !=
+                ReminderPlan.idVersion) {
           await _notificationService.cancelPendingNotifications();
           // Until they all are, they're set afresh at each start.
           if (await refreshReminders()) {
             await _notificationService.setRemindersTimeZone(timeZone);
+            await _notificationService
+                .setRemindersIdVersion(ReminderPlan.idVersion);
           }
         } else if (await _lockService.getLock() != AppLock.off) {
           await refreshReminders();
@@ -1046,7 +1052,7 @@ class TasksViewModel with ChangeNotifier {
   Future<void> _cancelReminders(TodoItem task) async {
     final ids = task.reminder.repeats
         ? ReminderPlan.idsOf(task.uuid)
-        : [task.uuid.hashCode];
+        : [ReminderPlan.idOf(task.uuid)];
     for (final id in ids) {
       await _notificationService.cancelNotification(id);
     }
@@ -1090,7 +1096,7 @@ class TasksViewModel with ChangeNotifier {
         DateTime scheduledTime = time.on(day);
         if (scheduledTime.isAfter(_now())) {
           await _notificationService.scheduleNotification(
-            task.uuid.hashCode,
+            ReminderPlan.idOf(task.uuid),
             _reminderTitle,
             await _reminderText(task),
             scheduledTime,

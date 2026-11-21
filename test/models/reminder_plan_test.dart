@@ -29,7 +29,7 @@ void main() {
 
     test('is set while it is still to come', () {
       expect(ReminderPlan.of(once(may(13)), now),
-          [OnceAlarm(uuid.hashCode, may(13, 18))]);
+          [OnceAlarm(ReminderPlan.idOf(uuid), may(13, 18))]);
     });
 
     test('is not set once it has gone, or the task is done', () {
@@ -47,13 +47,15 @@ void main() {
     final daily = repeating(Recurrence.daily());
 
     test("repeats from today's time while it's still to come", () {
-      expect(ReminderPlan.of(daily, may(13, 5)),
-          [RepeatingAlarm(uuid.hashCode, may(13, 7), RepeatEvery.day)]);
+      expect(ReminderPlan.of(daily, may(13, 5)), [
+        RepeatingAlarm(ReminderPlan.idOf(uuid), may(13, 7), RepeatEvery.day)
+      ]);
     });
 
     test("repeats from tomorrow's once today's has gone", () {
-      expect(ReminderPlan.of(daily, may(13, 8)),
-          [RepeatingAlarm(uuid.hashCode, may(14, 7), RepeatEvery.day)]);
+      expect(ReminderPlan.of(daily, may(13, 8)), [
+        RepeatingAlarm(ReminderPlan.idOf(uuid), may(14, 7), RepeatEvery.day)
+      ]);
     });
 
     test('goes by the clock on a day the clocks change', () {
@@ -80,15 +82,16 @@ void main() {
     final rent = repeating(Recurrence.monthly(31), time: const ClockTime(9, 0));
     expect(ReminderPlan.of(rent, DateTime(2026, 6, 1)), [
       RepeatingAlarm(
-          uuid.hashCode, DateTime(2026, 7, 31, 9), RepeatEvery.month),
+          ReminderPlan.idOf(uuid), DateTime(2026, 7, 31, 9), RepeatEvery.month),
     ]);
   });
 
   group('a reminder that stops', () {
     test('repeats by itself while it has many times left', () {
       final course = repeating(Recurrence.daily(until: may(31)));
-      expect(ReminderPlan.of(course, now),
-          [RepeatingAlarm(uuid.hashCode, may(14, 7), RepeatEvery.day)]);
+      expect(ReminderPlan.of(course, now), [
+        RepeatingAlarm(ReminderPlan.idOf(uuid), may(14, 7), RepeatEvery.day)
+      ]);
     });
 
     test('is set one time at a time for its last few times', () {
@@ -117,8 +120,21 @@ void main() {
     final ids = ReminderPlan.idsOf(uuid);
     expect(ids, hasLength(1 + 7 + ReminderPlan.lastTimes));
     expect(ids.toSet(), hasLength(ids.length));
-    expect(ids.first, uuid.hashCode);
+    expect(ids.first, ReminderPlan.idOf(uuid));
     expect(
         ReminderPlan.idsOf("other").toSet().intersection(ids.toSet()), isEmpty);
+  });
+
+  test(
+      "a reminder's id is the same in every version of Dart: its key's "
+      "32-bit FNV-1a hash, signed, as Android takes it", () {
+    // The hash's published test vectors.
+    expect(ReminderPlan.idOf(""), (0x811c9dc5).toSigned(32));
+    expect(ReminderPlan.idOf("a"), (0xe40c292c).toSigned(32));
+    expect(ReminderPlan.idOf("foobar"), (0xbf9cf968).toSigned(32));
+    for (final id
+        in ReminderPlan.idsOf("3f8e2a9c-1b4d-4e6f-9a7b-2c5d8e1f0a3b")) {
+      expect(id, inInclusiveRange(-0x80000000, 0x7fffffff));
+    }
   });
 }

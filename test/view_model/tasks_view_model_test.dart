@@ -206,9 +206,24 @@ class FakeNotifications extends NotificationService {
   @override
   Future<void> setRemindersTimeZone(String timeZone) async => setIn = timeZone;
 
+  /// How the reminders' ids were made when they were all last set: the way
+  /// the app makes them now, unless a test says otherwise.
+  int idVersion = ReminderPlan.idVersion;
+
+  @override
+  Future<int> remindersIdVersion() async => idVersion;
+
+  @override
+  Future<void> setRemindersIdVersion(int version) async => idVersion = version;
+
+  /// Whether setting a reminder fails, as when the phone won't let the app
+  /// set exact alarms.
+  bool failSchedules = false;
+
   @override
   Future<void> scheduleNotification(
       int id, String title, String? body, DateTime scheduledTime) async {
+    if (failSchedules) throw StateError("Can't set alarms");
     once[id] = scheduledTime;
     bodies[id] = body;
   }
@@ -216,6 +231,7 @@ class FakeNotifications extends NotificationService {
   @override
   Future<void> scheduleRepeatingNotification(int id, String title, String? body,
       DateTime first, RepeatEvery every) async {
+    if (failSchedules) throw StateError("Can't set alarms");
     repeating[id] = (first: first, every: every);
     bodies[id] = body;
   }
@@ -457,7 +473,8 @@ void main() {
       expect((result as Info).message, startsWith("Time remaining"));
       final call = task("Call");
       expect(call.reminder, Reminder.once);
-      expect(notifications.once[call.uuid.hashCode], DateTime(2026, 5, 13, 18));
+      expect(notifications.once[ReminderPlan.idOf(call.uuid)],
+          DateTime(2026, 5, 13, 18));
     });
 
     test('adds a task without a reminder that has already gone', () async {
@@ -497,7 +514,8 @@ void main() {
       final call = task("Call");
       expect(call.done, isFalse);
       expect(call.reminder, Reminder.once);
-      expect(notifications.once[call.uuid.hashCode], DateTime(2026, 5, 13, 18));
+      expect(notifications.once[ReminderPlan.idOf(call.uuid)],
+          DateTime(2026, 5, 13, 18));
     });
 
     test('a done task stays done when its reminder has already gone', () async {
@@ -659,7 +677,7 @@ void main() {
         time: const ClockTime(7, 0),
         reminder: Reminder.daily,
       ));
-      notifications.once["shop".hashCode] = DateTime(2027, 5, 12, 9);
+      notifications.once[ReminderPlan.idOf("shop")] = DateTime(2027, 5, 12, 9);
     }
 
     for (final (earlier, why) in [
@@ -670,10 +688,10 @@ void main() {
         await setEarlier();
         notifications.setIn = earlier;
         await tasks.get();
-        expect(
-            notifications.once, {"call".hashCode: DateTime(2026, 5, 13, 18)});
-        expect(
-            notifications.daily, {"stretch".hashCode: const ClockTime(7, 0)});
+        expect(notifications.once,
+            {ReminderPlan.idOf("call"): DateTime(2026, 5, 13, 18)});
+        expect(notifications.daily,
+            {ReminderPlan.idOf("stretch"): const ClockTime(7, 0)});
         expect(notifications.setIn, "Africa/Cairo");
       });
     }
@@ -681,8 +699,53 @@ void main() {
     test("set in the phone's time zone are left as they are", () async {
       await setEarlier();
       await tasks.get();
-      expect(notifications.once, {"shop".hashCode: DateTime(2027, 5, 12, 9)});
+      expect(notifications.once,
+          {ReminderPlan.idOf("shop"): DateTime(2027, 5, 12, 9)});
       expect(notifications.daily, isEmpty);
+    });
+
+    test(
+        "set under ids made the old way are cancelled, and set afresh under "
+        "the ids made now", () async {
+      await setEarlier();
+      notifications
+        ..idVersion = 0
+        // Under the ids `String.hashCode` made, which the tasks can't find
+        // to cancel anymore.
+        ..once.clear()
+        ..once[1001] = DateTime(2026, 5, 13, 18)
+        ..repeating[1002] =
+            (first: DateTime(2026, 5, 14, 7), every: RepeatEvery.day);
+      await tasks.get();
+      expect(notifications.once,
+          {ReminderPlan.idOf("call"): DateTime(2026, 5, 13, 18)});
+      expect(notifications.daily,
+          {ReminderPlan.idOf("stretch"): const ClockTime(7, 0)});
+      expect(notifications.idVersion, ReminderPlan.idVersion);
+    });
+
+    test("set the old way are set afresh at each start until they all can be",
+        () async {
+      await setEarlier();
+      notifications
+        ..idVersion = 0
+        ..failSchedules = true;
+      await tasks.get();
+      expect(notifications.idVersion, 0);
+
+      // The next time the app starts.
+      notifications.failSchedules = false;
+      final restarted = TasksViewModel(
+        repository: repository,
+        notificationService: notifications,
+        lockService: lock,
+        clock: () => time,
+      );
+      addTearDown(restarted.dispose);
+      await restarted.get();
+      expect(notifications.once,
+          {ReminderPlan.idOf("call"): DateTime(2026, 5, 13, 18)});
+      expect(notifications.idVersion, ReminderPlan.idVersion);
     });
   });
 
@@ -893,8 +956,8 @@ void main() {
           time: const ClockTime(9, 0));
       final rent = task("Rent");
       expect(rent.monthDay, 1);
-      expect(
-          notifications.monthly, {rent.uuid.hashCode: DateTime(2026, 6, 1, 9)});
+      expect(notifications.monthly,
+          {ReminderPlan.idOf(rent.uuid): DateTime(2026, 6, 1, 9)});
     });
 
     test('are done for today when they come round today', () async {
@@ -952,7 +1015,7 @@ void main() {
         ..setReminder(Reminder.once)
         ..setDay(DateTime(2026, 5, 13)));
       expect(notifications.weekly, isEmpty);
-      expect(notifications.once.keys, [task("Gym").uuid.hashCode]);
+      expect(notifications.once.keys, [ReminderPlan.idOf(task("Gym").uuid)]);
       expect(task("Gym").weekdays, isEmpty);
     });
 
@@ -1049,7 +1112,7 @@ void main() {
         progress: RepeatProgress(since: DateTime(2026, 5, 1)),
       ));
       // Set to repeat by itself back when it had many times left.
-      notifications.repeating["pills".hashCode] =
+      notifications.repeating[ReminderPlan.idOf("pills")] =
           (first: DateTime(2026, 5, 1, 18), every: RepeatEvery.day);
       await tasks.get();
       expect(notifications.repeating, isEmpty);
@@ -1166,7 +1229,7 @@ Shop
       expect(task("Book").done, isFalse);
       expect(task("Pack").done, isTrue);
       expect(task("Book").reminder, Reminder.once);
-      expect(notifications.once.keys, [task("Book").uuid.hashCode]);
+      expect(notifications.once.keys, [ReminderPlan.idOf(task("Book").uuid)]);
     });
 
     test('says how many were done with it', () async {
@@ -1304,7 +1367,7 @@ Trip
   Pack
 Shop
   Milk""");
-        expect(notifications.once.keys, [task("Pay").uuid.hashCode]);
+        expect(notifications.once.keys, [ReminderPlan.idOf(task("Pay").uuid)]);
         expect(tasks.trash, isEmpty);
       });
 
@@ -1550,7 +1613,8 @@ Shop
         expect(
             tasks.tree.nodeOf(task("Fresh eggs"))!.parent!.task.title, "Trip");
         expect(task("Fresh eggs").reminder, Reminder.once);
-        expect(notifications.once.keys, [task("Fresh eggs").uuid.hashCode]);
+        expect(notifications.once.keys,
+            [ReminderPlan.idOf(task("Fresh eggs").uuid)]);
         expect(tasks.items.where((each) => each.title == "Eggs"), isEmpty);
       });
 
@@ -1866,7 +1930,7 @@ Shop
       expect(await tasks.restoreFromTrash(trashed!), isA<Success>());
       expect(titles(), ["First", "Call", "Last"]);
       expect(task("Call").reminder, Reminder.once);
-      expect(notifications.once.keys, [task("Call").uuid.hashCode]);
+      expect(notifications.once.keys, [ReminderPlan.idOf(task("Call").uuid)]);
       expect(tasks.trash, isEmpty);
     });
 
@@ -1899,7 +1963,7 @@ Shop
       expect(calls, hasLength(2));
       final putBack =
           calls.singleWhere((task) => task.uuid != trashed.item.task.uuid);
-      expect(notifications.once.keys, [putBack.uuid.hashCode]);
+      expect(notifications.once.keys, [ReminderPlan.idOf(putBack.uuid)]);
     });
 
     test("a daily task put back keeps its days, and reminds again", () async {

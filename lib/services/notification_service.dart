@@ -64,6 +64,20 @@ class NotificationService {
     await prefs.setString(_timeZoneKey, timeZone);
   }
 
+  static const _idVersionKey = 'reminders.idVersion';
+
+  /// How the ids of the reminders were made when they were last all set,
+  /// as `ReminderPlan.idVersion` has it, or 0 if that was before it was kept.
+  Future<int> remindersIdVersion() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_idVersionKey) ?? 0;
+  }
+
+  Future<void> setRemindersIdVersion(int version) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_idVersionKey, version);
+  }
+
   Future<void> showInstantNotification(String title, String body) async {
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
         android: AndroidNotificationDetails(

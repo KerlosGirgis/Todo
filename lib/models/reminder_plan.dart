@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'recurrence.dart';
 import 'todo_item.dart';
 
@@ -57,6 +59,13 @@ abstract final class ReminderPlan {
   /// and they're set afresh each day the app is opened on.
   static const lastTimes = 8;
 
+  /// How the ids are made: raised whenever that changes, so that the
+  /// reminders on the phone set under ids made the old way, which their
+  /// tasks can't find to cancel anymore, are all cancelled and set afresh.
+  /// Version 0 used `String.hashCode`, which Dart doesn't promise to keep
+  /// the same from one version to the next. Since 1, a hash of their own.
+  static const idVersion = 1;
+
   /// The reminders [task] needs as of [now], each under an id of [idsOf]:
   ///
   /// * A one-time reminder that's still to come, unless the task is done.
@@ -75,7 +84,7 @@ abstract final class ReminderPlan {
       final day = task.day;
       if (day == null || task.done) return const [];
       final at = time.on(day);
-      return at.isAfter(now) ? [OnceAlarm(uuid.hashCode, at)] : const [];
+      return at.isAfter(now) ? [OnceAlarm(idOf(uuid), at)] : const [];
     }
     final recurrence = task.recurrence;
     if (recurrence == null) return const [];
@@ -102,15 +111,18 @@ abstract final class ReminderPlan {
               RepeatingAlarm(
                   _weekdayId(uuid, weekday), first, RepeatEvery.week),
         ],
-      final every => [RepeatingAlarm(uuid.hashCode, first, every)],
+      final every => [RepeatingAlarm(idOf(uuid), first, every)],
     };
   }
 
-  /// Every id a reminder of the task with [uuid] can have: the one a
-  /// one-time, daily or monthly reminder goes by, then one for each day of
-  /// the week, then one for each of its last times.
+  /// The id the one-time, daily or monthly reminder of the task with [uuid]
+  /// goes by.
+  static int idOf(String uuid) => _hash(uuid);
+
+  /// Every id a reminder of the task with [uuid] can have: [idOf]'s, then
+  /// one for each day of the week, then one for each of its last times.
   static List<int> idsOf(String uuid) => [
-        uuid.hashCode,
+        idOf(uuid),
         for (var weekday = DateTime.monday;
             weekday <= DateTime.sunday;
             weekday++)
@@ -118,7 +130,18 @@ abstract final class ReminderPlan {
         for (var index = 0; index < lastTimes; index++) _timeId(uuid, index),
       ];
 
-  static int _weekdayId(String uuid, int weekday) => "$uuid#w$weekday".hashCode;
+  static int _weekdayId(String uuid, int weekday) => _hash("$uuid#w$weekday");
 
-  static int _timeId(String uuid, int index) => "$uuid#t$index".hashCode;
+  static int _timeId(String uuid, int index) => _hash("$uuid#t$index");
+
+  /// [key]'s 32-bit FNV-1a hash, as Android takes a notification's id: an
+  /// int of 32 bits, signed. It's the same in every version of Dart, so a
+  /// reminder set before an update can still be found by its id after it.
+  static int _hash(String key) {
+    var hash = 0x811c9dc5;
+    for (final byte in utf8.encode(key)) {
+      hash = ((hash ^ byte) * 0x01000193) & 0xffffffff;
+    }
+    return hash.toSigned(32);
+  }
 }

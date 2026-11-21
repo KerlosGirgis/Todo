@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:todo/services/device_service.dart';
@@ -31,5 +32,14 @@ void main() {
           device: FakeDevice("Mars/Olympus"));
       expect(NotificationService().timeZone, tz.UTC.name);
     });
+  });
+
+  test("remembers how the reminders' ids were made, as 0 before it did",
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    final notifications = NotificationService();
+    expect(await notifications.remindersIdVersion(), 0);
+    await notifications.setRemindersIdVersion(1);
+    expect(await notifications.remindersIdVersion(), 1);
   });
 }
