@@ -42,6 +42,12 @@ class FakeWidgets extends HomeWidgetService {
       (id: noteText == null ? null : 1, text: noteText);
 
   @override
+  Future<void> clearNote() async {
+    if (failSaving) throw StateError("Storage full");
+    noteText = null;
+  }
+
+  @override
   Stream<WidgetKind> get taps => tapped.stream;
 }
 
@@ -88,6 +94,38 @@ void main() {
         await widgets.setStyle(WidgetKind.tasks, const WidgetStyle(opacity: 0)),
         isA<Failure>());
     expect(widgets.styleOf(WidgetKind.tasks), WidgetStyle.tasksDefault);
+  });
+
+  test('reads in afresh what the note widget shows', () async {
+    await widgets.load();
+    expect(widgets.noteText, isNull);
+    var notified = 0;
+    widgets.addListener(() => notified++);
+
+    phone.noteText = "Weekend plans";
+    await widgets.loadNote();
+    expect(widgets.noteText, "Weekend plans");
+    expect(notified, 1);
+    // Nothing to say when it's the same.
+    await widgets.loadNote();
+    expect(notified, 1);
+  });
+
+  test('takes the note off the note widget', () async {
+    phone.noteText = "Weekend plans";
+    await widgets.load();
+    final result = await widgets.clearNote();
+    expect((result as Info).message, "Widget Cleared");
+    expect(phone.noteText, isNull);
+    expect(widgets.noteText, isNull);
+  });
+
+  test("keeps the note widget's note when it can't be taken off", () async {
+    phone.noteText = "Weekend plans";
+    await widgets.load();
+    phone.failSaving = true;
+    expect(await widgets.clearNote(), isA<Failure>());
+    expect(widgets.noteText, "Weekend plans");
   });
 
   test('asks the phone to add a widget', () async {

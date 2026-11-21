@@ -171,4 +171,75 @@ void main() {
     notes.dispose();
     widgets.dispose();
   });
+
+  testWidgets(
+      "a row under the note widget's says which note it shows, and takes it "
+      "off", (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
+    FlutterSecureStorage.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({});
+    final user = UserViewModel(
+      repository: FakeUserRepository(),
+      lockService: newLock(),
+      deviceService: FakeDevice(),
+      databaseService: FakeDatabase(),
+    );
+    await user.get();
+    final tasks = TasksViewModel(
+      repository: FakeTasksRepository(),
+      notificationService: FakeNotifications(),
+      lockService: FakeLock(),
+    );
+    final notes = NotesViewModel(
+      repository: notes_test.FakeNotesRepository(),
+      authService: notes_test.FakeAuth(),
+      lockService: notes_test.FakeLock(),
+      homeWidgetService: notes_test.FakeHomeWidget(),
+    );
+    // Put there from the note's editor, since the widgets were last read.
+    final phone = FakeWidgets()..noteText = "\nWeekend plans\nThe river walk";
+    final widgets = WidgetsViewModel(service: phone);
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: user),
+        ChangeNotifierProvider.value(value: tasks),
+        ChangeNotifierProvider.value(value: notes),
+        ChangeNotifierProvider.value(value: widgets),
+        ChangeNotifierProvider(
+            create: (_) => TourViewModel(service: TourService())),
+      ],
+      child: ToastificationWrapper(
+        child: MaterialApp(
+          theme: AppTheme.getTheme(isDarkMode: false),
+          home: const ProfilePage(),
+        ),
+      ),
+    ));
+    await wait(tester, const Duration(seconds: 2));
+
+    await tester.scrollUntilVisible(find.text("Clear Widget"), 300,
+        scrollable: find.byType(Scrollable).first);
+    await wait(tester);
+    expect(find.text("Shows “Weekend plans”"), findsOneWidget);
+
+    await tester.tap(find.text("Clear Widget"));
+    // Through its toast.
+    await wait(tester, const Duration(seconds: 6));
+    expect(phone.noteText, isNull);
+    expect(widgets.noteText, isNull);
+    expect(find.text("No note on it now"), findsOneWidget);
+
+    // With nothing on the widget, as far as it knows, the row does nothing.
+    phone.noteText = "Put on it behind the row's back";
+    await tester.tap(find.text("Clear Widget"));
+    await wait(tester);
+    expect(phone.noteText, "Put on it behind the row's back");
+
+    await tester.pumpWidget(const SizedBox());
+    tasks.dispose();
+    notes.dispose();
+    widgets.dispose();
+  });
 }

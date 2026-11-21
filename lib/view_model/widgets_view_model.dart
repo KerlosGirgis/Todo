@@ -83,12 +83,40 @@ class WidgetsViewModel with ChangeNotifier {
     } catch (e) {
       _canAdd = false;
     }
-    try {
-      _noteText = (await _service.shownNote()).text;
-    } catch (e) {
-      _noteText = null;
-    }
+    _noteText = await _shownNoteText();
     notifyListeners();
+  }
+
+  /// Reads in afresh what the note widget shows, as a note may have been put
+  /// on it from its editor since.
+  Future<void> loadNote() async {
+    final text = await _shownNoteText();
+    if (text == _noteText) return;
+    _noteText = text;
+    notifyListeners();
+  }
+
+  /// Takes the note off the note widget, which goes back to saying "Note"
+  /// until another is put on it from its editor.
+  Future<Result> clearNote() async {
+    try {
+      await _service.clearNote();
+    } catch (e) {
+      return const Failure("Couldn't clear the widget");
+    }
+    _noteText = null;
+    notifyListeners();
+    return const Info("Widget Cleared");
+  }
+
+  /// The text the note widget shows, or null when it shows no note, or that
+  /// can't be told.
+  Future<String?> _shownNoteText() async {
+    try {
+      return (await _service.shownNote()).text;
+    } catch (e) {
+      return null;
+    }
   }
 
   /// Has every widget of [kind] look as [style] has it.

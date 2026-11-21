@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nothing of the app's leaves the phone: not to the cloud, which
+     android:allowBackup="false" stops as well, and not to a new phone, which
+     from Android 12 on only these rules stop. The database's key is kept
+     with the phone's keystore, which never moves, so a database copied over
+     without it would never open there. A backup file from the app is what
+     takes the tasks and notes to a new phone. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

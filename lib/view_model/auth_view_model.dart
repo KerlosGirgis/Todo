@@ -8,7 +8,15 @@ import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/verse_service.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
-enum AuthStatus { initializing, authenticated, unauthenticated }
+enum AuthStatus {
+  initializing,
+  authenticated,
+  unauthenticated,
+
+  /// The app couldn't open the tasks and notes, once the App Lock, if it
+  /// has one, let the user through. They can try again.
+  failed,
+}
 
 class AuthViewModel with ChangeNotifier {
   AuthViewModel(
@@ -64,12 +72,14 @@ class AuthViewModel with ChangeNotifier {
     if (_status == AuthStatus.initializing) return;
     _status = AuthStatus.initializing;
     notifyListeners();
-    if (await _unlocksAsItOpens()) {
-      await _open();
-    } else {
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
-    }
+    _status = !await _unlocksAsItOpens()
+        ? AuthStatus.unauthenticated
+        : await _open()
+            ? AuthStatus.authenticated
+            // Says so, for the user to try again, rather than opening for
+            // good.
+            : AuthStatus.failed;
+    notifyListeners();
   }
 
   Future<void> retryAuthentication() async {
@@ -85,7 +95,12 @@ class AuthViewModel with ChangeNotifier {
     } catch (e) {
       return Failure(_uncheckable);
     }
-    if (check.matched) await _open(key: check.key);
+    if (check.matched) {
+      // The lock page stays, for the user to try again.
+      if (!await _open(key: check.key)) return Failure(_unopenable);
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+    }
     return _resultOf(check);
   }
 
@@ -100,6 +115,7 @@ class AuthViewModel with ChangeNotifier {
   }
 
   static const _uncheckable = "Couldn't check the password";
+  static const _unopenable = "Couldn't open your tasks and notes. Try again.";
 
   static Result _resultOf(PasswordCheck check) {
     if (check.matched) return Success("Unlocked");
@@ -187,16 +203,24 @@ class AuthViewModel with ChangeNotifier {
     }
   }
 
-  /// Opens the app, and the database with [key], the one the App Lock's
-  /// password unlocked, if it's locked with one.
-  Future<void> _open({String? key}) async {
-    if (!_opened) {
+  /// Opens the app the first time it's unlocked: the database, with [key],
+  /// the one the App Lock's password unlocked, if it's locked with one, then
+  /// the verses and the profile. Whether it's open; not when the database
+  /// won't open, as when its key is gone, which is left for the user to try
+  /// again rather than opening for good.
+  Future<bool> _open({String? key}) async {
+    if (_opened) return true;
+    try {
       await _dbService.openDb(key: key);
       await _verseService.loadVerses();
       await _userViewModel.get();
-      _opened = true;
+    } catch (e) {
+      if (kDebugMode) {
+        print("Couldn't open the app: $e");
+      }
+      return false;
     }
-    _status = AuthStatus.authenticated;
-    notifyListeners();
+    _opened = true;
+    return true;
   }
 }

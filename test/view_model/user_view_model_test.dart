@@ -63,11 +63,19 @@ class FakeDatabase implements DatabaseService {
   /// or null for the one kept as it is.
   String? openedWith;
 
+  /// Whether it won't open, as when its key is gone.
+  bool failToOpen = false;
+
+  /// How many times the app has tried to open it.
+  var opens = 0;
+
   @override
   String? get key => dbKey;
 
   @override
   Future<Database> openDb({String? key}) async {
+    opens++;
+    if (failToOpen) throw StateError("The database's key is missing");
     openedWith = key;
     return _NoDatabase();
   }
@@ -370,6 +378,64 @@ void main() {
       await auth.initializeApp();
       expect(await auth.unlock("0000"), isA<Failure>());
       expect(auth.status, AuthStatus.unauthenticated);
+      expect(await auth.unlock("1234"), isA<Success>());
+      expect(auth.status, AuthStatus.authenticated);
+      expect(database.openedWith, dbKey);
+    });
+
+    test("says so when the database won't open, and opens it on a try after",
+        () async {
+      final database = FakeDatabase()..failToOpen = true;
+      final auth = AuthViewModel(
+        UserViewModel(
+          repository: repository,
+          lockService: newLock(),
+          deviceService: device,
+          databaseService: database,
+        ),
+        lockService: newLock(),
+        databaseService: database,
+        verseService: FakeVerses(),
+      );
+      await auth.initializeApp();
+      expect(auth.status, AuthStatus.failed);
+      expect(auth.opened, isFalse);
+
+      database.failToOpen = false;
+      await auth.retryAuthentication();
+      expect(auth.status, AuthStatus.authenticated);
+      expect(auth.opened, isTrue);
+      expect(database.opens, 2);
+    });
+
+    test(
+        "stays at the lock page when the right password's database won't "
+        "open, for another try, which isn't a wrong password", () async {
+      await user.changeAppLock(AppLock.password,
+          askForPassword: () async => null,
+          askForNewPassword: ({required minLength}) async => "1234");
+      final database = FakeDatabase()..failToOpen = true;
+      final auth = AuthViewModel(
+        UserViewModel(
+          repository: repository,
+          lockService: newLock(),
+          deviceService: device,
+          databaseService: database,
+        ),
+        lockService: newLock(),
+        databaseService: database,
+        verseService: FakeVerses(),
+      );
+      await auth.initializeApp();
+      final result = await auth.unlock("1234");
+      expect((result as Failure).message,
+          "Couldn't open your tasks and notes. Try again.");
+      expect(auth.status, AuthStatus.unauthenticated);
+      expect(auth.opened, isFalse);
+      expect(
+          await const FlutterSecureStorage().read(key: 'lockFailures'), isNull);
+
+      database.failToOpen = false;
       expect(await auth.unlock("1234"), isA<Success>());
       expect(auth.status, AuthStatus.authenticated);
       expect(database.openedWith, dbKey);

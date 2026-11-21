@@ -9,6 +9,7 @@ import '../../../../../models/user_profile.dart';
 import '../../../../../models/widget_style.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
+import '../../../../../view_model/widgets_view_model.dart';
 import '../../lock_page/widgets/password_dialogs.dart';
 import 'appearance_picker.dart';
 import 'settings_group.dart';
@@ -27,6 +28,7 @@ const _mint = Color(0xff00C7BE);
 const _cyan = Color(0xff32ADE6);
 const _pink = Color(0xffFF2D55);
 const _yellow = Color(0xffFFCC00);
+const _red = Color(0xffFF3B30);
 
 class AppearanceSection extends StatelessWidget {
   const AppearanceSection({super.key});
@@ -320,7 +322,57 @@ class NotesSection extends StatelessWidget {
           kind: WidgetKind.note,
           subtitle: "A note on the home screen",
         ),
+        const _ClearNoteWidgetTile(),
       ],
+    );
+  }
+}
+
+/// A row that takes the note off the home screen's note widget, which then
+/// says "Note" until a note is put on it again from its editor. It says
+/// which note the widget shows, and is dimmed while it shows none.
+class _ClearNoteWidgetTile extends StatefulWidget {
+  const _ClearNoteWidgetTile();
+
+  @override
+  State<_ClearNoteWidgetTile> createState() => _ClearNoteWidgetTileState();
+}
+
+class _ClearNoteWidgetTileState extends State<_ClearNoteWidgetTile> {
+  @override
+  void initState() {
+    super.initState();
+    // Afresh, as a note may have been put on the widget since.
+    Provider.of<WidgetsViewModel?>(context, listen: false)?.loadNote();
+  }
+
+  Future<void> _clear() async =>
+      _showResult(await context.read<WidgetsViewModel>().clearNote());
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Provider.of<WidgetsViewModel?>(context)?.noteText;
+    final firstLine = text
+        ?.split("\n")
+        .map((line) => line.trim())
+        .firstWhere((line) => line.isNotEmpty, orElse: () => "");
+    return AnimatedOpacity(
+      opacity: text == null ? 0.45 : 1,
+      duration: const Duration(milliseconds: 200),
+      // Read out as a button of its own, rather than as part of the group.
+      child: MergeSemantics(
+        child: SettingsTile(
+          icon: Icons.backspace_rounded,
+          color: _red,
+          title: "Clear Widget",
+          subtitle: Text(
+            text == null ? "No note on it now" : "Shows “$firstLine”",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          onTap: text == null ? null : _clear,
+        ),
+      ),
     );
   }
 }
