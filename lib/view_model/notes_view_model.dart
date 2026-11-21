@@ -18,6 +18,7 @@ import '../services/backup_service.dart';
 import '../services/file_service.dart';
 import '../services/home_widget_service.dart';
 import '../services/lock_service.dart';
+import 'backup_flow.dart';
 
 class NotesViewModel with ChangeNotifier {
   NotesViewModel({
@@ -32,8 +33,12 @@ class NotesViewModel with ChangeNotifier {
        _authService = authService ?? AuthenticationService(),
        _lockService = lockService ?? LockService(),
        _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
-       _backupService = backupService ?? BackupService(),
-       _fileService = fileService ?? FileService(),
+       _backups = BackupFlow(
+         BackupKind.notes,
+         authService: authService,
+         backupService: backupService,
+         fileService: fileService,
+       ),
        _now = clock ?? DateTime.now;
 
   /// The notes, with all they say.
@@ -58,8 +63,9 @@ class NotesViewModel with ChangeNotifier {
   final AuthenticationService _authService;
   final LockService _lockService;
   final HomeWidgetService _homeWidgetService;
-  final BackupService _backupService;
-  final FileService _fileService;
+
+  /// Backing the notes up, and restoring them.
+  final BackupFlow _backups;
   final DateTime Function() _now;
 
   /// The time as the notes go by it, which the pages show them as of: the
@@ -512,12 +518,10 @@ class NotesViewModel with ChangeNotifier {
   Future<Result?> backup({
     required PasswordPrompt askForPassword,
     required NewBackupPasswordPrompt askForBackupPassword,
-  }) async {
-    final pass = await _authService.passAppLock(askForPassword);
-    if (pass == null) return null;
-    if (!pass.passed) return Failure("Authentication failed");
-    final password = pass.password;
-    try {
+  }) => _backups.backUp(
+    askForPassword: askForPassword,
+    askForBackupPassword: askForBackupPassword,
+    records: (password) async {
       final notes = await _notesRepository.getNotes();
       // Locked notes go into the file with all they say, so it takes their
       // lock, as opening one does: the App Lock may be off, or a password,
@@ -526,24 +530,16 @@ class NotesViewModel with ChangeNotifier {
       // just given is the one a locked note falls back on without it.
       if (notes.any((note) => note.locked) &&
           await _lockService.getLock() != AppLock.fingerprint) {
-        final unlocked = await _passNoteLock(() async => password);
-        if (unlocked is! Success) return unlocked;
+        switch (await _passNoteLock(() async => password)) {
+          case Failure(:final message) || Info(:final message):
+            return Denied(message);
+          case Success():
+            break;
+        }
       }
-      final file = await _backupService.write(
-        [for (final note in notes) note.toMap()],
-        kind: BackupKind.notes,
-        askForPassword: askForBackupPassword,
-      );
-      if (file == null) return null;
-      final outputPath = await _fileService.saveFile(file, 'notes.json');
-      if (outputPath == null || outputPath.isEmpty) {
-        return Info("You didn't choose a directory");
-      }
-      return Success("Backup Created");
-    } catch (e) {
-      return Failure("Couldn't back up the notes");
-    }
-  }
+      return Granted([for (final note in notes) note.toMap()]);
+    },
+  );
 
   /// Adds the notes from a backup file the user picks, once
   /// [askForBackupPassword] gets the password it's locked with, in place of
@@ -556,46 +552,43 @@ class NotesViewModel with ChangeNotifier {
     required PasswordPrompt askForPassword,
     required BackupPasswordPrompt askForBackupPassword,
   }) async {
+    final List<Note> currentNotes;
     try {
-      final currentNotes = await _notesRepository.getNotes();
-      if (overwrite && currentNotes.any((note) => note.locked)) {
-        final unlocked = await _passNoteLock(askForPassword);
-        if (unlocked is! Success) return unlocked;
-      }
-      final bytes = await _fileService.pickJsonFile();
-      if (bytes == null) {
-        return Info("You didn't choose a file");
-      }
-      final records = await _backupService.read(
-        bytes,
-        kind: BackupKind.notes,
-        askForPassword: askForBackupPassword,
-      );
-      if (records == null) return null;
-      final importedNotes = records.map<Note>((e) => Note.fromMap(e)).toList();
-      final existingNotes = overwrite ? <Note>[] : currentNotes;
-      final newNotes = <Note>[];
-      for (final note in importedNotes) {
-        final exists = existingNotes.any((e) => _sameNote(e, note));
-        if (exists) continue;
-        newNotes.add(note);
-      }
-      try {
-        // All or nothing, so a restore that fails part-way through leaves
-        // the notes as they were.
-        await _notesRepository.importNotes(newNotes, overwrite: overwrite);
-      } catch (e) {
-        return Failure("Couldn't restore the backup. Nothing was changed.");
-      }
-      // Replacing the notes deleted the one on the widget, whichever it was.
-      if (overwrite) await _clearWidget();
-      await _reload();
-      return Success("Data Restored");
-    } on WrongBackupKindException {
-      return Failure("That's a backup of tasks, not notes");
+      currentNotes = await _notesRepository.getNotes();
     } catch (e) {
-      return Failure("Couldn't restore the backup");
+      return const Failure("Couldn't restore the backup");
     }
+    if (overwrite && currentNotes.any((note) => note.locked)) {
+      final unlocked = await _passNoteLock(askForPassword);
+      if (unlocked is! Success) return unlocked;
+    }
+    return _backups.restore(
+      askForBackupPassword: askForBackupPassword,
+      putBack: (records) async {
+        final importedNotes = records
+            .map<Note>((e) => Note.fromMap(e))
+            .toList();
+        final existingNotes = overwrite ? <Note>[] : currentNotes;
+        final newNotes = [
+          for (final note in importedNotes)
+            if (!existingNotes.any((each) => _sameNote(each, note))) note,
+        ];
+        try {
+          // All or nothing, so a restore that fails part-way through leaves
+          // the notes as they were.
+          await _notesRepository.importNotes(newNotes, overwrite: overwrite);
+        } catch (e) {
+          return const Failure(
+            "Couldn't restore the backup. Nothing was changed.",
+          );
+        }
+        // Replacing the notes deleted the one on the widget, whichever it
+        // was.
+        if (overwrite) await _clearWidget();
+        await _reload();
+        return const Success("Data Restored");
+      },
+    );
   }
 
   /// Checks it's the user, for a locked [note]: see [_passNoteLock].

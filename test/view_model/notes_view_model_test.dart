@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui' show Color;
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
@@ -8,9 +9,13 @@ import 'package:todo/models/note.dart';
 import 'package:todo/models/trashed.dart';
 import 'package:todo/repositories/notes_repository.dart';
 import 'package:todo/services/authentication_service.dart';
+import 'package:todo/services/backup_service.dart';
 import 'package:todo/services/home_widget_service.dart';
 import 'package:todo/services/lock_service.dart';
 import 'package:todo/view_model/notes_view_model.dart';
+
+import 'backup_flow_test.dart'
+    show MemoryFiles, backupPassword, newBackupPassword;
 
 /// The notes table, in memory.
 class FakeNotesRepository extends NotesRepository {
@@ -44,6 +49,12 @@ class FakeNotesRepository extends NotesRepository {
   @override
   Future<void> deleteNote(int id) async =>
       rows.removeWhere((row) => row.id == id);
+
+  @override
+  Future<void> importNotes(List<Note> notes, {required bool overwrite}) async {
+    if (overwrite) rows.clear();
+    rows.addAll(notes.map(_withId));
+  }
 
   /// The trash, the first deleted first. Like the real one, it keeps a note
   /// as backups do, and never gives an entry's id to another.
@@ -468,6 +479,85 @@ void main() {
         expect(notes.trash, isEmpty);
       },
     );
+  });
+
+  group('backups', () {
+    late MemoryFiles files;
+    late NotesViewModel backingUp;
+
+    setUp(() {
+      // The App Lock is off.
+      FlutterSecureStorage.setMockInitialValues({});
+      files = MemoryFiles();
+      backingUp = NotesViewModel(
+        repository: repository,
+        authService: auth,
+        lockService: lock,
+        homeWidgetService: homeWidget,
+        backupService: BackupService.inDart(iterations: 1000),
+        fileService: files,
+      );
+    });
+
+    test("take a locked note's lock before it goes into the file, with all "
+        "it says", () async {
+      auth.fingerprint = FingerprintCheck.failed;
+      final refused = await backingUp.backup(
+        askForPassword: noPassword,
+        askForBackupPassword: newBackupPassword("correct horse"),
+      );
+      expect((refused as Failure).message, "Authentication failed");
+      expect(files.saved, isNull);
+
+      auth.fingerprint = FingerprintCheck.passed;
+      final result = await backingUp.backup(
+        askForPassword: noPassword,
+        askForBackupPassword: newBackupPassword("correct horse"),
+      );
+      expect((result as Success).message, "Backup Created");
+      final records = await BackupService.inDart(iterations: 1000).read(
+        files.saved!.bytes,
+        kind: BackupKind.notes,
+        askForPassword: backupPassword("correct horse"),
+      );
+      expect(
+        [for (final record in records!) Note.fromMap(record).body],
+        ["Plans\nWalk by the river", "secret"],
+      );
+    });
+
+    test("restored in place of locked notes take their lock first, and "
+        "added to the notes add none twice", () async {
+      // A backup from before backups were locked: the open note, as it is,
+      // and a new one.
+      files.picked = utf8.encode(
+        jsonEncode([
+          repository.rows.first.toMap(),
+          const Note(title: "Shopping", body: "Milk").toMap(),
+        ]),
+      );
+      auth.fingerprint = FingerprintCheck.failed;
+      final refused = await backingUp.restore(
+        true,
+        askForPassword: noPassword,
+        askForBackupPassword: backupPassword(null),
+      );
+      expect((refused as Failure).message, "Authentication failed");
+      expect(files.picks, 0);
+      expect(repository.rows.map((note) => note.title), ["Open", "Diary"]);
+
+      final added = await backingUp.restore(
+        false,
+        askForPassword: noPassword,
+        askForBackupPassword: backupPassword(null),
+      );
+      expect((added as Success).message, "Data Restored");
+      expect(repository.rows.map((note) => note.title), [
+        "Open",
+        "Diary",
+        "Shopping",
+      ]);
+    });
   });
 
   group('NoteEditorViewModel', () {
