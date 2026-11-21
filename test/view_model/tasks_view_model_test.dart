@@ -85,6 +85,7 @@ class FakeTasksRepository extends TasksRepository {
 
   @override
   Future<void> refreshAllItems(List<TodoItem> items) async {
+    if (failWrites) throw StateError("Disk full");
     rows
       ..clear()
       ..addAll(items.map(_withId));
@@ -1692,6 +1693,18 @@ Shop
     group('moving', () {
       int at(String title) =>
           tasks.items.indexWhere((each) => each.title == title);
+
+      test(
+        "a dragged task that can't be saved goes back, and says so",
+        () async {
+          await plan();
+          final before = outline();
+          repository.failWrites = true;
+          final result = await tasks.syncAfterReorder(at("Shop"), at("Hotel"));
+          expect((result as Failure).message, "Couldn't move the task");
+          expect(outline(), before);
+        },
+      );
 
       test('a dragged task lines up with the task below it', () async {
         await plan();

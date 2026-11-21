@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' show Color;
 
@@ -49,6 +50,27 @@ class FakeNotesRepository extends NotesRepository {
   @override
   Future<void> deleteNote(int id) async =>
       rows.removeWhere((row) => row.id == id);
+
+  /// The orders the notes were rewritten in, by their titles; and what a
+  /// rewrite waits for, if anything, as a slow one would. It fails as an
+  /// update does, and numbers the notes afresh from 1, in their new order,
+  /// as the real table does once every row has gone.
+  final rewrites = <List<String>>[];
+  Future<void>? rewriting;
+
+  @override
+  Future<void> refreshAllNotes(List<Note> notes) async {
+    await rewriting;
+    if (failUpdates) throw StateError("Disk full");
+    rewrites.add([for (final note in notes) note.title]);
+    rows
+      ..clear()
+      ..addAll([
+        for (final (index, note) in notes.indexed)
+          Note.fromMap({...note.toMap(), 'id': index + 1}),
+      ]);
+    _nextId = rows.length + 1;
+  }
 
   @override
   Future<void> importNotes(List<Note> notes, {required bool overwrite}) async {
@@ -156,6 +178,9 @@ class FakeHomeWidget extends HomeWidgetService {
 
   @override
   Future<void> clearNote() async => id = text = null;
+
+  @override
+  Future<void> followNote(int noteId) async => id = noteId;
 }
 
 /// A formatted note's text: a heading, then a line of plain text.
@@ -279,6 +304,79 @@ void main() {
       expect(saved.title, "Journal");
       expect(saved.body, "secret");
       expect(saved.locked, isTrue);
+    });
+  });
+
+  group('reordering', () {
+    setUp(() async {
+      repository.rows.add(const Note(id: 3, title: "Shop", body: "Milk"));
+      await notes.get();
+    });
+
+    List<String> titles(Iterable<Note> notes) => [
+      for (final note in notes) note.title,
+    ];
+
+    test("shows the new order straight away, then saves it", () async {
+      final gate = Completer<void>();
+      repository.rewriting = gate.future;
+      final moving = notes.syncAfterReorder(2, 0);
+      expect(titles(notes.notes), ["Shop", "Open", "Diary"]);
+
+      gate.complete();
+      expect(await moving, isNull);
+      expect(titles(notes.notes), ["Shop", "Open", "Diary"]);
+      expect(titles(repository.rows), ["Shop", "Open", "Diary"]);
+    });
+
+    test("says so when it can't be saved, and the notes go back", () async {
+      repository.failUpdates = true;
+      final result = await notes.syncAfterReorder(2, 0);
+      expect((result as Failure).message, "Couldn't move the note");
+      expect(titles(notes.notes), ["Open", "Diary", "Shop"]);
+    });
+
+    test(
+      "keeps one made while another is being saved where it was dropped",
+      () async {
+        final gate = Completer<void>();
+        repository.rewriting = gate.future;
+        final first = notes.syncAfterReorder(2, 0);
+        // The first is being written as the second is made, on the notes
+        // as they show.
+        await Future<void>.delayed(Duration.zero);
+        final second = notes.syncAfterReorder(2, 1);
+        expect(titles(notes.notes), ["Shop", "Diary", "Open"]);
+
+        gate.complete();
+        expect(await first, isNull);
+        expect(await second, isNull);
+        expect(titles(notes.notes), ["Shop", "Diary", "Open"]);
+        expect(titles(repository.rows), ["Shop", "Diary", "Open"]);
+        expect(repository.rewrites, [
+          ["Shop", "Open", "Diary"],
+          ["Shop", "Diary", "Open"],
+        ]);
+      },
+    );
+
+    test("made together are saved once, as they leave the notes", () async {
+      await Future.wait([
+        notes.syncAfterReorder(2, 0),
+        notes.syncAfterReorder(2, 1),
+      ]);
+      expect(repository.rewrites, [
+        ["Shop", "Diary", "Open"],
+      ]);
+    });
+
+    test("keep the widget on its note, whose id changes", () async {
+      homeWidget
+        ..id = 1
+        ..text = "Plans\nWalk by the river";
+      await notes.syncAfterReorder(2, 0);
+      expect(shown("Open").id, 2);
+      expect(homeWidget.id, 2);
     });
   });
 

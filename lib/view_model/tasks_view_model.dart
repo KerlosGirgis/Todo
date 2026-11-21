@@ -329,12 +329,13 @@ class TasksViewModel with ChangeNotifier {
   /// none below it, it goes last, as a task of its own. Tasks that are
   /// folded away don't count: one dropped between the same two tasks on
   /// show as it was picked up from stays where it is. Only in the user's
-  /// own order: sorted otherwise, a task's place isn't up to them.
-  Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
-    if (sort != TaskSort.custom) return;
+  /// own order: sorted otherwise, a task's place isn't up to them. Why it
+  /// couldn't be moved, or null; then the tasks go back as they were.
+  Future<Result?> syncAfterReorder(int oldIndex, int newIndex) async {
+    if (sort != TaskSort.custom) return null;
     final nodes = _shown.nodes;
     if (oldIndex == newIndex || oldIndex < 0 || oldIndex >= nodes.length) {
-      return;
+      return null;
     }
     final moved = nodes[oldIndex];
     // The tasks it could be next to: not the ones that go with it, nor ones
@@ -347,13 +348,10 @@ class TasksViewModel with ChangeNotifier {
     final below = rest.skip(newIndex).where(beside).firstOrNull;
     if (above == nodes.take(oldIndex).where(beside).lastOrNull &&
         below == nodes.skip(oldIndex).where(beside).firstOrNull) {
-      return;
+      return null;
     }
-    if (below == null) {
-      await moveInto(moved.task, null);
-    } else {
-      await moveBeside(moved.task, below.task, after: false);
-    }
+    if (below == null) return moveInto(moved.task, null);
+    return moveBeside(moved.task, below.task, after: false);
   }
 
   /// Makes [task] a subtask of [parent], the last one, or a task of its own

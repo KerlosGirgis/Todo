@@ -152,11 +152,13 @@ class _TaskListState extends State<TaskList> {
   }
 
   Future<void> _reorder(int oldIndex, int newIndex) async {
+    final onResult = widget.onResult;
     // The tasks are in their new order before it's saved, so the subtasks
     // come back out where the task now is.
     final moving = widget.tasks.syncAfterReorder(oldIndex, newIndex);
     _putDown();
-    await moving;
+    // Said even should the list be gone by then, as the move was asked for.
+    onResult(await moving);
   }
 
   @override

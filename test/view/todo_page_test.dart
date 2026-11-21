@@ -345,6 +345,22 @@ Trip
     await page.close(tester);
   });
 
+  testWidgets("a drag that can't be saved says so, and the tasks go back", (
+    tester,
+  ) async {
+    await page.open(tester, plans());
+    final before = page.outline;
+    page.rows.failWrites = true;
+    final up =
+        tester.getTopLeft(card("Pack")).dy -
+        tester.getTopLeft(card("Shop")).dy -
+        10;
+    await dragCard(tester, "Shop", Offset(0, up));
+    expect(find.text("Couldn't move the task"), findsOneWidget);
+    expect(page.outline, before);
+    await page.close(tester);
+  });
+
   testWidgets("a task picked up and put back keeps its subtasks on show", (
     tester,
   ) async {

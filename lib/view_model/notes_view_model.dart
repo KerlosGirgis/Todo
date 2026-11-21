@@ -492,22 +492,62 @@ class NotesViewModel with ChangeNotifier {
     );
   }
 
-  Future<void> syncAfterReorder(int oldIndex, int newIndex) async {
-    final oldNote = _notes.removeAt(oldIndex);
-    _notes.insert(newIndex, oldNote);
-    final onWidget = await _noteOnWidget();
-    try {
-      // A copy, as the next reorder can move notes in the list while this
-      // one is still being written.
-      await _notesRepository.refreshAllNotes(List.of(_notes));
-    } catch (e) {
-      // The order stays as it was in the database.
+  /// The reorders being saved, which go one at a time, in order; and how
+  /// many there have been, as only the last one's order needs saving: it's
+  /// the order the notes are in.
+  Future<void> _reordering = Future.value();
+  var _reorders = 0;
+
+  /// Moves the note at [oldIndex] among [notes] to [newIndex], straight
+  /// away, as that's where it was dropped, then saves the notes in their new
+  /// order. Why it couldn't be saved, or null; then the notes go back as
+  /// they were.
+  Future<Result?> syncAfterReorder(int oldIndex, int newIndex) {
+    final count = _notes.length;
+    if (oldIndex == newIndex ||
+        oldIndex < 0 ||
+        oldIndex >= count ||
+        newIndex < 0 ||
+        newIndex >= count) {
+      return Future.value();
     }
-    // Rewriting the table gives every note a new id, so the notes are read
-    // back in: the ids held before would now point at other notes. The
-    // widget's too.
+    _notes.insert(newIndex, _notes.removeAt(oldIndex));
+    _publish();
+    // As they are now, as the next reorder can move them while this one is
+    // still being saved.
+    final order = List.of(_notes);
+    final reorder = ++_reorders;
+    final saving = _reordering.then((_) async {
+      // A later one saves this one's order along with its own.
+      if (reorder != _reorders) return null;
+      return _saveOrder(order, latest: () => reorder == _reorders);
+    });
+    _reordering = saving;
+    return saving;
+  }
+
+  /// Saves the notes in [order], then reads them back in, the widget's note
+  /// too: rewriting the table gives every note a new id, and the ids held
+  /// before would now point at other notes. Not while [latest] says another
+  /// reorder has come since, though, as reading them in would undo it
+  /// meanwhile: that one reads them in once it's saved.
+  Future<Result?> _saveOrder(
+    List<Note> order, {
+    required bool Function() latest,
+  }) async {
+    final onWidget = await _noteOnWidget();
+    Result? result;
+    try {
+      await _notesRepository.refreshAllNotes(order);
+    } catch (e) {
+      // The order stays as it was in the database, which the notes go back
+      // to as they're read in.
+      result = const Failure("Couldn't move the note");
+    }
+    if (!latest()) return null;
     await _reload();
     if (onWidget != null) await _followOnWidget(onWidget);
+    return result;
   }
 
   /// Saves the notes to a file locked with a password that

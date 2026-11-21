@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../../view_model/notes_view_model.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
 import '../../../profile/profile_page/widgets/profile_button.dart';
 import '../../../profile/profile_page/widgets/settings_group.dart';
@@ -65,7 +66,8 @@ class ReorderNotesDialog extends StatelessWidget {
                 buildDefaultDragHandles: false,
                 itemCount: count,
                 onReorderStart: (_) => HapticFeedback.mediumImpact(),
-                onReorderItem: notes.syncAfterReorder,
+                onReorderItem: (from, to) =>
+                    notes.syncAfterReorder(from, to).then(FeedbackToast.show),
                 // The row being dragged is drawn again, without the hairline
                 // that parts it from the row above.
                 proxyDecorator: (child, index, animation) => _LiftedRow(
