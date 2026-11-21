@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/user_view_model.dart';
 
 const _accent = Color(0xff3D5AFE);
@@ -21,7 +22,10 @@ class AppearancePicker extends StatelessWidget {
     final amoled = context.select<UserViewModel, bool>(
       (user) => user.user.amoledTheme,
     );
-    void choose(bool dark) => context.read<UserViewModel>().setDarkTheme(dark);
+    void choose(bool dark) => context
+        .read<UserViewModel>()
+        .setDarkTheme(dark)
+        .then(FeedbackToast.show);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),

@@ -21,15 +21,30 @@ class NotificationService {
           iOS: iOSInitializationSettings,
         );
     // A tap on a reminder only opens the app, so there's no handler for it.
+    // Nor is the user asked to let the app post notifications here, before
+    // the app has shown anything, but as they turn a reminder on: see
+    // [requestPermission].
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
     );
+  }
 
-    await flutterLocalNotificationsPlugin
+  /// Whether the phone shows the app's notifications, which the reminders
+  /// are, once the user has been asked to let it, if they're off: on Android
+  /// 13 and up, the phone asks them for the app, for as long as it still
+  /// will after they've said no. On older phones, it's only whether they've
+  /// turned the app's notifications off.
+  Future<bool> requestPermission() async {
+    final android = flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
+        >();
+    // Only Android has the app ask.
+    if (android == null) return true;
+    if (await android.areNotificationsEnabled() ?? false) return true;
+    await android.requestNotificationsPermission();
+    // As they are now, whatever the answer was.
+    return await android.areNotificationsEnabled() ?? false;
   }
 
   /// Sets reminders in the phone's time zone, such as "Africa/Cairo", rather

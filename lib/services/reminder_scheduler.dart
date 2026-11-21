@@ -24,6 +24,12 @@ class ReminderScheduler {
 
   static const _title = "Don't Forget Your Task!";
 
+  /// Whether the phone will show the reminders, once the user has been asked
+  /// to let the app post notifications, if they're off: as they turn a
+  /// reminder on, when the question makes sense, rather than as the app
+  /// starts.
+  Future<bool> askToShow() => _notifications.requestPermission();
+
   /// Sets the reminders [task] needs, if it has any still to come. Those of
   /// a repeating task that it needs no more, as when its last times are set
   /// one by one, or once they've gone, are cancelled.

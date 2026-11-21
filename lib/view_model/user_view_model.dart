@@ -112,17 +112,41 @@ class UserViewModel with ChangeNotifier {
     _deviceService.hideFromRecents(lock != AppLock.off).ignore();
   }
 
-  /// Saves [user] as the profile.
-  Future<void> _save(UserProfile user) async {
-    _user = user;
-    await _userRepository.updateUser(user);
-    notifyListeners();
-  }
+  /// The saves in hand, which go one at a time, in order, so that each
+  /// changes the profile as the one before it left it.
+  Future<void> _saving = Future.value();
 
-  /// Saves the profile with [change], unless [unchanged]: a notification
-  /// rebuilds every page that shows the profile.
-  Future<void> _set(bool unchanged, UserProfile Function() change) async {
-    if (!unchanged) await _save(change());
+  static const _unsaved = Failure("Couldn't change the setting");
+  static const _avatarUnchanged = Failure("Couldn't change the avatar");
+
+  /// Saves the profile [change] makes of it, as the saves before it leave
+  /// it, then shows it, doing [along] as well: only once it's saved, so the
+  /// pages show what's kept. Nothing's saved when [change] gives null, for
+  /// a profile it leaves as it is, as a notification rebuilds every page
+  /// that shows the profile. [saved] once it's saved, null when there was
+  /// nothing to save, and [failure] when it can't be, which leaves the
+  /// profile as it was.
+  Future<Result?> _save(
+    UserProfile? Function(UserProfile user) change, {
+    Result? saved,
+    Failure failure = _unsaved,
+    VoidCallback? along,
+  }) {
+    final saving = _saving.then((_) async {
+      final changed = change(_user);
+      if (changed == null) return null;
+      try {
+        await _userRepository.updateUser(changed);
+      } catch (e) {
+        return failure;
+      }
+      _user = changed;
+      along?.call();
+      notifyListeners();
+      return saved;
+    });
+    _saving = saving;
+    return saving;
   }
 
   /// Renames the user to [name], without the spaces at either end.
@@ -133,49 +157,78 @@ class UserViewModel with ChangeNotifier {
     if (name.characters.length > maxNameLength) {
       return Failure("Use at most $maxNameLength characters");
     }
-    await _save(user.copyWith(name: name));
-    return Info("Name Updated");
+    return await _save(
+          (user) => user.copyWith(name: name),
+          failure: const Failure("Couldn't change the name"),
+        ) ??
+        const Info("Name Updated");
   }
 
   /// Has [avatar] stand for the user. A photo of their own that stood for
   /// them before is deleted, but only once the profile has the new avatar:
-  /// until then, it's the one the profile points at.
-  Future<void> setAvatar(Avatar avatar) async {
-    final old = user.avatar;
-    if (avatar == old) return;
-    await _save(user.copyWith(avatar: avatar));
-    if (old is PhotoAvatar) {
-      try {
-        await _imageService.deletePhoto(old.path);
-      } catch (e) {
-        // Left behind, which only takes up a little room.
-      }
+  /// until then, it's the one the profile points at. Why it couldn't be
+  /// changed, or null.
+  Future<Result?> setAvatar(Avatar avatar) async {
+    Avatar? replaced;
+    final result = await _save((user) {
+      if (user.avatar == avatar) return null;
+      replaced = user.avatar;
+      return user.copyWith(avatar: avatar);
+    }, failure: _avatarUnchanged);
+    if (replaced case PhotoAvatar(:final path) when result == null) {
+      await _deletePhoto(path);
     }
+    return result;
   }
 
   /// Has the user pick a photo of their own for their avatar, in place of
-  /// whichever stands for them now.
-  Future<void> pickPhoto() async {
-    final path = await _imageService.pickProfilePicture();
-    if (path != null) await setAvatar(PhotoAvatar(path));
+  /// whichever stands for them now. Why it couldn't be changed, or null, as
+  /// when they back out.
+  Future<Result?> pickPhoto() async {
+    final String? path;
+    try {
+      path = await _imageService.pickProfilePicture();
+    } catch (e) {
+      return _avatarUnchanged;
+    }
+    if (path == null) return null;
+    final result = await setAvatar(PhotoAvatar(path));
+    // A copy the profile doesn't point at isn't kept.
+    if (result != null) await _deletePhoto(path);
+    return result;
   }
 
-  Future<void> setDarkTheme(bool darkTheme) => _set(
-    darkTheme == user.darkTheme,
-    () => user.copyWith(darkTheme: darkTheme),
+  /// Deletes the photo at [path], one the user picked, if it can.
+  Future<void> _deletePhoto(String path) async {
+    try {
+      await _imageService.deletePhoto(path);
+    } catch (e) {
+      // Left behind, which only takes up a little room.
+    }
+  }
+
+  // Each of these says why it couldn't save the setting, or gives null.
+
+  Future<Result?> setDarkTheme(bool darkTheme) => _save(
+    (user) => user.darkTheme == darkTheme
+        ? null
+        : user.copyWith(darkTheme: darkTheme),
   );
 
-  Future<void> setAmoledTheme(bool amoled) => _set(
-    amoled == user.amoledTheme,
-    () => user.copyWith(amoledTheme: amoled),
+  Future<Result?> setAmoledTheme(bool amoled) => _save(
+    (user) =>
+        user.amoledTheme == amoled ? null : user.copyWith(amoledTheme: amoled),
   );
 
-  Future<void> setAutoSave(bool autoSave) =>
-      _set(autoSave == user.autoSave, () => user.copyWith(autoSave: autoSave));
+  Future<Result?> setAutoSave(bool autoSave) => _save(
+    (user) =>
+        user.autoSave == autoSave ? null : user.copyWith(autoSave: autoSave),
+  );
 
-  Future<void> setStartPage(StartPage startPage) => _set(
-    startPage == user.startPage,
-    () => user.copyWith(startPage: startPage),
+  Future<Result?> setStartPage(StartPage startPage) => _save(
+    (user) => user.startPage == startPage
+        ? null
+        : user.copyWith(startPage: startPage),
   );
 
   /// The view the to-do page's menu has switched to, away from the one the
@@ -196,32 +249,40 @@ class UserViewModel with ChangeNotifier {
   }
 
   /// Has the to-do page list the tasks, or map them, each time it opens,
-  /// and now, in place of a view its menu has switched to.
-  Future<void> setTasksView(TasksView view) async {
-    final shown = shownTasksView;
-    _tasksViewForNow = null;
-    if (view != user.tasksView) {
-      await _save(user.copyWith(tasksView: view));
-    } else if (view != shown) {
+  /// and now, in place of a view its menu has switched to. Should it not be
+  /// saved, the page shows the tasks as it did.
+  Future<Result?> setTasksView(TasksView view) async {
+    final result = await _save(
+      (user) => user.tasksView == view ? null : user.copyWith(tasksView: view),
+      along: () => _tasksViewForNow = null,
+    );
+    // The view the settings pick already, in place of one the menu has
+    // switched to: nothing to save, only the page to show it again.
+    if (result == null && _tasksViewForNow != null) {
+      _tasksViewForNow = null;
       notifyListeners();
     }
+    return result;
   }
 
   /// Puts notes in the handwritten font, or back in the regular one. The
   /// home screen's note widget has a font of its own: see WidgetsViewModel.
-  Future<void> setCasualFont(bool casualFont) => _set(
-    casualFont == user.casualFont,
-    () => user.copyWith(casualFont: casualFont),
+  Future<Result?> setCasualFont(bool casualFont) => _save(
+    (user) => user.casualFont == casualFont
+        ? null
+        : user.copyWith(casualFont: casualFont),
   );
 
-  Future<void> setWordCount(bool wordCount) => _set(
-    wordCount == user.wordCount,
-    () => user.copyWith(wordCount: wordCount),
+  Future<Result?> setWordCount(bool wordCount) => _save(
+    (user) => user.wordCount == wordCount
+        ? null
+        : user.copyWith(wordCount: wordCount),
   );
 
-  Future<void> setShowVerse(bool showVerse) => _set(
-    showVerse == user.showVerse,
-    () => user.copyWith(showVerse: showVerse),
+  Future<Result?> setShowVerse(bool showVerse) => _save(
+    (user) => user.showVerse == showVerse
+        ? null
+        : user.copyWith(showVerse: showVerse),
   );
 
   /// Changes what the app is locked with to [lock], once the lock it has now
@@ -328,51 +389,55 @@ class UserViewModel with ChangeNotifier {
 
   Future<Result?> setNotesTextSize(double size) => _setTextSize(
     size,
-    user.notesTextSize,
-    (size) => user.copyWith(notesTextSize: size),
+    (user) => user.notesTextSize,
+    (user) => user.copyWith(notesTextSize: size),
   );
 
   Future<Result?> setNotesTitleSize(double size) => _setTextSize(
     size,
-    user.notesTitleSize,
-    (size) => user.copyWith(notesTitleSize: size),
+    (user) => user.notesTitleSize,
+    (user) => user.copyWith(notesTitleSize: size),
   );
 
   Future<Result?> setTasksTitleSize(double size) => _setTextSize(
     size,
-    user.tasksTitleSize,
-    (size) => user.copyWith(tasksTitleSize: size),
+    (user) => user.tasksTitleSize,
+    (user) => user.copyWith(tasksTitleSize: size),
   );
 
   Future<Result?> setTasksDescSize(double size) => _setTextSize(
     size,
-    user.tasksDescSize,
-    (size) => user.copyWith(tasksDescSize: size),
+    (user) => user.tasksDescSize,
+    (user) => user.copyWith(tasksDescSize: size),
   );
 
-  /// Saves [size], one of the text sizes on offer, with [change], unless
-  /// it's [current] already: then there's nothing to say.
+  /// Saves [size], one of the text sizes on offer, as [change] sets it,
+  /// unless it's the size [current] reads already: then there's nothing to
+  /// say.
   Future<Result?> _setTextSize(
     double size,
-    double current,
-    UserProfile Function(double size) change,
+    double Function(UserProfile user) current,
+    UserProfile Function(UserProfile user) change,
   ) async {
     if (!_isTextSize(size)) {
       return const Failure("That text size isn't on offer");
     }
-    if (size == current) return null;
-    await _save(change(size));
-    return const Success("Text Size Changed");
+    return _save(
+      (user) => current(user) == size ? null : change(user),
+      saved: const Success("Text Size Changed"),
+      failure: const Failure("Couldn't change the text size"),
+    );
   }
 
   /// Shows [lines] lines of a task's description before "Show More", or the
-  /// whole of it for 0.
-  Future<void> setDescLines(int lines) async {
-    if (lines >= 0 && lines <= maxDescLines) {
-      await _set(
-        lines == user.descLines,
-        () => user.copyWith(descLines: lines),
-      );
+  /// whole of it for 0. Why it couldn't be saved, or null.
+  Future<Result?> setDescLines(int lines) async {
+    if (lines < 0 || lines > maxDescLines) {
+      return const Failure("That number of lines isn't on offer");
     }
+    return _save(
+      (user) =>
+          user.descLines == lines ? null : user.copyWith(descLines: lines),
+    );
   }
 }

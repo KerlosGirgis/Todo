@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/avatar.dart';
 import '../../../../../view_model/user_view_model.dart';
 import 'profile_button.dart';
@@ -79,7 +80,10 @@ class AvatarPickerSheet extends StatelessWidget {
                   label: "Avatar ${index + 1}",
                   selected: avatar == current,
                   onTap: () {
-                    context.read<UserViewModel>().setAvatar(avatar);
+                    context
+                        .read<UserViewModel>()
+                        .setAvatar(avatar)
+                        .then(FeedbackToast.show);
                     Navigator.pop(context);
                   },
                 ),
@@ -93,7 +97,7 @@ class AvatarPickerSheet extends StatelessWidget {
             onPressed: () {
               final user = context.read<UserViewModel>();
               Navigator.pop(context);
-              user.pickPhoto();
+              user.pickPhoto().then(FeedbackToast.show);
             },
           ),
         ],

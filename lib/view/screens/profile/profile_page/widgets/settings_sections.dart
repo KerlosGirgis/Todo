@@ -52,8 +52,10 @@ class AppearanceSection extends StatelessWidget {
             title: "AMOLED Black",
             subtitle: const Text("Pure black backgrounds in dark mode"),
             value: amoled,
-            onChanged: (amoled) =>
-                context.read<UserViewModel>().setAmoledTheme(amoled),
+            onChanged: (amoled) => context
+                .read<UserViewModel>()
+                .setAmoledTheme(amoled)
+                .then(FeedbackToast.show),
           ),
       ],
     );
@@ -77,7 +79,9 @@ class GeneralSection extends StatelessWidget {
           bottom: CupertinoSlidingSegmentedControl<StartPage>(
             groupValue: user.user.startPage,
             onValueChanged: (page) {
-              if (page != null) user.setStartPage(page);
+              if (page != null) {
+                user.setStartPage(page).then(FeedbackToast.show);
+              }
             },
             children: const {
               StartPage.tasks: _Segment(
@@ -97,7 +101,7 @@ class GeneralSection extends StatelessWidget {
           title: "Daily Verse",
           subtitle: const Text("Shown when you tap your avatar"),
           value: user.user.showVerse,
-          onChanged: user.setShowVerse,
+          onChanged: (on) => user.setShowVerse(on).then(FeedbackToast.show),
         ),
         const _AppLockTile(),
         if (user.appLock == AppLock.password) const _ChangePasswordTile(),
@@ -230,7 +234,9 @@ class TasksSection extends StatelessWidget {
           bottom: CupertinoSlidingSegmentedControl<TasksView>(
             groupValue: user.user.tasksView,
             onValueChanged: (view) {
-              if (view != null) user.setTasksView(view);
+              if (view != null) {
+                user.setTasksView(view).then(FeedbackToast.show);
+              }
             },
             children: const {
               TasksView.list: _Segment(
@@ -261,7 +267,9 @@ class TasksSection extends StatelessWidget {
           bottom: CupertinoSlidingSegmentedControl<int>(
             groupValue: user.user.descLines,
             onValueChanged: (lines) {
-              if (lines != null) user.setDescLines(lines);
+              if (lines != null) {
+                user.setDescLines(lines).then(FeedbackToast.show);
+              }
             },
             children: {
               0: const _Segment(label: "Off"),
@@ -294,7 +302,7 @@ class NotesSection extends StatelessWidget {
           title: "Auto Save",
           subtitle: const Text("Save changes as you type"),
           value: user.user.autoSave,
-          onChanged: user.setAutoSave,
+          onChanged: (on) => user.setAutoSave(on).then(FeedbackToast.show),
         ),
         SettingsSwitchTile(
           icon: Icons.numbers_rounded,
@@ -302,7 +310,7 @@ class NotesSection extends StatelessWidget {
           title: "Word Count",
           subtitle: const Text("Show a live count while you write"),
           value: user.user.wordCount,
-          onChanged: user.setWordCount,
+          onChanged: (on) => user.setWordCount(on).then(FeedbackToast.show),
         ),
         SettingsSwitchTile(
           icon: Icons.font_download_rounded,
@@ -314,7 +322,7 @@ class NotesSection extends StatelessWidget {
             style: TextStyle(fontFamily: 'casual', fontWeight: FontWeight.w600),
           ),
           value: user.user.casualFont,
-          onChanged: user.setCasualFont,
+          onChanged: (on) => user.setCasualFont(on).then(FeedbackToast.show),
         ),
         const _TextSizeTile(
           setting: TextSizeSetting.noteTitle,

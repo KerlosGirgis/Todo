@@ -227,6 +227,20 @@ class FakeNotifications extends NotificationService {
   @override
   Future<void> setRemindersIdVersion(int version) async => idVersion = version;
 
+  /// Whether the phone shows the app's notifications, as the user let it
+  /// when asked, or not; how many times the app has asked; and whether
+  /// asking fails, as when it's being asked already.
+  bool allowed = true;
+  var asked = 0;
+  bool failAsks = false;
+
+  @override
+  Future<bool> requestPermission() async {
+    asked++;
+    if (failAsks) throw StateError("Already asking");
+    return allowed;
+  }
+
   /// Whether setting a reminder fails, as when the phone won't let the app
   /// set exact alarms.
   bool failSchedules = false;
@@ -692,6 +706,68 @@ void main() {
         expect(task("First").done, isFalse);
       },
     );
+  });
+
+  group('asking to post notifications', () {
+    const notShown = "Reminder set, but notifications are off for this app";
+
+    test("is for turning a reminder on, and nothing before it", () async {
+      await add("Call", time: const ClockTime(18, 0));
+      await add("Stretch", time: const ClockTime(7, 0));
+      await tasks.get();
+      expect(notifications.asked, 0);
+
+      await tasks.toggleReminder(task("Call"));
+      expect(notifications.asked, 1);
+      await tasks.remindDaily(task("Stretch"));
+      expect(notifications.asked, 2);
+
+      // Turning one off, setting them all again, or putting a task back
+      // with its reminder doesn't ask.
+      await tasks.toggleReminder(task("Call"));
+      await tasks.refreshReminders();
+      final trashed = await tasks.delete(task("Stretch"));
+      await tasks.restoreFromTrash(trashed!);
+      expect(task("Stretch").reminder, Reminder.daily);
+      expect(notifications.asked, 2);
+    });
+
+    test("says so when the phone won't show a reminder, which is set all the "
+        "same, to go off once notifications are on", () async {
+      notifications.allowed = false;
+      final added = await add(
+        "Call",
+        time: const ClockTime(18, 0),
+        reminder: Reminder.once,
+      );
+      expect((added as Failure).message, notShown);
+      expect(task("Call").reminder, Reminder.once);
+      expect(notifications.once, hasLength(1));
+
+      await add("Stretch", time: const ClockTime(7, 0));
+      final daily = await tasks.remindDaily(task("Stretch"));
+      expect((daily as Failure).message, notShown);
+      expect(task("Stretch").reminder, Reminder.daily);
+      expect(notifications.daily, hasLength(1));
+    });
+
+    test("says so of a done task the reminder makes to do again", () async {
+      await add("Call", time: const ClockTime(18, 0));
+      await tasks.toggleDone(task("Call"));
+      notifications.allowed = false;
+      final result = await tasks.toggleReminder(task("Call"));
+      expect((result as Failure).message, "Task undone. $notShown");
+      expect(task("Call").done, isFalse);
+    });
+
+    test("sets the reminder as before when the phone can't say whether it'll "
+        "show it", () async {
+      notifications.failAsks = true;
+      await add("Call", time: const ClockTime(18, 0));
+      final result = await tasks.toggleReminder(task("Call"));
+      expect((result as Info).message, startsWith("Time remaining"));
+      expect(notifications.once, hasLength(1));
+    });
   });
 
   group('reminders', () {

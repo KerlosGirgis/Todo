@@ -8,6 +8,7 @@ import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/services/tour_service.dart';
 import 'package:todo/view/screens/profile/profile_page/screen/profile_page.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/progress_card.dart';
+import 'package:todo/view/screens/profile/profile_page/widgets/settings_group.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/settings_sections.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
@@ -264,4 +265,79 @@ void main() {
       widgets.dispose();
     },
   );
+
+  testWidgets("a setting that can't be saved says so, and stays as it was", (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.625;
+    addTearDown(tester.view.reset);
+    FlutterSecureStorage.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({});
+    final rows = FakeUserRepository();
+    final user = UserViewModel(
+      repository: rows,
+      lockService: newLock(),
+      deviceService: FakeDevice(),
+      databaseService: FakeDatabase(),
+    );
+    await user.get();
+    final tasks = TasksViewModel(
+      repository: FakeTasksRepository(),
+      notificationService: FakeNotifications(),
+      lockService: FakeLock(),
+    );
+    final notes = NotesViewModel(
+      repository: notes_test.FakeNotesRepository(),
+      authService: notes_test.FakeAuth(),
+      lockService: notes_test.FakeLock(),
+      homeWidgetService: notes_test.FakeHomeWidget(),
+    );
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: user),
+          ChangeNotifierProvider.value(value: tasks),
+          ChangeNotifierProvider.value(value: notes),
+          ChangeNotifierProvider(
+            create: (_) => TourViewModel(service: TourService()),
+          ),
+        ],
+        child: ToastificationWrapper(
+          child: MaterialApp(
+            theme: AppTheme.getTheme(isDarkMode: false),
+            home: const ProfilePage(),
+          ),
+        ),
+      ),
+    );
+    await wait(tester, const Duration(seconds: 2));
+    await tester.scrollUntilVisible(
+      find.text("Daily Verse"),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await wait(tester);
+
+    // The disk is full.
+    rows.failUpdates = true;
+    await tester.tap(find.text("Daily Verse"));
+    await wait(tester);
+    expect(find.text("Couldn't change the setting"), findsOneWidget);
+    expect(user.user.showVerse, isTrue);
+    expect(
+      tester
+          .widget<SettingsSwitchTile>(
+            find.widgetWithText(SettingsSwitchTile, "Daily Verse"),
+          )
+          .value,
+      isTrue,
+    );
+
+    // Through its toast.
+    await wait(tester, const Duration(seconds: 4));
+    await tester.pumpWidget(const SizedBox());
+    tasks.dispose();
+    notes.dispose();
+  });
 }

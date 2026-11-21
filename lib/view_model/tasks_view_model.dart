@@ -863,7 +863,8 @@ class TasksViewModel with ChangeNotifier {
   }
 
   /// Reminds the user of [task] once, on its day at its time, or turns its
-  /// reminder off when it has one.
+  /// reminder off when it has one. Turning one on asks the user to let the
+  /// app post notifications, while they're off: see [_askToShow].
   Future<Result> toggleReminder(TodoItem task) {
     task = _current(task);
     return task.reminder == Reminder.none
@@ -871,7 +872,8 @@ class TasksViewModel with ChangeNotifier {
         : _cancelReminder(task);
   }
 
-  /// Reminds the user of [task] every day, at its time.
+  /// Reminds the user of [task] every day, at its time, asking to post
+  /// notifications as [toggleReminder] does.
   Future<Result> remindDaily(TodoItem task) =>
       _repeat(_current(task), Recurrence.daily());
 
@@ -1005,13 +1007,16 @@ class TasksViewModel with ChangeNotifier {
         DateTime scheduledTime = time.on(day);
         if (scheduledTime.isAfter(_now())) {
           final reminding = task.copyWith(done: false, reminder: Reminder.once);
+          final shown = await _askToShow();
           await _reminders.set(reminding);
           await _tasksRepository.updateItem(reminding);
           await _reload();
+          final undone = task.done ? "Task undone. " : "";
+          if (!shown) return Failure("$undone$_notShown");
           final remaining =
               "Time remaining:\n "
               "${DateTimeUtils.durationToString(scheduledTime.difference(_now()))}";
-          return Info(task.done ? "Task undone. $remaining" : remaining);
+          return Info("$undone$remaining");
         } else {
           return Info("Please set time and date in the future");
         }
@@ -1039,17 +1044,36 @@ class TasksViewModel with ChangeNotifier {
     if (repeating.occurrenceOn(today) == null) {
       return Info("Please set an end after its next time");
     }
+    // One whose last time has gone has nothing more to remind of.
+    final ended = repeating.recurrence!.hasEndedBy(today);
+    final shown = ended || await _askToShow();
     try {
       await _reminders.set(repeating);
       // Without its day, as a repeating task has none.
       await _tasksRepository.updateItem(repeating);
       await _reload();
-      // One whose last time has gone has nothing more to remind of.
-      return repeating.recurrence!.hasEndedBy(today)
-          ? Info("Task Updated")
-          : Success("Reminder Set");
+      if (ended) return Info("Task Updated");
+      return shown ? Success("Reminder Set") : const Failure(_notShown);
     } catch (e) {
       return Failure("Couldn't set the reminder");
+    }
+  }
+
+  /// What's said of a reminder that's set, but that the phone won't show
+  /// while the app's notifications are off. It's set all the same, so it
+  /// goes off once they're on again.
+  static const _notShown =
+      "Reminder set, but notifications are off for this app";
+
+  /// Whether the phone will show a reminder being turned on, once the user
+  /// has been asked to let the app post notifications, if they're off: then,
+  /// rather than as the app starts. True when that can't be told, as when
+  /// it's being asked already, since nothing can be said of it then.
+  Future<bool> _askToShow() async {
+    try {
+      return await _reminders.askToShow();
+    } catch (e) {
+      return true;
     }
   }
 

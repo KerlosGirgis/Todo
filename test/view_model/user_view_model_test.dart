@@ -54,11 +54,16 @@ class FakeImages extends ImageService {
   String? picked;
   final deleted = <(String, Avatar)>[];
 
-  /// Whether deleting a photo fails.
+  /// Whether deleting a photo fails, and whether picking one does, as when
+  /// the cropper can't read it.
   bool failDeletes = false;
+  bool failPicks = false;
 
   @override
-  Future<String?> pickProfilePicture() async => picked;
+  Future<String?> pickProfilePicture() async {
+    if (failPicks) throw const FileSystemException("Can't read the photo");
+    return picked;
+  }
 
   @override
   Future<void> deletePhoto(String path) async {
@@ -199,10 +204,78 @@ void main() {
     test('show up to five lines of a description', () async {
       await user.setDescLines(UserViewModel.maxDescLines);
       expect(user.user.descLines, 5);
-      await user.setDescLines(6);
+      expect(await user.setDescLines(6), isA<Failure>());
       expect(user.user.descLines, 5);
       await user.setDescLines(0);
       expect(user.user.descLines, 0);
+    });
+
+    test("that can't be saved stay as they were, and say so, rather than "
+        "showing what isn't kept", () async {
+      await user.setTasksView(TasksView.list);
+      user.showTasksAs(TasksView.map);
+      final was = user.user.toMap();
+      repository.failUpdates = true;
+      var notified = 0;
+      user.addListener(() => notified++);
+
+      for (final saving in [
+        user.setDarkTheme(!user.user.darkTheme),
+        user.setAmoledTheme(true),
+        user.setStartPage(StartPage.notes),
+        user.setShowVerse(false),
+        user.setDescLines(4),
+        user.setCasualFont(true),
+      ]) {
+        expect(
+          (await saving as Failure).message,
+          "Couldn't change the setting",
+        );
+      }
+      expect(
+        (await user.setNotesTextSize(1.5) as Failure).message,
+        "Couldn't change the text size",
+      );
+      expect(
+        (await user.rename("Kerlos") as Failure).message,
+        "Couldn't change the name",
+      );
+      expect(
+        (await user.setAvatar(const BundledAvatar("004")) as Failure).message,
+        "Couldn't change the avatar",
+      );
+      // The view picked in the settings, over the menu's, which stays.
+      expect(await user.setTasksView(TasksView.map), isA<Failure>());
+      expect(user.shownTasksView, TasksView.map);
+
+      expect(user.user.toMap(), was);
+      expect(repository.rows.single.toMap(), was);
+      expect(notified, 0);
+    });
+
+    test("changed together are saved one after another, each as the one before "
+        "left the profile", () async {
+      final dark = user.user.darkTheme;
+      final saving = [
+        user.setAmoledTheme(true),
+        user.setWordCount(true),
+        user.setDarkTheme(!dark),
+        user.setDarkTheme(dark),
+        user.setNotesTextSize(1.5),
+      ];
+      expect(await Future.wait(saving), [
+        null,
+        null,
+        null,
+        null,
+        isA<Success>(),
+      ]);
+      for (final profile in [user.user, repository.rows.single]) {
+        expect(profile.amoledTheme, isTrue);
+        expect(profile.wordCount, isTrue);
+        expect(profile.darkTheme, dark);
+        expect(profile.notesTextSize, 1.5);
+      }
     });
 
     test('take text sizes from a quarter to twice the size', () async {
@@ -344,11 +417,22 @@ void main() {
       expect(images.deleted, [(first.path, const BundledAvatar("004"))]);
     });
 
-    test("stays when the profile can't be saved with another", () async {
+    test("stays when the profile can't be saved with another, which isn't "
+        "kept", () async {
       repository.failUpdates = true;
       images.picked = second.path;
-      await expectLater(withPhotos.pickPhoto(), throwsA(isA<StateError>()));
+      final result = await withPhotos.pickPhoto();
+      expect((result as Failure).message, "Couldn't change the avatar");
+      expect(withPhotos.user.avatar, first);
       expect(repository.rows.single.avatar, first);
+      expect(images.deleted, [(second.path, first)]);
+    });
+
+    test("stays when another can't be picked, and says so", () async {
+      images.failPicks = true;
+      final result = await withPhotos.pickPhoto();
+      expect((result as Failure).message, "Couldn't change the avatar");
+      expect(withPhotos.user.avatar, first);
       expect(images.deleted, isEmpty);
     });
 
