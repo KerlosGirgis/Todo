@@ -5,13 +5,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
 import '../../../../../models/task_tree.dart';
 import '../../../../../models/trashed.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/tasks_view_model.dart';
+import '../../../../../view_model/trash_bin.dart';
 import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
@@ -74,8 +74,7 @@ class _TrashPageState extends State<TrashPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final reads = [
-        Provider.of<TasksViewModel>(context, listen: false).getTrash(),
-        Provider.of<NotesViewModel>(context, listen: false).getTrash(),
+        for (final kind in TrashKind.values) _trashOf(kind).getTrash(),
       ];
       try {
         await Future.wait(reads);
@@ -84,6 +83,12 @@ class _TrashPageState extends State<TrashPage> {
       }
     });
   }
+
+  /// The trash of the tasks, or of the notes.
+  TrashOwner<Object?> _trashOf(TrashKind kind) => switch (kind) {
+    TrashKind.task => Provider.of<TasksViewModel>(context, listen: false),
+    TrashKind.note => Provider.of<NotesViewModel>(context, listen: false),
+  };
 
   @override
   void dispose() {
@@ -184,7 +189,8 @@ class _TrashPageState extends State<TrashPage> {
                   cardOf: (entry) => TrashTaskCard(
                     entry: entry,
                     now: context.read<TasksViewModel>().now,
-                    onRestore: () => _restoreTask(entry),
+                    onRestore: () =>
+                        _restore(context.read<TasksViewModel>(), entry),
                     onDelete: () => _deleteTask(entry),
                   ),
                 ),
@@ -196,7 +202,8 @@ class _TrashPageState extends State<TrashPage> {
                   cardOf: (entry) => TrashNoteCard(
                     entry: entry,
                     now: context.read<NotesViewModel>().now,
-                    onRestore: () => _restoreNote(entry),
+                    onRestore: () =>
+                        _restore(context.read<NotesViewModel>(), entry),
                     onDelete: () => _deleteNote(entry),
                   ),
                 ),
@@ -223,25 +230,18 @@ class _TrashPageState extends State<TrashPage> {
 
   void _show(TrashKind kind) => setState(() => _kind = kind);
 
-  Future<void> _restoreTask(Trashed<TaskBranch> entry) async {
-    final tasks = Provider.of<TasksViewModel>(context, listen: false);
-    FeedbackToast.show(await tasks.restoreFromTrash(entry));
-  }
-
-  Future<void> _restoreNote(Trashed<Note> entry) async {
-    final notes = Provider.of<NotesViewModel>(context, listen: false);
-    FeedbackToast.show(await notes.restoreFromTrash(entry));
-  }
+  /// Puts back what [entry] holds, from [trash].
+  Future<void> _restore<T>(TrashOwner<T> trash, Trashed<T> entry) async =>
+      FeedbackToast.show(await trash.restoreFromTrash(entry));
 
   /// Deletes [entry]'s task for good, with the tasks in it, once the user
   /// says to.
-  Future<void> _deleteTask(Trashed<TaskBranch> entry) async {
-    final tasks = Provider.of<TasksViewModel>(context, listen: false);
+  Future<void> _deleteTask(Trashed<TaskBranch> entry) {
     final title = entry.item.task.title;
-    final confirmed = await confirmDeleteForever(
-      context,
-      title: "Delete Forever?",
-      message: switch (entry.item.subtasks.length) {
+    return _deleteForever(
+      context.read<TasksViewModel>(),
+      entry,
+      switch (entry.item.subtasks.length) {
         0 => "“$title” will be deleted for good. This can't be undone.",
         1 =>
           "“$title” and its subtask will be deleted for good. This "
@@ -251,71 +251,57 @@ class _TrashPageState extends State<TrashPage> {
               "for good. This can't be undone.",
       },
     );
-    if (confirmed) FeedbackToast.show(await tasks.deleteForever(entry));
   }
 
   /// Deletes [entry]'s note for good, once the user says to, and once its
   /// lock lets them through.
-  Future<void> _deleteNote(Trashed<Note> entry) async {
-    final notes = Provider.of<NotesViewModel>(context, listen: false);
+  Future<void> _deleteNote(Trashed<Note> entry) => _deleteForever(
+    context.read<NotesViewModel>(),
+    entry,
+    "“${entry.item.title}” will be deleted for good. This can't be undone.",
+  );
+
+  /// Deletes what [entry] holds for good, from [trash], once the user says
+  /// to, as [message] puts it, and once what it takes lets them.
+  Future<void> _deleteForever<T>(
+    TrashOwner<T> trash,
+    Trashed<T> entry,
+    String message,
+  ) async {
     final askForPassword = noteLockPasswordPrompt(context);
     final confirmed = await confirmDeleteForever(
       context,
       title: "Delete Forever?",
-      message:
-          "“${entry.item.title}” will be deleted for good. This can't "
-          "be undone.",
+      message: message,
     );
-    if (confirmed) {
-      FeedbackToast.show(
-        await notes.deleteForever(entry, askForPassword: askForPassword),
-      );
-    }
+    if (!confirmed) return;
+    FeedbackToast.show(
+      await trash.deleteForever(entry, askForPassword: askForPassword),
+    );
   }
 
   /// Puts back every task, or every note, as the page shows.
-  Future<void> _restoreAll() async {
-    final Result result;
-    switch (_kind) {
-      case TrashKind.task:
-        result = await Provider.of<TasksViewModel>(
-          context,
-          listen: false,
-        ).restoreAllFromTrash();
-      case TrashKind.note:
-        result = await Provider.of<NotesViewModel>(
-          context,
-          listen: false,
-        ).restoreAllFromTrash();
-    }
-    FeedbackToast.show(result);
-  }
+  Future<void> _restoreAll() async =>
+      FeedbackToast.show(await _trashOf(_kind).restoreAllFromTrash());
 
   /// Deletes every task, or every note, as the page shows, for good, once
   /// the user says to.
   Future<void> _deleteAll() async {
-    final tasks = Provider.of<TasksViewModel>(context, listen: false);
-    final notes = Provider.of<NotesViewModel>(context, listen: false);
+    final trash = _trashOf(_kind);
     final askForPassword = noteLockPasswordPrompt(context);
-    final kind = _kind;
-    final (count, things) = switch (kind) {
-      TrashKind.task => (tasks.trash.length, "tasks"),
-      TrashKind.note => (notes.trash.length, "notes"),
-    };
+    final count = trash.trash.length;
+    final thing = _kind.name;
     final confirmed = await confirmDeleteForever(
       context,
-      title: "Delete All ${things[0].toUpperCase()}${things.substring(1)}?",
+      title: "Delete All ${thing[0].toUpperCase()}${thing.substring(1)}s?",
       message: count == 1
-          ? "The ${things.substring(0, things.length - 1)} in the Trash will "
-                "be deleted for good. This can't be undone."
-          : "The $count $things in the Trash will be deleted for good. This "
+          ? "The $thing in the Trash will be deleted for good. This can't be "
+                "undone."
+          : "The $count ${thing}s in the Trash will be deleted for good. This "
                 "can't be undone.",
     );
     if (!confirmed) return;
-    FeedbackToast.show(switch (kind) {
-      TrashKind.task => await tasks.emptyTrash(),
-      TrashKind.note => await notes.emptyTrash(askForPassword: askForPassword),
-    });
+    FeedbackToast.show(await trash.emptyTrash(askForPassword: askForPassword));
   }
 }
 

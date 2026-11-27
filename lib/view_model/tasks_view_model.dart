@@ -30,6 +30,7 @@ import '../services/lock_service.dart';
 import '../services/notification_service.dart';
 import '../services/reminder_scheduler.dart';
 import 'backup_flow.dart';
+import 'trash_bin.dart';
 
 part 'task_draft.dart';
 
@@ -57,7 +58,7 @@ enum EmptyTasksReason {
   noneOnce,
 }
 
-class TasksViewModel with ChangeNotifier {
+class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   TasksViewModel({
     TasksRepository? repository,
     BackupService? backupService,
@@ -139,11 +140,18 @@ class TasksViewModel with ChangeNotifier {
   /// How many tasks [filter] lets through, subtasks included.
   int countOf(TaskFilter filter) => _allTasks.where(filter.shows).length;
 
-  List<Trashed<TaskBranch>> _trash = [];
+  /// The tasks in the trash, each with the tasks in it.
+  late final _trash = TrashBin<TaskBranch>(
+    noun: "task",
+    read: () => _tasksRepository.getTrash(),
+    delete: (ids) => _tasksRepository.deleteFromTrash(ids),
+    changed: notifyListeners,
+  );
 
   /// The tasks in the trash, each with the tasks in it, the last deleted
   /// first, once [getTrash] has read them in.
-  List<Trashed<TaskBranch>> get trash => UnmodifiableListView(_trash);
+  @override
+  List<Trashed<TaskBranch>> get trash => _trash.entries;
 
   /// Why the filter lets no task through, or null while it lets some.
   EmptyTasksReason? get emptyReason {
@@ -605,7 +613,7 @@ class TasksViewModel with ChangeNotifier {
         // It's in the trash all the same.
       }
     }
-    await _reloadTrash();
+    await _trash.reload();
     await _reload();
     final subtasks = branch.subtasks.length;
     return Deleted(switch (subtasks) {
@@ -616,34 +624,23 @@ class TasksViewModel with ChangeNotifier {
   }
 
   /// Reads in the tasks in the trash.
-  Future<void> getTrash() async {
-    _trash = await _tasksRepository.getTrash();
-    notifyListeners();
-  }
-
-  /// Reads in the trash again once it's changed, as [_reload] does the
-  /// tasks.
-  Future<void> _reloadTrash() async {
-    try {
-      await getTrash();
-    } catch (e) {
-      // Shown as it was, until it's next read in.
-    }
-  }
+  @override
+  Future<void> getTrash() => _trash.load();
 
   /// Puts the task [entry] holds back on the list, with the tasks in it,
   /// where they were when they can be, with their reminders, if those are
   /// still to come. In the task it was a subtask of, if that's on the list.
+  @override
   Future<Result> restoreFromTrash(Trashed<TaskBranch> entry) async {
     final TaskBranch? branch;
     try {
       branch = await _putBack(entry, await _uuidsInUse());
     } catch (e) {
-      return Failure("Couldn't restore the task");
+      return _trash.unrestorable;
     }
-    await _reloadTrash();
+    await _trash.reload();
     await _reload();
-    if (branch == null) return Info("That task isn't in the Trash anymore");
+    if (branch == null) return _trash.gone;
     final reminded = await _reminders.setEach(branch.all);
     await _settle();
     if (!reminded) {
@@ -653,79 +650,48 @@ class TasksViewModel with ChangeNotifier {
             : "Task restored, but not every reminder could be set",
       );
     }
-    return Success("Task Restored");
+    return _trash.restored;
   }
 
   /// Puts every task in the trash back on the list, with their reminders.
+  @override
   Future<Result> restoreAllFromTrash() async {
-    final restored = <TaskBranch>[];
-    var allBack = true;
+    final Set<String> uuids;
     try {
-      final uuids = await _uuidsInUse();
-      // The first deleted first, so a task deleted later can't take the
-      // place it had.
-      for (final entry in (await _tasksRepository.getTrash()).reversed) {
-        try {
-          if (await _putBack(entry, uuids) case final branch?) {
-            restored.add(branch);
-          }
-        } catch (e) {
-          allBack = false;
-        }
-      }
+      uuids = await _uuidsInUse();
     } catch (e) {
-      allBack = false;
+      return _trash.restoredAll(0, all: false);
     }
-    await _reloadTrash();
+    final restored = <TaskBranch>[];
+    final (:back, :all) = await _trash.putBackAll((entry) async {
+      final branch = await _putBack(entry, uuids);
+      if (branch != null) restored.add(branch);
+      return branch != null;
+    });
     await _reload();
     final remindersSet = await _reminders.setEach([
       for (final branch in restored) ...branch.all,
     ]);
     await _settle();
-    if (!allBack) {
-      return Failure(
-        restored.isEmpty
-            ? "Couldn't restore the tasks"
-            : "Couldn't restore every task",
+    if (all && !remindersSet) {
+      return const Failure(
+        "Tasks restored, but not every reminder could be set",
       );
     }
-    if (!remindersSet) {
-      return Failure("Tasks restored, but not every reminder could be set");
-    }
-    return Success(
-      restored.length == 1
-          ? "Task Restored"
-          : "${restored.length} Tasks Restored",
-    );
+    return _trash.restoredAll(back, all: all);
   }
 
-  /// Deletes the task [entry] holds for good, with the tasks in it.
-  Future<Result> deleteForever(Trashed<TaskBranch> entry) async {
-    try {
-      await _tasksRepository.deleteFromTrash([entry.id]);
-    } catch (e) {
-      return Failure("Couldn't delete the task");
-    }
-    await _reloadTrash();
-    return Info("Task Deleted Forever");
-  }
+  /// Deletes the task [entry] holds for good, with the tasks in it. Nothing
+  /// in the tasks' trash takes a password: [askForPassword] goes unused.
+  @override
+  Future<Result> deleteForever(
+    Trashed<TaskBranch> entry, {
+    PasswordPrompt? askForPassword,
+  }) => _trash.deleteForever(entry);
 
   /// Deletes every task in the trash for good.
-  Future<Result> emptyTrash() async {
-    final int count;
-    try {
-      // The ones there are now, as the user saw them.
-      final ids = [for (final entry in _trash) entry.id];
-      await _tasksRepository.deleteFromTrash(ids);
-      count = ids.length;
-    } catch (e) {
-      return Failure("Couldn't delete the tasks");
-    }
-    await _reloadTrash();
-    return Info(
-      count == 1 ? "1 Task Deleted Forever" : "$count Tasks Deleted Forever",
-    );
-  }
+  @override
+  Future<Result> emptyTrash({PasswordPrompt? askForPassword}) => _trash.empty();
 
   /// The uuids of the tasks on the list, which a task put back can't share.
   Future<Set<String>> _uuidsInUse() async => {

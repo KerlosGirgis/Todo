@@ -213,4 +213,36 @@ void main() {
     expect(find.text("No Deleted Notes"), findsOneWidget);
     await finish(tester);
   });
+
+  for (final (kind, things) in [
+    (TrashKind.task, ["Shop", "Call"]),
+    (TrashKind.note, ["Plans", "Ideas"]),
+  ]) {
+    testWidgets("Restore All puts back every ${kind.name} on view, and only "
+        "those", (tester) async {
+      await trashTask(TodoItem(uuid: "shop", title: "Shop"), daysAgo(2));
+      await trashTask(TodoItem(uuid: "call", title: "Call"), daysAgo(1));
+      await trashNote(const Note(id: 1, title: "Plans"), daysAgo(2));
+      await trashNote(const Note(id: 2, title: "Ideas"), daysAgo(1));
+      await openTrash(tester, kind);
+
+      await tester.tap(find.byTooltip("Menu"));
+      await wait(tester);
+      await tester.tap(find.byTooltip("Restore All"));
+      await wait(tester);
+      expect(
+        find.text(
+          "2 ${kind.name[0].toUpperCase()}${kind.name.substring(1)}s "
+          "Restored",
+        ),
+        findsOneWidget,
+      );
+      for (final thing in things) {
+        expect(find.text(thing), findsNothing);
+      }
+      expect(taskRows.trash, hasLength(kind == TrashKind.task ? 0 : 2));
+      expect(noteRows.trash, hasLength(kind == TrashKind.note ? 0 : 2));
+      await finish(tester);
+    });
+  }
 }
