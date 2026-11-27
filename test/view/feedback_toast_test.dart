@@ -62,6 +62,32 @@ void main() {
     await wait(tester);
   });
 
+  testWidgets("a deletion a view model says of shows as one, with its Undo", (
+    tester,
+  ) async {
+    await showApp(tester);
+    var undone = 0;
+    FeedbackToast.show(
+      Deleted(
+        "Task moved to Trash",
+        undo: () async {
+          undone++;
+          return const Success("Task Restored");
+        },
+      ),
+    );
+    await wait(tester);
+    expect(find.text("Task moved to Trash"), findsOneWidget);
+    expect(find.byIcon(Icons.delete_rounded), findsOneWidget);
+
+    await tester.tap(find.text("Undo"));
+    await wait(tester);
+    expect(undone, 1);
+    // Back in view, which says so: no toast of its own.
+    expect(find.text("Task Restored"), findsNothing);
+    expect(find.text("Task moved to Trash"), findsNothing);
+  });
+
   testWidgets("closes by itself, leaving it deleted", (tester) async {
     await showApp(tester);
     var undone = 0;

@@ -18,6 +18,12 @@ class Undoable extends Success {
   final Future<Result> Function() undo;
 }
 
+/// An [Undoable] that moved something to the trash, which [undo] puts back
+/// where it was.
+class Deleted extends Undoable {
+  const Deleted(super.message, {required super.undo});
+}
+
 class Failure extends Result {
   final String message;
 

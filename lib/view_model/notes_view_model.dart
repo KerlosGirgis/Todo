@@ -328,28 +328,26 @@ class NotesViewModel with ChangeNotifier {
 
   /// Moves [note] to the trash, where it waits to be put back or deleted for
   /// good, once its lock lets the user through, as deleting a locked note
-  /// always has, and takes it off the widget. Gives the entry it's in the
-  /// trash as, which puts it back.
-  Future<Access<Trashed<Note>>> _moveToTrash(
+  /// always has, and takes it off the widget. Says so with a [Deleted],
+  /// whose undo puts it back; or why it couldn't be moved.
+  Future<Result> _moveToTrash(
     Note note, {
     required PasswordPrompt askForPassword,
   }) async {
-    switch (await _authenticate(note, askForPassword: askForPassword)) {
-      case Failure(:final message) || Info(:final message):
-        return Denied(message);
-      case Success():
-        break;
-    }
+    final unlocked = await _authenticate(note, askForPassword: askForPassword);
+    if (unlocked is! Success) return unlocked;
     final Trashed<Note> trashed;
     try {
       trashed = await _notesRepository.moveToTrash(note, deletedAt: _now());
     } catch (e) {
-      return const Denied("Couldn't delete the note");
+      return const Failure("Couldn't delete the note");
     }
     await _takeOffWidget(note.id);
     await _reload();
     await _reloadTrash();
-    return Granted(_shownInTrash(trashed));
+    // Without a locked note's text, as the pages get the trash.
+    final entry = _shownInTrash(trashed);
+    return Deleted("Note moved to Trash", undo: () => restoreFromTrash(entry));
   }
 
   /// Reads in the notes in the trash.
@@ -867,17 +865,15 @@ class NoteEditorViewModel {
   /// Moves the note to the trash, once its lock lets the user through, with
   /// [askForPassword] for the App Lock's password on a phone that can't take
   /// a fingerprint. What's still to be saved, as the editor would save it
-  /// as it closes, goes with it. Gives the entry it's in the trash as, which
-  /// puts it back.
-  Future<Access<Trashed<Note>>> delete({
-    required PasswordPrompt askForPassword,
-  }) async {
+  /// as it closes, goes with it. Says so with a [Deleted], whose undo puts
+  /// it back; or why it couldn't be moved.
+  Future<Result> delete({required PasswordPrompt askForPassword}) async {
     await flush();
     final result = await _notes._moveToTrash(
       _note,
       askForPassword: askForPassword,
     );
-    if (result is Granted) {
+    if (result is Deleted) {
       _autoSave?.cancel();
       _autoSave = null;
     }

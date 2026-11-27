@@ -29,11 +29,14 @@ class FeedbackToast {
 
   /// Shows how [result] went, if there's a result to show: none when the
   /// user cancelled. One that changed more than was asked of it, an
-  /// [Undoable], comes with an Undo that takes it all back.
+  /// [Undoable], comes with an Undo that takes it all back, as does one that
+  /// moved something to the trash, a [Deleted].
   static void show(Result? result) {
     switch (result) {
       case null:
         break;
+      case Deleted(:final message, :final undo):
+        deleted(message, onUndo: () => undo().then(undone));
       case Undoable(:final message, :final undo):
         undoable(message, onUndo: () => undo().then(undone));
       case Success(:final message):

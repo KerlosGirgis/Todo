@@ -557,19 +557,8 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
 /// Moves [task] to the trash, with the tasks in it, as its card has been
 /// swiped away, and says so with an Undo that puts them back where they
 /// were.
-Future<void> _moveToTrash(TasksViewModel tasks, TodoItem task) async {
-  final trashed = await tasks.delete(task);
-  if (trashed == null) {
-    FeedbackToast.error("Couldn't delete the task");
-    return;
-  }
-  final subtasks = trashed.item.subtasks.length;
-  FeedbackToast.deleted(switch (subtasks) {
-    0 => "Task moved to Trash",
-    1 => "Task and its subtask moved to Trash",
-    _ => "Task and its $subtasks subtasks moved to Trash",
-  }, onUndo: () => tasks.restoreFromTrash(trashed).then(FeedbackToast.undone));
-}
+Future<void> _moveToTrash(TasksViewModel tasks, TodoItem task) async =>
+    FeedbackToast.show(await tasks.delete(task));
 
 /// The sort and filter buttons, in the bottom left corner, over the list
 /// and the map alike. Not there until the tasks are read in, nor while

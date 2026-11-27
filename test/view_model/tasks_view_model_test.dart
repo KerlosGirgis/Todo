@@ -271,8 +271,12 @@ class FakeNotifications extends NotificationService {
     bodies[id] = body;
   }
 
+  /// Whether cancelling a reminder fails.
+  bool failCancels = false;
+
   @override
   Future<void> cancelNotification(int id) async {
+    if (failCancels) throw StateError("Can't cancel alarms");
     once.remove(id);
     repeating.remove(id);
     bodies.remove(id);
@@ -350,6 +354,13 @@ void main() {
 
   TodoItem task(String title) =>
       tasks.items.singleWhere((task) => task.title == title);
+
+  /// Moves the task titled [title] to the trash, as a swipe does, and gives
+  /// the entry it's there as: the last deleted, which the trash lists first.
+  Future<Trashed<TaskBranch>> trashTask(String title) async {
+    expect(await tasks.delete(task(title)), isA<Deleted>());
+    return tasks.trash.first;
+  }
 
   group('TaskDraft', () {
     test('a time on its own is for today', () {
@@ -652,7 +663,7 @@ void main() {
         await add("Shop");
         repository.failReads = true;
         expect(await tasks.toggleDone(task("Call")), isA<Success>());
-        expect(await tasks.delete(task("Shop")), isNotNull);
+        expect(await tasks.delete(task("Shop")), isA<Deleted>());
 
         repository.failReads = false;
         await tasks.get();
@@ -727,8 +738,8 @@ void main() {
       // with its reminder doesn't ask.
       await tasks.toggleReminder(task("Call"));
       await tasks.refreshReminders();
-      final trashed = await tasks.delete(task("Stretch"));
-      await tasks.restoreFromTrash(trashed!);
+      final trashed = await trashTask("Stretch");
+      await tasks.restoreFromTrash(trashed);
       expect(task("Stretch").reminder, Reminder.daily);
       expect(notifications.asked, 2);
     });
@@ -768,6 +779,59 @@ void main() {
       final result = await tasks.toggleReminder(task("Call"));
       expect((result as Info).message, startsWith("Time remaining"));
       expect(notifications.once, hasLength(1));
+    });
+  });
+
+  group('turning a reminder on or off', () {
+    test("isn't done on the phone when it can't be saved", () async {
+      await add("Call", time: const ClockTime(18, 0));
+      await add("Stretch", time: const ClockTime(7, 0));
+      repository.failWrites = true;
+      for (final turningOn in [
+        tasks.toggleReminder(task("Call")),
+        tasks.remindDaily(task("Stretch")),
+      ]) {
+        expect(
+          (await turningOn as Failure).message,
+          "Couldn't set the reminder",
+        );
+      }
+      expect(task("Call").reminder, Reminder.none);
+      expect(task("Stretch").reminder, Reminder.none);
+      expect(notifications.once, isEmpty);
+      expect(notifications.repeating, isEmpty);
+    });
+
+    test("the phone won't take leaves the task as it was", () async {
+      await add("Call", time: const ClockTime(18, 0));
+      await tasks.toggleDone(task("Call"));
+      notifications.failSchedules = true;
+      final result = await tasks.toggleReminder(task("Call"));
+      expect((result as Failure).message, "Couldn't set the reminder");
+      expect(task("Call").reminder, Reminder.none);
+      expect(task("Call").done, isTrue);
+      expect(repository.rows.single.reminder, Reminder.none);
+      expect(notifications.once, isEmpty);
+    });
+
+    test("stays on, and set, when turning it off can't be saved", () async {
+      await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
+      repository.failWrites = true;
+      final result = await tasks.toggleReminder(task("Call"));
+      expect((result as Failure).message, "Couldn't turn the reminder off");
+      expect(task("Call").reminder, Reminder.once);
+      expect(notifications.once, hasLength(1));
+    });
+
+    test("stays on, and set, when the phone won't cancel it", () async {
+      await add("Stretch", time: const ClockTime(7, 0));
+      await tasks.remindDaily(task("Stretch"));
+      notifications.failCancels = true;
+      final result = await tasks.toggleReminder(task("Stretch"));
+      expect((result as Failure).message, "Couldn't turn the reminder off");
+      expect(task("Stretch").reminder, Reminder.daily);
+      expect(repository.rows.single.reminder, Reminder.daily);
+      expect(notifications.daily, hasLength(1));
     });
   });
 
@@ -1212,9 +1276,9 @@ void main() {
           ..setReminder(Reminder.weekly)
           ..toggleWeekday(DateTime.friday),
       );
-      final trashed = await tasks.delete(task("Gym"));
+      final trashed = await trashTask("Gym");
       expect(notifications.repeating, isEmpty);
-      await tasks.restoreFromTrash(trashed!);
+      await tasks.restoreFromTrash(trashed);
       expect(notifications.weekly, hasLength(2));
       expect(task("Gym").weekdays, {DateTime.wednesday, DateTime.friday});
     });
@@ -1586,6 +1650,28 @@ Shop
 
     group('in the trash', () {
       test(
+        "are named as their task goes, and come back with its Undo",
+        () async {
+          await add("Trip");
+          await addIn("Trip", "Book");
+          await addIn("Book", "Flights");
+          final book = await tasks.delete(task("Book"));
+          expect(
+            (book as Deleted).message,
+            "Task and its subtask moved to Trash",
+          );
+          expect(await book.undo(), isA<Success>());
+          final trip = await tasks.delete(task("Trip"));
+          expect(
+            (trip as Deleted).message,
+            "Task and its 2 subtasks moved to Trash",
+          );
+          expect(await trip.undo(), isA<Success>());
+          expect(outline(), "Trip\n  Book\n    Flights");
+        },
+      );
+
+      test(
         'go there with their task, as one entry, and come back with it',
         () async {
           await plan();
@@ -1595,10 +1681,10 @@ Shop
             time: const ClockTime(18, 0),
             reminder: Reminder.once,
           );
-          final trashed = await tasks.delete(task("Book"));
+          final trashed = await trashTask("Book");
           expect(outline(), "Trip\n  Pack\nShop\n  Milk");
           expect(tasks.trash, hasLength(1));
-          expect(trashed!.item.task.title, "Book");
+          expect(trashed.item.task.title, "Book");
           expect(trashed.item.subtasks.map((each) => each.title), [
             "Flights",
             "Hotel",
@@ -1635,12 +1721,12 @@ Shop
         'put back without their task wait for it as tasks of their own',
         () async {
           await plan();
-          final milk = await tasks.delete(task("Milk"));
-          final shop = await tasks.delete(task("Shop"));
-          await tasks.restoreFromTrash(milk!);
+          final milk = await trashTask("Milk");
+          final shop = await trashTask("Shop");
+          await tasks.restoreFromTrash(milk);
           expect(outline().split("\n").last, "Milk");
           expect(tasks.tree.nodeOf(task("Milk"))!.parent, isNull);
-          await tasks.restoreFromTrash(shop!);
+          await tasks.restoreFromTrash(shop);
           expect(tasks.tree.nodeOf(task("Milk"))!.parent!.task.title, "Shop");
         },
       );
@@ -1662,9 +1748,9 @@ Shop
       test('follow a task put back under a new uuid', () async {
         await add("Trip");
         await addIn("Trip", "Book");
-        final trashed = await tasks.delete(task("Trip"));
+        final trashed = await trashTask("Trip");
         // As a backup restored since might bring it back.
-        await repository.insertItem(trashed!.item.task);
+        await repository.insertItem(trashed.item.task);
         await tasks.restoreFromTrash(trashed);
         final trips = tasks.tree.roots
             .where((node) => node.task.title == "Trip")
@@ -1681,10 +1767,10 @@ Shop
         await add("Trip");
         await addIn("Trip", "Book");
         await addIn("Trip", "Pack");
-        final book = await tasks.delete(task("Book"));
+        final book = await trashTask("Book");
         await tasks.toggleDone(task("Trip"));
         expect(task("Trip").done, isTrue);
-        await tasks.restoreFromTrash(book!);
+        await tasks.restoreFromTrash(book);
         expect(task("Trip").done, isFalse);
         expect(task("Pack").done, isTrue);
       });
@@ -2238,6 +2324,18 @@ Shop
       for (final entry in tasks.trash) entry.item.task.title,
     ];
 
+    test("deleting a task says so, with an Undo that puts it back", () async {
+      await add("First");
+      await add("Call");
+      await add("Last");
+      final result = await tasks.delete(task("Call"));
+      expect((result as Deleted).message, "Task moved to Trash");
+      expect(titles(), ["First", "Last"]);
+      expect(await result.undo(), isA<Success>());
+      expect(titles(), ["First", "Call", "Last"]);
+      expect(tasks.trash, isEmpty);
+    });
+
     test(
       'deleting a task moves it there, and turns its reminder off',
       () async {
@@ -2247,8 +2345,8 @@ Shop
           reminder: Reminder.once,
         );
         await add("Shop");
-        final trashed = await tasks.delete(task("Call"));
-        expect(trashed!.item.task.title, "Call");
+        final trashed = await trashTask("Call");
+        expect(trashed.item.task.title, "Call");
         expect(trashed.deletedAt, now);
         expect(titles(), ["Shop"]);
         expect(inTrash(), ["Call"]);
@@ -2259,7 +2357,10 @@ Shop
     test('a task that cannot be moved there stays on the list', () async {
       await add("Call");
       repository.failMoves = true;
-      expect(await tasks.delete(task("Call")), isNull);
+      expect(
+        (await tasks.delete(task("Call")) as Failure).message,
+        "Couldn't delete the task",
+      );
       expect(titles(), ["Call"]);
       expect(tasks.trash, isEmpty);
     });
@@ -2276,8 +2377,8 @@ Shop
       await add("First");
       await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
       await add("Last");
-      final trashed = await tasks.delete(task("Call"));
-      expect(await tasks.restoreFromTrash(trashed!), isA<Success>());
+      final trashed = await trashTask("Call");
+      expect(await tasks.restoreFromTrash(trashed), isA<Success>());
       expect(titles(), ["First", "Call", "Last"]);
       expect(task("Call").reminder, Reminder.once);
       expect(notifications.once.keys, [ReminderPlan.idOf(task("Call").uuid)]);
@@ -2286,17 +2387,17 @@ Shop
 
     test("puts a task back once, however often it's asked", () async {
       await add("Call");
-      final trashed = await tasks.delete(task("Call"));
-      await tasks.restoreFromTrash(trashed!);
+      final trashed = await trashTask("Call");
+      await tasks.restoreFromTrash(trashed);
       expect(await tasks.restoreFromTrash(trashed), isA<Info>());
       expect(titles(), ["Call"]);
     });
 
     test("doesn't remind of a task put back after its time has gone", () async {
       await add("Call", time: const ClockTime(18, 0), reminder: Reminder.once);
-      final trashed = await tasks.delete(task("Call"));
+      final trashed = await trashTask("Call");
       time = DateTime(2026, 5, 13, 19);
-      expect(await tasks.restoreFromTrash(trashed!), isA<Success>());
+      expect(await tasks.restoreFromTrash(trashed), isA<Success>());
       expect(notifications.once, isEmpty);
     });
 
@@ -2308,9 +2409,9 @@ Shop
           time: const ClockTime(18, 0),
           reminder: Reminder.once,
         );
-        final trashed = await tasks.delete(task("Call"));
+        final trashed = await trashTask("Call");
         // As a backup restored since might bring it back.
-        await repository.insertItem(trashed!.item.task);
+        await repository.insertItem(trashed.item.task);
         notifications.once.clear();
         await tasks.restoreFromTrash(trashed);
         final calls = tasks.items.where((task) => task.title == "Call");
@@ -2329,9 +2430,9 @@ Shop
         reminder: Reminder.daily,
       );
       await tasks.toggleDone(task("Stretch"));
-      final trashed = await tasks.delete(task("Stretch"));
+      final trashed = await trashTask("Stretch");
       expect(notifications.daily, isEmpty);
-      await tasks.restoreFromTrash(trashed!);
+      await tasks.restoreFromTrash(trashed);
       expect(task("Stretch").done, isTrue);
       expect(task("Stretch").progress.doneDays, {DateTime(2026, 5, 13)});
       expect(notifications.daily.values.single, const ClockTime(7, 0));
@@ -2353,10 +2454,10 @@ Shop
       await add("First");
       await add("Second");
       await add("Third");
-      final first = await tasks.delete(task("First"));
+      final first = await trashTask("First");
       await tasks.delete(task("Second"));
       await tasks.delete(task("Third"));
-      expect(await tasks.deleteForever(first!), isA<Info>());
+      expect(await tasks.deleteForever(first), isA<Info>());
       expect(inTrash(), ["Third", "Second"]);
       expect(await tasks.restoreFromTrash(first), isA<Info>());
       expect(titles(), isEmpty);

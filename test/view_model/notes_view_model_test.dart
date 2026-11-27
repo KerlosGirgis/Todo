@@ -474,8 +474,9 @@ void main() {
         shown(title),
         askForPassword: noPassword,
       )) as Granted<NoteEditorViewModel>).value;
-      final trashed = await editor.delete(askForPassword: noPassword);
-      return (trashed as Granted<Trashed<Note>>).value;
+      expect(await editor.delete(askForPassword: noPassword), isA<Deleted>());
+      // The last deleted, which the trash lists first.
+      return notes.trash.first;
     }
 
     List<String> titles() => [for (final note in notes.notes) note.title];
@@ -757,12 +758,20 @@ void main() {
     test("moves the note to the trash, and takes it off the widget", () async {
       final editor = await openNote("Open");
       await editor.showOnWidget();
-      final trashed = await editor.delete(askForPassword: noPassword);
-      expect((trashed as Granted<Trashed<Note>>).value.item.title, "Open");
+      final result = await editor.delete(askForPassword: noPassword);
+      expect((result as Deleted).message, "Note moved to Trash");
       expect(repository.rows.map((note) => note.title), ["Diary"]);
       expect(notes.notes.map((note) => note.title), ["Diary"]);
       expect(notes.trash.single.item.body, "Plans\nWalk by the river");
       expect(homeWidget.id, isNull);
+    });
+
+    test("deleting it comes with an Undo that puts it back", () async {
+      final editor = await openNote("Open");
+      final result = await editor.delete(askForPassword: noPassword);
+      expect(await (result as Deleted).undo(), isA<Success>());
+      expect(notes.notes.map((note) => note.title), ["Open", "Diary"]);
+      expect(notes.trash, isEmpty);
     });
 
     test(
@@ -779,7 +788,7 @@ void main() {
     test("keeps a locked note where it is when its lock says no", () async {
       final editor = await openNote("Diary");
       auth.fingerprint = FingerprintCheck.failed;
-      expect(await editor.delete(askForPassword: noPassword), isA<Denied>());
+      expect(await editor.delete(askForPassword: noPassword), isA<Failure>());
       expect(repository.rows.map((note) => note.title), ["Open", "Diary"]);
       expect(repository.trash, isEmpty);
     });
@@ -788,10 +797,7 @@ void main() {
         "after it", () async {
       final editor = await openNote("Open");
       repository.failReads = true;
-      expect(
-        await editor.delete(askForPassword: noPassword),
-        isA<Granted<Trashed<Note>>>(),
-      );
+      expect(await editor.delete(askForPassword: noPassword), isA<Deleted>());
 
       repository.failReads = false;
       await notes.get();

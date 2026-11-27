@@ -577,10 +577,10 @@ class TasksViewModel with ChangeNotifier {
   }
 
   /// Moves [task] to the trash, with the tasks in it, where they wait to be
-  /// put back or deleted for good, and turns their reminders off. Gives the
-  /// entry they're in the trash as, which puts them back, or null if they
-  /// couldn't be moved, which leaves them on the list.
-  Future<Trashed<TaskBranch>?> delete(TodoItem task) async {
+  /// put back or deleted for good, and turns their reminders off. Says so
+  /// with a [Deleted], whose undo puts them back where they were; or why
+  /// they couldn't be moved, which leaves them on the list.
+  Future<Result> delete(TodoItem task) async {
     task = _current(task);
     final branch = _tree.nodeOf(task)?.branch ?? TaskBranch(task);
     final going = branch.all.toSet();
@@ -595,7 +595,7 @@ class TasksViewModel with ChangeNotifier {
     } catch (e) {
       // Back on the list, as they're still there.
       await _reload();
-      return null;
+      return const Failure("Couldn't delete the task");
     }
     for (final each in branch.all) {
       if (each.reminder == Reminder.none) continue;
@@ -607,7 +607,12 @@ class TasksViewModel with ChangeNotifier {
     }
     await _reloadTrash();
     await _reload();
-    return trashed;
+    final subtasks = branch.subtasks.length;
+    return Deleted(switch (subtasks) {
+      0 => "Task moved to Trash",
+      1 => "Task and its subtask moved to Trash",
+      _ => "Task and its $subtasks subtasks moved to Trash",
+    }, undo: () => restoreFromTrash(trashed));
   }
 
   /// Reads in the tasks in the trash.
@@ -998,32 +1003,26 @@ class TasksViewModel with ChangeNotifier {
   /// still to come. A task done already is to do again, as a reminder of it
   /// means it isn't done.
   Future<Result> _remindOnce(TodoItem task) async {
-    try {
-      final day = task.day;
-      final time = task.time;
-      if (day != null && time != null) {
-        DateTime scheduledTime = time.on(day);
-        if (scheduledTime.isAfter(_now())) {
-          final reminding = task.copyWith(done: false, reminder: Reminder.once);
-          final shown = await _askToShow();
-          await _reminders.set(reminding);
-          await _tasksRepository.updateItem(reminding);
-          await _reload();
-          final undone = task.done ? "Task undone. " : "";
-          if (!shown) return Failure("$undone$_notShown");
-          final remaining =
-              "Time remaining:\n "
-              "${DateTimeUtils.durationToString(scheduledTime.difference(_now()))}";
-          return Info("$undone$remaining");
-        } else {
-          return Info("Please set time and date in the future");
-        }
-      } else {
-        return Info("Please set time and date");
-      }
-    } catch (e) {
-      return Failure("Couldn't set the reminder");
+    final day = task.day;
+    final time = task.time;
+    if (day == null || time == null) {
+      return const Info("Please set time and date");
     }
+    final scheduledTime = time.on(day);
+    if (!scheduledTime.isAfter(_now())) {
+      return const Info("Please set time and date in the future");
+    }
+    final reminding = task.copyWith(done: false, reminder: Reminder.once);
+    final shown = await _askToShow();
+    if (await _setReminder(reminding, was: task) case final failed?) {
+      return failed;
+    }
+    final undone = task.done ? "Task undone. " : "";
+    if (!shown) return Failure("$undone$_notShown");
+    final remaining =
+        "Time remaining:\n "
+        "${DateTimeUtils.durationToString(scheduledTime.difference(_now()))}";
+    return Info("$undone$remaining");
   }
 
   /// Has [task] come round as [rule] has it, with the user reminded at its
@@ -1045,16 +1044,41 @@ class TasksViewModel with ChangeNotifier {
     // One whose last time has gone has nothing more to remind of.
     final ended = repeating.recurrence!.hasEndedBy(today);
     final shown = ended || await _askToShow();
-    try {
-      await _reminders.set(repeating);
-      // Without its day, as a repeating task has none.
-      await _tasksRepository.updateItem(repeating);
-      await _reload();
-      if (ended) return Info("Task Updated");
-      return shown ? Success("Reminder Set") : const Failure(_notShown);
-    } catch (e) {
-      return Failure("Couldn't set the reminder");
+    // Without its day, as a repeating task has none.
+    if (await _setReminder(repeating, was: task) case final failed?) {
+      return failed;
     }
+    if (ended) return const Info("Task Updated");
+    return shown ? const Success("Reminder Set") : const Failure(_notShown);
+  }
+
+  /// Saves [task] with its reminder, then sets that reminder on the phone:
+  /// in that order, so the task never has a reminder going off that it
+  /// doesn't show. Should the phone not take it, or not all of it, the task
+  /// goes back as it [was], with the reminders it had. Why it couldn't be
+  /// set, or null.
+  Future<Result?> _setReminder(TodoItem task, {required TodoItem was}) async {
+    try {
+      await _tasksRepository.updateItem(task);
+    } catch (e) {
+      // Nothing's changed, on the phone or off it.
+      return const Failure("Couldn't set the reminder");
+    }
+    try {
+      await _reminders.set(task);
+    } catch (e) {
+      try {
+        await _reminders.cancel(task);
+        await _tasksRepository.updateItem(was);
+        await _reminders.set(was);
+      } catch (e) {
+        // As far as it got.
+      }
+      await _reload();
+      return const Failure("Couldn't set the reminder");
+    }
+    await _reload();
+    return null;
   }
 
   /// What's said of a reminder that's set, but that the phone won't show
@@ -1088,15 +1112,32 @@ class TasksViewModel with ChangeNotifier {
     return rule.fits(today) ? fresh.withDay(today, done: task.done) : fresh;
   }
 
+  /// Turns [task]'s reminder off: saved first, then cancelled on the phone,
+  /// so the task never shows a reminder that's no longer set. Should the
+  /// phone not cancel it, or not all of it, the reminder's back on, saved
+  /// and set as it was.
   Future<Result> _cancelReminder(TodoItem task) async {
+    const failure = Failure("Couldn't turn the reminder off");
+    try {
+      await _tasksRepository.updateItem(task.copyWith(reminder: Reminder.none));
+    } catch (e) {
+      // Still on, and still set.
+      return failure;
+    }
     try {
       await _reminders.cancel(task);
-      await _tasksRepository.updateItem(task.copyWith(reminder: Reminder.none));
-      await _reload();
-      return Info("Reminder Turned Off");
     } catch (e) {
-      return Failure("Couldn't turn the reminder off");
+      try {
+        await _tasksRepository.updateItem(task);
+        await _reminders.set(task);
+      } catch (e) {
+        // As far as it got.
+      }
+      await _reload();
+      return failure;
     }
+    await _reload();
+    return const Info("Reminder Turned Off");
   }
 }
 
