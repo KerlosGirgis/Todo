@@ -34,8 +34,9 @@ class BackupFlow {
   /// Saves the [records] to a file locked with a new password that
   /// [askForBackupPassword] gets from the user, once the App Lock lets them
   /// through: with [askForPassword], for an app locked with a password.
-  /// [records] gets that password, when one was given, and can deny the
-  /// backup, saying why. Null if the user cancels.
+  /// [records] gets that password, when one was given, which was checked as
+  /// it was entered, so it needn't be again, and can deny the backup, saying
+  /// why. Null if the user cancels.
   Future<Result?> backUp({
     required PasswordPrompt askForPassword,
     required NewBackupPasswordPrompt askForBackupPassword,

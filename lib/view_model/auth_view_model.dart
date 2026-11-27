@@ -103,53 +103,26 @@ class AuthViewModel with ChangeNotifier {
   }
 
   /// Opens the app with [password], for an app locked with one, which
-  /// unlocks the database's key too.
+  /// unlocks the database's key too. The dialogs that ask for the password
+  /// again have it checked by what they ask for it for: see
+  /// [AuthenticationService.passAppLock].
   Future<Result> unlock(String password) async {
     final PasswordCheck check;
     try {
       check = await _lockService.checkPassword(password);
     } catch (e) {
-      return Failure(_uncheckable);
+      return const Failure(AuthenticationService.uncheckable);
     }
     if (check.matched) {
       // The lock page stays, for the user to try again.
-      if (!await _open(key: check.key)) return Failure(_unopenable);
+      if (!await _open(key: check.key)) return const Failure(_unopenable);
       _status = AuthStatus.authenticated;
       notifyListeners();
     }
-    return _resultOf(check);
+    return AuthenticationService.resultOf(check);
   }
 
-  /// Checks [password] against the App Lock's, as the lock page does, for
-  /// the dialogs that ask for it again.
-  Future<Result> checkPassword(String password) async {
-    try {
-      return _resultOf(await _lockService.checkPassword(password));
-    } catch (e) {
-      return Failure(_uncheckable);
-    }
-  }
-
-  static const _uncheckable = "Couldn't check the password";
   static const _unopenable = "Couldn't open your tasks and notes. Try again.";
-
-  static Result _resultOf(PasswordCheck check) {
-    if (check.matched) return Success("Unlocked");
-    if (check.wait > Duration.zero) {
-      return Failure("Too many tries. Try again in ${_inWords(check.wait)}.");
-    }
-    return Failure("Wrong password");
-  }
-
-  /// [wait], rounded up to whole seconds, minutes or hours, as "1 minute".
-  static String _inWords(Duration wait) {
-    String count(int n, String unit) => "$n $unit${n == 1 ? "" : "s"}";
-    final seconds = (wait.inMilliseconds / 1000).ceil();
-    if (seconds < 60) return count(seconds, "second");
-    final minutes = (seconds / 60).ceil();
-    if (minutes < 60) return count(minutes, "minute");
-    return count((minutes / 60).ceil(), "hour");
-  }
 
   /// Called as the app is put away, so that it can tell how long it's been
   /// gone when it comes back.

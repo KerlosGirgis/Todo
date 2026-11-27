@@ -1,8 +1,12 @@
 import 'result.dart';
 
-/// Asks the user for the App Lock's password, and gives it once they've
-/// entered it right, or null if they cancel.
-typedef PasswordPrompt = Future<String?> Function();
+/// Asks the user for the App Lock's password, trying each one they enter
+/// with [check], which says why one won't do, until one does, and gives
+/// that one, or null if they cancel. [check] is the view model's, so the
+/// password is checked the once, as it's entered, by what it's for.
+typedef PasswordPrompt = Future<String?> Function(
+  Future<Result> Function(String password) check,
+);
 
 /// Asks the user for a new password for the App Lock, of at least
 /// [minLength] characters, twice, so that a typo can't lock them out, and

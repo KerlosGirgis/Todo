@@ -2,24 +2,26 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/prompts.dart';
 import '../../../../../core/result.dart';
-import '../../../../../view_model/auth_view_model.dart';
 import '../../../tasks/todo_page/widgets/form_dialog.dart';
 import '../../profile_page/widgets/profile_button.dart';
 import 'password_field.dart';
 
 /// How the App Lock's password is asked for, saying what for in [subtitle]:
-/// from [context]'s page, if it's still open by then.
+/// from [context]'s page, if it's still open by then, trying each one the
+/// user enters with the check the view model asking for it gives.
 PasswordPrompt passwordPrompt(
   BuildContext context, {
   required String subtitle,
-}) => () async {
+}) => (check) async {
   if (!context.mounted) return null;
-  return showPasswordDialog(context, subtitle: subtitle);
+  return showFormDialog<String>(
+    context,
+    _PasswordDialog(subtitle: subtitle, check: check),
+  );
 };
 
 /// How a locked note asks for the App Lock's password in place of the
@@ -85,21 +87,6 @@ BackupPasswordPrompt backupPasswordPrompt(BuildContext context) =>
       );
       return password != null;
     };
-
-/// Asks for the App Lock's password, saying what for in [subtitle], and
-/// hands it back once it's right, or null if the user cancels.
-Future<String?> showPasswordDialog(
-  BuildContext context, {
-  required String subtitle,
-}) {
-  return showFormDialog<String>(
-    context,
-    _PasswordDialog(
-      subtitle: subtitle,
-      check: context.read<AuthViewModel>().checkPassword,
-    ),
-  );
-}
 
 /// Asks for a password, saying what for in [subtitle], until [check] finds
 /// one right, and hands that one back, or null if the user cancels.

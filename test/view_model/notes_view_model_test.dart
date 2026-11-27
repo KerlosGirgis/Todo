@@ -16,7 +16,13 @@ import 'package:todo/services/lock_service.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 
 import 'backup_flow_test.dart'
-    show MemoryFiles, backupPassword, newBackupPassword;
+    show
+        MemoryFiles,
+        appLockPassword,
+        backupPassword,
+        newBackupPassword,
+        noPassword;
+import 'user_view_model_test.dart' show CountingLock;
 
 /// The notes table, in memory.
 class FakeNotesRepository extends NotesRepository {
@@ -133,6 +139,9 @@ class FakeNotesRepository extends NotesRepository {
 }
 
 class FakeAuth extends AuthenticationService {
+  /// [lockService] is what the App Lock's password is checked against.
+  FakeAuth({super.lockService});
+
   FingerprintCheck fingerprint = FingerprintCheck.passed;
   var fingerprintsAsked = 0;
 
@@ -195,8 +204,6 @@ void main() {
   late FakeLock lock;
   late FakeHomeWidget homeWidget;
   late NotesViewModel notes;
-
-  Future<String?> noPassword() async => null;
 
   setUp(() async {
     repository = FakeNotesRepository();
@@ -283,7 +290,7 @@ void main() {
         var asked = 0;
         final access = await notes.open(
           shown("Diary"),
-          askForPassword: () async {
+          askForPassword: (check) async {
             asked++;
             return "1234";
           },
@@ -674,6 +681,69 @@ void main() {
         "Diary",
         "Shopping",
       ]);
+    });
+  });
+
+  group("on a phone without a fingerprint, with a password App Lock, "
+      "locked notes", () {
+    late CountingLock appLock;
+    late NotesViewModel locked;
+
+    setUp(() async {
+      FlutterSecureStorage.setMockInitialValues({});
+      appLock = CountingLock();
+      await appLock.enableLock(password: "1234", key: "database key");
+      locked = NotesViewModel(
+        repository: repository,
+        authService: FakeAuth(lockService: appLock)
+          ..fingerprint = FingerprintCheck.unavailable,
+        lockService: appLock,
+        homeWidgetService: homeWidget,
+        backupService: BackupService.inDart(iterations: 1000),
+        fileService: MemoryFiles(),
+      );
+      await locked.get();
+    });
+
+    Note diary() => locked.notes.singleWhere((note) => note.title == "Diary");
+
+    test("open with the App Lock's password, each one entered checked the "
+        "once", () async {
+      final tried = <String>[];
+      final access = await locked.open(
+        diary(),
+        askForPassword: (check) async {
+          for (final password in ["0000", "1234"]) {
+            tried.add(password);
+            if (await check(password) is Success) return password;
+          }
+          return null;
+        },
+      );
+      final editor = (access as Granted<NoteEditorViewModel>).value;
+      expect(editor.note.body, "secret");
+      expect(tried, ["0000", "1234"]);
+      expect(appLock.checks, 2);
+    });
+
+    test("don't open for a password the check didn't pass, whatever the "
+        "prompt gives", () async {
+      final access = await locked.edit(
+        diary(),
+        askForPassword: (check) async => "1234",
+      );
+      expect((access as Denied).message, "Authentication failed");
+      expect(appLock.checks, 0);
+    });
+
+    test("go into a backup on the App Lock's password, checked the once for "
+        "the App Lock and their lock both", () async {
+      final result = await locked.backup(
+        askForPassword: appLockPassword("1234"),
+        askForBackupPassword: newBackupPassword("correct horse"),
+      );
+      expect((result as Success).message, "Backup Created");
+      expect(appLock.checks, 1);
     });
   });
 

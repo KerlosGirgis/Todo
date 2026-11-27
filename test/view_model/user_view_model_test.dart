@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:todo/core/prompts.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/avatar.dart';
@@ -16,6 +17,8 @@ import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/verse_service.dart';
 import 'package:todo/view_model/auth_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
+
+import 'backup_flow_test.dart' show appLockPassword, noPassword;
 
 /// The profile table, in memory.
 class FakeUserRepository extends UserRepository {
@@ -82,6 +85,31 @@ class FakeDevice extends DeviceService {
 /// A lock whose waits after wrong passwords go by a clock that stands still.
 LockService newLock() =>
     LockService.withClock(() async => (boot: 1, sinceBoot: Duration.zero));
+
+/// [newLock], which counts the passwords checked against it.
+class CountingLock extends LockService {
+  CountingLock()
+    : super.withClock(() async => (boot: 1, sinceBoot: Duration.zero));
+
+  var checks = 0;
+
+  @override
+  Future<PasswordCheck> checkPassword(String password) {
+    checks++;
+    return super.checkPassword(password);
+  }
+}
+
+/// A lock whose passwords can't be checked, as when the phone's secure
+/// storage fails.
+class UncheckableLock extends LockService {
+  UncheckableLock()
+    : super.withClock(() async => (boot: 1, sinceBoot: Duration.zero));
+
+  @override
+  Future<PasswordCheck> checkPassword(String password) async =>
+      throw StateError("Can't read the lock");
+}
 
 /// A lock that can't be read, as when the phone's secure storage fails.
 class UnreadableLock extends LockService {
@@ -466,7 +494,8 @@ void main() {
   });
 
   group('changeAppLock', () {
-    Future<String?> refuse() async => fail("Asked for the current password");
+    Future<String?> refuse(Future<Result> Function(String) check) async =>
+        fail("Asked for the current password");
     Future<String?> newPassword({required int minLength}) async {
       expect(minLength, UserViewModel.minPasswordLength);
       return "1234";
@@ -505,7 +534,7 @@ void main() {
           var asked = 0;
           final result = await user.changeAppLock(
             AppLock.off,
-            askForPassword: () async {
+            askForPassword: (check) async {
               asked++;
               return null;
             },
@@ -520,7 +549,7 @@ void main() {
       test('turns off with the password', () async {
         final result = await user.changeAppLock(
           AppLock.off,
-          askForPassword: () async => "1234",
+          askForPassword: appLockPassword("1234"),
           askForNewPassword: newPassword,
         );
         expect((result as Info).message, "Lock Disabled");
@@ -540,7 +569,7 @@ void main() {
         await fingerprint.loadAppLock();
         final result = await fingerprint.changeAppLock(
           AppLock.fingerprint,
-          askForPassword: () async => "1234",
+          askForPassword: appLockPassword("1234"),
           askForNewPassword: newPassword,
         );
         expect((result as Success).message, "Fingerprint Lock Enabled");
@@ -548,19 +577,69 @@ void main() {
         expect(await unlockedKey(), dbKey);
       });
 
-      test("doesn't change for a wrong password", () async {
+      test("doesn't change for a wrong password: the dialog says why, and "
+          "the user gives up", () async {
+        final said = <String>[];
         final result = await user.changeAppLock(
-          AppLock.password,
-          askForPassword: () async => "0000",
+          AppLock.off,
+          askForPassword: (check) async {
+            if (await check("0000") case Failure(:final message)) {
+              said.add(message);
+            }
+            return null;
+          },
           askForNewPassword: newPassword,
         );
-        expect((result as Failure).message, "Authentication failed");
+        expect(result, isNull);
+        expect(said, ["Wrong password"]);
+        expect(user.appLock, AppLock.password);
+        expect(await newLock().getLock(), AppLock.password);
+      });
+
+      test("won't take a password the check didn't pass, whatever the prompt "
+          "gives", () async {
+        for (final askForPassword in <PasswordPrompt>[
+          // The one it tried, which was wrong.
+          (check) async {
+            await check("0000");
+            return "0000";
+          },
+          // The right one, but never tried.
+          (check) async => "1234",
+        ]) {
+          final result = await user.changeAppLock(
+            AppLock.off,
+            askForPassword: askForPassword,
+            askForNewPassword: newPassword,
+          );
+          expect((result as Failure).message, "Authentication failed");
+          expect(user.appLock, AppLock.password);
+        }
+        expect(await newLock().getLock(), AppLock.password);
+      });
+
+      test('checks the password the once, as it is entered', () async {
+        final lock = CountingLock();
+        final counted = UserViewModel(
+          repository: repository,
+          lockService: lock,
+          deviceService: device,
+          databaseService: FakeDatabase(),
+        );
+        await counted.loadAppLock();
+        final result = await counted.changeAppLock(
+          AppLock.password,
+          askForPassword: appLockPassword("1234"),
+          askForNewPassword: ({required minLength}) async => "4321",
+        );
+        expect((result as Success).message, "Password Changed");
+        expect(lock.checks, 1);
       });
 
       test('changes the password', () async {
         final result = await user.changeAppLock(
           AppLock.password,
-          askForPassword: () async => "1234",
+          askForPassword: appLockPassword("1234"),
           askForNewPassword: ({required minLength}) async => "4321",
         );
         expect((result as Success).message, "Password Changed");
@@ -571,7 +650,7 @@ void main() {
       test("won't take a new password that's too short", () async {
         final result = await user.changeAppLock(
           AppLock.password,
-          askForPassword: () async => "1234",
+          askForPassword: appLockPassword("1234"),
           askForNewPassword: ({required minLength}) async => "12",
         );
         expect((result as Failure).message, "Use at least 4 characters");
@@ -583,7 +662,7 @@ void main() {
     test('is what the lock page asks for', () async {
       await user.changeAppLock(
         AppLock.password,
-        askForPassword: () async => null,
+        askForPassword: noPassword,
         askForNewPassword: ({required minLength}) async => "1234",
       );
       final fresh = UserViewModel(
@@ -602,7 +681,7 @@ void main() {
     test('opens the database with the key only its password unlocks', () async {
       await user.changeAppLock(
         AppLock.password,
-        askForPassword: () async => null,
+        askForPassword: noPassword,
         askForNewPassword: ({required minLength}) async => "1234",
       );
       final database = FakeDatabase();
@@ -752,7 +831,7 @@ void main() {
         "open, for another try, which isn't a wrong password", () async {
       await user.changeAppLock(
         AppLock.password,
-        askForPassword: () async => null,
+        askForPassword: noPassword,
         askForNewPassword: ({required minLength}) async => "1234",
       );
       final database = FakeDatabase()..failToOpen = true;
@@ -786,42 +865,88 @@ void main() {
       expect(database.openedWith, dbKey);
     });
 
-    test(
-      'asks for its password only when the app is locked with one',
-      () async {
-        final auth = AuthenticationService(lockService: newLock());
-        var asked = 0;
-        Future<String?> ask() async {
-          asked++;
-          return "1234";
-        }
+    test('asks for its password only when the app is locked with one, and '
+        'checks each one entered the once', () async {
+      final lock = CountingLock();
+      final auth = AuthenticationService(lockService: lock);
+      var asked = 0;
+      Future<String?> ask(Future<Result> Function(String) check) async {
+        asked++;
+        return appLockPassword("1234")(check);
+      }
 
-        expect(await auth.passAppLock(ask), (passed: true, password: null));
-        expect(asked, 0);
-        await user.changeAppLock(
-          AppLock.password,
-          askForPassword: () async => null,
-          askForNewPassword: ({required minLength}) async => "1234",
-        );
-        expect(await auth.passAppLock(ask), (passed: true, password: "1234"));
-        expect(asked, 1);
-        expect(await auth.passAppLock(() async => null), isNull);
-        expect(await auth.passAppLock(() async => "0000"), (
-          passed: false,
-          password: "0000",
-        ));
-      },
-    );
+      expect(await auth.passAppLock(ask), (passed: true, password: null));
+      expect(asked, 0);
+      await user.changeAppLock(
+        AppLock.password,
+        askForPassword: noPassword,
+        askForNewPassword: ({required minLength}) async => "1234",
+      );
+      expect(await auth.passAppLock(ask), (passed: true, password: "1234"));
+      expect(asked, 1);
+      expect(lock.checks, 1);
+      expect(await auth.passAppLock(noPassword), isNull);
+      expect(await auth.passAppLock(appLockPassword("0000")), isNull);
+      expect(lock.checks, 2);
+    });
+
+    test("lets no password through that the check didn't pass, whatever the "
+        "prompt gives", () async {
+      await user.changeAppLock(
+        AppLock.password,
+        askForPassword: noPassword,
+        askForNewPassword: ({required minLength}) async => "1234",
+      );
+      final auth = AuthenticationService(lockService: newLock());
+      expect(
+        await auth.passAppLock((check) async {
+          await check("0000");
+          return "0000";
+        }),
+        (passed: false, password: null),
+      );
+      expect(await auth.passAppLock((check) async => "1234"), (
+        passed: false,
+        password: null,
+      ));
+    });
 
     test("doesn't let the user through when it can't be read", () async {
       final auth = AuthenticationService(lockService: UnreadableLock());
       var asked = 0;
-      final pass = await auth.passAppLock(() async {
+      final pass = await auth.passAppLock((check) async {
         asked++;
         return "1234";
       });
       expect(pass, (passed: false, password: null));
       expect(asked, 0);
+    });
+
+    test("says why a password won't do", () async {
+      await user.changeAppLock(
+        AppLock.password,
+        askForPassword: noPassword,
+        askForNewPassword: ({required minLength}) async => "1234",
+      );
+      final auth = AuthenticationService(lockService: newLock());
+      expect((await auth.checkPassword("1234") as Success).message, "Unlocked");
+      for (var tries = 1; tries < 5; tries++) {
+        expect(
+          (await auth.checkPassword("0000") as Failure).message,
+          "Wrong password",
+        );
+      }
+      // The fifth wrong one in a row has the next try wait.
+      expect(
+        (await auth.checkPassword("0000") as Failure).message,
+        "Too many tries. Try again in 30 seconds.",
+      );
+      expect(
+        (await AuthenticationService(
+          lockService: UncheckableLock(),
+        ).checkPassword("1234") as Failure).message,
+        "Couldn't check the password",
+      );
     });
   });
 }

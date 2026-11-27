@@ -36,7 +36,7 @@ void main() {
     await notes.get();
     final access = await notes.open(
       notes.notes.single,
-      askForPassword: () async => null,
+      askForPassword: (_) async => null,
     );
     final editor = (access as Granted<NoteEditorViewModel>).value;
 

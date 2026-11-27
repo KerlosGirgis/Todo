@@ -51,7 +51,17 @@ NewBackupPasswordPrompt newBackupPassword(String? password) =>
 BackupPasswordPrompt backupPassword(String? password) =>
     (open) async => password != null && await open(password) is Success;
 
-Future<String?> noPassword() async => null;
+/// The App Lock's password: [password], tried with the prompt's check as
+/// the dialog tries what's typed, and given back if it passes; otherwise,
+/// or with none, the user cancels.
+PasswordPrompt appLockPassword(String? password) =>
+    (check) async =>
+        password != null && await check(password) is Success ? password : null;
+
+/// No App Lock password: the user cancels.
+Future<String?> noPassword(
+  Future<Result> Function(String password) check,
+) async => null;
 
 void main() {
   late FakeAppLock appLock;

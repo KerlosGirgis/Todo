@@ -287,37 +287,47 @@ class UserViewModel with ChangeNotifier {
 
   /// Changes what the app is locked with to [lock], once the lock it has now
   /// lets the user through: their fingerprint, or the password
-  /// [askForPassword] gets from them. A password lock takes a new password
-  /// from [askForNewPassword]; for an app locked with one already, this
-  /// changes it. Null if the user cancels.
+  /// [askForPassword] gets from them, checked as they enter it. A password
+  /// lock takes a new password from [askForNewPassword]; for an app locked
+  /// with one already, this changes it. Null if the user cancels.
   Future<Result?> changeAppLock(
     AppLock lock, {
     required PasswordPrompt askForPassword,
     required NewPasswordPrompt askForNewPassword,
   }) async {
-    String? password;
+    // An app locked with a password asks for it first; otherwise the lock
+    // lets the user through as it's changed.
+    AppLockPass? pass;
     if (_appLock == AppLock.password) {
-      password = await askForPassword();
-      if (password == null) return null;
+      pass = await _authService.passAppLock(askForPassword);
+      if (pass == null) return null;
+      if (!pass.passed) return Failure("Authentication failed");
     }
     switch (lock) {
       case AppLock.off:
-        return _turnOffAppLock(password: password);
+        return _turnOffAppLock(pass);
       case AppLock.fingerprint:
-        return _lockWithFingerprint(password: password);
+        return _lockWithFingerprint(pass);
       case AppLock.password:
         final newPassword = await askForNewPassword(
           minLength: minPasswordLength,
         );
         if (newPassword == null) return null;
-        return _lockWithPassword(newPassword, password: password);
+        return _lockWithPassword(newPassword, pass);
     }
   }
 
+  /// Whether the App Lock lets the user through: as [pass] says, for an app
+  /// locked with a password, which was checked as it was entered, rather
+  /// than again; otherwise straight away for an app that isn't locked, or
+  /// with their fingerprint.
+  Future<bool> _passes(AppLockPass? pass) async =>
+      pass?.passed ?? await _authService.passesAppLock();
+
   /// Turns the App Lock off, once it lets the user through: with their
-  /// fingerprint, or [password], whichever the app is locked with.
-  Future<Result> _turnOffAppLock({String? password}) async {
-    if (!await _authService.passesAppLock(password: password)) {
+  /// fingerprint, or the password [pass] has, whichever it's locked with.
+  Future<Result> _turnOffAppLock(AppLockPass? pass) async {
+    if (!await _passes(pass)) {
       return Failure("Authentication failed");
     }
     if (!await _withKey((key) => _lockService.disableLock(key: key))) {
@@ -329,10 +339,10 @@ class UserViewModel with ChangeNotifier {
   }
 
   /// Locks the app with the user's fingerprint, once the lock it has now lets
-  /// them through, and their fingerprint shows that it works.
-  Future<Result> _lockWithFingerprint({String? password}) async {
-    if (!await _authService.passesAppLock(password: password) ||
-        !await _authService.authenticate()) {
+  /// them through, as [pass] says for a password, and their fingerprint
+  /// shows that it works.
+  Future<Result> _lockWithFingerprint(AppLockPass? pass) async {
+    if (!await _passes(pass) || !await _authService.authenticate()) {
       return Failure("Authentication failed");
     }
     if (!await _withKey((key) => _lockService.enableLock(key: key))) {
@@ -344,16 +354,16 @@ class UserViewModel with ChangeNotifier {
   }
 
   /// Locks the app with [newPassword], once the lock it has now lets the user
-  /// through: their fingerprint, or [password]. For an app locked with a
-  /// password already, this changes it.
+  /// through: their fingerprint, or the password [pass] has. For an app
+  /// locked with a password already, this changes it.
   Future<Result> _lockWithPassword(
-    String newPassword, {
-    String? password,
-  }) async {
+    String newPassword,
+    AppLockPass? pass,
+  ) async {
     if (newPassword.length < minPasswordLength) {
       return Failure("Use at least $minPasswordLength characters");
     }
-    if (!await _authService.passesAppLock(password: password)) {
+    if (!await _passes(pass)) {
       return Failure("Authentication failed");
     }
     final changing = _appLock == AppLock.password;

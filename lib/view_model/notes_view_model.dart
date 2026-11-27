@@ -426,7 +426,9 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
   );
 
   /// No password, for a lock asked for without a way to ask for one.
-  static Future<String?> _noPassword() async => null;
+  static Future<String?> _noPassword(
+    Future<Result> Function(String password) check,
+  ) async => null;
 
   /// The reorders being saved, which go one at a time, in order; and how
   /// many there have been, as only the last one's order needs saving: it's
@@ -503,10 +505,14 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
       // lock, as opening one does: the App Lock may be off, or a password,
       // which a locked note won't take while the fingerprint works. An app
       // locked with the fingerprint has just asked for it, and the password
-      // just given is the one a locked note falls back on without it.
+      // just given, checked as it was entered, is the one a locked note
+      // falls back on without it.
       if (notes.any((note) => note.locked) &&
           await _lockService.getLock() != AppLock.fingerprint) {
-        switch (await _passNoteLock(() async => password)) {
+        switch (await _passNoteLock(
+          _noPassword,
+          passwordGiven: password != null,
+        )) {
           case Failure(:final message) || Info(:final message):
             return Denied(message);
           case Success():
@@ -581,8 +587,13 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
 
   /// Checks it's the user, as a locked note does: with their fingerprint, or,
   /// on a phone that can't take one, with the App Lock's password, which
-  /// [askForPassword] asks them for.
-  Future<Result> _passNoteLock(PasswordPrompt askForPassword) async {
+  /// [askForPassword] asks them for, checking each one they enter; or which
+  /// they've just given, when [passwordGiven], to back the notes up, as the
+  /// App Lock asked for it and checked it then.
+  Future<Result> _passNoteLock(
+    PasswordPrompt askForPassword, {
+    bool passwordGiven = false,
+  }) async {
     switch (await _authService.checkFingerprint()) {
       case FingerprintCheck.passed:
         return Success("Authenticated");
@@ -605,11 +616,9 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
             "Fingerprint isn't available. Set an App Lock password instead.",
           );
         }
-        final password = await askForPassword();
-        if (password != null &&
-            await _authService.passesAppLock(password: password)) {
-          return Success("Authenticated");
-        }
+        if (passwordGiven) return Success("Authenticated");
+        final pass = await _authService.passAppLock(askForPassword);
+        if (pass?.passed ?? false) return Success("Authenticated");
         return Failure("Authentication failed");
     }
   }
