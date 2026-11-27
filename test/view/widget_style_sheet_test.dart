@@ -8,8 +8,8 @@ import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/widget_look.dart';
 import 'package:todo/models/widget_style.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/widget_previews.dart';
-import 'package:todo/view/widgets/color_swatches.dart';
 import 'package:todo/view/screens/profile/profile_page/widgets/widget_style_sheet.dart';
+import 'package:todo/view/widgets/color_swatches.dart';
 import 'package:todo/view_model/user_view_model.dart';
 import 'package:todo/view_model/widgets_view_model.dart';
 

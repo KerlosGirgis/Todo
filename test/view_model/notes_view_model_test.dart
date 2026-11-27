@@ -47,10 +47,6 @@ class FakeNotesRepository extends NotesRepository {
     if (index != -1) rows[index] = item;
   }
 
-  @override
-  Future<void> deleteNote(int id) async =>
-      rows.removeWhere((row) => row.id == id);
-
   /// The orders the notes were rewritten in, by their titles; and what a
   /// rewrite waits for, if anything, as a slow one would. It fails as an
   /// update does, and numbers the notes afresh from 1, in their new order,
@@ -228,6 +224,18 @@ void main() {
   Note shown(String title) =>
       notes.notes.singleWhere((note) => note.title == title);
 
+  test(
+    "says so when the notes can't be read in, and shows them as they were",
+    () async {
+      repository.failReads = true;
+      expect(
+        (await notes.get() as Failure).message,
+        "Couldn't read your notes",
+      );
+      expect(notes.notes.map((note) => note.title), ["Open", "Diary"]);
+    },
+  );
+
   group('locked notes', () {
     test("reach the pages without their text", () {
       expect(shown("Diary").body, "");
@@ -381,6 +389,16 @@ void main() {
   });
 
   group('NoteDraft', () {
+    test("says nothing was saved when the note couldn't be", () async {
+      final draft = (await notes.edit(
+        shown("Open"),
+        askForPassword: noPassword,
+      ) as Granted<NoteDraft>).value..setTitle("Weekend");
+      repository.failUpdates = true;
+      expect(await draft.save(), isA<Unsaved>());
+      expect(shown("Open").title, "Open");
+    });
+
     test("a new note is a white title on graphite", () {
       final draft = notes.newDraft();
       expect(draft.adding, isTrue);
@@ -672,11 +690,14 @@ void main() {
 
     testWidgets("auto-saves once the writing pauses", (tester) async {
       final editor = await openNote("Open");
-      editor.edit([
-        {'insert': 'Plans for\n'},
-      ], autoSave: true);
+      editor.edit(
+        () => [
+          {'insert': 'Plans for\n'},
+        ],
+        autoSave: true,
+      );
       await tester.pump(const Duration(milliseconds: 300));
-      editor.edit(edited, autoSave: true);
+      editor.edit(() => edited, autoSave: true);
       expect(editor.unsaved.value, isTrue);
       await tester.pump(const Duration(milliseconds: 300));
       expect(repository.rows.first.body, "Plans\nWalk by the river");
@@ -688,7 +709,7 @@ void main() {
 
     testWidgets("saves only when asked with auto-save off", (tester) async {
       final editor = await openNote("Open");
-      editor.edit(edited, autoSave: false);
+      editor.edit(() => edited, autoSave: false);
       await tester.pump(const Duration(seconds: 2));
       expect(repository.rows.first.body, "Plans\nWalk by the river");
       expect(editor.unsaved.value, isTrue);
@@ -701,7 +722,7 @@ void main() {
     testWidgets("saves what's waiting as it closes", (tester) async {
       final editor = await openNote("Open");
       editor
-        ..edit(edited, autoSave: true)
+        ..edit(() => edited, autoSave: true)
         ..dispose();
       await tester.pump();
       expect(repository.rows.first.body, "Plans for Sunday");
@@ -712,7 +733,7 @@ void main() {
     ) async {
       final editor = await openNote("Open");
       final reads = repository.reads;
-      editor.edit(edited, autoSave: false);
+      editor.edit(() => edited, autoSave: false);
       await editor.save();
       await tester.pump();
       expect(repository.reads, reads);
@@ -720,20 +741,47 @@ void main() {
       expect(editor.note.body, "Plans for Sunday");
     });
 
-    test("has nothing unsaved once it's written back as it was", () async {
-      final editor = await openNote("Open");
-      editor.edit(edited, autoSave: false);
-      expect(editor.unsaved.value, isTrue);
-      editor.edit(editor.content, autoSave: false);
-      expect(editor.unsaved.value, isFalse);
-    });
+    testWidgets(
+      "has nothing unsaved once it's written back as it was, as the writing "
+      "pauses",
+      (tester) async {
+        final editor = await openNote("Open");
+        editor.edit(() => edited, autoSave: false);
+        expect(editor.unsaved.value, isTrue);
+        editor.edit(() => editor.content, autoSave: false);
+        await tester.pump(NoteEditorViewModel.settleDelay);
+        expect(editor.unsaved.value, isFalse);
+      },
+    );
+
+    testWidgets(
+      "takes the text from the editor once the writing pauses, not on each "
+      "key",
+      (tester) async {
+        final editor = await openNote("Open");
+        var taken = 0;
+        List<Map<String, dynamic>> text() {
+          taken++;
+          return edited;
+        }
+
+        for (var key = 0; key < 20; key++) {
+          editor.edit(text, autoSave: true);
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+        expect(taken, 0);
+        await tester.pump(NoteEditorViewModel.autoSaveDelay);
+        expect(taken, 1);
+        expect(repository.rows.first.body, "Plans for Sunday");
+      },
+    );
 
     test("says when a save fails", () async {
       final editor = await openNote("Open");
       final failures = <String>[];
       final subscription = editor.failures.listen(failures.add);
       repository.failUpdates = true;
-      editor.edit(edited, autoSave: false);
+      editor.edit(() => edited, autoSave: false);
       await editor.save();
       await Future<void>.delayed(Duration.zero);
       expect(failures, ["Couldn't save the note"]);
@@ -778,7 +826,7 @@ void main() {
       "puts what's waiting to be saved in the trash with the note",
       () async {
         final editor = await openNote("Open");
-        editor.edit(edited, autoSave: true);
+        editor.edit(() => edited, autoSave: true);
         await editor.delete(askForPassword: noPassword);
         expect(repository.trash.single.item.body, "Plans for Sunday");
         expect(repository.trash.single.item.delta, jsonEncode(edited));

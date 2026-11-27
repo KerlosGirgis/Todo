@@ -47,7 +47,7 @@ class TodoPageHarness {
   /// Opens the page on [seed], as a list or a map, on a phone of [size],
   /// with the tasks listed as [listing] if it was kept from before, and the
   /// tasks going by [clock], or the phone's. Every tour counts as seen,
-  /// unless some are [due].
+  /// unless some are [due]. The tasks can't be read in when [unreadable].
   Future<void> open(
     WidgetTester tester,
     List<TodoItem> seed, {
@@ -56,6 +56,7 @@ class TodoPageHarness {
     Set<PageTour> due = const {},
     TaskListing? listing,
     DateTime Function()? clock,
+    bool unreadable = false,
   }) async {
     tester.view.physicalSize = size * 2;
     tester.view.devicePixelRatio = 2;
@@ -69,6 +70,7 @@ class TodoPageHarness {
     for (final task in seed) {
       await rows.insertItem(task);
     }
+    rows.failReads = unreadable;
     tasks = TasksViewModel(
       repository: rows,
       notificationService: FakeNotifications(),
@@ -308,7 +310,7 @@ void main() {
     await page.open(tester, plans());
     await tester.tap(find.text("Trip"));
     await page.wait(tester);
-    expect(find.text("Task done, with its 3 subtasks"), findsOneWidget);
+    expect(find.text("Task Done, with its 3 subtasks"), findsOneWidget);
     expect(page.task("Flights").done, isTrue);
     expect(page.task("Milk").done, isFalse);
     expect(find.text("3 of 3 subtasks"), findsOneWidget);
@@ -342,6 +344,32 @@ Trip
       tester.getTopLeft(card("Pack")).dx,
     );
     expect(tester.takeException(), isNull);
+    await page.close(tester);
+  });
+
+  testWidgets("tasks that can't be read in are said to be, rather than "
+      "thrown", (tester) async {
+    await page.open(tester, plans(), unreadable: true);
+    expect(find.text("Couldn't read your tasks"), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await page.close(tester);
+  });
+
+  testWidgets("a task added while the list is open makes room for itself", (
+    tester,
+  ) async {
+    await page.open(tester, plans());
+    final packTop = tester.getTopLeft(card("Pack")).dy;
+    // A subtask of Book, between Flights and Pack.
+    await page.tasks.save(
+      page.tasks.subtaskDraft(page.task("Book"))..setTitle("Visa"),
+    );
+    await tester.pump();
+    // Its row starts with no room, and opens up.
+    expect(tester.getTopLeft(card("Pack")).dy, closeTo(packTop, 2));
+    await page.wait(tester);
+    expect(tester.getTopLeft(card("Pack")).dy, greaterThan(packTop + 40));
+    expect(find.text("Visa"), findsOneWidget);
     await page.close(tester);
   });
 

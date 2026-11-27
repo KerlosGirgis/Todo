@@ -128,19 +128,19 @@ class _NotesPageState extends State<NotesPage>
       ..addListener(_toursReplayed);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final tourDue = _tours.isDue(PageTour.notes);
-      var touring = false;
-      try {
-        await Provider.of<NotesViewModel>(context, listen: false).get();
-        touring = await tourDue;
-      } finally {
-        if (mounted) {
-          setState(() {
-            _loaded = true;
-            _touring = touring;
-          });
-        }
-      }
-      if (touring && mounted) _tourStart = Timer(_tourDelay, _startTour);
+      final failed = await Provider.of<NotesViewModel>(
+        context,
+        listen: false,
+      ).get();
+      // Not over notes that couldn't be read in.
+      final touring = failed == null && await tourDue;
+      if (!mounted) return;
+      setState(() {
+        _loaded = true;
+        _touring = touring;
+      });
+      FeedbackToast.show(failed);
+      if (touring) _tourStart = Timer(_tourDelay, _startTour);
     });
   }
 
@@ -155,8 +155,6 @@ class _NotesPageState extends State<NotesPage>
     super.dispose();
   }
 
-  /// Shows the user how the page works: on the first card, or on an example
-  /// one when there are no notes.
   /// Shows the tour again once the user asks for the tips again in the
   /// settings, as they come back from them.
   Future<void> _toursReplayed() async {
@@ -166,6 +164,8 @@ class _NotesPageState extends State<NotesPage>
     _tourStart = Timer(_tourDelay, _startTour);
   }
 
+  /// Shows the user how the page works: on the first card, or on an example
+  /// one when there are no notes.
   void _startTour() {
     _searchFocusNode.unfocus();
     final notes = Provider.of<NotesViewModel>(context, listen: false);
@@ -611,25 +611,41 @@ class _NoteGridState extends State<_NoteGrid> {
   /// in view rise in one after another.
   bool _opening = true;
 
-  /// The notes there were at the last build, so a note added since can rise
-  /// in by itself.
-  Set<int?> _known = {};
+  /// The notes there are, so a note added since can rise in by itself.
+  Set<int?> _known = const {};
+
+  /// The notes added since the notes last changed, which rise in, in the
+  /// frame that brings them.
+  Set<int?> _added = const {};
 
   @override
   void initState() {
     super.initState();
+    _known = _ids();
     WidgetsBinding.instance.addPostFrameCallback((_) => _opening = false);
   }
 
+  /// As the notes change, which rebuilds the grid with them.
   @override
-  Widget build(BuildContext context) {
-    final ids = {for (final note in widget.notes) note.id};
+  void didUpdateWidget(_NoteGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final ids = _ids();
     // Only a note added makes the count grow; reordering the notes gives
     // every one of them a new id, but they're the same notes.
-    final added = !_opening && ids.length > _known.length
+    _added = !_opening && ids.length > _known.length
         ? ids.difference(_known)
-        : const <int?>{};
+        : const {};
     _known = ids;
+    if (_added.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _added = const {});
+    }
+  }
+
+  Set<int?> _ids() => {for (final note in widget.notes) note.id};
+
+  @override
+  Widget build(BuildContext context) {
+    final added = _added;
     final notes = widget.matching;
     return SliverGrid.builder(
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(

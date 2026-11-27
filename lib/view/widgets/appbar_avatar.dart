@@ -1,13 +1,12 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/ui/feedback_toast.dart';
-import '../../view_model/user_view_model.dart';
-
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/ui/feedback_toast.dart';
 import '../../models/avatar.dart';
 import '../../models/verse.dart';
+import '../../view_model/user_view_model.dart';
 import 'ringed_avatar.dart';
 
 const _accent = Color(0xff3D5AFE);

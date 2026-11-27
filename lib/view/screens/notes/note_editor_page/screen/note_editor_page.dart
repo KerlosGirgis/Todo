@@ -116,11 +116,12 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
     _changes.cancel();
     _failures.cancel();
     _lifecycle.dispose();
+    // Saving what's waiting to be saved, which it takes from the editor's
+    // controller, so before that goes.
+    _editor.dispose();
     _scrollController.dispose();
     _controller.dispose();
     _bodyFocusNode.dispose();
-    // Saving what's waiting to be saved.
-    _editor.dispose();
     super.dispose();
   }
 
@@ -324,10 +325,13 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   ];
 
   void _changed() {
-    final rtl = _isRtl(_controller.document.toPlainText());
+    final document = _controller.document;
+    final rtl = _isRtl(
+      document.getPlainText(0, math.min(document.length, _directionSample)),
+    );
     if (rtl != _rtl) setState(() => _rtl = rtl);
     _editor.edit(
-      _controller.document.toDelta().toJson(),
+      () => _controller.document.toDelta().toJson(),
       autoSave: context.read<UserViewModel>().user.autoSave,
     );
   }
@@ -406,4 +410,11 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   }
 }
 
-bool _isRtl(String text) => intl.Bidi.detectRtlDirectionality(text);
+/// How much of a note's text tells which way it goes: its start, as reading
+/// all of a long note on each key would hold up the writing.
+const _directionSample = 500;
+
+/// Whether [text] reads from right to left, by how it starts.
+bool _isRtl(String text) => intl.Bidi.detectRtlDirectionality(
+  text.length > _directionSample ? text.substring(0, _directionSample) : text,
+);

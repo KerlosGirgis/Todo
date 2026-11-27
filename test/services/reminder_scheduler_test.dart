@@ -79,6 +79,24 @@ void main() {
     expect(await reminders.setEach([call, stretch]), isFalse);
   });
 
+  test("reads the App Lock once for every reminder set together, and not at "
+      "all with none to set", () async {
+    await reminders.setEach([call, stretch, course]);
+    expect(lock.reads, 1);
+    expect(notifications.bodies.values.toSet(), {"Call", "Stretch", "Course"});
+
+    lock.reads = 0;
+    await reminders.setEach([TodoItem(uuid: "shop", title: "Shop")]);
+    expect(lock.reads, 0);
+
+    // Locked, none says which task it's for.
+    lock.lock = AppLock.password;
+    await reminders.setEach([call, stretch]);
+    expect(lock.reads, 1);
+    expect(notifications.bodies[ReminderPlan.idOf("call")], isNull);
+    expect(notifications.bodies[ReminderPlan.idOf("stretch")], isNull);
+  });
+
   group('as the app starts', () {
     test("sets every reminder afresh when they were set another way, and "
         "keeps how once they all are", () async {

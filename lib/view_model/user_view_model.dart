@@ -1,19 +1,19 @@
 import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
 
+import '../core/prompts.dart';
+import '../core/result.dart';
 import '../models/app_lock.dart';
 import '../models/avatar.dart';
 import '../models/user_profile.dart';
 import '../models/verse.dart';
+import '../repositories/user_repository.dart';
 import '../services/authentication_service.dart';
 import '../services/database_service.dart';
 import '../services/device_service.dart';
 import '../services/image_service.dart';
 import '../services/lock_service.dart';
 import '../services/verse_service.dart';
-import '../repositories/user_repository.dart';
-import '../core/prompts.dart';
-import '../core/result.dart';
 
 class UserViewModel with ChangeNotifier {
   UserViewModel({

@@ -2,9 +2,9 @@ import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../../core/tasks_widget_snapshot.dart';
 import '../../../../../models/clock_time.dart';
 import '../../../../../models/repeat_progress.dart';
-import '../../../../../core/tasks_widget_snapshot.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../models/widget_look.dart';
 import '../../../../../models/widget_style.dart';

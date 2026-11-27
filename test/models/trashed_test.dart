@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/models/clock_time.dart';
-import 'package:todo/models/repeat_progress.dart';
 import 'package:todo/models/note.dart';
+import 'package:todo/models/repeat_progress.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/trashed.dart';
 

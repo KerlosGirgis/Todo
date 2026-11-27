@@ -1,8 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../core/utils/loading_utils.dart';
-
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/utils/loading_utils.dart';
 
 class Loading extends StatefulWidget {
   const Loading({super.key});

@@ -1,20 +1,19 @@
 import 'package:intl/intl.dart';
 
 class DateTimeUtils {
+  /// [duration] in words, to the minute, leaving out what's none: "1 day,
+  /// 2 hours, 5 minutes", "3 hours", or "less than a minute".
   static String durationToString(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    bool isDaysSingular = duration.inDays == 1;
-    bool isHoursSingular = duration.inHours == 1;
-    bool isMinutesSingular = duration.inMinutes == 1;
-    if (duration.inDays > 0) {
-      return "${duration.inDays} ${isDaysSingular ? 'day' : 'days'} , ${twoDigits(duration.inHours.remainder(24))} ${isHoursSingular ? 'hour' : 'hours'} , $twoDigitMinutes ${isMinutesSingular ? 'minute' : 'minutes'}";
-    }
-    if (duration.inHours == 0) {
-      return "$twoDigitMinutes ${isMinutesSingular ? 'minute' : 'minutes'}";
-    } else {
-      return "${twoDigits(duration.inHours)} ${isHoursSingular ? 'hour' : 'hours'} , $twoDigitMinutes ${isMinutesSingular ? 'minute' : 'minutes'}";
-    }
+    String count(int n, String unit) => "$n $unit${n == 1 ? "" : "s"}";
+    final days = duration.inDays;
+    final hours = duration.inHours.remainder(24);
+    final minutes = duration.inMinutes.remainder(60);
+    final parts = [
+      if (days > 0) count(days, "day"),
+      if (hours > 0) count(hours, "hour"),
+      if (minutes > 0) count(minutes, "minute"),
+    ];
+    return parts.isEmpty ? "less than a minute" : parts.join(", ");
   }
 
   /// "Today", "Tomorrow", "Yesterday", "Fri, Oct 24", or "Jan 3, 2027" in

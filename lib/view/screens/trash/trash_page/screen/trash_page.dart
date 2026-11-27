@@ -73,14 +73,13 @@ class _TrashPageState extends State<TrashPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final reads = [
+      final failed = await Future.wait([
         for (final kind in TrashKind.values) _trashOf(kind).getTrash(),
-      ];
-      try {
-        await Future.wait(reads);
-      } finally {
-        if (mounted) setState(() => _loaded = true);
-      }
+      ]);
+      if (!mounted) return;
+      setState(() => _loaded = true);
+      // Said the once, should both trashes not be read in.
+      FeedbackToast.show(failed.nonNulls.firstOrNull);
     });
   }
 

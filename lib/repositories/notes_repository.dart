@@ -36,10 +36,6 @@ class NotesRepository {
     return items;
   }
 
-  Future<void> deleteNote(int id) async {
-    await db.delete('Notes', where: 'id = ?', whereArgs: [id]);
-  }
-
   Future<void> updateNote(Note item) async {
     await db.update(
       'Notes',

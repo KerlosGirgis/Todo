@@ -1,10 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/user_view_model.dart';
-import '../../../../../core/extensions/theme_extensions.dart';
 import 'profile_button.dart';
 
 const _accent = Color(0xff3D5AFE);

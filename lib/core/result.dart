@@ -30,6 +30,12 @@ class Failure extends Result {
   const Failure(this.message);
 }
 
+/// A [Failure] that left everything as it was, so it can be asked again just
+/// as it was: the form it came from stays open, with what was put in it.
+class Unsaved extends Failure {
+  const Unsaved(super.message);
+}
+
 class Info extends Result {
   final String message;
 

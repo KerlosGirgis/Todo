@@ -158,4 +158,28 @@ void main() {
     expect(page.task("Pills").until, isNull);
     await page.close(tester);
   });
+
+  testWidgets("a task that can't be added keeps its form open, with what "
+      "was written in it", (tester) async {
+    await page.open(tester, const []);
+    await tester.tap(find.byTooltip("Add Task"));
+    await page.wait(tester);
+    await tester.enterText(find.widgetWithText(TextField, "Title"), "Gym");
+    // Add is on once there's a title.
+    await page.wait(tester);
+    page.rows.failWrites = true;
+    await tester.tap(find.text("Add"));
+    await page.wait(tester);
+    expect(find.text("Couldn't add the task"), findsOneWidget);
+    expect(find.text("New Task"), findsOneWidget);
+    expect(find.widgetWithText(TextField, "Gym"), findsOneWidget);
+
+    // Added once it can be, which closes the form.
+    page.rows.failWrites = false;
+    await tester.tap(find.text("Add"));
+    await page.wait(tester);
+    expect(find.text("New Task"), findsNothing);
+    expect(page.task("Gym").title, "Gym");
+    await page.close(tester);
+  });
 }

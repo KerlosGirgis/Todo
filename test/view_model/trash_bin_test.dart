@@ -58,6 +58,12 @@ void main() {
     expect(changes, 1);
   });
 
+  test("says so when the entries can't be read in", () async {
+    table.failReads = true;
+    expect((await bin.load() as Failure).message, "Couldn't read the Trash");
+    expect(shown(), ["", "Call", "Shop"]);
+  });
+
   test(
     "shows the entries as they were when they can't be read in again",
     () async {

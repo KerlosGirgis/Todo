@@ -1,3 +1,4 @@
+import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'key_service.dart';
@@ -18,8 +19,7 @@ class DatabaseService {
   /// Opens the database with [key], which the App Lock's password unlocked,
   /// or else with the key kept as it is, or a new one for a new database.
   Future<Database> openDb({String? key}) async {
-    var databasesPath = await getDatabasesPath();
-    String path = '$databasesPath/Database.db';
+    final path = p.join(await getDatabasesPath(), 'Database.db');
     final keys = KeyService();
     final dbKey = key ?? await keys.unlockedKey() ?? await _newKey(path, keys);
     _db = await openDatabase(
@@ -163,10 +163,7 @@ class DatabaseService {
     if (oldVersion < 6) {
       // They may be there already: an older build that opens the database
       // puts its version back, but leaves the columns.
-      final columns = {
-        for (final column in await db.rawQuery('PRAGMA table_info(ToDo)'))
-          column['name'],
-      };
+      final columns = await _columns(db, 'ToDo');
       if (!columns.contains('since')) {
         await db.execute('ALTER TABLE ToDo ADD COLUMN since TEXT');
       }
@@ -181,10 +178,7 @@ class DatabaseService {
       );
     }
     if (oldVersion < 7) {
-      final columns = {
-        for (final column in await db.rawQuery('PRAGMA table_info(User)'))
-          column['name'],
-      };
+      final columns = await _columns(db, 'User');
       if (!columns.contains('amoled')) {
         await db.execute(
           'ALTER TABLE User ADD COLUMN amoled INTEGER DEFAULT 0',

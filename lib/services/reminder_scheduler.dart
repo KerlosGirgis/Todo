@@ -33,10 +33,15 @@ class ReminderScheduler {
   /// Sets the reminders [task] needs, if it has any still to come. Those of
   /// a repeating task that it needs no more, as when its last times are set
   /// one by one, or once they've gone, are cancelled.
-  Future<void> set(TodoItem task) async {
+  Future<void> set(TodoItem task) => _set(task, _isLocked);
+
+  /// Sets [task]'s reminders, as [set] does, with [locked] telling whether
+  /// the app is locked, which is asked only when there's one to set.
+  Future<void> _set(TodoItem task, Future<bool> Function() locked) async {
     final alarms = ReminderPlan.of(task, _now());
     if (alarms.isNotEmpty) {
-      final body = await _text(task);
+      // Which task it is, but not while the app is locked.
+      final body = await locked() ? null : task.title;
       for (final alarm in alarms) {
         switch (alarm) {
           case OnceAlarm(:final id, :final at):
@@ -62,10 +67,14 @@ class ReminderScheduler {
   /// Sets the reminders of each of [tasks], as [set] does: one that can't
   /// be leaves the others to be set all the same. Whether every one was.
   Future<bool> setEach(Iterable<TodoItem> tasks) async {
+    // Asked once for them all, rather than for each, as asking reads the
+    // phone's secure storage; and only if one of them has a reminder to set.
+    Future<bool>? asked;
+    Future<bool> locked() => asked ??= _isLocked();
     var allSet = true;
     for (final task in tasks) {
       try {
-        await set(task);
+        await _set(task, locked);
       } catch (e) {
         allSet = false;
       }
@@ -131,8 +140,8 @@ class ReminderScheduler {
     }
   }
 
-  /// What [task]'s reminder says under its title: which task it is, but not
-  /// while the app is locked.
-  Future<String?> _text(TodoItem task) async =>
-      await _lockService.getLock() == AppLock.off ? task.title : null;
+  /// Whether the app is locked, when reminders don't say which task they're
+  /// for, as the lock screen and the notification shade would show it to
+  /// anyone with the phone.
+  Future<bool> _isLocked() async => await _lockService.getLock() != AppLock.off;
 }

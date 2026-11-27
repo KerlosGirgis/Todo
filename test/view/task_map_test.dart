@@ -89,7 +89,7 @@ void main() {
     expect(page.task("Milk").done, isTrue);
     // Which finishes the task it's in.
     expect(page.task("Shop").done, isTrue);
-    expect(find.text("Task done. That finishes “Shop”"), findsOneWidget);
+    expect(find.text("Task Done. That finishes “Shop”"), findsOneWidget);
     expect(find.bySemanticsLabel("2 of 6 tasks done"), findsOneWidget);
     await page.close(tester);
   });

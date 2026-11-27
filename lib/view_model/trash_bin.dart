@@ -12,8 +12,9 @@ abstract interface class TrashOwner<T> {
   /// once [getTrash] has read them in.
   List<Trashed<T>> get trash;
 
-  /// Reads in the entries.
-  Future<void> getTrash();
+  /// Reads in the entries. Why they couldn't be, or null: then they're
+  /// shown as they were.
+  Future<Result?> getTrash();
 
   /// Puts back what [entry] holds, where it was when it can.
   Future<Result> restoreFromTrash(Trashed<T> entry);
@@ -63,26 +64,28 @@ class TrashBin<T> {
   List<Trashed<T>> _shown = [];
   List<Trashed<T>> get entries => UnmodifiableListView(_shown);
 
-  /// Reads in the entries.
-  Future<void> load() async {
-    _entries = await _read();
+  /// Reads in the entries. Why they couldn't be, or null: then they're
+  /// shown as they were.
+  Future<Result?> load() async {
+    final List<Trashed<T>> entries;
+    try {
+      entries = await _read();
+    } catch (e) {
+      return const Failure("Couldn't read the Trash");
+    }
+    _entries = entries;
     final shownOf = _shownOf;
     _shown = shownOf == null
         ? _entries
         : [for (final entry in _entries) shownOf(entry)];
     _changed();
+    return null;
   }
 
   /// Reads in the entries again once they've changed. Should that fail,
   /// they're shown as they were, until they're next read in: the change has
   /// gone through, or the user has been told it hasn't, either way.
-  Future<void> reload() async {
-    try {
-      await load();
-    } catch (e) {
-      // Shown as they were.
-    }
-  }
+  Future<void> reload() => load();
 
   /// [entry], one of [entries], with all it holds, or null when it isn't in
   /// the trash anymore.

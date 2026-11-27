@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:todo/core/tasks_widget_snapshot.dart';
 import 'package:todo/models/clock_time.dart';
 import 'package:todo/models/repeat_progress.dart';
 import 'package:todo/models/task_sort.dart';
-import 'package:todo/core/tasks_widget_snapshot.dart';
 import 'package:todo/models/todo_item.dart';
 
 /// Noon on a Wednesday.

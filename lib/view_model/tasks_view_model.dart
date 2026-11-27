@@ -3,14 +3,11 @@ import 'dart:collection';
 
 import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
-
-import '../core/result.dart';
-import '../services/file_service.dart';
-import '../repositories/tasks_repository.dart';
-
 import 'package:uuid/v4.dart';
 
 import '../core/prompts.dart';
+import '../core/result.dart';
+import '../core/tasks_widget_snapshot.dart';
 import '../core/utils/date_time_utils.dart';
 import '../models/app_lock.dart';
 import '../models/clock_time.dart';
@@ -20,11 +17,12 @@ import '../models/task_filters.dart';
 import '../models/task_listing.dart';
 import '../models/task_sort.dart';
 import '../models/task_tree.dart';
-import '../core/tasks_widget_snapshot.dart';
 import '../models/todo_item.dart';
 import '../models/trashed.dart';
+import '../repositories/tasks_repository.dart';
 import '../services/authentication_service.dart';
 import '../services/backup_service.dart';
+import '../services/file_service.dart';
 import '../services/home_widget_service.dart';
 import '../services/lock_service.dart';
 import '../services/notification_service.dart';
@@ -195,7 +193,9 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   /// Goes off as the next day begins, to start the daily tasks over.
   Timer? _dayEnd;
 
-  Future<void> get() async {
+  /// Reads in the tasks, as the to-do page does as it opens. Why they
+  /// couldn't be, or null: then they're shown as they were.
+  Future<Result?> get() async {
     if (!_listingKnown) {
       _listingKnown = true;
       try {
@@ -204,8 +204,13 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
         // Listed as usual, then.
       }
     }
-    final today = _dateOf(_now());
-    _setDay(today, await _tasksRepository.getItems());
+    final List<TodoItem> items;
+    try {
+      items = await _tasksRepository.getItems();
+    } catch (e) {
+      return const Failure("Couldn't read your tasks");
+    }
+    _setDay(_dateOf(_now()), items);
     _awaitNewDay();
     if (!_remindersChecked) {
       _remindersChecked = true;
@@ -218,19 +223,14 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
         // The reminders stay as they were.
       }
     }
+    return null;
   }
 
   /// Reads the tasks in again once a change has been saved, or has failed,
   /// to show them as they now are. Should that fail, they're shown as they
   /// were until they're next read in: the change has gone through, or the
   /// user has been told it hasn't, either way.
-  Future<void> _reload() async {
-    try {
-      await get();
-    } catch (e) {
-      // Shown as they were, until they're next read in.
-    }
-  }
+  Future<void> _reload() => get();
 
   /// Brings each repeating task up to date if a new day has begun since the
   /// tasks were: at midnight, or as the app comes back after it. A daily
@@ -527,7 +527,7 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
       try {
         added = added.copyWith(id: await _tasksRepository.insertItem(added));
       } catch (e) {
-        return const Failure("Couldn't add the task");
+        return const Unsaved("Couldn't add the task");
       }
       await _reload();
       // Unfolded, so the new task shows.
@@ -560,7 +560,7 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
       await _tasksRepository.updateItem(updated);
     } catch (e) {
       // As it was, reminder and all.
-      return const Failure("Couldn't save the task");
+      return const Unsaved("Couldn't save the task");
     }
     try {
       // Whichever it had, in case it's been turned off, or it's changed.
@@ -625,7 +625,7 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
 
   /// Reads in the tasks in the trash.
   @override
-  Future<void> getTrash() => _trash.load();
+  Future<Result?> getTrash() => _trash.load();
 
   /// Puts the task [entry] holds back on the list, with the tasks in it,
   /// where they were when they can be, with their reminders, if those are
@@ -749,8 +749,8 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
     // Before they're marked, as the time that stands for a repeating task
     // may be another once it's done.
     final said = done
-        ? (task.repeats ? "Done for ${_occasionOf(task)}" : "Task done")
-        : "Task undone";
+        ? (task.repeats ? "Done for ${_occasionOf(task)}" : "Task Done")
+        : "Task Undone";
     try {
       await _tasksRepository.updateItems([
         for (final each in changing) each.marked(done: done, today: today),
@@ -792,10 +792,10 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
     return Undoable(message, undo: () => _markAs(changing));
   }
 
-  /// The day that stands for a repeating [task] today, as a message names
-  /// it: "today", "yesterday", "tomorrow", or "Fri, Oct 24".
+  /// The day that stands for a repeating [task] today, as a message's title
+  /// names it: "Today", "Yesterday", "Tomorrow", or "Fri, Oct 24".
   String _occasionOf(TodoItem task) =>
-      DateTimeUtils.dayInSentence(task.occurrenceOn(today) ?? today, today);
+      DateTimeUtils.friendlyDay(task.occurrenceOn(today) ?? today, today);
 
   /// [task]'s title in quotes, cut short if it's long, to name it in a
   /// message.
@@ -807,9 +807,10 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   /// Marks each of [tasks] done or not as it is here, as it was before a
   /// change that's being taken back, with the reminder it had then.
   Future<Result> _markAs(List<TodoItem> tasks) async {
+    // As they are now, not as they were when the change was made.
+    if (await get() != null) return const Failure("Couldn't undo that");
     final List<TodoItem> restored;
     try {
-      await get();
       restored = [
         for (final was in tasks)
           // Not one that's been deleted since.
@@ -972,23 +973,23 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
     final day = task.day;
     final time = task.time;
     if (day == null || time == null) {
-      return const Info("Please set time and date");
+      return const Info("A reminder needs a date and a time");
     }
     final scheduledTime = time.on(day);
     if (!scheduledTime.isAfter(_now())) {
-      return const Info("Please set time and date in the future");
+      return const Info("A reminder needs a date and time in the future");
     }
     final reminding = task.copyWith(done: false, reminder: Reminder.once);
     final shown = await _askToShow();
     if (await _setReminder(reminding, was: task) case final failed?) {
       return failed;
     }
-    final undone = task.done ? "Task undone. " : "";
+    final undone = task.done ? "Task Undone. " : "";
     if (!shown) return Failure("$undone$_notShown");
-    final remaining =
-        "Time remaining:\n "
-        "${DateTimeUtils.durationToString(scheduledTime.difference(_now()))}";
-    return Info("$undone$remaining");
+    final away = DateTimeUtils.durationToString(
+      scheduledTime.difference(_now()),
+    );
+    return Success("${undone}Reminder Set\nIn $away");
   }
 
   /// Has [task] come round as [rule] has it, with the user reminded at its
@@ -999,13 +1000,13 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
     Recurrence rule, {
     RepeatProgress? progress,
   }) async {
-    if (task.time == null) return Info("Please set time");
+    if (task.time == null) return const Info("A reminder needs a time");
     final repeating = task.repeatingAs(
       rule,
       progress: progress ?? _progressAs(task, rule),
     );
     if (repeating.occurrenceOn(today) == null) {
-      return Info("Please set an end after its next time");
+      return const Info("The reminder ends before the task comes round");
     }
     // One whose last time has gone has nothing more to remind of.
     final ended = repeating.recurrence!.hasEndedBy(today);

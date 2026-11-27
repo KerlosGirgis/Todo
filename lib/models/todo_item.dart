@@ -117,9 +117,6 @@ class TodoItem {
   /// afresh: one that reminds the user daily, weekly or monthly.
   bool get repeats => recurrence != null;
 
-  /// Whether the task is for every day.
-  bool get isDaily => reminder == Reminder.daily;
-
   /// The day that stands for a repeating task on [today]: the last time it
   /// came round, until the next time does, or the first time, while that's
   /// still to come. Null for a task that doesn't repeat, or never comes

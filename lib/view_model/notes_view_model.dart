@@ -5,14 +5,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
-import '../core/result.dart';
-import '../repositories/notes_repository.dart';
 import '../core/prompts.dart';
+import '../core/result.dart';
 import '../core/utils/note_document_utils.dart';
 import '../models/app_lock.dart';
 import '../models/note.dart';
 import '../models/note_preview.dart';
 import '../models/trashed.dart';
+import '../repositories/notes_repository.dart';
 import '../services/authentication_service.dart';
 import '../services/backup_service.dart';
 import '../services/file_service.dart';
@@ -84,26 +84,27 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
   /// see [_checkWidget].
   bool _widgetChecked = false;
 
-  Future<void> get() async {
-    _notes = await _notesRepository.getNotes();
+  /// Reads in the notes, as the notes page does as it opens. Why they
+  /// couldn't be, or null: then they're shown as they were.
+  Future<Result?> get() async {
+    try {
+      _notes = await _notesRepository.getNotes();
+    } catch (e) {
+      return const Failure("Couldn't read your notes");
+    }
     _publish();
     if (!_widgetChecked) {
       _widgetChecked = true;
       await _checkWidget();
     }
+    return null;
   }
 
   /// Reads the notes in again once a change has been saved, or has failed,
   /// to show them as they now are. Should that fail, they're shown as they
   /// were until they're next read in: the change has gone through, or the
   /// user has been told it hasn't, either way.
-  Future<void> _reload() async {
-    try {
-      await get();
-    } catch (e) {
-      // Shown as they were, until they're next read in.
-    }
-  }
+  Future<void> _reload() => get();
 
   /// Shows the pages the notes as they are now.
   void _publish() {
@@ -223,7 +224,7 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
       await _reload();
       return Info("Note Updated");
     } catch (e) {
-      return Failure("Couldn't save the note");
+      return const Unsaved("Couldn't save the note");
     }
   }
 
@@ -360,7 +361,7 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
 
   /// Reads in the notes in the trash.
   @override
-  Future<void> getTrash() => _trash.load();
+  Future<Result?> getTrash() => _trash.load();
 
   /// [entry] as the pages get it: without a locked note's text.
   static Trashed<Note> _shownInTrash(Trashed<Note> entry) =>
@@ -729,6 +730,11 @@ class NoteEditorViewModel {
   /// How long the writing pauses before it's saved.
   static const autoSaveDelay = Duration(milliseconds: 500);
 
+  /// How long the writing pauses, with auto-save off, before it's told
+  /// whether there's anything to save: nothing, should it be back as it was
+  /// saved.
+  static const settleDelay = Duration(milliseconds: 300);
+
   final NotesViewModel _notes;
   Note _note;
 
@@ -739,10 +745,15 @@ class NoteEditorViewModel {
   /// for the editor to start from.
   final List<Map<String, dynamic>> content;
 
-  /// The text as it's been written, and as it was last saved, as JSON.
+  /// The text as it was last taken from the editor, and as it was last
+  /// saved, as JSON.
   late List<Map<String, dynamic>> _edited;
   late String _editedJson;
   late String _savedJson;
+
+  /// Gives the editor's text as it is now, as delta ops, once it's changed
+  /// since it was last taken: see [edit]. Null till it changes again.
+  List<Map<String, dynamic>> Function()? _pending;
 
   final _unsaved = ValueNotifier(false);
 
@@ -755,25 +766,53 @@ class NoteEditorViewModel {
   Stream<String> get failures => _failures.stream;
 
   Timer? _autoSave;
+  Timer? _settle;
 
   /// The saves in hand, which go one at a time, in order.
   Future<void> _saving = Future.value();
   bool _disposed = false;
 
-  /// Takes [content], the editor's text as delta ops, as it's written. With
-  /// [autoSave] on, it's saved once the writing pauses.
-  void edit(List<Map<String, dynamic>> content, {required bool autoSave}) {
-    _edited = content;
-    _editedJson = jsonEncode(content);
-    _unsaved.value = _editedJson != _savedJson;
+  /// Takes note that the editor's text has changed: [content] gives it as
+  /// delta ops. They're asked for once the writing pauses, or the note's
+  /// saved, rather than on each key, as making them over a long note would
+  /// hold up the writing. With [autoSave] on, the note's saved then.
+  void edit(
+    List<Map<String, dynamic>> Function() content, {
+    required bool autoSave,
+  }) {
+    _pending = content;
+    _unsaved.value = true;
     _autoSave?.cancel();
-    _autoSave = autoSave && _unsaved.value ? Timer(autoSaveDelay, save) : null;
+    _settle?.cancel();
+    _autoSave = autoSave ? Timer(autoSaveDelay, save) : null;
+    _settle = autoSave ? null : Timer(settleDelay, _settleWriting);
+  }
+
+  /// Takes the editor's text, if it's changed since it was last taken.
+  void _take() {
+    final content = _pending;
+    if (content == null) return;
+    _pending = null;
+    _edited = content();
+    _editedJson = jsonEncode(_edited);
+  }
+
+  /// Once the writing pauses, with auto-save off: whether there's anything
+  /// to save after all.
+  void _settleWriting() {
+    _settle = null;
+    _take();
+    if (!_disposed) _unsaved.value = _editedJson != _savedJson;
   }
 
   /// Saves the text as it is now.
   Future<void> save() {
     _autoSave?.cancel();
     _autoSave = null;
+    _settle?.cancel();
+    _settle = null;
+    // As it is now, whatever's written while it saves.
+    _take();
     return _saving = _saving.then((_) => _write());
   }
 
@@ -783,17 +822,20 @@ class NoteEditorViewModel {
 
   Future<void> _write() async {
     final (content, json) = (_edited, _editedJson);
-    if (json == _savedJson) return;
-    try {
-      _note = await _notes._saveContent(_note, content);
-      _savedJson = json;
-    } catch (e) {
-      if (!_disposed) {
-        _failures.add("Couldn't save the note");
+    if (json != _savedJson) {
+      try {
+        _note = await _notes._saveContent(_note, content);
+        _savedJson = json;
+      } catch (e) {
+        if (!_disposed) {
+          _failures.add("Couldn't save the note");
+        }
       }
     }
-    // Still unsaved if it was written in while it saved.
-    if (!_disposed) _unsaved.value = _editedJson != _savedJson;
+    // Still unsaved if it was written in while it saved, or since.
+    if (!_disposed) {
+      _unsaved.value = _pending != null || _editedJson != _savedJson;
+    }
   }
 
   /// Shows the note's saved text on the home screen's widget.
@@ -813,14 +855,20 @@ class NoteEditorViewModel {
     if (result is Deleted) {
       _autoSave?.cancel();
       _autoSave = null;
+      _settle?.cancel();
+      _settle = null;
     }
     return result;
   }
 
-  /// Saves what's waiting to be saved, then lets the editor go.
+  /// Saves what's waiting to be saved, then lets the editor go. Before the
+  /// editor goes itself, as what's waiting is taken from it.
   void dispose() {
     _disposed = true;
+    _settle?.cancel();
+    _settle = null;
     flush().whenComplete(() {
+      _pending = null;
       _unsaved.dispose();
       _failures.close();
     });

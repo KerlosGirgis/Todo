@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:readmore/readmore.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
@@ -109,6 +109,9 @@ class _TaskCardState extends State<TaskCard> {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
     final done = widget.task.done;
+    // Worked out the once, rather than on each frame of the animation below,
+    // which only changes the colours.
+    final facts = _Facts.of(widget.task, widget.now);
     return AnimatedScale(
       scale: _pressed ? 0.98 : 1,
       duration: const Duration(milliseconds: 160),
@@ -161,7 +164,7 @@ class _TaskCardState extends State<TaskCard> {
                 duration: const Duration(milliseconds: 350),
                 curve: Curves.easeOutCubic,
                 builder: (context, doneness, child) =>
-                    _buildContent(context, doneness),
+                    _buildContent(context, doneness, facts),
               ),
             ),
           ),
@@ -180,22 +183,15 @@ class _TaskCardState extends State<TaskCard> {
     widget.onEdit!();
   }
 
-  /// The card's insides, part way between to-do (0) and done (1).
-  Widget _buildContent(BuildContext context, double doneness) {
+  /// The card's insides, part way between to-do (0) and done (1), saying
+  /// what [facts] has of the task.
+  Widget _buildContent(BuildContext context, double doneness, _Facts facts) {
     final task = widget.task;
     final ink = context.colors.wB;
     // Text fades back as the task gets done.
     Color fade(double alpha, double doneAlpha) =>
         ink.withValues(alpha: lerpDouble(alpha, doneAlpha, doneness));
-    final now = widget.now;
-    final recurrence = task.recurrence;
-    final occurrence = task.occurrenceOn(now);
-    // The time that stands for it as the card has it, which is how the tour
-    // can check it off.
-    final progress = occurrence == null
-        ? task.progress
-        : task.progress.withDay(occurrence, done: task.done);
-    final chips = _chips(context, doneness, now, recurrence, progress);
+    final chips = _chips(context, doneness, facts);
     final subtasks = widget.subtasks;
     return Padding(
       // Less under the subtasks' row, which has room of its own to tap.
@@ -265,18 +261,13 @@ class _TaskCardState extends State<TaskCard> {
               padding: const EdgeInsets.fromLTRB(_textInset, 10, 10, 0),
               child: Wrap(spacing: 6, runSpacing: 6, children: chips),
             ),
-          if (recurrence != null)
+          if (facts.recent case final recent?)
             Padding(
               padding: const EdgeInsets.fromLTRB(_textInset, 12, 10, 0),
               // Fades back with the chips once the task's done for now.
               child: Opacity(
                 opacity: lerpDouble(1, 0.5, doneness)!,
-                child: _RecentTimes(
-                  recurrence: recurrence,
-                  progress: progress,
-                  today: now,
-                  doneness: doneness,
-                ),
+                child: _RecentTimes(recent: recent, doneness: doneness),
               ),
             ),
           if (subtasks != null)
@@ -327,25 +318,15 @@ class _TaskCardState extends State<TaskCard> {
   }
 
   /// When the task is due, how it repeats and until when, and for how many
-  /// times in a row it's been done.
-  List<Widget> _chips(
-    BuildContext context,
-    double doneness,
-    DateTime now,
-    Recurrence? recurrence,
-    RepeatProgress progress,
-  ) {
-    final task = widget.task;
+  /// times in a row it's been done, as [facts] has them.
+  List<Widget> _chips(BuildContext context, double doneness, _Facts facts) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final ink = context.colors.wB;
     // Done tasks' chips fade back with the rest of the card.
     final strength = lerpDouble(1, 0.5, doneness)!;
-    final streak = recurrence?.streak(now, done: progress.doneDays) ?? 0;
-    final end = recurrence == null ? null : repeatEndLabel(recurrence, now);
     final orange = _orange(isDarkTheme);
-    final when = taskWhenLabel(task, now);
     // Red once it's overdue, as in Reminders, until it's done.
-    final overdue = task.isPastDue(now) ? 1 - doneness : 0.0;
+    final overdue = facts.overdue ? 1 - doneness : 0.0;
     final red = context.colors.systemRed;
     final whenColor = Color.lerp(ink.withValues(alpha: 0.6), red, overdue)!;
     final whenTint = Color.lerp(
@@ -358,19 +339,19 @@ class _TaskCardState extends State<TaskCard> {
       alpha: (isDarkTheme ? 0.08 : 0.05) * strength,
     );
     return [
-      if (when != null)
+      if (facts.when case final due?)
         _Chip(
-          icon: taskDayOf(task, now) == null
-              ? Icons.schedule_rounded
-              : Icons.calendar_today_rounded,
-          label: when,
+          icon: facts.hasDay
+              ? Icons.calendar_today_rounded
+              : Icons.schedule_rounded,
+          label: due,
           color: whenColor.withValues(alpha: whenColor.a * strength),
           tint: whenTint.withValues(alpha: whenTint.a * strength),
         ),
-      if (recurrence != null)
+      if (facts.repeat case final repeat?)
         _Chip(
           icon: Icons.repeat_rounded,
-          label: repeatChipLabel(recurrence),
+          label: repeat,
           color: Colors.white.withValues(alpha: strength),
           gradient: LinearGradient(
             colors: [
@@ -379,19 +360,19 @@ class _TaskCardState extends State<TaskCard> {
             ],
           ),
         ),
-      if (end != null)
+      if (facts.end case final end?)
         _Chip(
-          icon: recurrence!.hasEndedBy(now)
+          icon: facts.ended
               ? Icons.flag_rounded
               : Icons.hourglass_bottom_rounded,
           label: end,
           color: plain,
           tint: plainTint,
         ),
-      if (recurrence != null && streak >= 2)
+      if (facts.streak case final streak?)
         _Chip(
           icon: Icons.local_fire_department_rounded,
-          label: streakLabel(recurrence, streak),
+          label: streak,
           color: orange.withValues(alpha: strength),
           tint: orange.withValues(
             alpha: (isDarkTheme ? 0.18 : 0.12) * strength,
@@ -399,6 +380,62 @@ class _TaskCardState extends State<TaskCard> {
         ),
     ];
   }
+}
+
+/// What a task's card says of it, as of the card's time, worked out once
+/// for each build of the card rather than on each frame of its done
+/// animation, which only changes its colours.
+class _Facts {
+  const _Facts({
+    required this.when,
+    required this.hasDay,
+    required this.overdue,
+    required this.repeat,
+    required this.end,
+    required this.ended,
+    required this.streak,
+    required this.recent,
+  });
+
+  factory _Facts.of(TodoItem task, DateTime now) {
+    final recurrence = task.recurrence;
+    final occurrence = task.occurrenceOn(now);
+    // The time that stands for it as the card has it, which is how the tour
+    // can check it off.
+    final progress = occurrence == null
+        ? task.progress
+        : task.progress.withDay(occurrence, done: task.done);
+    final streak = recurrence?.streak(now, done: progress.doneDays) ?? 0;
+    return _Facts(
+      when: taskWhenLabel(task, now),
+      hasDay: taskDayOf(task, now) != null,
+      overdue: task.isPastDue(now),
+      repeat: recurrence == null ? null : repeatChipLabel(recurrence),
+      end: recurrence == null ? null : repeatEndLabel(recurrence, now),
+      ended: recurrence?.hasEndedBy(now) ?? false,
+      streak: recurrence != null && streak >= 2
+          ? streakLabel(recurrence, streak)
+          : null,
+      recent: recurrence == null ? null : _Recent.of(recurrence, progress, now),
+    );
+  }
+
+  /// When the task is due, and whether that's on a day, or only a time.
+  final String? when;
+  final bool hasDay;
+
+  /// Whether the task was due before now, and still is.
+  final bool overdue;
+
+  /// How a repeating task repeats; until when, and whether that's gone; and
+  /// how many times in a row it's been done, when that's two or more.
+  final String? repeat;
+  final String? end;
+  final bool ended;
+  final String? streak;
+
+  /// A repeating task's last few times.
+  final _Recent? recent;
 }
 
 /// A repeating task's last few times, each with its initial: filled in with
@@ -411,43 +448,23 @@ class _TaskCardState extends State<TaskCard> {
 /// its first time while that's still to come; a monthly one, its last six
 /// months, each by its initial.
 class _RecentTimes extends StatelessWidget {
-  const _RecentTimes({
-    required this.recurrence,
-    required this.progress,
-    required this.today,
-    required this.doneness,
-  });
+  const _RecentTimes({required this.recent, required this.doneness});
 
-  final Recurrence recurrence;
-  final RepeatProgress progress;
-  final DateTime today;
+  final _Recent recent;
 
   /// How far the time that stands for the task now has filled in, as the
   /// card goes from to-do (0) to done (1).
   final double doneness;
 
-  static const _days = 7;
-  static const _months = 6;
-
   @override
   Widget build(BuildContext context) {
-    final current = recurrence.currentAsOf(today);
-    final monthly = recurrence.every == RepeatEvery.month;
-    final slots = monthly ? _monthSlots(current) : _daySlots(current);
-    int count(DayStatus status) =>
-        slots.where((slot) => slot.status == status).length;
-    final stillToDo = current != null && !progress.isDoneOn(current);
     // Big enough for its initial at the user's text size.
     final size = math.max(
       24.0,
       MediaQuery.textScalerOf(context).scale(11.5) + 11,
     );
     return Semantics(
-      label:
-          "Last ${monthly ? "$_months months" : "$_days days"}: "
-          "${count(DayStatus.done)} done, ${count(DayStatus.missed)} missed"
-          "${stillToDo ? ", ${DateTimeUtils.dayInSentence(current, today)} "
-                    "still to do" : ""}",
+      label: recent.label,
       excludeSemantics: true,
       child: Align(
         alignment: AlignmentDirectional.centerStart,
@@ -457,7 +474,7 @@ class _RecentTimes extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final (index, slot) in slots.indexed) ...[
+              for (final (index, slot) in recent.slots.indexed) ...[
                 if (index > 0) const SizedBox(width: 6),
                 slot.current
                     ? _DayDot(
@@ -479,50 +496,74 @@ class _RecentTimes extends StatelessWidget {
       ),
     );
   }
+}
 
-  /// The last seven days, up to today, or up to [current] when that's
-  /// still to come.
-  List<_Slot> _daySlots(DateTime? current) {
-    final last = current != null && current.isAfter(today) ? current : today;
-    return [
-      for (var back = _days - 1; back >= 0; back--)
-        _slot(
-          DateTime(last.year, last.month, last.day - back),
-          DateFormat("EEEEE"),
-          current,
-        ),
-    ];
+/// A repeating task's last few times, as [_RecentTimes] shows them: each
+/// with its initial and how it went, and what a screen reader says of them.
+class _Recent {
+  const _Recent(this.slots, this.label);
+
+  /// A daily or weekly task's last seven days, up to today, or up to its
+  /// first time while that's still to come; a monthly one's last six
+  /// months, up to the one its time is in, each by the day it comes round
+  /// on there: none, in a month without that day.
+  factory _Recent.of(
+    Recurrence recurrence,
+    RepeatProgress progress,
+    DateTime today,
+  ) {
+    final current = recurrence.currentAsOf(today);
+    final monthly = recurrence.every == RepeatEvery.month;
+    _Slot slot(DateTime day, DateFormat letter) => (
+      letter: letter.format(day),
+      status: recurrence.statusOf(day, today, done: progress.doneDays),
+      current: day == current,
+    );
+    final List<_Slot> slots;
+    if (monthly) {
+      final last = current ?? today;
+      final monthDay = recurrence.monthDay!;
+      final letter = DateFormat("MMMMM");
+      slots = [
+        for (var back = _months - 1; back >= 0; back--)
+          if (DateTime(last.year, last.month - back) case final month
+              when DateTime(month.year, month.month + 1, 0).day < monthDay)
+            (
+              letter: letter.format(month),
+              status: DayStatus.untracked,
+              current: false,
+            )
+          else
+            slot(DateTime(last.year, last.month - back, monthDay), letter),
+      ];
+    } else {
+      final last = current != null && current.isAfter(today) ? current : today;
+      final letter = DateFormat("EEEEE");
+      slots = [
+        for (var back = _days - 1; back >= 0; back--)
+          slot(DateTime(last.year, last.month, last.day - back), letter),
+      ];
+    }
+    int count(DayStatus status) =>
+        slots.where((slot) => slot.status == status).length;
+    final stillToDo = current != null && !progress.isDoneOn(current);
+    return _Recent(
+      slots,
+      "Last ${monthly ? "$_months months" : "$_days days"}: "
+      "${count(DayStatus.done)} done, ${count(DayStatus.missed)} missed"
+      "${stillToDo ? ", ${DateTimeUtils.dayInSentence(current, today)} "
+                "still to do" : ""}",
+    );
   }
 
-  /// The last six months, up to the one [current] is in, each by the day the
-  /// task comes round on in it: none, in a month without that day.
-  List<_Slot> _monthSlots(DateTime? current) {
-    final last = current ?? today;
-    final monthDay = recurrence.monthDay!;
-    final letter = DateFormat("MMMMM");
-    return [
-      for (var back = _months - 1; back >= 0; back--)
-        if (DateTime(last.year, last.month - back) case final month
-            when DateTime(month.year, month.month + 1, 0).day < monthDay)
-          (
-            letter: letter.format(month),
-            status: DayStatus.untracked,
-            current: false,
-          )
-        else
-          _slot(
-            DateTime(last.year, last.month - back, monthDay),
-            letter,
-            current,
-          ),
-    ];
-  }
+  static const _days = 7;
+  static const _months = 6;
 
-  _Slot _slot(DateTime day, DateFormat letter, DateTime? current) => (
-    letter: letter.format(day),
-    status: recurrence.statusOf(day, today, done: progress.doneDays),
-    current: day == current,
-  );
+  /// The days, or the months, from the first.
+  final List<_Slot> slots;
+
+  /// What a screen reader says of them all.
+  final String label;
 }
 
 /// A day, or a month, of [_RecentTimes]: its initial, how it went, and

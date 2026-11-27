@@ -64,10 +64,6 @@ class FakeTasksRepository extends TasksRepository {
   }
 
   @override
-  Future<void> deleteItem(int id) async =>
-      rows.removeWhere((row) => row.id == id);
-
-  @override
   Future<void> updateItem(TodoItem item) async {
     if (failWrites) throw StateError("Disk full");
     final index = rows.indexWhere((row) => row.id == item.id);
@@ -303,8 +299,15 @@ class FakeLock extends LockService {
   AppLock lock = AppLock.off;
   final changed = StreamController<AppLock>.broadcast();
 
+  /// How many times the lock has been read, each a read of the phone's
+  /// secure storage.
+  var reads = 0;
+
   @override
-  Future<AppLock> getLock() async => lock;
+  Future<AppLock> getLock() async {
+    reads++;
+    return lock;
+  }
 
   @override
   Stream<AppLock> get changes => changed.stream;
@@ -524,14 +527,32 @@ void main() {
   });
 
   group('saving', () {
+    test("says nothing was saved only when nothing was", () async {
+      repository.failWrites = true;
+      expect(await add("Call"), isA<Unsaved>());
+      repository.failWrites = false;
+      notifications.failSchedules = true;
+      final result = await add(
+        "Call",
+        time: const ClockTime(18, 0),
+        reminder: Reminder.once,
+      );
+      // Added, without its reminder: the form has nothing more to do.
+      expect((result as Failure).message, "Couldn't set the reminder");
+      expect(result, isNot(isA<Unsaved>()));
+      expect(task("Call").reminder, Reminder.none);
+    });
+
     test('adds a task with a reminder still to come', () async {
       final result = await add(
         "Call",
         time: const ClockTime(18, 0),
         reminder: Reminder.once,
       );
-      expect(result, isA<Info>());
-      expect((result as Info).message, startsWith("Time remaining"));
+      expect(
+        (result as Success).message,
+        startsWith("Reminder Set\nIn 6 hours"),
+      );
       final call = task("Call");
       expect(call.reminder, Reminder.once);
       expect(
@@ -548,7 +569,7 @@ void main() {
       );
       expect(
         (result as Info).message,
-        "Please set time and date in the future",
+        "A reminder needs a date and time in the future",
       );
       expect(task("Late").reminder, Reminder.none);
       expect(notifications.once, isEmpty);
@@ -579,8 +600,8 @@ void main() {
       final draft = tasks.draft(task("Call"))..setReminder(Reminder.once);
       final result = await tasks.save(draft);
       expect(
-        (result as Info).message,
-        startsWith("Task undone. Time remaining"),
+        (result as Success).message,
+        startsWith("Task Undone. Reminder Set\nIn "),
       );
       final call = task("Call");
       expect(call.done, isFalse);
@@ -598,7 +619,7 @@ void main() {
       final result = await tasks.save(draft);
       expect(
         (result as Info).message,
-        "Please set time and date in the future",
+        "A reminder needs a date and time in the future",
       );
       expect(task("Late").done, isTrue);
       expect(task("Late").reminder, Reminder.none);
@@ -625,6 +646,19 @@ void main() {
       expect(notifications.once, hasLength(1));
     });
   });
+
+  test(
+    "says so when the tasks can't be read in, and shows them as they were",
+    () async {
+      await add("Call");
+      repository.failReads = true;
+      expect(
+        (await tasks.get() as Failure).message,
+        "Couldn't read your tasks",
+      );
+      expect(tasks.items.map((task) => task.title), ["Call"]);
+    },
+  );
 
   group('commands', () {
     test('marking a task done turns its reminder off', () async {
@@ -768,7 +802,7 @@ void main() {
       await tasks.toggleDone(task("Call"));
       notifications.allowed = false;
       final result = await tasks.toggleReminder(task("Call"));
-      expect((result as Failure).message, "Task undone. $notShown");
+      expect((result as Failure).message, "Task Undone. $notShown");
       expect(task("Call").done, isFalse);
     });
 
@@ -777,7 +811,7 @@ void main() {
       notifications.failAsks = true;
       await add("Call", time: const ClockTime(18, 0));
       final result = await tasks.toggleReminder(task("Call"));
-      expect((result as Info).message, startsWith("Time remaining"));
+      expect((result as Success).message, startsWith("Reminder Set\nIn "));
       expect(notifications.once, hasLength(1));
     });
   });
@@ -987,7 +1021,7 @@ void main() {
     test('are done for today only, and keep reminding every day', () async {
       await addStretch();
       final result = await tasks.toggleDone(task("Stretch"));
-      expect((result as Success).message, "Done for today");
+      expect((result as Success).message, "Done for Today");
       expect(task("Stretch").done, isTrue);
       expect(task("Stretch").reminder, Reminder.daily);
       expect(notifications.daily.values.single, const ClockTime(7, 0));
@@ -1008,7 +1042,7 @@ void main() {
       await addStretch();
       await tasks.toggleDone(task("Stretch"));
       final result = await tasks.toggleDone(task("Stretch"));
-      expect((result as Info).message, "Task undone");
+      expect((result as Info).message, "Task Undone");
       expect(task("Stretch").done, isFalse);
       expect(repository.rows.single.progress.doneDays, isEmpty);
       expect(notifications.daily, hasLength(1));
@@ -1053,7 +1087,7 @@ void main() {
         ..setReminder(Reminder.daily);
       await tasks.save(draft);
       final read = task("Read");
-      expect(read.isDaily, isTrue);
+      expect(read.reminder, Reminder.daily);
       expect(read.done, isTrue);
       expect(read.progress.since, DateTime(2026, 5, 13));
       expect(read.progress.doneDays, {DateTime(2026, 5, 13)});
@@ -1206,7 +1240,7 @@ void main() {
     test('are done for today when they come round today', () async {
       await addRepeating("Swim", (draft) => draft.setReminder(Reminder.weekly));
       final result = await tasks.toggleDone(task("Swim"));
-      expect((result as Success).message, "Done for today");
+      expect((result as Success).message, "Done for Today");
       expect(task("Swim").done, isTrue);
       expect(notifications.weekly, hasLength(1), reason: "they keep reminding");
     });
@@ -1395,7 +1429,10 @@ void main() {
         ..toggleWeekday(DateTime.wednesday)
         ..setUntil(DateTime(2026, 5, 14));
       final result = await tasks.save(draft);
-      expect((result as Info).message, "Please set an end after its next time");
+      expect(
+        (result as Info).message,
+        "The reminder ends before the task comes round",
+      );
       expect(task("Gym").reminder, Reminder.none);
       expect(notifications.repeating, isEmpty);
     });
@@ -1507,7 +1544,7 @@ Shop
         // The other one was done already.
         expect(
           (result as Undoable).message,
-          "Task done, with its last subtask",
+          "Task Done, with its last subtask",
         );
         expect(tasks.items.every((each) => each.done), isTrue);
         expect(task("Book").reminder, Reminder.none);
@@ -1525,9 +1562,26 @@ Shop
     test('says how many were done with it', () async {
       await plan();
       final result = await tasks.toggleDone(task("Trip"));
-      expect((result as Undoable).message, "Task done, with its 4 subtasks");
+      expect((result as Undoable).message, "Task Done, with its 4 subtasks");
       expect(tasks.finishedTasksCount, 5);
     });
+
+    test(
+      "an Undo that can't read the tasks in says so, and changes nothing",
+      () async {
+        await plan();
+        final result = await tasks.toggleDone(task("Trip"));
+        repository.failReads = true;
+        expect(
+          (await (result as Undoable).undo() as Failure).message,
+          "Couldn't undo that",
+        );
+        repository.failReads = false;
+        await tasks.get();
+        expect(task("Trip").done, isTrue);
+        expect(task("Flights").done, isTrue);
+      },
+    );
 
     test('says so when only the ones still to do were done with it', () async {
       await plan();
@@ -1536,7 +1590,7 @@ Shop
       final result = await tasks.toggleDone(task("Trip"));
       expect(
         (result as Undoable).message,
-        "Task done, with its last 2 subtasks",
+        "Task Done, with its last 2 subtasks",
       );
       await result.undo();
       await tasks.toggleDone(task("Book"));
@@ -1551,7 +1605,7 @@ Shop
       expect(await tasks.toggleDone(task("Flights")), isA<Success>());
       expect(await tasks.toggleDone(task("Pack")), isNot(isA<Undoable>()));
       final result = await tasks.toggleDone(task("Hotel"));
-      expect((result as Undoable).message, "Task done. That finishes “Book”");
+      expect((result as Undoable).message, "Task Done. That finishes “Book”");
       expect(task("Book").done, isTrue);
       expect(task("Trip").done, isTrue);
       expect(task("Shop").done, isFalse);
@@ -1569,7 +1623,7 @@ Shop
       final result = await tasks.toggleDone(task("Hotel"));
       expect(
         (result as Undoable).message,
-        "Task undone, and the 2 tasks it's in",
+        "Task Undone, and the 2 tasks it's in",
       );
       expect(task("Hotel").done, isFalse);
       expect(task("Book").done, isFalse);
@@ -1605,7 +1659,7 @@ Shop
       );
       await addIn("Routine", "Water");
       final result = await tasks.toggleDone(task("Stretch"));
-      expect((result as Success).message, "Done for today");
+      expect((result as Success).message, "Done for Today");
       await tasks.toggleDone(task("Water"));
       expect(task("Routine").done, isTrue);
       expect(task("Routine").progress.doneDays, {DateTime(2026, 5, 13)});
@@ -1620,7 +1674,7 @@ Shop
       final again = await tasks.toggleDone(task("Stretch"));
       expect(
         (again as Undoable).message,
-        "Done for today. That finishes “Routine”",
+        "Done for Today. That finishes “Routine”",
       );
     });
 
@@ -1994,7 +2048,7 @@ Shop
           ..setParent(task("Trip"));
         expect(draft.moved, isTrue);
         final result = await tasks.save(draft);
-        expect((result as Info).message, startsWith("Time remaining"));
+        expect((result as Success).message, startsWith("Reminder Set\nIn "));
         expect(
           tasks.tree.nodeOf(task("Fresh eggs"))!.parent!.task.title,
           "Trip",

@@ -62,10 +62,6 @@ class TasksRepository {
     return items;
   }
 
-  Future<void> deleteItem(int id) async {
-    await db.delete('ToDo', where: 'id = ?', whereArgs: [id]);
-  }
-
   Future<void> updateItem(TodoItem item) async {
     await db.update(
       'ToDo',

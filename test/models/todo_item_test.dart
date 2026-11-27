@@ -86,7 +86,7 @@ void main() {
         'doneDays': "2026-05-11,2026-05-13",
       };
       final task = TodoItem.fromMap(daily);
-      expect(task.isDaily, isTrue);
+      expect(task.reminder, Reminder.daily);
       expect(task.progress.since, DateTime(2026, 5, 1));
       expect(task.progress.doneDays, {
         DateTime(2026, 5, 11),

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../widgets/color_swatches.dart';
@@ -87,9 +88,20 @@ class _NoteDialogState extends State<NoteDialog> {
     FeedbackToast.show(result);
   }
 
+  /// Whether the note's being saved, which the form waits for: it stays
+  /// open, with what was put in it, should the note not be saved.
+  bool _saving = false;
+
   Future<void> _save() async {
-    Navigator.of(context).pop();
+    setState(() => _saving = true);
     final result = await _draft.save();
+    if (mounted) {
+      if (result is Unsaved) {
+        setState(() => _saving = false);
+      } else {
+        Navigator.of(context).pop();
+      }
+    }
     FeedbackToast.show(result);
   }
 
@@ -166,7 +178,7 @@ class _NoteDialogState extends State<NoteDialog> {
           // Only once there's a title to save.
           ProfileButton(
             label: adding ? "Add" : "Save",
-            onPressed: _draft.canSave ? _save : null,
+            onPressed: _draft.canSave && !_saving ? _save : null,
           ),
         ],
       ),

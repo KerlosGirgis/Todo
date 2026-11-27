@@ -32,6 +32,8 @@ linter:
     # A Future that isn't awaited loses its errors: await it, or say that's
     # meant with `unawaited`.
     unawaited_futures: true
+    # Imports in sections, dart: then package: then relative, each sorted.
+    directives_ordering: true
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

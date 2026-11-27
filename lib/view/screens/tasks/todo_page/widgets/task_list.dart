@@ -77,9 +77,12 @@ class _TaskListState extends State<TaskList> {
   /// view rise in one after another.
   bool _opening = true;
 
-  /// The tasks listed at the last build, so a task added since can rise in
-  /// by itself.
-  Set<String> _listed = {};
+  /// The tasks listed, so a task added since can rise in by itself.
+  Set<String> _listed = const {};
+
+  /// The tasks added since the tasks last changed, which make room for
+  /// themselves and rise in, in the frame that brings them.
+  Set<String> _added = const {};
 
   /// The task being dragged or swiped away, by its key, whose subtasks fold
   /// away under it until it's dropped or gone: they go with it.
@@ -97,8 +100,24 @@ class _TaskListState extends State<TaskList> {
   @override
   void initState() {
     super.initState();
+    // As they are now: the view model's tasks change in place.
+    _listed = _keys();
     WidgetsBinding.instance.addPostFrameCallback((_) => _opening = false);
   }
+
+  /// As the tasks change, which rebuilds the list with them.
+  @override
+  void didUpdateWidget(TaskList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final listed = _keys();
+    _added = _opening ? const {} : listed.difference(_listed);
+    _listed = listed;
+    if (_added.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _added = const {});
+    }
+  }
+
+  Set<String> _keys() => {for (final node in widget.tasks.tree.nodes) node.key};
 
   @override
   void dispose() {
@@ -165,9 +184,7 @@ class _TaskListState extends State<TaskList> {
   Widget build(BuildContext context) {
     final tasks = widget.tasks;
     final nodes = tasks.tree.nodes;
-    final listed = {for (final node in nodes) node.key};
-    final added = _opening ? const <String>{} : listed.difference(_listed);
-    _listed = listed;
+    final added = _added;
     // A task is out of sight while any task it's inside of is folded, or
     // being carried.
     final hidden = List.filled(nodes.length, false);

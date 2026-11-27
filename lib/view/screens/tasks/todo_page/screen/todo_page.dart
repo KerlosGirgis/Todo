@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
@@ -130,12 +130,15 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
       ).checkForNewDay,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        await Provider.of<TasksViewModel>(context, listen: false).get();
-      } finally {
-        if (mounted) setState(() => _loaded = true);
-      }
-      await _tourIfDue();
+      final failed = await Provider.of<TasksViewModel>(
+        context,
+        listen: false,
+      ).get();
+      if (!mounted) return;
+      setState(() => _loaded = true);
+      FeedbackToast.show(failed);
+      // Not over tasks that couldn't be read in.
+      if (failed == null) await _tourIfDue();
     });
   }
 

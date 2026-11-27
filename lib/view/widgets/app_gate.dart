@@ -1,8 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
-import 'loading.dart';
-
 import '../../core/extensions/theme_extensions.dart';
 import '../../models/user_profile.dart';
 import '../../view_model/auth_view_model.dart';
@@ -11,6 +9,7 @@ import '../screens/notes/notes_page/screen/notes_page.dart';
 import '../screens/profile/lock_page/screen/lock_page.dart';
 import '../screens/profile/profile_page/widgets/profile_button.dart';
 import '../screens/tasks/todo_page/screen/todo_page.dart';
+import 'loading.dart';
 
 /// The app's home: the lock page, or what it shows while it opens, or
 /// can't, then the page it opens on.

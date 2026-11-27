@@ -1,9 +1,12 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart'
     show FlutterQuillLocalizations;
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import 'package:toastification/toastification.dart';
 
+import 'core/theme/app_theme.dart';
 import 'models/widget_style.dart';
 import 'services/home_widget_service.dart';
 import 'services/notification_service.dart';
@@ -15,11 +18,6 @@ import 'view_model/tasks_view_model.dart';
 import 'view_model/tour_view_model.dart';
 import 'view_model/user_view_model.dart';
 import 'view_model/widgets_view_model.dart';
-
-import 'package:flutter/services.dart';
-import 'package:timezone/data/latest.dart' as tz;
-
-import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
