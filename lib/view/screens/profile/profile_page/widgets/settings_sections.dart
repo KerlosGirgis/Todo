@@ -10,9 +10,9 @@ import '../../../../../models/widget_style.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../../view_model/widgets_view_model.dart';
-import '../../lock_page/widgets/password_dialogs.dart';
+import '../../../../widgets/password_dialogs.dart';
+import '../../../../widgets/settings_group.dart';
 import 'appearance_picker.dart';
-import 'settings_group.dart';
 import 'text_size_sheet.dart';
 import 'widget_style_sheet.dart';
 

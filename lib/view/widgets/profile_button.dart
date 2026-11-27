@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../../core/extensions/theme_extensions.dart';
+import '../../core/extensions/theme_extensions.dart';
 
 const _accent = Color(0xff3D5AFE);
 

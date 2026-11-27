@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/core/theme/app_theme.dart';
 import 'package:todo/models/app_lock.dart';
-import 'package:todo/view/screens/profile/lock_page/widgets/password_dialogs.dart';
+import 'package:todo/view/widgets/password_dialogs.dart';
 import 'package:todo/view_model/user_view_model.dart';
 
 import '../view_model/backup_flow_test.dart' show noPassword;

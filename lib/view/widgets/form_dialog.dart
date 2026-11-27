@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../profile/profile_page/widgets/settings_group.dart';
+import '../../core/extensions/theme_extensions.dart';
+import 'settings_group.dart';
 
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);

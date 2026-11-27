@@ -5,10 +5,10 @@ import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../widgets/color_swatches.dart';
-import '../../../profile/lock_page/widgets/password_dialogs.dart';
-import '../../../profile/profile_page/widgets/profile_button.dart';
-import '../../../profile/profile_page/widgets/settings_group.dart';
-import '../../../tasks/todo_page/widgets/form_dialog.dart';
+import '../../../../widgets/form_dialog.dart';
+import '../../../../widgets/password_dialogs.dart';
+import '../../../../widgets/profile_button.dart';
+import '../../../../widgets/settings_group.dart';
 
 const _accent = Color(0xff3D5AFE);
 

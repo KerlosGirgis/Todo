@@ -16,20 +16,20 @@ import '../../../../../models/user_profile.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
+import '../../../../widgets/app_gate.dart';
+import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/page_bar_actions.dart';
+import '../../../../widgets/password_dialogs.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../../widgets/themed_status_bar.dart';
 import '../../../../widgets/tour.dart';
 import '../../../../widgets/widget_page_requests.dart';
-import '../../../notes/notes_page/screen/notes_page.dart';
-import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
 import '../../../trash/trash_page/screen/trash_page.dart';
 import '../widgets/empty_tasks.dart';
-import '../widgets/form_dialog.dart';
 import '../widgets/sort_filter_buttons.dart';
 import '../widgets/task_dialog.dart';
 import '../widgets/task_list.dart';
@@ -113,9 +113,6 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   /// The tasks, which can leave the map with nothing to show.
   late final TasksViewModel _tasks;
 
-  /// Starts the daily tasks over when the app comes back on a new day.
-  late final AppLifecycleListener _lifecycle;
-
   @override
   void initState() {
     super.initState();
@@ -123,12 +120,6 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
       ..addListener(_toursReplayed);
     _tasks = Provider.of<TasksViewModel>(context, listen: false)
       ..addListener(_tasksChanged);
-    _lifecycle = AppLifecycleListener(
-      onResume: Provider.of<TasksViewModel>(
-        context,
-        listen: false,
-      ).checkForNewDay,
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final failed = await Provider.of<TasksViewModel>(
         context,
@@ -159,7 +150,6 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
     _route?.secondaryAnimation?.removeStatusListener(_coverChanged);
-    _lifecycle.dispose();
     _tasks.removeListener(_tasksChanged);
     _tours.removeListener(_toursReplayed);
     _tourStart?.cancel();
@@ -534,25 +524,7 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   void _addSubtask(TodoItem parent) =>
       showFormDialog<void>(context, TaskDialog(parent: parent));
 
-  void _openNotes() {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const NotesPage(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(-1, 0),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.ease)),
-              ),
-              child: child,
-            ),
-      ),
-    );
-  }
+  void _openNotes() => switchToPage(context, StartPage.notes);
 
   void _openSettings() => Navigator.push(context, profileRoute());
 }

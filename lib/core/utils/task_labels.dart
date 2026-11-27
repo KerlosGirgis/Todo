@@ -96,6 +96,23 @@ String? repeatEndLabel(Recurrence recurrence, DateTime now) {
   return "Until ${DateTimeUtils.shortDay(until, now)}";
 }
 
+/// A headline for how far through their [total] tasks the user is, with a
+/// line of detail under it, as the to-do page's summary and the profile
+/// page's progress card both say it.
+(String, String) describeTaskProgress(int done, int total) {
+  final progress = total == 0 ? 0.0 : done / total;
+  return switch (progress) {
+    _ when total == 0 => ("No tasks yet", "Add a task to get started."),
+    1.0 => ("All done", "You've finished every task. Nice work!"),
+    >= 0.75 => ("Almost there", "$done of ${_tasks(total)} done"),
+    >= 0.5 => ("Halfway there", "$done of ${_tasks(total)} done"),
+    > 0 => ("Off to a good start", "$done of ${_tasks(total)} done"),
+    _ => ("Ready to begin", "${_tasks(total)} waiting for you"),
+  };
+}
+
+String _tasks(int count) => count == 1 ? "1 task" : "$count tasks";
+
 bool _isOnly(Set<int> days, Set<int> these) =>
     days.length == these.length && days.containsAll(these);
 

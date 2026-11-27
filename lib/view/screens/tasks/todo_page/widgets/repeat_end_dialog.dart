@@ -6,9 +6,9 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../models/recurrence.dart';
 import '../../../../../view_model/tasks_view_model.dart';
-import '../../../profile/profile_page/widgets/profile_button.dart';
-import '../../../profile/profile_page/widgets/settings_group.dart';
-import 'form_dialog.dart';
+import '../../../../widgets/form_dialog.dart';
+import '../../../../widgets/profile_button.dart';
+import '../../../../widgets/settings_group.dart';
 
 /// iOS's system red, as for the task's date.
 const _red = Color(0xffFF3B30);

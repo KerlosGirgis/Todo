@@ -12,11 +12,11 @@ import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/user_view_model.dart';
+import '../../../../widgets/profile_button.dart';
 import '../../../notes/note_editor_page/widgets/note_styles.dart';
-import '../../../notes/notes_page/screen/notes_page.dart';
 import '../../../notes/notes_page/widgets/note_card.dart';
+import '../../../notes/notes_page/widgets/note_grid_layout.dart';
 import '../../../tasks/todo_page/widgets/task_card.dart';
-import 'profile_button.dart';
 
 const _accent = Color(0xff3D5AFE);
 

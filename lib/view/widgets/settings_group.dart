@@ -1,7 +1,7 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../../core/extensions/theme_extensions.dart';
+import '../../core/extensions/theme_extensions.dart';
 import 'profile_card.dart';
 
 const _accent = Color(0xff3D5AFE);

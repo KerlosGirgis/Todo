@@ -8,8 +8,8 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../models/app_lock.dart';
 import '../../../../../view_model/auth_view_model.dart';
-import '../../profile_page/widgets/profile_button.dart';
-import '../widgets/password_field.dart';
+import '../../../../widgets/password_field.dart';
+import '../../../../widgets/profile_button.dart';
 
 class LockPage extends StatefulWidget {
   const LockPage({super.key});

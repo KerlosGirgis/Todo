@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../../core/extensions/theme_extensions.dart';
+import '../../core/extensions/theme_extensions.dart';
 
 /// The rounded surface the profile page's cards sit on. A soft shadow lifts
 /// it off light pages; on dark ones a hairline edge does the separating.

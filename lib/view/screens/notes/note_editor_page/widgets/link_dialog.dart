@@ -2,8 +2,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/utils/link_utils.dart';
-import '../../../profile/profile_page/widgets/profile_button.dart';
-import '../../../tasks/todo_page/widgets/form_dialog.dart';
+import '../../../../widgets/form_dialog.dart';
+import '../../../../widgets/profile_button.dart';
 
 const _accent = Color(0xff3D5AFE);
 

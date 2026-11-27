@@ -11,9 +11,9 @@ import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/tour_service.dart';
 import 'package:todo/view/screens/notes/notes_page/screen/notes_page.dart';
 import 'package:todo/view/screens/profile/lock_page/screen/lock_page.dart';
-import 'package:todo/view/screens/profile/profile_page/widgets/settings_group.dart';
 import 'package:todo/view/screens/tasks/todo_page/screen/todo_page.dart';
 import 'package:todo/view/widgets/app_gate.dart';
+import 'package:todo/view/widgets/settings_group.dart';
 import 'package:todo/view_model/auth_view_model.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
@@ -94,68 +94,76 @@ void main() {
     }
   }
 
+  /// Opens the app as main.dart puts it together, over a database that
+  /// opens and with every tour seen, on the to-do page: its tasks and notes.
+  Future<(TasksViewModel, NotesViewModel)> openWholeApp(
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915) * 2;
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.reset);
+    // Every tour seen, so none starts over the page.
+    SharedPreferences.setMockInitialValues({
+      for (final tour in PageTour.values) 'tour.${tour.name}': tour.version,
+    });
+    // A database that opens, this time.
+    database.failToOpen = false;
+    final lock = newLock();
+    final device = FakeDevice();
+    user = UserViewModel(
+      repository: FakeUserRepository(),
+      lockService: lock,
+      deviceService: device,
+      databaseService: database,
+    );
+    auth = AuthViewModel(
+      user,
+      lockService: lock,
+      databaseService: database,
+      deviceService: device,
+      verseService: FakeVerses(),
+    );
+    final tasks = TasksViewModel(
+      repository: FakeTasksRepository(),
+      notificationService: FakeNotifications(),
+      lockService: FakeLock(),
+    );
+    final notes = NotesViewModel(
+      repository: notes_test.FakeNotesRepository(),
+      authService: notes_test.FakeAuth(),
+      lockService: notes_test.FakeLock(),
+      homeWidgetService: notes_test.FakeHomeWidget(),
+    );
+    await auth.initializeApp();
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: user),
+          ChangeNotifierProvider.value(value: tasks),
+          ChangeNotifierProvider.value(value: notes),
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider(
+            create: (_) => TourViewModel(service: TourService()),
+          ),
+        ],
+        child: ToastificationWrapper(
+          child: MaterialApp(
+            theme: AppTheme.getTheme(isDarkMode: false),
+            home: const AppGate(),
+          ),
+        ),
+      ),
+    );
+    await wait(tester, const Duration(seconds: 2));
+    expect(find.byType(TodoPage), findsOneWidget);
+    return (tasks, notes);
+  }
+
   testWidgets(
     "a start page picked in the settings is for the next start: the page "
     "the app opened on stays under them",
     (tester) async {
-      tester.view.physicalSize = const Size(412, 915) * 2;
-      tester.view.devicePixelRatio = 2;
-      addTearDown(tester.view.reset);
-      // Every tour seen, so none starts over the page.
-      SharedPreferences.setMockInitialValues({
-        for (final tour in PageTour.values) 'tour.${tour.name}': tour.version,
-      });
-      // A database that opens, this time.
-      database.failToOpen = false;
-      final lock = newLock();
-      final device = FakeDevice();
-      user = UserViewModel(
-        repository: FakeUserRepository(),
-        lockService: lock,
-        deviceService: device,
-        databaseService: database,
-      );
-      auth = AuthViewModel(
-        user,
-        lockService: lock,
-        databaseService: database,
-        deviceService: device,
-        verseService: FakeVerses(),
-      );
-      final tasks = TasksViewModel(
-        repository: FakeTasksRepository(),
-        notificationService: FakeNotifications(),
-        lockService: FakeLock(),
-      );
-      final notes = NotesViewModel(
-        repository: notes_test.FakeNotesRepository(),
-        authService: notes_test.FakeAuth(),
-        lockService: notes_test.FakeLock(),
-        homeWidgetService: notes_test.FakeHomeWidget(),
-      );
-      await auth.initializeApp();
-      // The app as main.dart puts it together, opening on the to-do page.
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: user),
-            ChangeNotifierProvider.value(value: tasks),
-            ChangeNotifierProvider.value(value: notes),
-            ChangeNotifierProvider.value(value: auth),
-            ChangeNotifierProvider(
-              create: (_) => TourViewModel(service: TourService()),
-            ),
-          ],
-          child: ToastificationWrapper(
-            child: MaterialApp(
-              theme: AppTheme.getTheme(isDarkMode: false),
-              home: const AppGate(),
-            ),
-          ),
-        ),
-      );
-      await wait(tester, const Duration(seconds: 2));
-      expect(find.byType(TodoPage), findsOneWidget);
+      final (tasks, notes) = await openWholeApp(tester);
 
       // The settings, from the page's menu, where Notes becomes the start
       // page.
@@ -179,6 +187,34 @@ void main() {
 
       // Back on the page they came from, as it was.
       expect(await tester.binding.handlePopRoute(), isTrue);
+      await wait(tester);
+      expect(find.byType(TodoPage), findsOneWidget);
+      expect(find.byType(NotesPage), findsNothing);
+
+      await tester.pumpWidget(const SizedBox());
+      tasks.dispose();
+      notes.dispose();
+    },
+  );
+
+  testWidgets(
+    "each page's switch puts the other in its place: the notes slide in "
+    "from the left, and the to-do page from the right",
+    (tester) async {
+      final (tasks, notes) = await openWholeApp(tester);
+
+      await tester.tap(find.byTooltip("Notes"));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(tester.getTopLeft(find.byType(NotesPage)).dx, lessThan(0));
+      await wait(tester);
+      expect(find.byType(NotesPage), findsOneWidget);
+      expect(find.byType(TodoPage), findsNothing);
+
+      await tester.tap(find.byTooltip("To-Do"));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(tester.getTopLeft(find.byType(TodoPage)).dx, greaterThan(0));
       await wait(tester);
       expect(find.byType(TodoPage), findsOneWidget);
       expect(find.byType(NotesPage), findsNothing);

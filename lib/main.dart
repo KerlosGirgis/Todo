@@ -21,6 +21,7 @@ import 'services/tour_service.dart';
 import 'services/verse_service.dart';
 import 'view/widgets/app_gate.dart';
 import 'view/widgets/app_lock_guard.dart';
+import 'view/widgets/new_day_watcher.dart';
 import 'view_model/auth_view_model.dart';
 import 'view_model/notes_view_model.dart';
 import 'view_model/tasks_view_model.dart';
@@ -143,34 +144,36 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppLockGuard(
       navigatorKey: _navigatorKey,
-      child: Selector<UserViewModel, (bool, bool)>(
-        selector: (_, userVM) =>
-            (userVM.user.darkTheme, userVM.user.amoledTheme),
-        builder: (context, theme, _) {
-          final (isDarkMode, isAmoled) = theme;
-          return ToastificationWrapper(
-            child: MaterialApp(
-              navigatorKey: _navigatorKey,
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.getTheme(
-                isDarkMode: isDarkMode,
-                isAmoled: isAmoled,
+      child: NewDayWatcher(
+        child: Selector<UserViewModel, (bool, bool)>(
+          selector: (_, userVM) =>
+              (userVM.user.darkTheme, userVM.user.amoledTheme),
+          builder: (context, theme, _) {
+            final (isDarkMode, isAmoled) = theme;
+            return ToastificationWrapper(
+              child: MaterialApp(
+                navigatorKey: _navigatorKey,
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.getTheme(
+                  isDarkMode: isDarkMode,
+                  isAmoled: isAmoled,
+                ),
+                localizationsDelegates: const [
+                  FlutterQuillLocalizations.delegate,
+                ],
+                // The note editor's flutter_quill is still built on
+                // flutter/material.dart, whose widgets look for that
+                // library's own theme and localizations. The bridge hands
+                // them the app's. Above the navigator, so menus quill opens
+                // in the overlay, like copy and paste, find them too.
+                builder: (context, child) =>
+                    // ignore: deprecated_member_use
+                    MaterialUiCompatibilityBridge(child: child!),
+                home: const AppGate(),
               ),
-              localizationsDelegates: const [
-                FlutterQuillLocalizations.delegate,
-              ],
-              // The note editor's flutter_quill is still built on
-              // flutter/material.dart, whose widgets look for that library's
-              // own theme and localizations. The bridge hands them the app's.
-              // Above the navigator, so menus quill opens in the overlay, like
-              // copy and paste, find them too.
-              builder: (context, child) =>
-                  // ignore: deprecated_member_use
-                  MaterialUiCompatibilityBridge(child: child!),
-              home: const AppGate(),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

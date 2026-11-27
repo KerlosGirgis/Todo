@@ -2,10 +2,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/utils/task_labels.dart';
 import '../../../../../view_model/tasks_view_model.dart';
+import '../../../../widgets/profile_card.dart';
 import '../../../../widgets/progress_ring.dart';
-import '../../../profile/profile_page/widgets/profile_card.dart';
-import '../../../profile/profile_page/widgets/progress_card.dart';
 
 /// How far through their tasks the user is, beside a smaller copy of the
 /// profile page's progress ring, and in the same words.

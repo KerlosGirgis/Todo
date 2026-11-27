@@ -2,8 +2,8 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../profile/profile_page/widgets/profile_button.dart';
-import 'form_dialog.dart';
+import '../../../../widgets/form_dialog.dart';
+import '../../../../widgets/profile_button.dart';
 
 const _accent = Color(0xff3D5AFE);
 const _highlight = Color(0xff40C4FF);

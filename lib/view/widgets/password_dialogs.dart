@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../../core/extensions/theme_extensions.dart';
-import '../../../../../core/prompts.dart';
-import '../../../../../core/result.dart';
-import '../../../tasks/todo_page/widgets/form_dialog.dart';
-import '../../profile_page/widgets/profile_button.dart';
+import '../../core/extensions/theme_extensions.dart';
+import '../../core/prompts.dart';
+import '../../core/result.dart';
+import 'form_dialog.dart';
 import 'password_field.dart';
+import 'profile_button.dart';
 
 /// How the App Lock's password is asked for, saying what for in [subtitle]:
 /// from [context]'s page, if it's still open by then, trying each one the

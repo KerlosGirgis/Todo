@@ -13,23 +13,24 @@ import '../../../../../models/trashed.dart';
 import '../../../../../models/user_profile.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/tour_view_model.dart';
+import '../../../../widgets/app_gate.dart';
+import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/page_bar_actions.dart';
+import '../../../../widgets/password_dialogs.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../../widgets/themed_status_bar.dart';
 import '../../../../widgets/tour.dart';
 import '../../../../widgets/widget_page_requests.dart';
-import '../../../profile/lock_page/widgets/password_dialogs.dart';
 import '../../../profile/profile_page/screen/profile_page.dart';
-import '../../../tasks/todo_page/screen/todo_page.dart';
-import '../../../tasks/todo_page/widgets/form_dialog.dart';
 import '../../../trash/trash_page/screen/trash_page.dart';
 import '../../note_editor_page/screen/note_editor_page.dart';
 import '../widgets/empty_notes.dart';
 import '../widgets/note_card.dart';
 import '../widgets/note_dialog.dart';
+import '../widgets/note_grid_layout.dart';
 import '../widgets/notes_overwrite_dialog.dart';
 import '../widgets/notes_search_field.dart';
 import '../widgets/notes_tour.dart';
@@ -37,41 +38,11 @@ import '../widgets/reorder_notes_dialog.dart';
 
 const _title = "Notes";
 
-/// The gap between cards.
-const _cardGap = 14.0;
-
-/// How wide a card grows before another column of them fits.
-const _maxCardWidth = 220.0;
-
-/// A card's width over its height.
-const _cardAspectRatio = 0.8;
-
 /// The room above the grid's first row.
 const _gridTop = 20.0;
 
 /// How long the page takes to rise in, which its tour waits for.
 const _tourDelay = Duration(milliseconds: 900);
-
-/// The page's margins either side: clear of a camera cutout on a phone
-/// turned on its side, and a comfortable width on large screens.
-(double, double) _gutters(double width, EdgeInsets padding) => (
-  math.max(16 + padding.left, (width - 1040) / 2),
-  math.max(16 + padding.right, (width - 1040) / 2),
-);
-
-/// How big each card is in the grid on this screen, so that a card drawn
-/// elsewhere, like the settings' preview of the title size, is as big and
-/// breaks its title over lines just as it will here.
-Size noteCardSize(BuildContext context) {
-  final width = MediaQuery.sizeOf(context).width;
-  final (left, right) = _gutters(width, MediaQuery.paddingOf(context));
-  final gridWidth = width - left - right;
-  // As the grid's delegate shares the width out between its columns.
-  final columns = math.max(1, (gridWidth / (_maxCardWidth + _cardGap)).ceil());
-  final cardWidth =
-      math.max(0.0, gridWidth - _cardGap * (columns - 1)) / columns;
-  return Size(cardWidth, cardWidth / _cardAspectRatio);
-}
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -192,7 +163,7 @@ class _NotesPageState extends State<NotesPage>
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final (gutterLeft, gutterRight) = _gutters(
+    final (gutterLeft, gutterRight) = noteGutters(
       MediaQuery.sizeOf(context).width,
       padding,
     );
@@ -405,25 +376,7 @@ class _NotesPageState extends State<NotesPage>
     Navigator.push(context, trashRoute(TrashKind.note));
   }
 
-  void _openTodo() {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const TodoPage(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(1, 0),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.ease)),
-              ),
-              child: child,
-            ),
-      ),
-    );
-  }
+  void _openTodo() => switchToPage(context, StartPage.tasks);
 
   void _openSettings() => Navigator.push(context, profileRoute());
 }
@@ -649,10 +602,10 @@ class _NoteGridState extends State<_NoteGrid> {
     final notes = widget.matching;
     return SliverGrid.builder(
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: _maxCardWidth,
-        mainAxisSpacing: _cardGap,
-        crossAxisSpacing: _cardGap,
-        childAspectRatio: _cardAspectRatio,
+        maxCrossAxisExtent: noteCardMaxWidth,
+        mainAxisSpacing: noteCardGap,
+        crossAxisSpacing: noteCardGap,
+        childAspectRatio: noteCardAspectRatio,
       ),
       itemCount: notes.length,
       itemBuilder: (context, index) {

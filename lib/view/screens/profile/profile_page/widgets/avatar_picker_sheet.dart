@@ -5,7 +5,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/avatar.dart';
 import '../../../../../view_model/user_view_model.dart';
-import 'profile_button.dart';
+import '../../../../widgets/profile_button.dart';
 
 const _accent = Color(0xff3D5AFE);
 

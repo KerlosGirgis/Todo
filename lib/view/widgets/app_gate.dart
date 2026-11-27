@@ -7,9 +7,9 @@ import '../../view_model/auth_view_model.dart';
 import '../../view_model/widgets_view_model.dart';
 import '../screens/notes/notes_page/screen/notes_page.dart';
 import '../screens/profile/lock_page/screen/lock_page.dart';
-import '../screens/profile/profile_page/widgets/profile_button.dart';
 import '../screens/tasks/todo_page/screen/todo_page.dart';
 import 'loading.dart';
+import 'profile_button.dart';
 
 /// The app's home: the lock page, or what it shows while it opens, or
 /// can't, then the page it opens on.
@@ -29,10 +29,7 @@ class AppGate extends StatelessWidget {
         context,
         listen: false,
       )?.launchPage;
-      return switch (launchPage ?? auth.openedOn) {
-        StartPage.tasks => const TodoPage(),
-        StartPage.notes => const NotesPage(),
-      };
+      return pageFor(launchPage ?? auth.openedOn);
     }
     if (auth.status == AuthStatus.unauthenticated) {
       return const LockPage();
@@ -45,6 +42,35 @@ class AppGate extends StatelessWidget {
       body: const Loading(),
     );
   }
+}
+
+/// The page the app shows for [page]: the to-do page, or the notes.
+Widget pageFor(StartPage page) => switch (page) {
+  StartPage.tasks => const TodoPage(),
+  StartPage.notes => const NotesPage(),
+};
+
+/// Puts [page] in place of the page [context] is on, as each page's switch
+/// button does, sliding it in from its side: the notes from the left, the
+/// to-do page from the right. Through here, rather than the pages knowing
+/// each other.
+void switchToPage(BuildContext context, StartPage page) {
+  Navigator.pushReplacement(
+    context,
+    PageRouteBuilder<void>(
+      pageBuilder: (context, animation, secondaryAnimation) => pageFor(page),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          SlideTransition(
+            position: animation.drive(
+              Tween(
+                begin: Offset(page == StartPage.notes ? -1 : 1, 0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.ease)),
+            ),
+            child: child,
+          ),
+    ),
+  );
 }
 
 /// What the app shows when it can't open the tasks and notes, rather than

@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/tasks_view_model.dart';
-import '../../../profile/lock_page/widgets/password_dialogs.dart';
-import '../../../profile/profile_page/widgets/profile_button.dart';
-import '../../../profile/profile_page/widgets/settings_group.dart';
-import 'form_dialog.dart';
+import '../../../../widgets/form_dialog.dart';
+import '../../../../widgets/password_dialogs.dart';
+import '../../../../widgets/profile_button.dart';
+import '../../../../widgets/settings_group.dart';
 
 // iOS's system colours, as on the profile page's settings.
 const _red = Color(0xffFF3B30);

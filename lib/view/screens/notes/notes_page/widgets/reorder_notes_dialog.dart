@@ -6,9 +6,9 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/note.dart';
 import '../../../../../view_model/notes_view_model.dart';
-import '../../../profile/profile_page/widgets/profile_button.dart';
-import '../../../profile/profile_page/widgets/settings_group.dart';
-import '../../../tasks/todo_page/widgets/form_dialog.dart';
+import '../../../../widgets/form_dialog.dart';
+import '../../../../widgets/profile_button.dart';
+import '../../../../widgets/settings_group.dart';
 import 'note_card.dart';
 
 /// Puts the notes in a new order, by dragging their titles up and down a

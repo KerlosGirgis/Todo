@@ -2,10 +2,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/utils/task_labels.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../../view_model/tasks_view_model.dart';
+import '../../../../widgets/profile_card.dart';
 import '../../../../widgets/progress_ring.dart';
-import 'profile_card.dart';
 
 /// How far through their tasks the user is, as a ring that fills up, with
 /// their counts of finished and remaining tasks, and of notes, below it.
@@ -111,22 +112,6 @@ class ProgressCard extends StatelessWidget {
     color: color,
   );
 }
-
-/// A headline for how far through their [total] tasks the user is, with a
-/// line of detail under it.
-(String, String) describeTaskProgress(int done, int total) {
-  final progress = total == 0 ? 0.0 : done / total;
-  return switch (progress) {
-    _ when total == 0 => ("No tasks yet", "Add a task to get started."),
-    1.0 => ("All done", "You've finished every task. Nice work!"),
-    >= 0.75 => ("Almost there", "$done of ${_tasks(total)} done"),
-    >= 0.5 => ("Halfway there", "$done of ${_tasks(total)} done"),
-    > 0 => ("Off to a good start", "$done of ${_tasks(total)} done"),
-    _ => ("Ready to begin", "${_tasks(total)} waiting for you"),
-  };
-}
-
-String _tasks(int count) => count == 1 ? "1 task" : "$count tasks";
 
 /// A count that ticks up to its value, over its label.
 class _Stat extends StatelessWidget {

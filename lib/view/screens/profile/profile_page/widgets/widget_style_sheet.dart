@@ -11,9 +11,9 @@ import '../../../../../models/widget_style.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../../view_model/widgets_view_model.dart';
 import '../../../../widgets/color_swatches.dart';
-import '../../../tasks/todo_page/widgets/form_dialog.dart';
-import 'profile_button.dart';
-import 'settings_group.dart';
+import '../../../../widgets/form_dialog.dart';
+import '../../../../widgets/profile_button.dart';
+import '../../../../widgets/settings_group.dart';
 import 'text_size_sheet.dart' show formatTextSize;
 import 'widget_previews.dart';
 

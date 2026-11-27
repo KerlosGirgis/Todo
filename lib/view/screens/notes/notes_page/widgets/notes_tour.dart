@@ -5,8 +5,8 @@ import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/tour.dart';
-import '../screen/notes_page.dart';
 import 'note_card.dart';
+import 'note_grid_layout.dart';
 
 /// The notes page's tour: how a note's card works, acted out on a copy of
 /// [note], the first card, whose key is [card], with its [preview], or, with
