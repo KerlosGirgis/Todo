@@ -27,11 +27,13 @@ class UserViewModel with ChangeNotifier {
   }) : _userRepository = repository ?? UserRepository(),
        _imageService = imageService ?? ImageService(),
        _lockService = lockService ?? LockService(),
-       _authService =
-           authService ?? AuthenticationService(lockService: lockService),
        _deviceService = deviceService ?? DeviceService(),
        _verseService = verseService ?? VerseService(),
-       _dbService = databaseService ?? DatabaseService();
+       _dbService = databaseService ?? DatabaseService() {
+    // Against the same lock as this, given or made here.
+    _authService =
+        authService ?? AuthenticationService(lockService: _lockService);
+  }
 
   UserProfile _user = UserProfile(
     name: "user",
@@ -79,7 +81,7 @@ class UserViewModel with ChangeNotifier {
   final UserRepository _userRepository;
   final ImageService _imageService;
   final LockService _lockService;
-  final AuthenticationService _authService;
+  late final AuthenticationService _authService;
   final DeviceService _deviceService;
   final VerseService _verseService;
   final DatabaseService _dbService;

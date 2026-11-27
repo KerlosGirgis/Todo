@@ -31,16 +31,20 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
     FileService? fileService,
     DateTime Function()? clock,
   }) : _notesRepository = repository ?? NotesRepository(),
-       _authService = authService ?? AuthenticationService(),
        _lockService = lockService ?? LockService(),
        _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
-       _backups = BackupFlow(
-         BackupKind.notes,
-         authService: authService,
-         backupService: backupService,
-         fileService: fileService,
-       ),
-       _now = clock ?? DateTime.now;
+       _now = clock ?? DateTime.now {
+    // What it makes of its own goes by the same lock as it does, given or
+    // made here: the App Lock a locked note falls back on, and a backup takes.
+    _authService =
+        authService ?? AuthenticationService(lockService: _lockService);
+    _backups = BackupFlow(
+      BackupKind.notes,
+      authService: _authService,
+      backupService: backupService,
+      fileService: fileService,
+    );
+  }
 
   /// The notes, with all they say.
   List<Note> _notes = [];
@@ -68,12 +72,12 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
   List<Trashed<Note>> get trash => _trash.entries;
 
   final NotesRepository _notesRepository;
-  final AuthenticationService _authService;
+  late final AuthenticationService _authService;
   final LockService _lockService;
   final HomeWidgetService _homeWidgetService;
 
   /// Backing the notes up, and restoring them.
-  final BackupFlow _backups;
+  late final BackupFlow _backups;
   final DateTime Function() _now;
 
   /// The time as the notes go by it, which the pages show them as of: the

@@ -69,18 +69,21 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   }) : _tasksRepository = repository ?? TasksRepository(),
        _lockService = lockService ?? LockService(),
        _homeWidgetService = homeWidgetService ?? HomeWidgetService(),
-       _now = clock ?? DateTime.now,
-       _reminders = ReminderScheduler(
-         notifications: notificationService,
-         lockService: lockService,
-         clock: clock,
-       ),
-       _backups = BackupFlow(
-         BackupKind.tasks,
-         authService: authService,
-         backupService: backupService,
-         fileService: fileService,
-       ) {
+       _now = clock ?? DateTime.now {
+    // What it makes of its own goes by the same lock and clock as it does,
+    // given or made here.
+    _reminders = ReminderScheduler(
+      notifications: notificationService,
+      lockService: _lockService,
+      clock: _now,
+    );
+    _backups = BackupFlow(
+      BackupKind.tasks,
+      authService:
+          authService ?? AuthenticationService(lockService: _lockService),
+      backupService: backupService,
+      fileService: fileService,
+    );
     // Reminders say which task they're for only while the app isn't locked,
     // and so does the widget.
     _lockChanges = _lockService.changes.listen((_) {
@@ -173,10 +176,10 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   final DateTime Function() _now;
 
   /// The tasks' reminders on the phone.
-  final ReminderScheduler _reminders;
+  late final ReminderScheduler _reminders;
 
   /// Backing the tasks up, and restoring them.
-  final BackupFlow _backups;
+  late final BackupFlow _backups;
 
   /// Whether the reminders have been checked against the phone's time zone
   /// and the App Lock since the app started.

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui' show Color;
 
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/core/result.dart';
@@ -22,7 +22,7 @@ import 'backup_flow_test.dart'
         backupPassword,
         newBackupPassword,
         noPassword;
-import 'user_view_model_test.dart' show CountingLock;
+import 'user_view_model_test.dart' show CountingLock, OwnPasswordLock;
 
 /// The notes table, in memory.
 class FakeNotesRepository extends NotesRepository {
@@ -745,6 +745,42 @@ void main() {
       expect((result as Success).message, "Backup Created");
       expect(appLock.checks, 1);
     });
+  });
+
+  test("given only a lock, check a locked note's password against it, "
+      "rather than one of their own: a wrong one doesn't open it", () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    const biometrics = MethodChannel('com.k.todo/biometrics');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    // A phone without a fingerprint, so a locked note asks for the
+    // password.
+    messenger.setMockMethodCallHandler(
+      biometrics,
+      (call) async => 'unavailable',
+    );
+    addTearDown(() => messenger.setMockMethodCallHandler(biometrics, null));
+    FlutterSecureStorage.setMockInitialValues({});
+    final lock = OwnPasswordLock();
+    final given = NotesViewModel(
+      repository: repository,
+      lockService: lock,
+      homeWidgetService: homeWidget,
+    );
+    await given.get();
+    final diary = given.notes.singleWhere((note) => note.title == "Diary");
+
+    final refused = await given.open(
+      diary,
+      askForPassword: appLockPassword("0000"),
+    );
+    expect((refused as Denied).message, "Authentication failed");
+    final opened = await given.open(
+      diary,
+      askForPassword: appLockPassword("1234"),
+    );
+    expect(opened, isA<Granted<NoteEditorViewModel>>());
+    expect(lock.checks, 2);
   });
 
   group('NoteEditorViewModel', () {

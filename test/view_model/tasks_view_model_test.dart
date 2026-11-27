@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
@@ -16,10 +17,15 @@ import 'package:todo/models/task_tree.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/trashed.dart';
 import 'package:todo/repositories/tasks_repository.dart';
+import 'package:todo/services/backup_service.dart';
 import 'package:todo/services/file_service.dart';
 import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/notification_service.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
+
+import 'backup_flow_test.dart'
+    show MemoryFiles, appLockPassword, newBackupPassword;
+import 'user_view_model_test.dart' show OwnPasswordLock;
 
 /// The tasks table, in memory. Like the real one, rewriting it gives every
 /// task a new id.
@@ -1163,6 +1169,34 @@ void main() {
       expect(notifications.daily, hasLength(2));
     });
   });
+
+  test(
+    "given only a lock, backs up behind it, rather than one of its own",
+    () async {
+      FlutterSecureStorage.setMockInitialValues({});
+      final passwordLock = OwnPasswordLock();
+      final locked = TasksViewModel(
+        repository: repository,
+        notificationService: notifications,
+        lockService: passwordLock,
+        backupService: BackupService.inDart(iterations: 1000),
+        fileService: MemoryFiles(),
+        clock: () => time,
+      );
+      addTearDown(locked.dispose);
+      var asked = 0;
+      final result = await locked.backup(
+        askForPassword: (check) async {
+          asked++;
+          return appLockPassword("1234")(check);
+        },
+        askForBackupPassword: newBackupPassword("correct horse"),
+      );
+      expect((result as Success).message, "Backup Created");
+      expect(asked, 1);
+      expect(passwordLock.checks, 1);
+    },
+  );
 
   group('weekly and monthly tasks', () {
     /// Adds a task at [time] through its form, repeating as [shape] has it.

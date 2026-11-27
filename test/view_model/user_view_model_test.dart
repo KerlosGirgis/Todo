@@ -100,6 +100,25 @@ class CountingLock extends LockService {
   }
 }
 
+/// An App Lock with the password "1234" that only this lock knows of: the
+/// phone's storage, which any other lock reads, has none, so another lock
+/// would let anyone through. It counts the passwords checked against it.
+class OwnPasswordLock extends LockService {
+  OwnPasswordLock() : super.withClock(() => throw StateError("No waits"));
+
+  var checks = 0;
+
+  @override
+  Future<AppLock> getLock() async => AppLock.password;
+
+  @override
+  Future<PasswordCheck> checkPassword(String password) async {
+    checks++;
+    final right = password == "1234";
+    return (matched: right, wait: Duration.zero, key: right ? dbKey : null);
+  }
+}
+
 /// A lock whose passwords can't be checked, as when the phone's secure
 /// storage fails.
 class UncheckableLock extends LockService {

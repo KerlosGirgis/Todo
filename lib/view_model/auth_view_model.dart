@@ -30,11 +30,14 @@ class AuthViewModel with ChangeNotifier {
     DeviceService? deviceService,
     VerseService? verseService,
     this._onOpened,
-  }) : _authService = authService ?? AuthenticationService(),
-       _lockService = lockService ?? LockService(),
+  }) : _lockService = lockService ?? LockService(),
        _dbService = databaseService ?? DatabaseService(),
        _deviceService = deviceService ?? DeviceService(),
-       _verseService = verseService ?? VerseService();
+       _verseService = verseService ?? VerseService() {
+    // Against the same lock as this, given or made here.
+    _authService =
+        authService ?? AuthenticationService(lockService: _lockService);
+  }
 
   AuthStatus _status = AuthStatus.unauthenticated;
   AuthStatus get status => _status;
@@ -68,7 +71,7 @@ class AuthViewModel with ChangeNotifier {
   final _awayFor = Stopwatch();
   Duration? _awaySinceBoot;
 
-  final AuthenticationService _authService;
+  late final AuthenticationService _authService;
   final LockService _lockService;
   final DatabaseService _dbService;
   final DeviceService _deviceService;
