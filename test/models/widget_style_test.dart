@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:todo/models/text_size.dart';
 import 'package:todo/models/widget_style.dart';
 
 void main() {
@@ -75,7 +76,7 @@ void main() {
         'showDone': 'yes',
       });
       expect(style.opacity, 1);
-      expect(style.textSize, WidgetStyle.minTextSize);
+      expect(style.textSize, TextSizes.min);
       expect(style.font, WidgetFont.regular);
       expect(style.showDone, isFalse);
     });
@@ -96,10 +97,7 @@ void main() {
     );
     expect(WidgetStyle.legacyNote(), WidgetStyle.noteDefault);
     expect(WidgetStyle.legacyNote(textSize: "big").textSize, 1);
-    expect(
-      WidgetStyle.legacyNote(textSize: "9").textSize,
-      WidgetStyle.maxTextSize,
-    );
+    expect(WidgetStyle.legacyNote(textSize: "9").textSize, TextSizes.max);
   });
 
   group('the text colour', () {

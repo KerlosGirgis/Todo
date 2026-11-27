@@ -10,6 +10,7 @@ import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/clock_time.dart';
 import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
+import '../../../../../models/text_size.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/profile_button.dart';
@@ -20,33 +21,13 @@ import '../../../tasks/todo_page/widgets/task_card.dart';
 
 const _accent = Color(0xff3D5AFE);
 
-/// A text size the profile page sets, and how to read and save it on the
-/// [UserViewModel].
-enum TextSizeSetting {
-  taskTitle("Task Title"),
-  taskDescription("Task Description"),
-  noteTitle("Note Title"),
-  noteBody("Note Body");
-
-  const TextSizeSetting(this.label);
-
-  final String label;
-
-  double saved(UserViewModel user) => switch (this) {
-    taskTitle => user.user.tasksTitleSize,
-    taskDescription => user.user.tasksDescSize,
-    noteTitle => user.user.notesTitleSize,
-    noteBody => user.user.notesTextSize,
-  };
-
-  /// Saves [size]. Null when it's the size already.
-  Future<Result?> apply(UserViewModel user, double size) => switch (this) {
-    taskTitle => user.setTasksTitleSize(size),
-    taskDescription => user.setTasksDescSize(size),
-    noteTitle => user.setNotesTitleSize(size),
-    noteBody => user.setNotesTextSize(size),
-  };
-}
+/// What [setting] is called, over its sheet.
+String _titleOf(TextSizeSetting setting) => switch (setting) {
+  TextSizeSetting.taskTitle => "Task Title",
+  TextSizeSetting.taskDescription => "Task Description",
+  TextSizeSetting.noteTitle => "Note Title",
+  TextSizeSetting.noteBody => "Note Body",
+};
 
 /// 1.125 -> "112.5%"
 String formatTextSize(double size) {
@@ -88,7 +69,9 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
   /// [UserViewModel], so that dragging the slider rebuilds only the sheet,
   /// and not the settings under it and every other page that listens to
   /// the user's.
-  late double _size = widget.setting.saved(context.read<UserViewModel>());
+  late double _size = context.read<UserViewModel>().user.textSize(
+    widget.setting,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +91,7 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            setting.label,
+            _titleOf(setting),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: context.colors.wB,
@@ -140,19 +123,16 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
               Expanded(
                 child: CupertinoSlider(
                   value: size,
-                  min: UserViewModel.minTextSize,
-                  max: UserViewModel.maxTextSize,
-                  divisions:
-                      ((UserViewModel.maxTextSize - UserViewModel.minTextSize) /
-                              UserViewModel.textSizeStep)
-                          .round(),
+                  min: TextSizes.min,
+                  max: TextSizes.max,
+                  divisions: ((TextSizes.max - TextSizes.min) / TextSizes.step)
+                      .round(),
                   activeColor: _accent,
                   // Snapped to the steps the divisions stand for, so the
                   // value reads cleanly and matches the saved one exactly.
                   onChanged: (value) => setState(
                     () => _size =
-                        (value / UserViewModel.textSizeStep).round() *
-                        UserViewModel.textSizeStep,
+                        (value / TextSizes.step).round() * TextSizes.step,
                   ),
                 ),
               ),
@@ -203,7 +183,9 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
           const SizedBox(height: 12),
           ProfileButton(
             label: "Apply",
-            onPressed: size == setting.saved(user) ? null : () => _apply(user),
+            onPressed: size == user.user.textSize(setting)
+                ? null
+                : () => _apply(user),
           ),
         ],
       ),
@@ -211,7 +193,7 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
   }
 
   Future<void> _apply(UserViewModel user) async {
-    final result = await widget.setting.apply(user, _size);
+    final result = await user.setTextSize(widget.setting, _size);
     if (result is Success && mounted) Navigator.pop(context);
     FeedbackToast.show(result);
   }

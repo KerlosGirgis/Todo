@@ -7,6 +7,7 @@ import 'package:todo/core/prompts.dart';
 import 'package:todo/core/result.dart';
 import 'package:todo/models/app_lock.dart';
 import 'package:todo/models/avatar.dart';
+import 'package:todo/models/text_size.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/repositories/user_repository.dart';
 import 'package:todo/services/authentication_service.dart';
@@ -280,7 +281,10 @@ void main() {
         );
       }
       expect(
-        (await user.setNotesTextSize(1.5) as Failure).message,
+        (await user.setTextSize(
+          TextSizeSetting.noteBody,
+          1.5,
+        ) as Failure).message,
         "Couldn't change the text size",
       );
       expect(
@@ -308,7 +312,7 @@ void main() {
         user.setWordCount(true),
         user.setDarkTheme(!dark),
         user.setDarkTheme(dark),
-        user.setNotesTextSize(1.5),
+        user.setTextSize(TextSizeSetting.noteBody, 1.5),
       ];
       expect(await Future.wait(saving), [
         null,
@@ -327,24 +331,52 @@ void main() {
 
     test('take text sizes from a quarter to twice the size', () async {
       expect(
-        await user.setNotesTextSize(UserViewModel.maxTextSize),
+        await user.setTextSize(TextSizeSetting.noteBody, TextSizes.max),
         isA<Success>(),
       );
       expect(
-        await user.setTasksTitleSize(UserViewModel.minTextSize),
+        await user.setTextSize(TextSizeSetting.taskTitle, TextSizes.min),
         isA<Success>(),
       );
-      expect(await user.setTasksDescSize(2.125), isA<Failure>());
-      expect(await user.setNotesTitleSize(0.125), isA<Failure>());
+      expect(
+        await user.setTextSize(TextSizeSetting.taskDescription, 2.125),
+        isA<Failure>(),
+      );
+      expect(
+        await user.setTextSize(TextSizeSetting.noteTitle, 0.125),
+        isA<Failure>(),
+      );
       expect(user.user.notesTextSize, 2);
       expect(user.user.tasksTitleSize, 0.25);
       expect(user.user.tasksDescSize, 1);
     });
 
+    test("set each text size by which one it is, and only that one", () async {
+      for (final (index, setting) in TextSizeSetting.values.indexed) {
+        final size = 1.25 + index * TextSizes.step;
+        expect(
+          (await user.setTextSize(setting, size) as Success).message,
+          "Text Size Changed",
+        );
+        expect(user.user.textSize(setting), size);
+        expect(repository.rows.single.textSize(setting), size);
+      }
+      expect(
+        [
+          for (final setting in TextSizeSetting.values)
+            user.user.textSize(setting),
+        ],
+        [1.25, 1.375, 1.5, 1.625],
+      );
+    });
+
     test("save a text size only when it changes", () async {
-      expect(await user.setNotesTitleSize(1), isNull);
+      expect(await user.setTextSize(TextSizeSetting.noteTitle, 1), isNull);
       expect(repository.updates, 0);
-      expect(await user.setNotesTitleSize(1.5), isA<Success>());
+      expect(
+        await user.setTextSize(TextSizeSetting.noteTitle, 1.5),
+        isA<Success>(),
+      );
       expect(repository.updates, 1);
     });
   });

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo/models/avatar.dart';
+import 'package:todo/models/text_size.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/models/verse.dart';
 
@@ -43,6 +44,26 @@ void main() {
       UserProfile.fromMap({...stored, 'notesTextSize': 1}).notesTextSize,
       1.0,
     );
+  });
+
+  test('reads and writes each text size by which one it is, keeping the '
+      'columns it keeps them in', () {
+    final user = UserProfile.fromMap(stored);
+    expect(user.textSize(TextSizeSetting.taskTitle), 1.0);
+    expect(user.textSize(TextSizeSetting.taskDescription), 0.875);
+    expect(user.textSize(TextSizeSetting.noteTitle), 1.0);
+    expect(user.textSize(TextSizeSetting.noteBody), 1.25);
+    for (final (setting, column) in [
+      (TextSizeSetting.taskTitle, 'tasksTitleSize'),
+      (TextSizeSetting.taskDescription, 'tasksDescSize'),
+      (TextSizeSetting.noteTitle, 'notesTitleSize'),
+      (TextSizeSetting.noteBody, 'notesTextSize'),
+    ]) {
+      final changed = user.withTextSize(setting, 1.5);
+      expect(changed.textSize(setting), 1.5);
+      // That column, and nothing else.
+      expect(changed.toMap(), {...stored, column: 1.5});
+    }
   });
 
   test('lists the tasks unless it says to map them', () {

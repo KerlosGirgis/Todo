@@ -6,6 +6,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
+import '../../../../../models/text_size.dart';
 import '../../../../../models/widget_look.dart';
 import '../../../../../models/widget_style.dart';
 import '../../../../../view_model/user_view_model.dart';
@@ -502,9 +503,9 @@ class _Controls extends StatelessWidget {
               title: "Text Size",
               value: style.textSize,
               label: formatTextSize(style.textSize),
-              min: WidgetStyle.minTextSize,
-              max: WidgetStyle.maxTextSize,
-              step: WidgetStyle.textSizeStep,
+              min: TextSizes.min,
+              max: TextSizes.max,
+              step: TextSizes.step,
               sizeEnds: true,
               onChanged: (size) => onChanged(style.copyWith(textSize: size)),
             ),

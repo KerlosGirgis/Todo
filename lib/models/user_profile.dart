@@ -1,4 +1,5 @@
 import 'avatar.dart';
+import 'text_size.dart';
 
 /// The page the app opens on. Kept as its index: 0 or 1.
 enum StartPage { tasks, notes }
@@ -59,6 +60,23 @@ class UserProfile {
 
   /// Whether the to-do page lists the tasks, or maps them.
   final TasksView tasksView;
+
+  /// [setting]'s size, as a multiple of its default one.
+  double textSize(TextSizeSetting setting) => switch (setting) {
+    TextSizeSetting.taskTitle => tasksTitleSize,
+    TextSizeSetting.taskDescription => tasksDescSize,
+    TextSizeSetting.noteTitle => notesTitleSize,
+    TextSizeSetting.noteBody => notesTextSize,
+  };
+
+  /// The profile with [setting] at [size], and the rest as it is.
+  UserProfile withTextSize(TextSizeSetting setting, double size) =>
+      switch (setting) {
+        TextSizeSetting.taskTitle => copyWith(tasksTitleSize: size),
+        TextSizeSetting.taskDescription => copyWith(tasksDescSize: size),
+        TextSizeSetting.noteTitle => copyWith(notesTitleSize: size),
+        TextSizeSetting.noteBody => copyWith(notesTextSize: size),
+      };
 
   UserProfile copyWith({
     String? name,

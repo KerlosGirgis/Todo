@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'text_size.dart';
+
 /// One of the app's home screen widgets: the to-do list, or a note.
 enum WidgetKind {
   tasks("tasksWidgetStyle", "Tasks"),
@@ -39,12 +41,6 @@ class WidgetStyle {
 
   /// The app's blue.
   static const defaultAccent = 0xff3D5AFE;
-
-  /// The text sizes on offer, as multiples of the widget's own: from a
-  /// quarter to twice the size, in eighths, as the app's own text sizes.
-  static const minTextSize = 0.25;
-  static const maxTextSize = 2.0;
-  static const textSizeStep = 0.125;
 
   /// How finely the background's opacity is set: in twentieths.
   static const opacityStep = 0.05;
@@ -173,7 +169,12 @@ class WidgetStyle {
       opacity: number('opacity', defaults.opacity, 0, 1),
       textColor: color('textColor', defaults.textColor),
       accent: color('accent', defaults.accent) ?? defaults.accent,
-      textSize: number('textSize', defaults.textSize, minTextSize, maxTextSize),
+      textSize: number(
+        'textSize',
+        defaults.textSize,
+        TextSizes.min,
+        TextSizes.max,
+      ),
       font: WidgetFont.values.asNameMap()[json['font']] ?? defaults.font,
       showDone: switch (json['showDone']) {
         final bool value => value,
@@ -200,8 +201,8 @@ class WidgetStyle {
   static WidgetStyle legacyNote({String? textSize, bool? casualFont}) =>
       noteDefault.copyWith(
         textSize: (double.tryParse(textSize ?? "") ?? 1).clamp(
-          minTextSize,
-          maxTextSize,
+          TextSizes.min,
+          TextSizes.max,
         ),
         font: casualFont == true ? WidgetFont.casual : WidgetFont.regular,
       );

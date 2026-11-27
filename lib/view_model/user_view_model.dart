@@ -5,6 +5,7 @@ import '../core/prompts.dart';
 import '../core/result.dart';
 import '../models/app_lock.dart';
 import '../models/avatar.dart';
+import '../models/text_size.dart';
 import '../models/user_profile.dart';
 import '../models/verse.dart';
 import '../repositories/user_repository.dart';
@@ -63,12 +64,6 @@ class UserViewModel with ChangeNotifier {
 
   /// The most characters a name can have.
   static const maxNameLength = 20;
-
-  /// The text sizes on offer, as multiples of the default ones: from a
-  /// quarter to twice the size, in eighths.
-  static const minTextSize = 0.25;
-  static const maxTextSize = 2.0;
-  static const textSizeStep = 0.125;
 
   /// The most lines of a task's description that can show before "Show
   /// More".
@@ -395,47 +390,17 @@ class UserViewModel with ChangeNotifier {
     }
   }
 
-  /// Whether [size] is one of the text sizes on offer.
-  static bool _isTextSize(double size) =>
-      size >= minTextSize && size <= maxTextSize;
-
-  Future<Result?> setNotesTextSize(double size) => _setTextSize(
-    size,
-    (user) => user.notesTextSize,
-    (user) => user.copyWith(notesTextSize: size),
-  );
-
-  Future<Result?> setNotesTitleSize(double size) => _setTextSize(
-    size,
-    (user) => user.notesTitleSize,
-    (user) => user.copyWith(notesTitleSize: size),
-  );
-
-  Future<Result?> setTasksTitleSize(double size) => _setTextSize(
-    size,
-    (user) => user.tasksTitleSize,
-    (user) => user.copyWith(tasksTitleSize: size),
-  );
-
-  Future<Result?> setTasksDescSize(double size) => _setTextSize(
-    size,
-    (user) => user.tasksDescSize,
-    (user) => user.copyWith(tasksDescSize: size),
-  );
-
-  /// Saves [size], one of the text sizes on offer, as [change] sets it,
-  /// unless it's the size [current] reads already: then there's nothing to
-  /// say.
-  Future<Result?> _setTextSize(
-    double size,
-    double Function(UserProfile user) current,
-    UserProfile Function(UserProfile user) change,
-  ) async {
-    if (!_isTextSize(size)) {
+  /// Sets [setting] to [size], one of the text sizes on offer: see
+  /// [TextSizes]. Why it couldn't be, or null when it's that size already:
+  /// then there's nothing to say.
+  Future<Result?> setTextSize(TextSizeSetting setting, double size) async {
+    if (!TextSizes.offers(size)) {
       return const Failure("That text size isn't on offer");
     }
     return _save(
-      (user) => current(user) == size ? null : change(user),
+      (user) => user.textSize(setting) == size
+          ? null
+          : user.withTextSize(setting, size),
       saved: const Success("Text Size Changed"),
       failure: const Failure("Couldn't change the text size"),
     );

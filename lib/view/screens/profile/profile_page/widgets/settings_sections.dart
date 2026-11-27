@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/result.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
+import '../../../../../models/text_size.dart';
 import '../../../../../models/user_profile.dart';
 import '../../../../../models/widget_style.dart';
 import '../../../../../view_model/tour_view_model.dart';
@@ -434,7 +435,9 @@ class _TextSizeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = context.select<UserViewModel, double>(setting.saved);
+    final size = context.select<UserViewModel, double>(
+      (user) => user.user.textSize(setting),
+    );
     return SettingsTile(
       icon: icon,
       color: color,
