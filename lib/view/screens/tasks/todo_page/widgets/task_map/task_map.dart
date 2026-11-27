@@ -7,7 +7,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../../core/result.dart';
-import '../../../../../../models/task_sort.dart';
 import '../../../../../../models/task_tree.dart';
 import '../../../../../../models/todo_item.dart';
 import '../../../../../../view_model/tasks_view_model.dart';
@@ -34,7 +33,12 @@ import 'map_toolbar.dart';
 class TaskMap extends StatefulWidget {
   const TaskMap({
     super.key,
-    required this.tasks,
+    required this.tree,
+    required this.now,
+    required this.byHand,
+    required this.done,
+    required this.total,
+    required this.actions,
     required this.insets,
     required this.onEdit,
     required this.onAddSubtask,
@@ -49,7 +53,26 @@ class TaskMap extends StatefulWidget {
     this.fullScreenKey,
   });
 
-  final TasksViewModel tasks;
+  /// The tasks the filter lets through, each in the task it's in, in the
+  /// sort's order: a new tree each time they change, which the map is laid
+  /// out afresh for.
+  final TaskTree tree;
+
+  /// The time the map shows the tasks as of, as it's laid out: the tasks'
+  /// own.
+  final DateTime now;
+
+  /// Whether the tasks are in the user's own order, the only one in which a
+  /// task can be dropped next to another, rather than only into it.
+  final bool byHand;
+
+  /// How many tasks there are, subtasks and all, whatever the filter lets
+  /// through, and how many of them are done, which the centre shows.
+  final int done;
+  final int total;
+
+  /// What the map asks of the tasks: see [TaskActions].
+  final TaskActions actions;
 
   /// How much of the map the page's bar covers at the top, and what the map
   /// keeps clear of at its other sides, as it's fitted to the screen.
@@ -188,11 +211,10 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
   /// change are measured again.
   final _sizes = <String, Size>{};
 
-  /// The tasks the map is of, and where they are.
+  /// The tasks the map is laid out for, and where they are.
   TaskTree? _tree;
   MapLayout _layout = MapLayout(TaskTree.empty, sizeOf: (node) => Size.zero);
   Map<String, List<MapNodeBit>> _bits = const {};
-  Set<String> _known = const {};
 
   /// Where the tasks' middles were as the last change began, the ones that
   /// have just come, and the ones that have just gone.
@@ -256,7 +278,7 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(TaskMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(widget.tasks.tree, _tree)) _lay(animate: true);
+    if (!identical(widget.tree, oldWidget.tree)) _lay(animate: true);
   }
 
   @override
@@ -285,8 +307,8 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
   /// theirs. The centre stays where it is on the screen.
   void _lay({required bool animate}) {
     final style = _style!;
-    final tree = widget.tasks.tree;
-    final now = widget.tasks.now;
+    final tree = widget.tree;
+    final now = widget.now;
     final bits = {
       for (final node in tree.nodes) node.key: MapNodeStyle.bitsOf(node, now),
     };
@@ -322,7 +344,6 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
       _tree = tree;
       _layout = layout;
       _bits = bits;
-      _known = {for (final node in tree.nodes) node.key};
       return;
     }
     final current = {
@@ -380,9 +401,11 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
         ..translateByDouble(-shift.dx, -shift.dy, 0, 1);
     }
 
-    final keys = {for (final node in tree.nodes) node.key};
-    final added = first ? const <String>{} : keys.difference(_known);
-    _known = keys;
+    // The ones that weren't in the tree the map was laid out for before.
+    final added = first
+        ? const <String>{}
+        : {for (final node in tree.nodes) node.key}
+              .difference({for (final node in _tree!.nodes) node.key});
     _tree = tree;
     _layout = layout;
     _bits = bits;
@@ -537,7 +560,7 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
 
   void _toggle(TodoItem task) {
     HapticFeedback.lightImpact();
-    widget.tasks.toggleDone(task).then(widget.onResult);
+    widget.actions.toggleDone(task).then(widget.onResult);
   }
 
   void _pickUp(String key, Offset global) {
@@ -589,7 +612,7 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     if ((point - _layout.hub).distance <= MapLayout.hubRadius + 12) {
       return const _Drop(null, _Where.into);
     }
-    final byHand = widget.tasks.sort == TaskSort.custom;
+    final byHand = widget.byHand;
     _Drop? nearest;
     var distance = double.infinity;
     for (final MapEntry(:key, value: place) in _layout.places.entries) {
@@ -624,16 +647,16 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     if (target == null || task == null) return;
     final onto = _layout.places[target.key]?.node.task;
     HapticFeedback.lightImpact();
-    final tasks = widget.tasks;
+    final actions = widget.actions;
     final Future<Result?> moving;
     if (onto == null) {
       // On the centre: a task of its own.
-      moving = tasks.moveInto(task, null);
+      moving = actions.moveInto(task, null);
     } else {
       moving = switch (target.where) {
-        _Where.into => tasks.moveInto(task, onto),
-        _Where.before => tasks.moveBeside(task, onto, after: false),
-        _Where.after => tasks.moveBeside(task, onto, after: true),
+        _Where.into => actions.moveInto(task, onto),
+        _Where.before => actions.moveBeside(task, onto, after: false),
+        _Where.after => actions.moveBeside(task, onto, after: true),
       };
     }
     moving.then(widget.onResult);
@@ -839,10 +862,10 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
                   onToggle: () => _toggle(selected.task),
                   onAddSubtask: () => widget.onAddSubtask(selected.task),
                   onEdit: () => widget.onEdit(selected.task),
-                  onReminder: () => widget.tasks
+                  onReminder: () => widget.actions
                       .toggleReminder(selected.task)
                       .then(widget.onResult),
-                  onDailyReminder: () => widget.tasks
+                  onDailyReminder: () => widget.actions
                       .remindDaily(selected.task)
                       .then(widget.onResult),
                   onDelete: () => widget.onDelete(selected.task),
@@ -862,8 +885,6 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
     final layout = _layout;
     final carried = _carried;
     final target = carried?.target;
-    final total =
-        widget.tasks.finishedTasksCount + widget.tasks.unfinishedTasksCount;
 
     final children = <Widget>[];
     final spots = <MapSpot>[];
@@ -877,8 +898,8 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
         child: KeyedSubtree(
           key: widget.hubKey,
           child: MapHub(
-            done: widget.tasks.finishedTasksCount,
-            total: total,
+            done: widget.done,
+            total: widget.total,
             targeted: target != null && target.key == null,
           ),
         ),
@@ -974,7 +995,7 @@ class _TaskMapState extends State<TaskMap> with TickerProviderStateMixin {
           color: mapBranchColor(place.branch, isDarkTheme: isDarkTheme),
           onTap: () {
             HapticFeedback.selectionClick();
-            widget.tasks.setFolded(task, !task.folded);
+            widget.actions.setFolded(task, !task.folded);
           },
         ),
       );

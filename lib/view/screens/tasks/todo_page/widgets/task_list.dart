@@ -4,15 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
-import '../../../../../models/task_sort.dart';
 import '../../../../../models/task_tree.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../../view_model/tasks_view_model.dart';
-import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/rise_in.dart';
 import 'task_card.dart';
 
@@ -38,7 +35,13 @@ const _sortedByDate = Info("To move tasks by hand, sort them by Custom");
 class TaskList extends StatefulWidget {
   const TaskList({
     super.key,
-    required this.tasks,
+    required this.tree,
+    required this.now,
+    required this.byHand,
+    required this.titleScale,
+    required this.descriptionScale,
+    required this.descriptionLines,
+    required this.actions,
     required this.listDelay,
     required this.onEdit,
     required this.onAddSubtask,
@@ -47,7 +50,28 @@ class TaskList extends StatefulWidget {
     required this.firstCardKey,
   });
 
-  final TasksViewModel tasks;
+  /// The tasks the filter lets through, in the sort's order, each in the
+  /// task it's in: a new tree each time they change, which tells the list
+  /// what's changed.
+  final TaskTree tree;
+
+  /// The time the cards show the tasks as of: the tasks' own, so that the
+  /// cards agree with the list.
+  final DateTime now;
+
+  /// Whether the tasks are in the user's own order, the only one they're
+  /// dragged to another place in.
+  final bool byHand;
+
+  /// The user's text sizes for a task's title and description, as
+  /// multiples of the default ones, and how many lines of a description
+  /// show before "Show More"; 0 shows it all.
+  final double titleScale;
+  final double descriptionScale;
+  final int descriptionLines;
+
+  /// What the cards ask of the tasks, and a drag: see [TaskActions].
+  final TaskActions actions;
 
   /// How many sections rise in ahead of the first card, as the list opens.
   final int listDelay;
@@ -77,9 +101,6 @@ class _TaskListState extends State<TaskList> {
   /// view rise in one after another.
   bool _opening = true;
 
-  /// The tasks listed, so a task added since can rise in by itself.
-  Set<String> _listed = const {};
-
   /// The tasks added since the tasks last changed, which make room for
   /// themselves and rise in, in the frame that brings them.
   Set<String> _added = const {};
@@ -100,24 +121,27 @@ class _TaskListState extends State<TaskList> {
   @override
   void initState() {
     super.initState();
-    // As they are now: the view model's tasks change in place.
-    _listed = _keys();
     WidgetsBinding.instance.addPostFrameCallback((_) => _opening = false);
   }
 
-  /// As the tasks change, which rebuilds the list with them.
+  /// As the tasks change, which rebuilds the list with a new tree: the tasks
+  /// in it that weren't in the one before are new.
   @override
   void didUpdateWidget(TaskList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final listed = _keys();
-    _added = _opening ? const {} : listed.difference(_listed);
-    _listed = listed;
+    final tree = widget.tree;
+    final was = oldWidget.tree;
+    _added = _opening || identical(tree, was)
+        ? const {}
+        : _keysOf(tree).difference(_keysOf(was));
     if (_added.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _added = const {});
     }
   }
 
-  Set<String> _keys() => {for (final node in widget.tasks.tree.nodes) node.key};
+  static Set<String> _keysOf(TaskTree tree) => {
+    for (final node in tree.nodes) node.key,
+  };
 
   @override
   void dispose() {
@@ -174,7 +198,7 @@ class _TaskListState extends State<TaskList> {
     final onResult = widget.onResult;
     // The tasks are in their new order before it's saved, so the subtasks
     // come back out where the task now is.
-    final moving = widget.tasks.syncAfterReorder(oldIndex, newIndex);
+    final moving = widget.actions.syncAfterReorder(oldIndex, newIndex);
     _putDown();
     // Said even should the list be gone by then, as the move was asked for.
     onResult(await moving);
@@ -182,8 +206,8 @@ class _TaskListState extends State<TaskList> {
 
   @override
   Widget build(BuildContext context) {
-    final tasks = widget.tasks;
-    final nodes = tasks.tree.nodes;
+    final actions = widget.actions;
+    final nodes = widget.tree.nodes;
     final added = _added;
     // A task is out of sight while any task it's inside of is folded, or
     // being carried.
@@ -202,44 +226,35 @@ class _TaskListState extends State<TaskList> {
         foldedAt = node.depth;
       }
     }
-    final (titleScale, descriptionScale, descriptionLines) = context
-        .select<UserViewModel, (double, double, int)>(
-          (user) => (
-            user.user.tasksTitleSize,
-            user.user.tasksDescSize,
-            user.user.descLines,
-          ),
-        );
-    final byHand = tasks.sort == TaskSort.custom;
-    // One time for every card, as the tasks have it.
-    final now = tasks.now;
+    final byHand = widget.byHand;
 
     TaskCard card(TaskNode node, {bool interactive = true}) {
       final task = node.task;
       return TaskCard(
         task: task,
-        now: now,
-        titleScale: titleScale,
-        descriptionScale: descriptionScale,
-        descriptionLines: descriptionLines,
+        // One time for every card, as the tasks have it.
+        now: widget.now,
+        titleScale: widget.titleScale,
+        descriptionScale: widget.descriptionScale,
+        descriptionLines: widget.descriptionLines,
         subtasks: node.subtaskCount == 0
             ? null
             : (done: node.doneSubtaskCount, total: node.subtaskCount),
         onToggle: !interactive
             ? null
-            : () => tasks.toggleDone(task).then(widget.onResult),
+            : () => actions.toggleDone(task).then(widget.onResult),
         onEdit: !interactive ? null : () => widget.onEdit(task),
         onReminder: !interactive
             ? null
-            : () => tasks.toggleReminder(task).then(widget.onResult),
+            : () => actions.toggleReminder(task).then(widget.onResult),
         // Only while it has no reminder: the bell's tap turns one off.
         onDailyReminder: !interactive || task.reminder != Reminder.none
             ? null
-            : () => tasks.remindDaily(task).then(widget.onResult),
+            : () => actions.remindDaily(task).then(widget.onResult),
         // Only with subtasks the filter lets through, to fold away.
         onFold: !interactive || node.children.isEmpty
             ? null
-            : () => tasks.setFolded(task, !task.folded),
+            : () => actions.setFolded(task, !task.folded),
       );
     }
 

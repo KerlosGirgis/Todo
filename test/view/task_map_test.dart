@@ -1,12 +1,17 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:todo/core/result.dart';
+import 'package:todo/core/theme/app_theme.dart';
+import 'package:todo/models/task_tree.dart';
 import 'package:todo/models/todo_item.dart';
 import 'package:todo/models/user_profile.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/task_map/map_node.dart';
+import 'package:todo/view/screens/tasks/todo_page/widgets/task_map/task_map.dart';
 import 'package:todo/view/widgets/large_title.dart';
 import 'package:todo/view_model/tour_view_model.dart';
 
+import 'task_list_test.dart' show RecordedActions, now, wait;
 import 'todo_page_test.dart' show TodoPageHarness, plans;
 
 void main() {
@@ -33,6 +38,61 @@ void main() {
     await gesture.up();
     await page.wait(tester);
   }
+
+  testWidgets("the map is laid out afresh for each new tree it's given, and "
+      "asks the actions it's given, with no view model behind it", (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915) * 2;
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.reset);
+    final actions = RecordedActions();
+    final results = <Result?>[];
+    Future<void> show(TaskTree tree, {required int done}) => tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.getTheme(isDarkMode: false),
+        home: Scaffold(
+          body: TaskMap(
+            tree: tree,
+            now: now,
+            byHand: true,
+            done: done,
+            total: tree.nodes.length,
+            actions: actions,
+            insets: EdgeInsets.zero,
+            onEdit: (task) {},
+            onAddSubtask: (task) {},
+            onDelete: (task) {},
+            onResult: results.add,
+          ),
+        ),
+      ),
+    );
+    final book = TodoItem(uuid: "book", title: "Book", done: true);
+    await show(TaskTree([book]), done: 1);
+    await wait(tester);
+    expect(find.text("Book"), findsOneWidget);
+    expect(find.text("Pack"), findsNothing);
+
+    await show(
+      TaskTree([book, TodoItem(uuid: "pack", title: "Pack")]),
+      done: 1,
+    );
+    await wait(tester);
+    expect(find.text("Pack"), findsOneWidget);
+    expect(find.bySemanticsLabel("1 of 2 tasks done"), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: node("Pack"),
+        matching: find.bySemanticsLabel("Done"),
+      ),
+    );
+    await tester.pump();
+    expect(actions.asked, ["done Pack"]);
+    expect((results.single as Success).message, "Task Done");
+    await wait(tester);
+  });
 
   testWidgets("each task branches off the task it's in, from the centre out", (
     tester,

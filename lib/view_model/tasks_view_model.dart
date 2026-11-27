@@ -56,7 +56,30 @@ enum EmptyTasksReason {
   noneOnce,
 }
 
-class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
+/// What the to-do page's list and map ask of the tasks, each saying how it
+/// went: marking one done, its reminder, folding its subtasks away, and
+/// moving it. The tasks themselves reach them as values, a new tree for
+/// each change, so that they can tell what's changed.
+abstract interface class TaskActions {
+  Future<Result> toggleDone(TodoItem task);
+  Future<Result> toggleReminder(TodoItem task);
+  Future<Result> remindDaily(TodoItem task);
+  Future<void> setFolded(TodoItem task, bool folded);
+
+  /// Moves the task at [oldIndex] among the tasks on the list, as the list
+  /// has them, to [newIndex].
+  Future<Result?> syncAfterReorder(int oldIndex, int newIndex);
+  Future<Result?> moveInto(TodoItem task, TodoItem? parent);
+  Future<Result?> moveBeside(
+    TodoItem task,
+    TodoItem sibling, {
+    required bool after,
+  });
+}
+
+class TasksViewModel
+    with ChangeNotifier
+    implements TrashOwner<TaskBranch>, TaskActions {
   TasksViewModel({
     TasksRepository? repository,
     BackupService? backupService,
@@ -342,6 +365,7 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   /// show as it was picked up from stays where it is. Only in the user's
   /// own order: sorted otherwise, a task's place isn't up to them. Why it
   /// couldn't be moved, or null; then the tasks go back as they were.
+  @override
   Future<Result?> syncAfterReorder(int oldIndex, int newIndex) async {
     if (sort != TaskSort.custom) return null;
     final nodes = _shown.nodes;
@@ -368,12 +392,14 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   /// Makes [task] a subtask of [parent], the last one, or a task of its own
   /// for null, the last of those. The tasks in it go with it. Null when
   /// there's nothing to say: it's moved, or was there already.
+  @override
   Future<Result?> moveInto(TodoItem task, TodoItem? parent) =>
       _move(task, parent: parent);
 
   /// Moves [task] next to [sibling], into the task that one's in: ahead of
   /// it, or right [after] it. The tasks in it go with it. Null when there's
   /// nothing to say.
+  @override
   Future<Result?> moveBeside(
     TodoItem task,
     TodoItem sibling, {
@@ -471,6 +497,7 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
 
   /// Folds [task]'s subtasks away, on the list and on the map, or brings
   /// them back out.
+  @override
   Future<void> setFolded(TodoItem task, bool folded) async {
     task = _current(task);
     if (task.folded == folded) return;
@@ -739,6 +766,7 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   /// one that isn't done again leaves the tasks it's in still to do. When
   /// other tasks change with it, the result is an [Undoable], which puts
   /// them all back.
+  @override
   Future<Result> toggleDone(TodoItem task) async {
     task = _current(task);
     final done = !task.done;
@@ -838,6 +866,7 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
   /// Reminds the user of [task] once, on its day at its time, or turns its
   /// reminder off when it has one. Turning one on asks the user to let the
   /// app post notifications, while they're off: see [_askToShow].
+  @override
   Future<Result> toggleReminder(TodoItem task) {
     task = _current(task);
     return task.reminder == Reminder.none
@@ -847,6 +876,7 @@ class TasksViewModel with ChangeNotifier implements TrashOwner<TaskBranch> {
 
   /// Reminds the user of [task] every day, at its time, asking to post
   /// notifications as [toggleReminder] does.
+  @override
   Future<Result> remindDaily(TodoItem task) =>
       _repeat(_current(task), Recurrence.daily());
 

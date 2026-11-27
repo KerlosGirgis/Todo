@@ -704,7 +704,12 @@ class _TaskMapPane extends StatelessWidget {
       );
     }
     return TaskMap(
-      tasks: tasks,
+      tree: tasks.tree,
+      now: tasks.now,
+      byHand: tasks.sort == TaskSort.custom,
+      done: tasks.finishedTasksCount,
+      total: tasks.finishedTasksCount + tasks.unfinishedTasksCount,
+      actions: tasks,
       insets: insets,
       onEdit: onEdit,
       onAddSubtask: onAddSubtask,
@@ -815,6 +820,14 @@ class _TaskListSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tasks = context.watch<TasksViewModel>();
+    final (titleScale, descriptionScale, descriptionLines) = context
+        .select<UserViewModel, (double, double, int)>(
+          (user) => (
+            user.user.tasksTitleSize,
+            user.user.tasksDescSize,
+            user.user.descLines,
+          ),
+        );
     if (tasks.emptyReason case final reason?) {
       return SliverFillRemaining(
         hasScrollBody: false,
@@ -834,7 +847,13 @@ class _TaskListSliver extends StatelessWidget {
       // A new list for each filter and sort, so the cards rise in afresh.
       sliver: TaskList(
         key: ValueKey((tasks.filter, tasks.sort, tasks.sortDirection)),
-        tasks: tasks,
+        tree: tasks.tree,
+        now: tasks.now,
+        byHand: tasks.sort == TaskSort.custom,
+        titleScale: titleScale,
+        descriptionScale: descriptionScale,
+        descriptionLines: descriptionLines,
+        actions: tasks,
         listDelay: listDelay,
         onEdit: onEdit,
         onAddSubtask: onAddSubtask,
