@@ -1,11 +1,16 @@
+/// How something the user asked for went, and what's said of it: a
+/// [Success], said in green; an [Info], in grey; or a [Failure], in red.
 sealed class Result {
-  const Result();
+  const Result(this.message);
+
+  /// What's said of it, as its toast says it.
+  final String message;
 }
 
+/// What the user asked for was done, which a confirmation says, in Title
+/// Case: "Task Added", "Lock Disabled".
 class Success extends Result {
-  final String message;
-
-  const Success(this.message);
+  const Success(super.message);
 }
 
 /// A [Success] that changed more than was asked of it, as marking a task
@@ -24,10 +29,10 @@ class Deleted extends Undoable {
   const Deleted(super.message, {required super.undo});
 }
 
+/// Something went wrong, so what was asked couldn't be done: "Couldn't
+/// save the task".
 class Failure extends Result {
-  final String message;
-
-  const Failure(this.message);
+  const Failure(super.message);
 }
 
 /// A [Failure] that left everything as it was, so it can be asked again just
@@ -36,10 +41,10 @@ class Unsaved extends Failure {
   const Unsaved(super.message);
 }
 
+/// Nothing was done, and why, or what it still needs, as a sentence: "Give
+/// the task a title", "A reminder needs a time".
 class Info extends Result {
-  final String message;
-
-  const Info(this.message);
+  const Info(super.message);
 }
 
 /// What came of asking for something behind a lock: the thing, once the lock

@@ -595,7 +595,7 @@ void main() {
       final draft = tasks.draft(task("Call"))
         ..setTitle("Call mum")
         ..setReminder(Reminder.none);
-      expect((await tasks.save(draft) as Info).message, "Task Updated");
+      expect((await tasks.save(draft) as Success).message, "Task Updated");
       expect(task("Call mum").reminder, Reminder.none);
       expect(notifications.once, isEmpty);
     });
@@ -674,7 +674,7 @@ void main() {
       expect(task("Call").done, isTrue);
       expect(task("Call").reminder, Reminder.none);
       expect(notifications.once, isEmpty);
-      expect(await tasks.toggleDone(task("Call")), isA<Info>());
+      expect(await tasks.toggleDone(task("Call")), isA<Success>());
       await tasks.get();
       expect(task("Call").done, isFalse);
     });
@@ -1048,7 +1048,7 @@ void main() {
       await addStretch();
       await tasks.toggleDone(task("Stretch"));
       final result = await tasks.toggleDone(task("Stretch"));
-      expect((result as Info).message, "Task Undone");
+      expect((result as Success).message, "Task Undone");
       expect(task("Stretch").done, isFalse);
       expect(repository.rows.single.progress.doneDays, isEmpty);
       expect(notifications.daily, hasLength(1));
@@ -1489,7 +1489,7 @@ void main() {
       final draft = tasks.draft(task("Course"));
       expect(draft.reminderStatus(), ReminderStatus.ended);
       final result = await tasks.save(draft..setTitle("Course done"));
-      expect((result as Info).message, "Task Updated");
+      expect((result as Success).message, "Task Updated");
       final course = task("Course done");
       expect(course.reminder, Reminder.daily);
       expect(course.until, DateTime(2026, 5, 10));
@@ -1665,7 +1665,7 @@ Shop
       expect(task("Flights").done, isTrue);
       // The tasks in a task stay done when it's to do again.
       await tasks.toggleDone(task("Trip"));
-      expect(await tasks.toggleDone(task("Trip")), isA<Info>());
+      expect(await tasks.toggleDone(task("Trip")), isA<Success>());
       expect(task("Book").done, isTrue);
     });
 
@@ -2099,7 +2099,7 @@ Shop
         () async {
           await plan();
           final draft = tasks.draft(task("Hotel"))..setParent(null);
-          expect((await tasks.save(draft) as Info).message, "Task Updated");
+          expect((await tasks.save(draft) as Success).message, "Task Updated");
           expect(task("Hotel").parent, isNull);
           expect(tasks.tree.roots.last.task.title, "Hotel");
         },
@@ -2545,12 +2545,12 @@ Shop
       final first = await trashTask("First");
       await tasks.delete(task("Second"));
       await tasks.delete(task("Third"));
-      expect(await tasks.deleteForever(first), isA<Info>());
+      expect(await tasks.deleteForever(first), isA<Success>());
       expect(inTrash(), ["Third", "Second"]);
       expect(await tasks.restoreFromTrash(first), isA<Info>());
       expect(titles(), isEmpty);
       final result = await tasks.emptyTrash();
-      expect((result as Info).message, "2 Tasks Deleted Forever");
+      expect((result as Success).message, "2 Tasks Deleted Forever");
       expect(tasks.trash, isEmpty);
       expect(repository.trash, isEmpty);
     });

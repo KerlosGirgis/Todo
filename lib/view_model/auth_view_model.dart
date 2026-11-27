@@ -191,7 +191,7 @@ class AuthViewModel with ChangeNotifier {
       };
     } catch (e) {
       if (kDebugMode) {
-        print('Initialization Error: $e');
+        debugPrint("Couldn't check the App Lock: $e");
       }
       return false;
     }
@@ -211,7 +211,7 @@ class AuthViewModel with ChangeNotifier {
       await _userViewModel.get();
     } catch (e) {
       if (kDebugMode) {
-        print("Couldn't open the app: $e");
+        debugPrint("Couldn't open the app: $e");
       }
       return false;
     }

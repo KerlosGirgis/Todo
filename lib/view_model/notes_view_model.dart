@@ -214,7 +214,7 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
           ),
         );
         await _reload();
-        return Info("Note Added");
+        return const Success("Note Added");
       }
       await _notesRepository.updateNote(
         note.copyWith(
@@ -226,7 +226,7 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
       );
       if (locked) await _takeOffWidget(note.id);
       await _reload();
-      return Info("Note Updated");
+      return const Success("Note Updated");
     } catch (e) {
       return const Unsaved("Couldn't save the note");
     }
@@ -258,7 +258,7 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
     } catch (e) {
       return Failure("Couldn't show the note on the widget");
     }
-    return Info("Note Shown on Widget");
+    return const Success("Note Shown on Widget");
   }
 
   /// Takes the note with [id] off the widget, if it's the one there: a
@@ -513,15 +513,11 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
       // falls back on without it.
       if (notes.any((note) => note.locked) &&
           await _lockService.getLock() != AppLock.fingerprint) {
-        switch (await _passNoteLock(
+        final unlocked = await _passNoteLock(
           _noPassword,
           passwordGiven: password != null,
-        )) {
-          case Failure(:final message) || Info(:final message):
-            return Denied(message);
-          case Success():
-            break;
-        }
+        );
+        if (unlocked is! Success) return Denied(unlocked.message);
       }
       return Granted([for (final note in notes) note.toMap()]);
     },
@@ -551,9 +547,7 @@ class NotesViewModel with ChangeNotifier implements TrashOwner<Note> {
     return _backups.restore(
       askForBackupPassword: askForBackupPassword,
       putBack: (records) async {
-        final importedNotes = records
-            .map<Note>((e) => Note.fromMap(e))
-            .toList();
+        final importedNotes = records.map(Note.fromMap).toList();
         final existingNotes = overwrite ? <Note>[] : currentNotes;
         final newNotes = [
           for (final note in importedNotes)

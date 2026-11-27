@@ -26,7 +26,8 @@ class _NotesOverwriteDialogState extends State<NotesOverwriteDialog> {
   bool _overwrite = true;
 
   void _import() {
-    Provider.of<NotesViewModel>(context, listen: false)
+    context
+        .read<NotesViewModel>()
         .restore(
           _overwrite,
           askForPassword: noteLockPasswordPrompt(context),

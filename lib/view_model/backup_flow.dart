@@ -76,7 +76,8 @@ class BackupFlow {
   /// cancels.
   Future<Result?> restore({
     required BackupPasswordPrompt askForBackupPassword,
-    required Future<Result> Function(List<dynamic> records) putBack,
+    required Future<Result> Function(List<Map<String, Object?>> records)
+    putBack,
   }) async {
     try {
       final bytes = await _fileService.pickJsonFile();

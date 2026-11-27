@@ -95,14 +95,10 @@ class _NotesPageState extends State<NotesPage>
   @override
   void initState() {
     super.initState();
-    _tours = Provider.of<TourViewModel>(context, listen: false)
-      ..addListener(_toursReplayed);
+    _tours = context.read<TourViewModel>()..addListener(_toursReplayed);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final tourDue = _tours.isDue(PageTour.notes);
-      final failed = await Provider.of<NotesViewModel>(
-        context,
-        listen: false,
-      ).get();
+      final failed = await context.read<NotesViewModel>().get();
       // Not over notes that couldn't be read in.
       final touring = failed == null && await tourDue;
       if (!mounted) return;
@@ -139,7 +135,7 @@ class _NotesPageState extends State<NotesPage>
   /// one when there are no notes.
   void _startTour() {
     _searchFocusNode.unfocus();
-    final notes = Provider.of<NotesViewModel>(context, listen: false);
+    final notes = context.read<NotesViewModel>();
     final note = notes.notes.firstOrNull;
     _tour.start(
       notesTour(
@@ -300,7 +296,8 @@ class _NotesPageState extends State<NotesPage>
 
   /// Backs the notes up, once the App Lock lets the user through.
   void _backUp() {
-    Provider.of<NotesViewModel>(context, listen: false)
+    context
+        .read<NotesViewModel>()
         .backup(
           askForPassword: passwordPrompt(
             context,
@@ -313,19 +310,16 @@ class _NotesPageState extends State<NotesPage>
 
   void _addNote() {
     _searchFocusNode.unfocus();
-    final draft = Provider.of<NotesViewModel>(
-      context,
-      listen: false,
-    ).newDraft();
+    final draft = context.read<NotesViewModel>().newDraft();
     showFormDialog<void>(context, NoteDialog(draft: draft));
   }
 
   /// Opens [note] in the editor, once its lock lets the user through.
   Future<void> _openNote(Note note) async {
-    final access = await Provider.of<NotesViewModel>(
-      context,
-      listen: false,
-    ).open(note, askForPassword: noteLockPasswordPrompt(context));
+    final access = await context.read<NotesViewModel>().open(
+      note,
+      askForPassword: noteLockPasswordPrompt(context),
+    );
     if (!mounted) {
       if (access case Granted(value: final editor)) editor.dispose();
       return;
@@ -355,10 +349,10 @@ class _NotesPageState extends State<NotesPage>
   /// Opens the dialog that changes [note]'s title, colours and lock, once
   /// its lock lets the user through.
   Future<void> _editNote(Note note) async {
-    final access = await Provider.of<NotesViewModel>(
-      context,
-      listen: false,
-    ).edit(note, askForPassword: noteLockPasswordPrompt(context));
+    final access = await context.read<NotesViewModel>().edit(
+      note,
+      askForPassword: noteLockPasswordPrompt(context),
+    );
     if (!mounted) {
       if (access case Granted(value: final draft)) draft.dispose();
       return;

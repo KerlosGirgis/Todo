@@ -116,15 +116,10 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   @override
   void initState() {
     super.initState();
-    _tours = Provider.of<TourViewModel>(context, listen: false)
-      ..addListener(_toursReplayed);
-    _tasks = Provider.of<TasksViewModel>(context, listen: false)
-      ..addListener(_tasksChanged);
+    _tours = context.read<TourViewModel>()..addListener(_toursReplayed);
+    _tasks = context.read<TasksViewModel>()..addListener(_tasksChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final failed = await Provider.of<TasksViewModel>(
-        context,
-        listen: false,
-      ).get();
+      final failed = await _tasks.get();
       if (!mounted) return;
       setState(() => _loaded = true);
       FeedbackToast.show(failed);
@@ -159,8 +154,7 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   }
 
   /// How the page shows the tasks now, and the tour that goes with it.
-  TasksView get _view =>
-      Provider.of<UserViewModel>(context, listen: false).shownTasksView;
+  TasksView get _view => context.read<UserViewModel>().shownTasksView;
   PageTour get _pageTour =>
       _view == TasksView.map ? PageTour.map : PageTour.tasks;
 
@@ -205,10 +199,7 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
       setState(() => _touring = false);
       return;
     }
-    final first = Provider.of<TasksViewModel>(
-      context,
-      listen: false,
-    ).tree.nodes.firstOrNull;
+    final first = _tasks.tree.nodes.firstOrNull;
     _tour.start(
       switch (tour) {
         PageTour.map => mapTour(
@@ -250,10 +241,9 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
       // The list opens afresh, under its summary.
       _listDelay = 1;
     });
-    Provider.of<UserViewModel>(
-      context,
-      listen: false,
-    ).showTasksAs(_view == TasksView.list ? TasksView.map : TasksView.list);
+    context.read<UserViewModel>().showTasksAs(
+      _view == TasksView.list ? TasksView.map : TasksView.list,
+    );
     _tourIfDue();
   }
 
@@ -491,21 +481,18 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   void _changeFilter(TaskFilter filter) {
     // The cards rise in again for the new filter, straight away.
     setState(() => _listDelay = 0);
-    Provider.of<TasksViewModel>(context, listen: false).setFilter(filter);
+    _tasks.setFilter(filter);
   }
 
   void _changeSort(TaskSort sort, SortDirection direction) {
     // The cards rise in again in their new order, straight away.
     setState(() => _listDelay = 0);
-    Provider.of<TasksViewModel>(
-      context,
-      listen: false,
-    ).setSort(sort, direction: direction);
+    _tasks.setSort(sort, direction: direction);
   }
 
   /// Backs the tasks up, once the App Lock lets the user through.
   void _backUp() {
-    Provider.of<TasksViewModel>(context, listen: false)
+    _tasks
         .backup(
           askForPassword: passwordPrompt(
             context,

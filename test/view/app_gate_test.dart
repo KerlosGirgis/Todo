@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -19,6 +20,7 @@ import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/tour_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
+import 'package:todo/view_model/widgets_view_model.dart';
 
 import '../view_model/notes_view_model_test.dart'
     as notes_test
@@ -27,6 +29,7 @@ import '../view_model/tasks_view_model_test.dart'
     show FakeLock, FakeNotifications, FakeTasksRepository;
 import '../view_model/user_view_model_test.dart'
     show FakeDatabase, FakeDevice, FakeUserRepository, FakeVerses, newLock;
+import '../view_model/widgets_view_model_test.dart' show FakeWidgets;
 
 /// An App Lock with the password "1234".
 class PasswordLock extends LockService {
@@ -41,6 +44,15 @@ class PasswordLock extends LockService {
     wait: Duration.zero,
     key: password == "1234" ? "database key" : null,
   );
+}
+
+/// An App Lock with the fingerprint, which a test can't give, so the app
+/// stays locked.
+class FingerprintLock extends LockService {
+  FingerprintLock() : super.withClock(() => throw StateError("No waits"));
+
+  @override
+  Future<AppLock> getLock() async => AppLock.fingerprint;
 }
 
 void main() {
@@ -72,8 +84,13 @@ void main() {
     );
     await auth.initializeApp();
     await tester.pumpWidget(
-      ChangeNotifierProvider.value(
-        value: auth,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider(
+            create: (_) => WidgetsViewModel(service: FakeWidgets()),
+          ),
+        ],
         child: MaterialApp(
           theme: AppTheme.getTheme(isDarkMode: false),
           home: const AppGate(),
@@ -142,6 +159,9 @@ void main() {
           ChangeNotifierProvider.value(value: tasks),
           ChangeNotifierProvider.value(value: notes),
           ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider(
+            create: (_) => WidgetsViewModel(service: FakeWidgets()),
+          ),
           ChangeNotifierProvider(
             create: (_) => TourViewModel(service: TourService()),
           ),
@@ -266,6 +286,34 @@ void main() {
       await tester.tap(find.text("Unlock"));
       await tester.pump();
       expect(database.opens, 2);
+    },
+  );
+
+  testWidgets(
+    "the fingerprint's lock page names its button, for screen readers, and "
+    "asks again with it",
+    (tester) async {
+      // A phone whose fingerprint doesn't match.
+      const biometrics = MethodChannel('com.k.todo/biometrics');
+      final messenger = tester.binding.defaultBinaryMessenger;
+      var asked = 0;
+      messenger.setMockMethodCallHandler(biometrics, (call) async {
+        asked++;
+        return 'failed';
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(biometrics, null));
+      await openApp(tester, FingerprintLock());
+      expect(find.byType(LockPage), findsOneWidget);
+      expect(asked, 1);
+      expect(database.opens, 0);
+
+      await tester.tap(find.byTooltip("Try Again"));
+      await tester.pump();
+      await tester.pump();
+      expect(asked, 2);
+      // Asked again, and still locked, with no fingerprint to give.
+      expect(find.byTooltip("Try Again"), findsOneWidget);
+      expect(auth.status, AuthStatus.unauthenticated);
     },
   );
 }

@@ -26,7 +26,8 @@ class _TasksOverwriteDialogState extends State<TasksOverwriteDialog> {
   bool _overwrite = true;
 
   void _import() {
-    Provider.of<TasksViewModel>(context, listen: false)
+    context
+        .read<TasksViewModel>()
         .restore(
           _overwrite,
           askForBackupPassword: backupPasswordPrompt(context),

@@ -130,7 +130,7 @@ void main() {
         bin.entries.first,
         permit: (entry) async => null,
       );
-      expect((deleted as Info).message, "Task Deleted Forever");
+      expect((deleted as Success).message, "Task Deleted Forever");
       expect(shown(), ["Call", "Shop"]);
     },
   );
@@ -161,7 +161,7 @@ void main() {
       expect(table.rows, hasLength(4));
 
       final emptied = await bin.empty();
-      expect((emptied as Info).message, "3 Tasks Deleted Forever");
+      expect((emptied as Success).message, "3 Tasks Deleted Forever");
       expect(table.titles, ["Later"]);
       expect(shown(), ["Later"]);
     },

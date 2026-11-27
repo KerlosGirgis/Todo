@@ -116,6 +116,29 @@ void main() {
     expect(titles(), ["Secret plan"]);
   });
 
+  test('reads what the app is locked with once, then goes by its changes, '
+      'rather than reading it for each change to the tasks', () async {
+    await tasks.get();
+    await settle();
+    final reads = lock.reads;
+    final draft = tasks.draft()..setTitle("Call the bank");
+    await tasks.save(draft);
+    await settle();
+    await tasks.toggleDone(tasks.items.single);
+    await settle();
+    await tasks.toggleDone(tasks.items.single);
+    await settle();
+    expect(widget.shown, hasLength(greaterThan(3)));
+    expect(lock.reads, reads);
+
+    lock.lock = AppLock.password;
+    lock.changed.add(AppLock.password);
+    await settle();
+    await settle();
+    expect(widget.shown.last.locked, isTrue);
+    expect(lock.reads, reads);
+  });
+
   test('that can\'t be shown them leaves the tasks as they are', () async {
     widget.fail = true;
     await repository.insertItem(TodoItem(uuid: "a", title: "Water the plants"));

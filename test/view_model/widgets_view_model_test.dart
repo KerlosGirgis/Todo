@@ -120,7 +120,7 @@ void main() {
     phone.noteText = "Weekend plans";
     await widgets.load();
     final result = await widgets.clearNote();
-    expect((result as Info).message, "Widget Cleared");
+    expect((result as Success).message, "Widget Cleared");
     expect(phone.noteText, isNull);
     expect(widgets.noteText, isNull);
   });

@@ -11,6 +11,10 @@ analyzer:
   exclude:
     - build/**
     - android/**
+  language:
+    # Data of no known type, as from JSON, is checked where it's read, rather
+    # than cast without a word wherever it goes.
+    strict-casts: true
 include: package:flutter_lints/flutter.yaml
 
 linter:

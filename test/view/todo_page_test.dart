@@ -17,20 +17,24 @@ import 'package:todo/view/screens/tasks/todo_page/widgets/task_card.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/task_map/map_node.dart';
 import 'package:todo/view/screens/tasks/todo_page/widgets/tasks_summary_card.dart';
 import 'package:todo/view/widgets/glass_popover.dart';
+import 'package:todo/view_model/auth_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
 import 'package:todo/view_model/tour_view_model.dart';
 import 'package:todo/view_model/user_view_model.dart';
+import 'package:todo/view_model/widgets_view_model.dart';
 
 import '../view_model/tasks_view_model_test.dart'
     show FakeLock, FakeNotifications, FakeTasksRepository;
 import '../view_model/user_view_model_test.dart'
-    show FakeDatabase, FakeDevice, FakeUserRepository, newLock;
+    show FakeDatabase, FakeDevice, FakeUserRepository, FakeVerses, newLock;
+import '../view_model/widgets_view_model_test.dart' show FakeWidgets;
 
 /// The to-do page over tasks kept in memory, for a test to open and use.
 class TodoPageHarness {
   late FakeTasksRepository rows;
   late TasksViewModel tasks;
   late UserViewModel user;
+  late WidgetsViewModel widgets;
 
   /// Lets [duration] go by a frame at a time, as it does on a phone, for
   /// the animations in it: a single pump would draw only their first frame.
@@ -85,11 +89,21 @@ class TodoPageHarness {
     );
     await user.get();
     await user.setTasksView(view);
+    final auth = AuthViewModel(
+      user,
+      lockService: newLock(),
+      databaseService: FakeDatabase(),
+      deviceService: FakeDevice(),
+      verseService: FakeVerses(),
+    );
+    widgets = WidgetsViewModel(service: FakeWidgets());
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: user),
           ChangeNotifierProvider.value(value: tasks),
+          ChangeNotifierProvider.value(value: auth),
+          ChangeNotifierProvider.value(value: widgets),
           ChangeNotifierProvider(
             create: (_) => TourViewModel(service: TourService()),
           ),
@@ -112,6 +126,7 @@ class TodoPageHarness {
     await wait(tester, const Duration(seconds: 6));
     await tester.pumpWidget(const SizedBox());
     tasks.dispose();
+    widgets.dispose();
   }
 
   /// Opens the menu at the end of the bar, then picks its item with

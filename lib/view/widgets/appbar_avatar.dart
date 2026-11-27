@@ -26,74 +26,73 @@ class _AppbarAvatarState extends State<AppbarAvatar> {
     // One tag per page, so the avatar flies into its own dialog but not
     // between the Todo and Notes pages when one replaces the other.
     final heroTag = (AppbarAvatar, ModalRoute.of(context));
-    return Consumer<UserViewModel>(
-      builder: (context, user, child) {
-        return Semantics(
-          button: true,
-          label: "Profile",
-          child: AnimatedScale(
-            scale: _pressed ? 0.9 : 1,
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.easeOut,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-              onHighlightChanged: (pressed) =>
-                  setState(() => _pressed = pressed),
-              onTap: () {
-                // A PageRoute rather than showGeneralDialog, because heroes
-                // only fly between PageRoutes.
-                Navigator.of(context, rootNavigator: true).push(
-                  PageRouteBuilder(
-                    opaque: false,
-                    barrierDismissible: true,
-                    barrierColor: Colors.black54,
-                    barrierLabel: MaterialLocalizations.of(context)
-                        .modalBarrierDismissLabel,
-                    transitionDuration: const Duration(milliseconds: 350),
-                    reverseTransitionDuration: const Duration(
-                      milliseconds: 300,
+    // Only the avatar: the rest of the profile is read as it's tapped, so a
+    // change to any other setting doesn't draw the button again.
+    final avatar = context.select<UserViewModel, Avatar>(
+      (user) => user.user.avatar,
+    );
+    return Semantics(
+      button: true,
+      label: "Profile",
+      child: AnimatedScale(
+        scale: _pressed ? 0.9 : 1,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          onHighlightChanged: (pressed) => setState(() => _pressed = pressed),
+          onTap: () {
+            final user = context.read<UserViewModel>();
+            // A PageRoute rather than showGeneralDialog, because heroes
+            // only fly between PageRoutes.
+            Navigator.of(context, rootNavigator: true).push(
+              PageRouteBuilder<void>(
+                opaque: false,
+                barrierDismissible: true,
+                barrierColor: Colors.black54,
+                barrierLabel: MaterialLocalizations.of(context)
+                    .modalBarrierDismissLabel,
+                transitionDuration: const Duration(milliseconds: 350),
+                reverseTransitionDuration: const Duration(milliseconds: 300),
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    _ProfileDialog(
+                      heroTag: heroTag,
+                      avatar: user.user.avatar,
+                      name: user.user.name,
+                      verse: user.dailyVerse,
                     ),
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        _ProfileDialog(
-                          heroTag: heroTag,
-                          avatar: user.user.avatar,
-                          name: user.user.name,
-                          verse: user.dailyVerse,
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                      final curvedAnimation = CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                        reverseCurve: Curves.easeInCubic,
+                      );
+                      return FadeTransition(
+                        opacity: curvedAnimation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: 0.95,
+                            end: 1,
+                          ).animate(curvedAnimation),
+                          child: child,
                         ),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                          var curvedAnimation = CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.easeOutCubic,
-                            reverseCurve: Curves.easeInCubic,
-                          );
-                          return FadeTransition(
-                            opacity: curvedAnimation,
-                            child: ScaleTransition(
-                              scale: Tween<double>(
-                                begin: 0.95,
-                                end: 1,
-                              ).animate(curvedAnimation),
-                              child: child,
-                            ),
-                          );
-                        },
-                  ),
-                );
-              },
-              child: SizedBox.square(
-                dimension: 44,
-                child: Hero(
-                  tag: heroTag,
-                  child: RingedAvatar(avatar: user.user.avatar),
-                ),
+                      );
+                    },
               ),
+            );
+          },
+          child: SizedBox.square(
+            dimension: 44,
+            child: Hero(
+              tag: heroTag,
+              child: RingedAvatar(avatar: avatar),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -178,7 +177,7 @@ class _VerseCard extends StatelessWidget {
 
     void copy() {
       Clipboard.setData(ClipboardData(text: verse.raw)).then((_) {
-        FeedbackToast.info("Verse Copied to Clipboard");
+        FeedbackToast.success("Verse Copied to Clipboard");
       });
     }
 

@@ -122,15 +122,16 @@ class BackupService {
   /// password of one that is. Null if the user cancels.
   ///
   /// Throws a [WrongBackupKindException] for a backup of the other kind, and
-  /// a [FormatException] for a file that isn't a backup.
-  Future<List<dynamic>?> read(
+  /// a [FormatException] for a file that isn't a backup, as one whose
+  /// records aren't each an object.
+  Future<List<Map<String, Object?>>?> read(
     Uint8List bytes, {
     required BackupKind kind,
     required BackupPasswordPrompt askForPassword,
   }) async {
     final file = jsonDecode(utf8.decode(bytes));
     // From before backups were locked: the records as they were.
-    if (file is List) return file;
+    if (file is List) return _records(file);
     if (file is! Map<String, dynamic> ||
         file['format'] != _format ||
         file['version'] != _version) {
@@ -167,7 +168,20 @@ class BackupService {
       }
     });
     if (!opened) return null;
-    return jsonDecode(utf8.decode(json!)) as List;
+    return _records(jsonDecode(utf8.decode(json!)));
+  }
+
+  /// A backup's [records], each a JSON object, as a task or a note is kept:
+  /// checked here, where the file is read, rather than as each is put back.
+  static List<Map<String, Object?>> _records(Object? records) {
+    if (records is! List) throw const FormatException("Not a backup");
+    return [
+      for (final record in records)
+        if (record is Map<String, Object?>)
+          record
+        else
+          throw const FormatException("Not a backup"),
+    ];
   }
 
   /// What's authenticated along with a file's records.

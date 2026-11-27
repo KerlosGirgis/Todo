@@ -96,7 +96,7 @@ void main() {
     await tester.pumpAndSettle();
     await enter(tester, "1234");
 
-    expect((result as Info).message, "Lock Disabled");
+    expect((result as Success).message, "Lock Disabled");
     expect(user.appLock, AppLock.off);
     expect(lock.checks, 1);
   });

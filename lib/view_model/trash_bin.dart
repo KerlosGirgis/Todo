@@ -139,7 +139,7 @@ class TrashBin<T> {
       return Failure("Couldn't delete the $noun");
     }
     await reload();
-    return Info("$_title Deleted Forever");
+    return Success("$_title Deleted Forever");
   }
 
   /// Deletes every entry for good, as the user saw them, once [permit] lets
@@ -157,7 +157,7 @@ class TrashBin<T> {
     }
     await reload();
     final count = entries.length;
-    return Info(
+    return Success(
       count == 1
           ? "1 $_title Deleted Forever"
           : "$count ${_title}s Deleted Forever",

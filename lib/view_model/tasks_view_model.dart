@@ -109,7 +109,8 @@ class TasksViewModel
     );
     // Reminders say which task they're for only while the app isn't locked,
     // and so does the widget.
-    _lockChanges = _lockService.changes.listen((_) {
+    _lockChanges = _lockService.changes.listen((lock) {
+      _lock = lock;
       refreshReminders();
       _refreshWidget();
     });
@@ -331,6 +332,12 @@ class TasksViewModel
   /// change being made has been.
   bool _widgetDue = false;
 
+  /// What the app is locked with, as the widget goes by it: read from the
+  /// phone's secure storage the first time the widget's shown the tasks,
+  /// then kept as [LockService.changes] says it changes, rather than read
+  /// again for each change to the tasks.
+  AppLock? _lock;
+
   /// Shows the home screen's to-do widget the tasks as they stand, in the
   /// page's order, a week ahead, or only how many are left while the App
   /// Lock is on. Once for all the changes made together, and not before the
@@ -341,14 +348,16 @@ class TasksViewModel
     scheduleMicrotask(() async {
       _widgetDue = false;
       try {
-        final locked = await _lockService.getLock() != AppLock.off;
+        final lock = _lock ?? await _lockService.getLock();
+        // Unless a change came while it was read, which is newer.
+        _lock ??= lock;
         await _homeWidgetService.showTasks(
           TasksWidgetSnapshot.of(
             _allTasks,
             now: _now(),
             sort: sort,
             direction: sortDirection,
-            locked: locked,
+            locked: lock != AppLock.off,
           ),
         );
       } catch (e) {
@@ -566,7 +575,7 @@ class TasksViewModel
         // Its day goes, as a repeating task has none.
         final rule? => _repeat(added, rule),
         _ when reminder == Reminder.once => _remindOnce(added),
-        _ => Future.value(Info("Task Added")),
+        _ => Future.value(const Success("Task Added")),
       };
       await _settle();
       return result;
@@ -602,7 +611,7 @@ class TasksViewModel
     final result = await switch (rule) {
       final rule? => _repeat(updated, rule, progress: progress),
       _ when reminder == Reminder.once => _remindOnce(updated),
-      _ => Future.value(Info("Task Updated")),
+      _ => Future.value(const Success("Task Updated")),
     };
     // Last, as moving it gives every task a new id, and it keeps its
     // reminder.
@@ -801,7 +810,7 @@ class TasksViewModel
     }
     await _reload();
     if (node == null || changing.length < 2) {
-      return done ? Success(said) : Info(said);
+      return Success(said);
     }
     final inIt = nodes.where((each) => each != node && each.isOrIsIn(node));
     final around = nodes.where((each) => !each.isOrIsIn(node)).toList();
@@ -909,11 +918,11 @@ class TasksViewModel
   /// Adds the tasks [records] has, from a backup, in place of every task
   /// there is when [overwrite] is set, with their reminders.
   Future<Result> _putBackRestored(
-    List<dynamic> records, {
+    List<Map<String, Object?>> records, {
     required bool overwrite,
   }) async {
-    final importedTasks = records.map<TodoItem>((e) {
-      final task = TodoItem.fromMap(e);
+    final importedTasks = records.map((record) {
+      final task = TodoItem.fromMap(record);
       // A daily task from a backup older than tasks' days counts its days
       // from today on.
       return task.repeats && task.progress.since == null
@@ -1048,7 +1057,7 @@ class TasksViewModel
     if (await _setReminder(repeating, was: task) case final failed?) {
       return failed;
     }
-    if (ended) return const Info("Task Updated");
+    if (ended) return const Success("Task Updated");
     return shown ? const Success("Reminder Set") : const Failure(_notShown);
   }
 
@@ -1137,7 +1146,7 @@ class TasksViewModel
       return failure;
     }
     await _reload();
-    return const Info("Reminder Turned Off");
+    return const Success("Reminder Turned Off");
   }
 }
 

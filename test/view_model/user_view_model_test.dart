@@ -524,7 +524,7 @@ void main() {
 
   group('rename', () {
     test('saves the name without the spaces around it', () async {
-      expect(await user.rename("  Kerlos "), isA<Info>());
+      expect(await user.rename("  Kerlos "), isA<Success>());
       expect(user.user.name, "Kerlos");
     });
 
@@ -537,10 +537,13 @@ void main() {
     });
 
     test('counts characters as the name field does', () async {
-      expect(await user.rename("a" * UserViewModel.maxNameLength), isA<Info>());
+      expect(
+        await user.rename("a" * UserViewModel.maxNameLength),
+        isA<Success>(),
+      );
       expect(await user.rename("a" * 21), isA<Failure>());
       // One character to the field, though seven code points.
-      expect(await user.rename("👨‍👩‍👧‍👦" * 20), isA<Info>());
+      expect(await user.rename("👨‍👩‍👧‍👦" * 20), isA<Success>());
     });
   });
 
@@ -603,7 +606,7 @@ void main() {
           askForPassword: appLockPassword("1234"),
           askForNewPassword: newPassword,
         );
-        expect((result as Info).message, "Lock Disabled");
+        expect((result as Success).message, "Lock Disabled");
         expect(user.appLock, AppLock.off);
         expect(await unlockedKey(), dbKey);
         expect(device.hidden, isFalse);

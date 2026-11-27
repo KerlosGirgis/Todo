@@ -158,7 +158,7 @@ class UserViewModel with ChangeNotifier {
           (user) => user.copyWith(name: name),
           failure: const Failure("Couldn't change the name"),
         ) ??
-        const Info("Name Updated");
+        const Success("Name Updated");
   }
 
   /// Has [avatar] stand for the user. A photo of their own that stood for
@@ -332,7 +332,7 @@ class UserViewModel with ChangeNotifier {
     }
     _setAppLock(AppLock.off);
     notifyListeners();
-    return Info("Lock Disabled");
+    return const Success("Lock Disabled");
   }
 
   /// Locks the app with the user's fingerprint, once the lock it has now lets

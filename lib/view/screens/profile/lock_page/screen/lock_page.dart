@@ -11,18 +11,8 @@ import '../../../../../view_model/auth_view_model.dart';
 import '../../../../widgets/password_field.dart';
 import '../../../../widgets/profile_button.dart';
 
-class LockPage extends StatefulWidget {
+class LockPage extends StatelessWidget {
   const LockPage({super.key});
-
-  @override
-  State<LockPage> createState() => LockPageState();
-}
-
-class LockPageState extends State<LockPage> {
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,12 +31,10 @@ class LockPageState extends State<LockPage> {
                   Flexible(child: Image.asset("assets/locked.png")),
                   Flexible(
                     child: IconButton(
-                      onPressed: () async {
-                        await Provider.of<AuthViewModel>(
-                          context,
-                          listen: false,
-                        ).retryAuthentication();
-                      },
+                      // Read out by name, rather than as a bare button.
+                      tooltip: "Try Again",
+                      onPressed: () =>
+                          context.read<AuthViewModel>().retryAuthentication(),
                       icon: const Icon(
                         Icons.refresh_sharp,
                         size: 70,

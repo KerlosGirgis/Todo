@@ -362,7 +362,7 @@ class _ClearNoteWidgetTileState extends State<_ClearNoteWidgetTile> {
   void initState() {
     super.initState();
     // Afresh, as a note may have been put on the widget since.
-    Provider.of<WidgetsViewModel?>(context, listen: false)?.loadNote();
+    context.read<WidgetsViewModel>().loadNote();
   }
 
   Future<void> _clear() async =>
@@ -370,7 +370,9 @@ class _ClearNoteWidgetTileState extends State<_ClearNoteWidgetTile> {
 
   @override
   Widget build(BuildContext context) {
-    final text = Provider.of<WidgetsViewModel?>(context)?.noteText;
+    final text = context.select<WidgetsViewModel, String?>(
+      (widgets) => widgets.noteText,
+    );
     final firstLine = text
         ?.split("\n")
         .map((line) => line.trim())

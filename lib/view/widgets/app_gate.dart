@@ -19,16 +19,15 @@ class AppGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
+    // A widget's page, for an app its tap opened, or else the start page
+    // the app opened with. Neither changes while the app runs, so a start
+    // page picked in the settings doesn't swap the page under them.
+    final launchPage = context.select<WidgetsViewModel, StartPage?>(
+      (widgets) => widgets.launchPage,
+    );
     // Once the app has opened, it stays open under the lock page whenever
     // it locks again: see AppLockGuard.
     if (auth.opened) {
-      // A widget's page, for an app its tap opened, or else the start page
-      // the app opened with. Neither changes while the app runs, so a start
-      // page picked in the settings doesn't swap the page under them.
-      final launchPage = Provider.of<WidgetsViewModel?>(
-        context,
-        listen: false,
-      )?.launchPage;
       return pageFor(launchPage ?? auth.openedOn);
     }
     if (auth.status == AuthStatus.unauthenticated) {

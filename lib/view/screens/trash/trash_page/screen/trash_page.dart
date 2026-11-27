@@ -85,8 +85,8 @@ class _TrashPageState extends State<TrashPage> {
 
   /// The trash of the tasks, or of the notes.
   TrashOwner<Object?> _trashOf(TrashKind kind) => switch (kind) {
-    TrashKind.task => Provider.of<TasksViewModel>(context, listen: false),
-    TrashKind.note => Provider.of<NotesViewModel>(context, listen: false),
+    TrashKind.task => context.read<TasksViewModel>(),
+    TrashKind.note => context.read<NotesViewModel>(),
   };
 
   @override

@@ -101,7 +101,7 @@ void main() {
     expect(files.saved!.name, "todo.json");
 
     files.picked = files.saved!.bytes;
-    List<dynamic>? read;
+    List<Map<String, Object?>>? read;
     final restored = await tasks.restore(
       askForBackupPassword: backupPassword("correct horse"),
       putBack: (records) async {
@@ -210,6 +210,23 @@ void main() {
         putBack: (_) async => throw StateError("Disk full"),
       );
       expect((failed as Failure).message, "Couldn't restore the backup");
+    });
+
+    test("turns away a file whose records aren't each an object, before "
+        "anything is put back", () async {
+      var putBack = 0;
+      for (final file in ['[1, 2]', '[{"title": "Call"}, "Shop"]', '{}']) {
+        files.picked = Uint8List.fromList(file.codeUnits);
+        final result = await flow(BackupKind.tasks).restore(
+          askForBackupPassword: backupPassword(null),
+          putBack: (_) async {
+            putBack++;
+            return const Success("Data Restored");
+          },
+        );
+        expect((result as Failure).message, "Couldn't restore the backup");
+      }
+      expect(putBack, 0);
     });
   });
 }

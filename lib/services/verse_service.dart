@@ -19,7 +19,7 @@ class VerseService {
     if (_verses == null) {
       final content = await rootBundle.loadString('assets/nasb.json');
       _verses = await Isolate.run(
-        () => List<String>.from(json.decode(content)),
+        () => List<String>.from(json.decode(content) as List),
       );
     }
     final prefs = await SharedPreferences.getInstance();

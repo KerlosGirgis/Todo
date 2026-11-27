@@ -314,7 +314,7 @@ void main() {
         shown("Diary"),
         askForPassword: noPassword,
       )) as Granted<NoteDraft>).value..setTitle("Journal");
-      expect(await draft.save(), isA<Info>());
+      expect(await draft.save(), isA<Success>());
       final saved = repository.rows.singleWhere((note) => note.id == 2);
       expect(saved.title, "Journal");
       expect(saved.body, "secret");
@@ -473,7 +473,7 @@ void main() {
       final draft = notes.newDraft()
         ..setTitle("  Ideas ")
         ..setCoverColor(0xFF34C759);
-      expect((await draft.save() as Info).message, "Note Added");
+      expect((await draft.save() as Success).message, "Note Added");
       expect(shown("Ideas").coverColor, 0xFF34C759);
     });
 
@@ -549,7 +549,7 @@ void main() {
       final trashed = await trash("Open");
       expect(
         await notes.deleteForever(trashed, askForPassword: noPassword),
-        isA<Info>(),
+        isA<Success>(),
       );
       expect(notes.trash, isEmpty);
       expect(repository.trash, isEmpty);
@@ -569,7 +569,7 @@ void main() {
         auth.fingerprint = FingerprintCheck.passed;
         expect(
           await notes.deleteForever(entry, askForPassword: noPassword),
-          isA<Info>(),
+          isA<Success>(),
         );
         expect(repository.trash, isEmpty);
       },
@@ -588,7 +588,7 @@ void main() {
       auth.fingerprint = FingerprintCheck.passed;
       final asked = auth.fingerprintsAsked;
       final result = await notes.emptyTrash(askForPassword: noPassword);
-      expect((result as Info).message, "2 Notes Deleted Forever");
+      expect((result as Success).message, "2 Notes Deleted Forever");
       expect(auth.fingerprintsAsked, asked + 1);
       expect(repository.trash, isEmpty);
     });
@@ -598,7 +598,10 @@ void main() {
       () async {
         await trash("Open");
         final asked = auth.fingerprintsAsked;
-        expect(await notes.emptyTrash(askForPassword: noPassword), isA<Info>());
+        expect(
+          await notes.emptyTrash(askForPassword: noPassword),
+          isA<Success>(),
+        );
         expect(auth.fingerprintsAsked, asked);
         expect(notes.trash, isEmpty);
       },
@@ -899,7 +902,7 @@ void main() {
       "shows the saved text on the widget, but not a locked note's",
       () async {
         final open = await openNote("Open");
-        expect(await open.showOnWidget(), isA<Info>());
+        expect(await open.showOnWidget(), isA<Success>());
         expect(homeWidget.text, "Plans\nWalk by the river");
         final diary = await openNote("Diary");
         expect(

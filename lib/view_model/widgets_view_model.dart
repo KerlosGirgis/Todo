@@ -106,7 +106,7 @@ class WidgetsViewModel with ChangeNotifier {
     }
     _noteText = null;
     notifyListeners();
-    return const Info("Widget Cleared");
+    return const Success("Widget Cleared");
   }
 
   /// The text the note widget shows, or null when it shows no note, or that

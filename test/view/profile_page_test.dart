@@ -72,6 +72,9 @@ void main() {
           ChangeNotifierProvider.value(value: tasks),
           ChangeNotifierProvider.value(value: notes),
           ChangeNotifierProvider(
+            create: (_) => WidgetsViewModel(service: FakeWidgets()),
+          ),
+          ChangeNotifierProvider(
             create: (_) => TourViewModel(service: TourService()),
           ),
         ],
@@ -299,6 +302,9 @@ void main() {
           ChangeNotifierProvider.value(value: user),
           ChangeNotifierProvider.value(value: tasks),
           ChangeNotifierProvider.value(value: notes),
+          ChangeNotifierProvider(
+            create: (_) => WidgetsViewModel(service: FakeWidgets()),
+          ),
           ChangeNotifierProvider(
             create: (_) => TourViewModel(service: TourService()),
           ),

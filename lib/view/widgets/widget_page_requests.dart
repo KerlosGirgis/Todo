@@ -19,8 +19,8 @@ mixin WidgetPageRequests<T extends StatefulWidget> on State<T> {
   /// Goes over to the other page.
   void openOtherPage();
 
-  StreamSubscription<StartPage>? _requests;
-  AuthViewModel? _auth;
+  late final StreamSubscription<StartPage> _requests;
+  late final AuthViewModel _auth;
 
   /// Whether a tap asked for the other page while the app was locked.
   bool _awaitingUnlock = false;
@@ -28,16 +28,15 @@ mixin WidgetPageRequests<T extends StatefulWidget> on State<T> {
   @override
   void initState() {
     super.initState();
-    _auth = Provider.of<AuthViewModel?>(context, listen: false);
-    _requests = Provider.of<WidgetsViewModel?>(
-      context,
-      listen: false,
-    )?.pageRequests.listen(_requested);
+    _auth = context.read<AuthViewModel>();
+    _requests = context.read<WidgetsViewModel>().pageRequests.listen(
+      _requested,
+    );
   }
 
   @override
   void dispose() {
-    _requests?.cancel();
+    _requests.cancel();
     _stopAwaitingUnlock();
     super.dispose();
   }
@@ -45,11 +44,10 @@ mixin WidgetPageRequests<T extends StatefulWidget> on State<T> {
   void _requested(StartPage page) {
     if (!mounted) return;
     if (page == widgetPage) return _stopAwaitingUnlock();
-    final auth = _auth;
-    if (auth != null && auth.status != AuthStatus.authenticated) {
+    if (_auth.status != AuthStatus.authenticated) {
       if (!_awaitingUnlock) {
         _awaitingUnlock = true;
-        auth.addListener(_lockChanged);
+        _auth.addListener(_lockChanged);
       }
       return;
     }
@@ -57,7 +55,7 @@ mixin WidgetPageRequests<T extends StatefulWidget> on State<T> {
   }
 
   void _lockChanged() {
-    if (_auth?.status != AuthStatus.authenticated) return;
+    if (_auth.status != AuthStatus.authenticated) return;
     _stopAwaitingUnlock();
     // Once the lock page has gone from over it.
     WidgetsBinding.instance.addPostFrameCallback((_) => _openIfShowing());
@@ -66,7 +64,7 @@ mixin WidgetPageRequests<T extends StatefulWidget> on State<T> {
   void _stopAwaitingUnlock() {
     if (!_awaitingUnlock) return;
     _awaitingUnlock = false;
-    _auth?.removeListener(_lockChanged);
+    _auth.removeListener(_lockChanged);
   }
 
   void _openIfShowing() {
