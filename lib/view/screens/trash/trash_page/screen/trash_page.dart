@@ -18,6 +18,7 @@ import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_gutters.dart';
 import '../../../../widgets/password_dialogs.dart';
 import '../../../../widgets/rise_in.dart';
+import '../../../../widgets/segment_label.dart';
 import '../../../../widgets/themed_status_bar.dart';
 import '../widgets/confirm_delete_dialog.dart';
 import '../widgets/empty_trash.dart';
@@ -369,41 +370,15 @@ class _KindControl extends StatelessWidget {
         if (kind != null) onChanged(kind);
       },
       children: const {
-        TrashKind.task: _Segment(icon: Icons.checklist_rounded, label: "To-Do"),
-        TrashKind.note: _Segment(
+        TrashKind.task: SegmentLabel(
+          icon: Icons.checklist_rounded,
+          label: "To-Do",
+        ),
+        TrashKind.note: SegmentLabel(
           icon: Icons.sticky_note_2_rounded,
           label: "Notes",
         ),
       },
-    );
-  }
-}
-
-/// A segment of the switch: an icon, then a label that shrinks to fit a
-/// segment too narrow for it, as in large text.
-class _Segment extends StatelessWidget {
-  const _Segment({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 17),
-          const SizedBox(width: 6),
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(label, style: const TextStyle(fontSize: 14.5)),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -466,12 +441,9 @@ class _TrashListState<T> extends State<_TrashList<T>> {
   final _leaving = <int>{};
 
   /// Whether the list is being laid out for the first time, when the cards
-  /// in view rise in one after another.
+  /// in view rise in one after another. Only then: nothing comes into the
+  /// trash while its page is open, as only other pages delete.
   bool _opening = true;
-
-  /// The entries there were at the last build, so one that's come since can
-  /// rise in by itself.
-  Set<int> _known = {};
 
   @override
   void initState() {
@@ -516,9 +488,6 @@ class _TrashListState<T> extends State<_TrashList<T>> {
         ),
       );
     }
-    final ids = {for (final entry in widget.entries) entry.id};
-    final added = _opening ? const <int>{} : ids.difference(_known);
-    _known = ids;
     return SliverPadding(
       padding: padding,
       sliver: SliverList.builder(
@@ -539,7 +508,7 @@ class _TrashListState<T> extends State<_TrashList<T>> {
             child: Padding(
               padding: const EdgeInsets.only(bottom: _cardGap),
               child: RiseIn(
-                animate: _opening || added.contains(entry.id),
+                animate: _opening,
                 delay: _opening
                     ? RiseIn.stagger * (3 + math.min(index, 8))
                     : Duration.zero,

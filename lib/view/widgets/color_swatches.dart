@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/extensions/theme_extensions.dart';
 import '../../core/theme/palette.dart';
 import '../../models/note.dart';
+import 'form_dialog.dart';
 import 'settings_group.dart';
 
 /// The colours on offer wherever a colour is picked, a note's cover or a
@@ -430,20 +431,7 @@ Future<Color> pickCustomColor(
     ),
     // Fades and grows in, like the dialog it opens from.
     transitionDuration: const Duration(milliseconds: 300),
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curvedAnimation = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        opacity: curvedAnimation,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.95, end: 1).animate(curvedAnimation),
-          child: child,
-        ),
-      );
-    },
+    transitionBuilder: formDialogTransition,
   );
 }
 

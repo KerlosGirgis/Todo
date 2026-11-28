@@ -13,6 +13,7 @@ import '../../../../../models/note.dart';
 import '../../../../../models/note_preview.dart';
 import '../../../../../models/text_size.dart';
 import '../../../../../models/todo_item.dart';
+import '../../../../../models/user_profile.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/profile_button.dart';
 import '../../../notes/note_editor_page/widgets/note_styles.dart';
@@ -64,7 +65,10 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<UserViewModel>();
+    // The profile as it's saved, which the preview draws the other text in.
+    final saved = context.select<UserViewModel, UserProfile>(
+      (user) => user.user,
+    );
     final setting = widget.setting;
     final size = _size;
     final secondary = context.colors.wB.withValues(alpha: 0.5);
@@ -96,7 +100,7 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
             style: TextStyle(color: secondary, fontSize: 14),
           ),
           const SizedBox(height: 20),
-          _Preview(setting: setting, size: size, user: user),
+          _Preview(setting: setting, size: size, saved: saved),
           const SizedBox(height: 24),
           Row(
             children: [
@@ -172,17 +176,18 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
           const SizedBox(height: 12),
           ProfileButton(
             label: "Apply",
-            onPressed: size == user.user.textSize(setting)
-                ? null
-                : () => _apply(user),
+            onPressed: size == saved.textSize(setting) ? null : _apply,
           ),
         ],
       ),
     );
   }
 
-  Future<void> _apply(UserViewModel user) async {
-    final result = await user.setTextSize(widget.setting, _size);
+  Future<void> _apply() async {
+    final result = await context.read<UserViewModel>().setTextSize(
+      widget.setting,
+      _size,
+    );
     if (result is Success && mounted) Navigator.pop(context);
     FeedbackToast.show(result);
   }
@@ -194,16 +199,17 @@ class _Preview extends StatelessWidget {
   const _Preview({
     required this.setting,
     required this.size,
-    required this.user,
+    required this.saved,
   });
 
   final TextSizeSetting setting;
   final double size;
-  final UserViewModel user;
+
+  /// The user's profile as it's saved.
+  final UserProfile saved;
 
   @override
   Widget build(BuildContext context) {
-    final saved = user.user;
     final casualFont = saved.casualFont;
     return switch (setting) {
       TextSizeSetting.taskTitle => _TaskPreview(

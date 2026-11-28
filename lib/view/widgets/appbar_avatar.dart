@@ -97,51 +97,43 @@ class _ProfileDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: context.colors.dialogBackground,
-      surfaceTintColor: Colors.transparent,
+    return DialogFrame(
+      maxWidth: 400,
+      inset: 32,
+      padding: const EdgeInsets.fromLTRB(24, 36, 24, 24),
       clipBehavior: Clip.antiAlias,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      constraints: const BoxConstraints(minWidth: 280, maxWidth: 400),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-        side: context.colors.dialogSide,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 36, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: SizedBox.square(
-                dimension: 152,
-                child: AvatarHalo(
-                  child: Hero(
-                    tag: heroTag,
-                    child: RingedAvatar(avatar: avatar),
-                  ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: SizedBox.square(
+              dimension: 152,
+              child: AvatarHalo(
+                child: Hero(
+                  tag: heroTag,
+                  child: RingedAvatar(avatar: avatar),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: context.colors.wB,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.colors.wB,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
             ),
-            if (verse != null) ...[
-              const SizedBox(height: 24),
-              _VerseCard(verse: verse!),
-            ],
+          ),
+          if (verse != null) ...[
+            const SizedBox(height: 24),
+            _VerseCard(verse: verse!),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -15,6 +15,7 @@ import '../../../../../view_model/widgets_view_model.dart';
 import '../../../../widgets/color_swatches.dart';
 import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/profile_button.dart';
+import '../../../../widgets/segment_label.dart';
 import '../../../../widgets/settings_group.dart';
 import 'settings_sheet.dart';
 import 'text_size_sheet.dart' show formatTextSize;
@@ -389,8 +390,8 @@ class _ModeSwitch extends StatelessWidget {
           if (dark != null) onChanged(dark);
         },
         children: const {
-          false: _Segment(icon: Icons.light_mode_rounded, label: "Light"),
-          true: _Segment(icon: Icons.dark_mode_rounded, label: "Dark"),
+          false: SegmentLabel(icon: Icons.light_mode_rounded, label: "Light"),
+          true: SegmentLabel(icon: Icons.dark_mode_rounded, label: "Dark"),
         },
       ),
     );
@@ -499,9 +500,15 @@ class _Controls extends StatelessWidget {
                   if (font != null) onChanged(style.copyWith(font: font));
                 },
                 children: const {
-                  WidgetFont.regular: _Segment(label: "Regular"),
+                  WidgetFont.regular: SegmentLabel(label: "Regular"),
                   // Written in the font itself, as a sample.
-                  WidgetFont.casual: _Segment(label: "Casual", casual: true),
+                  WidgetFont.casual: SegmentLabel(
+                    label: "Casual",
+                    style: TextStyle(
+                      fontFamily: 'casual',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 },
               ),
             ),
@@ -606,43 +613,6 @@ class _SliderTile extends StatelessWidget {
               ],
             )
           : slider,
-    );
-  }
-}
-
-/// A segment of a segmented control: a label, after an optional icon.
-class _Segment extends StatelessWidget {
-  const _Segment({this.icon, required this.label, this.casual = false});
-
-  final IconData? icon;
-  final String label;
-
-  /// Whether the label is in the handwritten font.
-  final bool casual;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[Icon(icon, size: 17), const SizedBox(width: 6)],
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14.5,
-                  fontFamily: casual ? 'casual' : null,
-                  fontWeight: casual ? FontWeight.w600 : null,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

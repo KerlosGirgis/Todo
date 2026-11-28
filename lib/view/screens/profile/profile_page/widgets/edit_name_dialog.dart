@@ -39,109 +39,93 @@ class _EditNameDialogState extends State<EditNameDialog> {
     super.dispose();
   }
 
+  /// Whether there's a name to save: more than spaces.
+  bool get _hasName => _nameController.text.trim().isNotEmpty;
+
   Future<void> _save() async {
+    // Not without one, as from the keyboard's Done.
+    if (!_hasName) return;
     final result = await context.read<UserViewModel>().rename(
       _nameController.text,
     );
     if (!mounted) return;
-    // Open still, to fix the name, when it won't do.
-    if (result is! Failure) Navigator.of(context).pop();
+    // Open still, to fix the name, unless it's been changed.
+    if (result is Success) Navigator.of(context).pop();
     FeedbackToast.show(result);
   }
 
   @override
   Widget build(BuildContext context) {
-    final fieldShape = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide.none,
-    );
-    return Dialog(
-      backgroundColor: context.colors.dialogBackground,
-      surfaceTintColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      constraints: const BoxConstraints(minWidth: 280, maxWidth: 400),
-      shape: RoundedSuperellipseBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(28)),
-        side: context.colors.dialogSide,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              "Edit Name",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: context.colors.wB,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.4,
-              ),
+    return DialogFrame(
+      maxWidth: 400,
+      inset: 32,
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            "Edit Name",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.colors.wB,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.4,
             ),
-            const SizedBox(height: 6),
-            Text(
-              "The name the app greets you by.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: context.colors.wB.withValues(alpha: 0.55),
-                fontSize: 14,
-              ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "The name the app greets you by.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: context.colors.wB.withValues(alpha: 0.55),
+              fontSize: 14,
             ),
-            const SizedBox(height: 22),
-            TextField(
-              controller: _nameController,
-              autofocus: true,
-              maxLines: 1,
-              maxLength: UserViewModel.maxNameLength,
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _save(),
-              cursorColor: AppPalette.accent,
-              style: TextStyle(fontSize: 18, color: context.colors.wB),
-              decoration: InputDecoration(
-                hintText: "Your name",
-                hintStyle: TextStyle(
-                  color: context.colors.wB.withValues(alpha: 0.35),
-                ),
-                filled: true,
-                fillColor: context.colors.wB.withValues(alpha: 0.06),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                border: fieldShape,
-                enabledBorder: fieldShape,
-                focusedBorder: fieldShape.copyWith(
-                  borderSide: const BorderSide(
-                    color: AppPalette.accent,
-                    width: 1.5,
+          ),
+          const SizedBox(height: 22),
+          TextField(
+            controller: _nameController,
+            autofocus: true,
+            maxLines: 1,
+            maxLength: UserViewModel.maxNameLength,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _save(),
+            cursorColor: AppPalette.accent,
+            style: TextStyle(fontSize: 18, color: context.colors.wB),
+            decoration: formFieldDecoration(context, hint: "Your name")
+                .copyWith(
+                  counterStyle: TextStyle(
+                    color: context.colors.wB.withValues(alpha: 0.4),
                   ),
                 ),
-                counterStyle: TextStyle(
-                  color: context.colors.wB.withValues(alpha: 0.4),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ProfileButton(
+                  label: "Cancel",
+                  tinted: true,
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ProfileButton(
-                    label: "Cancel",
-                    tinted: true,
-                    onPressed: () => Navigator.of(context).pop(),
+              const SizedBox(width: 12),
+              // Only once there's a name to save, as on the app's other
+              // forms.
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: _nameController,
+                  builder: (context, child) => ProfileButton(
+                    label: "Save",
+                    onPressed: _hasName ? _save : null,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ProfileButton(label: "Save", onPressed: _save),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

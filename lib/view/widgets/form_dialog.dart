@@ -82,67 +82,96 @@ class FormDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return DialogFrame(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              _HeaderIcon(icon, color: color),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: context.colors.wB,
+                        fontSize: 21,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: context.colors.wB.withValues(alpha: 0.55),
+                        fontSize: 13.5,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const _CloseButton(),
+            ],
+          ),
+          if (content.isNotEmpty) ...[const SizedBox(height: 20), ...content],
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              for (final (index, action) in actions.indexed) ...[
+                if (index > 0) const SizedBox(width: 12),
+                Expanded(child: action),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// What the app's dialogs are drawn on: the dialogs' colour, with large
+/// round corners and the theme's hairline round them, at most [maxWidth]
+/// wide and [inset] in from the sides of the screen. Their [child] scrolls
+/// on a screen too short for it, set in by [padding]. The sizes are a
+/// [FormDialog]'s unless given.
+class DialogFrame extends StatelessWidget {
+  const DialogFrame({
+    super.key,
+    this.maxWidth = 440,
+    this.inset = 24,
+    this.padding = const EdgeInsets.all(20),
+    this.clipBehavior,
+    required this.child,
+  });
+
+  final double maxWidth;
+  final double inset;
+  final EdgeInsetsGeometry padding;
+
+  /// How what's in it is cut to its corners, if it is.
+  final Clip? clipBehavior;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: context.colors.dialogBackground,
       surfaceTintColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      constraints: const BoxConstraints(minWidth: 280, maxWidth: 440),
+      clipBehavior: clipBehavior,
+      insetPadding: EdgeInsets.symmetric(horizontal: inset, vertical: 24),
+      constraints: BoxConstraints(minWidth: 280, maxWidth: maxWidth),
       shape: RoundedSuperellipseBorder(
         borderRadius: const BorderRadius.all(Radius.circular(28)),
         side: context.colors.dialogSide,
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                _HeaderIcon(icon, color: color),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: context.colors.wB,
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          color: context.colors.wB.withValues(alpha: 0.55),
-                          fontSize: 13.5,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const _CloseButton(),
-              ],
-            ),
-            if (content.isNotEmpty) ...[const SizedBox(height: 20), ...content],
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                for (final (index, action) in actions.indexed) ...[
-                  if (index > 0) const SizedBox(width: 12),
-                  Expanded(child: action),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
+      child: SingleChildScrollView(padding: padding, child: child),
     );
   }
 }

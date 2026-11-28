@@ -146,13 +146,14 @@ class UserViewModel with ChangeNotifier {
     return saving;
   }
 
-  /// Renames the user to [name], without the spaces at either end.
+  /// Renames the user to [name], without the spaces at either end, or says
+  /// what a name that won't do still needs.
   Future<Result> rename(String name) async {
     name = name.trim();
-    if (name.isEmpty) return Failure("Name can't be empty");
+    if (name.isEmpty) return const Info("Name can't be empty");
     // Counted as the name's field counts them, by what reads as one.
     if (name.characters.length > maxNameLength) {
-      return Failure("Use at most $maxNameLength characters");
+      return const Info("Use at most $maxNameLength characters");
     }
     return await _save(
           (user) => user.copyWith(name: name),

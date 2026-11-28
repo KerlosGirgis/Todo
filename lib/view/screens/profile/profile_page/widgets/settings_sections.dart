@@ -13,6 +13,7 @@ import '../../../../../view_model/tour_view_model.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../../view_model/widgets_view_model.dart';
 import '../../../../widgets/password_dialogs.dart';
+import '../../../../widgets/segment_label.dart';
 import '../../../../widgets/settings_group.dart';
 import 'appearance_picker.dart';
 import 'text_size_sheet.dart';
@@ -72,11 +73,11 @@ class GeneralSection extends StatelessWidget {
               }
             },
             children: const {
-              StartPage.tasks: _Segment(
+              StartPage.tasks: SegmentLabel(
                 icon: Icons.checklist_rounded,
                 label: "To-Do",
               ),
-              StartPage.notes: _Segment(
+              StartPage.notes: SegmentLabel(
                 icon: Icons.sticky_note_2_rounded,
                 label: "Notes",
               ),
@@ -161,9 +162,9 @@ class _AppLockTileState extends State<_AppLockTile> {
           if (lock != null) _change(lock);
         },
         children: const {
-          AppLock.off: _Segment(label: "Off"),
-          AppLock.fingerprint: _Segment(label: "Fingerprint"),
-          AppLock.password: _Segment(label: "Password"),
+          AppLock.off: SegmentLabel(label: "Off"),
+          AppLock.fingerprint: SegmentLabel(label: "Fingerprint"),
+          AppLock.password: SegmentLabel(label: "Password"),
         },
       ),
     );
@@ -227,11 +228,14 @@ class TasksSection extends StatelessWidget {
               }
             },
             children: const {
-              TasksView.list: _Segment(
+              TasksView.list: SegmentLabel(
                 icon: Icons.view_agenda_rounded,
                 label: "List",
               ),
-              TasksView.map: _Segment(icon: Icons.hub_rounded, label: "Map"),
+              TasksView.map: SegmentLabel(
+                icon: Icons.hub_rounded,
+                label: "Map",
+              ),
             },
           ),
         ),
@@ -260,9 +264,9 @@ class TasksSection extends StatelessWidget {
               }
             },
             children: {
-              0: const _Segment(label: "Off"),
+              0: const SegmentLabel(label: "Off"),
               for (var lines = 1; lines <= UserViewModel.maxDescLines; lines++)
-                lines: _Segment(label: "$lines"),
+                lines: SegmentLabel(label: "$lines"),
             },
           ),
         ),
@@ -433,34 +437,6 @@ class _TextSizeTile extends StatelessWidget {
       title: title,
       trailing: DisclosureValue(formatTextSize(size)),
       onTap: () => showTextSizeSheet(context, setting),
-    );
-  }
-}
-
-/// A segment of a segmented control: a label, after an optional icon. The
-/// label shrinks to fit a segment too narrow for it, as in large text.
-class _Segment extends StatelessWidget {
-  const _Segment({this.icon, required this.label});
-
-  final IconData? icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[Icon(icon, size: 17), const SizedBox(width: 6)],
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(label, style: const TextStyle(fontSize: 14.5)),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

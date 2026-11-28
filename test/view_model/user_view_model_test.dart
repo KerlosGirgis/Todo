@@ -528,11 +528,8 @@ void main() {
       expect(user.user.name, "Kerlos");
     });
 
-    test("won't take an empty name", () async {
-      expect(
-        (await user.rename("   ") as Failure).message,
-        "Name can't be empty",
-      );
+    test("won't take an empty name, which it says the name needs", () async {
+      expect((await user.rename("   ") as Info).message, "Name can't be empty");
       expect(repository.updates, 0);
     });
 
@@ -541,7 +538,10 @@ void main() {
         await user.rename("a" * UserViewModel.maxNameLength),
         isA<Success>(),
       );
-      expect(await user.rename("a" * 21), isA<Failure>());
+      expect(
+        (await user.rename("a" * 21) as Info).message,
+        "Use at most 20 characters",
+      );
       // One character to the field, though seven code points.
       expect(await user.rename("👨‍👩‍👧‍👦" * 20), isA<Success>());
     });
