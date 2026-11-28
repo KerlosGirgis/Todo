@@ -33,7 +33,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           # F-Droid's build reads this version with a sed: keep it quoted, with nothing after it.
-          flutter-version: '3.47.7'
+          flutter-version: '3.50.1'
 
       - name: Install dependencies
         run: flutter pub get --enforce-lockfile
@@ -69,15 +69,15 @@ jobs:
           name: Todo ${{ github.ref_name }}
           body: |
             ## Release Notes
-            - Redesigned the To-Do, Notes and Profile pages.
-            - Added rich text formatting to notes: headings, lists, checklists, quotes, code, links, highlights and more.
-            - Daily tasks are now checked off day by day, with a week view and streaks.
-            - Added task filters.
-            - Added a password option to App Lock. The password also locks the app's encrypted data, so it can't be recovered if forgotten.
-            - App Lock now locks again after a minute away and hides the app's screen from recent apps.
-            - Backups are now encrypted with a password. Older backups can still be restored.
-            - Reminders hide task names while App Lock is on and follow the phone's time zone. One-time reminders no longer repeat every year.
-            - Locked notes can no longer be shown on the home screen widget.
-            - Added a quick tour of the To-Do and Notes pages. Replay it with Show Tips Again in settings.
-            - Added profile picture cropping.
-            - Removed unneeded permissions, updated dependencies and fixed various bugs.
+            - Added subtasks. Tasks can hold subtasks nested as deep as you like, and fold to hide them. Swipe a task right to add a subtask; swipe left still deletes it.
+            - Added a map view that shows your tasks as a mind map. Press and hold a task to move it, or go full screen. Open it from the menu, or make it the default with Show Tasks As in settings.
+            - Tasks can now repeat weekly on chosen days or monthly on a chosen day, and can stop after a while or on a set date.
+            - Replaced the task filters with Sort and Filter buttons: sort by due date, or show only Done, Undone, Daily, Weekly, Monthly or Once tasks. Your choice is remembered.
+            - Deleted tasks and notes now go to a Trash, with Undo. Restore them or delete them for good from the Trash page in the menu.
+            - Added a To-Do home screen widget. While App Lock is on, it shows only task counts.
+            - Added style settings for both home screen widgets (colours, opacity, size and font) with a live preview, and a Clear Widget option for the note widget.
+            - Added an AMOLED Black option for the dark theme, contributed by agustux in #18.
+            - The notification permission is now asked for only when you turn on a reminder.
+            - The To-Do and Settings pages now keep one column in landscape.
+            - Android's phone-to-phone transfer no longer copies the app's data. Use Back Up and Restore to move it to a new phone.
+            - Updated dependencies and fixed various bugs.

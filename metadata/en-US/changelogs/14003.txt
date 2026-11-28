@@ -1,0 +1,8 @@
+• Added subtasks, nested as deep as you like. Swipe a task right to add one.
+• Added a map view that shows your tasks as a mind map.
+• Tasks can now repeat weekly on chosen days or monthly.
+• Added Sort and Filter buttons for tasks.
+• Deleted tasks and notes now go to a Trash, with Undo option.
+• Added a To-Do home screen widget and style options for both widgets.
+• Added an AMOLED Black theme contributed by agustux.
+• Updated dependencies and fixed various bugs.
