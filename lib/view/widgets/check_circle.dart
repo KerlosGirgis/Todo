@@ -3,9 +3,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/extensions/theme_extensions.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
+import '../../core/theme/palette.dart';
 
 /// The round check at the start of a task's card, or of a line of a note's
 /// checklist: an empty ring for something to do, filled with the app's
@@ -81,7 +79,7 @@ class _CheckPainter extends CustomPainter {
         center,
         fillRadius,
         Paint()
-          ..color = _accent.withValues(alpha: 0.5 * opacity)
+          ..color = AppPalette.accent.withValues(alpha: 0.5 * opacity)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6 * scale),
       );
     }
@@ -93,8 +91,8 @@ class _CheckPainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            _accent.withValues(alpha: opacity),
-            _highlight.withValues(alpha: opacity),
+            AppPalette.accent.withValues(alpha: opacity),
+            AppPalette.highlight.withValues(alpha: opacity),
           ],
         ).createShader(rect),
     );

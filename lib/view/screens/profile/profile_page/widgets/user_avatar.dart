@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../models/avatar.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/ringed_avatar.dart';
@@ -50,7 +51,7 @@ class UserAvatar extends StatelessWidget {
                   button: true,
                   label: "Change avatar",
                   child: Material(
-                    color: const Color(0xff3D5AFE),
+                    color: AppPalette.accent,
                     elevation: 2,
                     clipBehavior: Clip.antiAlias,
                     // The page-coloured border cuts the badge out of the ring.

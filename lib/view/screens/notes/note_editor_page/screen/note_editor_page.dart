@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../core/utils/link_utils.dart';
 import '../../../../../view_model/notes_view_model.dart';
@@ -20,6 +21,7 @@ import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
+import '../../../../widgets/page_gutters.dart';
 import '../../../../widgets/password_dialogs.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../../widgets/themed_status_bar.dart';
@@ -28,8 +30,6 @@ import '../widgets/link_dialog.dart';
 import '../widgets/note_formatting.dart';
 import '../widgets/note_styles.dart';
 import '../widgets/note_title.dart';
-
-const _accent = Color(0xff3D5AFE);
 
 /// How far below the bar the note's title starts.
 const _titleTop = 10.0;
@@ -128,11 +128,11 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final width = MediaQuery.sizeOf(context).width;
-    // Clear of a camera cutout on a phone turned on its side, and lines a
-    // comfortable length on large screens.
-    final gutterLeft = math.max(16 + padding.left, (width - 720) / 2);
-    final gutterRight = math.max(16 + padding.right, (width - 720) / 2);
+    // Lines a comfortable length on large screens.
+    final EdgeInsets(left: gutterLeft, right: gutterRight) = pageGutters(
+      context,
+      maxWidth: 720,
+    );
     final textLeft = gutterLeft + _textInset;
     final textRight = gutterRight + _textInset;
     // How far up the page the toolbar, and the formatting panel over it
@@ -252,7 +252,7 @@ class _NoteEditorPageState extends State<NoteEditorPage> {
                               showCodeBlockLineNumbers: false,
                               textSelectionThemeData:
                                   const legacy.TextSelectionThemeData(
-                                    cursorColor: _accent,
+                                    cursorColor: AppPalette.accent,
                                   ),
                               // Keeps the line being written clear of the
                               // toolbar.

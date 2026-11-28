@@ -4,11 +4,9 @@ import 'package:intl/intl.dart' as intl;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../widgets/glass.dart';
 import 'format_panel.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
 
 /// The gap between the formatting panel and the bar under it.
 const _panelGap = 10.0;
@@ -464,11 +462,16 @@ class _GlowingSaveButtonState extends State<_GlowingSaveButton> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+            colors: [
+              AppPalette.accent,
+              Color.lerp(AppPalette.accent, AppPalette.highlight, 0.7)!,
+            ],
           ),
           shadows: [
             BoxShadow(
-              color: _accent.withValues(alpha: isDarkTheme ? 0.22 : 0.25),
+              color: AppPalette.accent.withValues(
+                alpha: isDarkTheme ? 0.22 : 0.25,
+              ),
               blurRadius: 12,
               offset: const Offset(0, 5),
             ),

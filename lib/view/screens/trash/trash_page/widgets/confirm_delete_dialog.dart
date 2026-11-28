@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/profile_button.dart';
 
@@ -26,11 +27,10 @@ class _ConfirmDeleteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return FormDialog(
       icon: Icons.delete_forever_rounded,
       // iOS's system red, as on the delete buttons.
-      color: isDarkTheme ? const Color(0xffFF453A) : const Color(0xffFF3B30),
+      color: context.colors.systemRed,
       title: title,
       subtitle: message,
       content: const [],

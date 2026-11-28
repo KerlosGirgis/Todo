@@ -5,10 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/utils/date_time_utils.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
 
 /// The days of the week as a row of round buttons, each with its initial,
 /// in the order the user's weeks run: filled in with the app's blues on the
@@ -103,7 +101,10 @@ class _WeekdayButton extends StatelessWidget {
                 ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+                    colors: [
+                      AppPalette.accent,
+                      Color.lerp(AppPalette.accent, AppPalette.highlight, 0.7)!,
+                    ],
                   )
                 : null,
           ),

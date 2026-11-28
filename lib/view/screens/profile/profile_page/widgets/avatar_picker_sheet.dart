@@ -2,28 +2,18 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/avatar.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/profile_button.dart';
-
-const _accent = Color(0xff3D5AFE);
+import '../../../../widgets/ringed_avatar.dart';
+import 'settings_sheet.dart';
 
 /// Opens the sheet that picks one of the bundled avatars, or a photo from
 /// the gallery.
 Future<void> showAvatarPicker(BuildContext context) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    backgroundColor: context.colors.dialogBackground,
-    shape: RoundedSuperellipseBorder(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-      side: context.colors.sheetSide,
-    ),
-    builder: (context) => const AvatarPickerSheet(),
-  );
+  return showSettingsSheet<void>(context, const AvatarPickerSheet());
 }
 
 class AvatarPickerSheet extends StatelessWidget {
@@ -142,20 +132,14 @@ class _AvatarOption extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(
                       width: 2.5,
-                      color: selected ? _accent : Colors.transparent,
+                      color: selected ? AppPalette.accent : Colors.transparent,
                     ),
                   ),
                   child: ClipOval(
                     // The same backdrop and zoom as the avatar's own ring,
                     // for the avatars drawn on a transparent background.
                     child: DecoratedBox(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xffE8EAF6), Color(0xffC5CAE9)],
-                        ),
-                      ),
+                      decoration: const BoxDecoration(gradient: avatarBackdrop),
                       child: Transform.scale(
                         scale: 1.05,
                         child: Image.asset(
@@ -176,7 +160,7 @@ class _AvatarOption extends StatelessWidget {
                     bottom: -2,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: _accent,
+                        color: AppPalette.accent,
                         shape: BoxShape.circle,
                         // Cut out of whatever it overlaps by the sheet's
                         // own colour.

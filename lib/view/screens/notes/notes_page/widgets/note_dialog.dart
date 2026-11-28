@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/notes_view_model.dart';
 import '../../../../widgets/color_swatches.dart';
@@ -9,13 +10,6 @@ import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/password_dialogs.dart';
 import '../../../../widgets/profile_button.dart';
 import '../../../../widgets/settings_group.dart';
-
-const _accent = Color(0xff3D5AFE);
-
-// iOS's system colours, as on the profile page's settings.
-const _pink = Color(0xffFF2D55);
-const _indigo = Color(0xff5856D6);
-const _green = Color(0xff34C759);
 
 /// One of the note's two colours.
 enum _ColorTarget { cover, title }
@@ -126,7 +120,7 @@ class _NoteDialogState extends State<NoteDialog> {
             maxLines: 1,
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.done,
-            cursorColor: _accent,
+            cursorColor: AppPalette.accent,
             style: TextStyle(
               color: ink,
               fontSize: 18,
@@ -140,7 +134,7 @@ class _NoteDialogState extends State<NoteDialog> {
             children: [
               ColorTile(
                 icon: Icons.palette_rounded,
-                color: _pink,
+                color: SystemColors.pink,
                 title: "Cover",
                 value: _colorOf(_ColorTarget.cover),
                 open: _picking == _ColorTarget.cover,
@@ -150,7 +144,7 @@ class _NoteDialogState extends State<NoteDialog> {
               ),
               ColorTile(
                 icon: Icons.format_color_text_rounded,
-                color: _indigo,
+                color: SystemColors.indigo,
                 title: "Title Color",
                 value: _colorOf(_ColorTarget.title),
                 open: _picking == _ColorTarget.title,
@@ -160,7 +154,7 @@ class _NoteDialogState extends State<NoteDialog> {
               ),
               SettingsSwitchTile(
                 icon: Icons.fingerprint_rounded,
-                color: _green,
+                color: SystemColors.green,
                 title: "Lock Note",
                 subtitle: const Text("Open it with your fingerprint"),
                 value: _draft.locked,

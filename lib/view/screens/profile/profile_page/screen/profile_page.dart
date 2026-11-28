@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +7,7 @@ import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../view_model/user_view_model.dart';
 import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/large_title.dart';
+import '../../../../widgets/page_gutters.dart';
 import '../../../../widgets/themed_status_bar.dart';
 import '../widgets/aurora.dart';
 import '../widgets/profile_header.dart';
@@ -63,11 +62,8 @@ class ProfilePageState extends State<ProfilePage> {
   Widget _buildBody(BuildContext context) {
     const avatarSize = 148.0;
     final padding = MediaQuery.paddingOf(context);
-    // Clear of a camera cutout on a phone turned on its side, and a
-    // comfortable width for the cards on wide screens.
-    final centred = (MediaQuery.sizeOf(context).width - 600) / 2;
-    final left = math.max(16 + padding.left, centred);
-    final right = math.max(16 + padding.right, centred);
+    // A comfortable width for the cards on wide screens.
+    final EdgeInsets(:left, :right) = pageGutters(context, maxWidth: 600);
     final name = context.select<UserViewModel, String>(
       (user) => user.user.name,
     );

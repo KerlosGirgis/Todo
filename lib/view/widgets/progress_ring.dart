@@ -3,9 +3,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/extensions/theme_extensions.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
+import '../../core/theme/palette.dart';
 
 /// How far through their tasks the user is, as a ring that fills with the
 /// app's blues, with the percentage in its middle. Its stroke and text keep
@@ -97,7 +95,7 @@ class _RingPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = width
           ..strokeCap = StrokeCap.round
-          ..color = _accent.withValues(alpha: 0.45)
+          ..color = AppPalette.accent.withValues(alpha: 0.45)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 7 / 11),
       );
     }
@@ -113,13 +111,17 @@ class _RingPainter extends CustomPainter {
         ..strokeWidth = width
         ..shader = SweepGradient(
           endAngle: sweep,
-          colors: const [_accent, _highlight],
+          colors: const [AppPalette.accent, AppPalette.highlight],
           transform: const GradientRotation(start),
         ).createShader(rect),
     );
     // Round ends drawn as dots, each in its own end's colour: a round cap
     // at the start would wrap around to the far end of the gradient.
-    canvas.drawCircle(pointAt(start), width / 2, Paint()..color = _accent);
+    canvas.drawCircle(
+      pointAt(start),
+      width / 2,
+      Paint()..color = AppPalette.accent,
+    );
     final end = pointAt(start + sweep);
     // As the ring closes, a shadow lifts its end over its start, as on
     // Apple's activity rings.
@@ -133,7 +135,7 @@ class _RingPainter extends CustomPainter {
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 3 / 11),
       );
     }
-    canvas.drawCircle(end, width / 2, Paint()..color = _highlight);
+    canvas.drawCircle(end, width / 2, Paint()..color = AppPalette.highlight);
   }
 
   @override

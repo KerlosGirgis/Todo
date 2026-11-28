@@ -2,11 +2,9 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/profile_button.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
 
 /// Has the user pick the day of the month a monthly task comes round on,
 /// from 1 to 31, in a grid of a week to a row, with [day], the one it's on
@@ -103,8 +101,12 @@ class _DayButton extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          _accent,
-                          Color.lerp(_accent, _highlight, 0.7)!,
+                          AppPalette.accent,
+                          Color.lerp(
+                            AppPalette.accent,
+                            AppPalette.highlight,
+                            0.7,
+                          )!,
                         ],
                       )
                     : null,

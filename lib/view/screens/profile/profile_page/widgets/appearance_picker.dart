@@ -3,11 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/user_view_model.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
 
 /// Light and dark previews of the app to choose the theme from, as in iOS's
 /// Display & Brightness settings.
@@ -90,7 +88,7 @@ class _Option extends StatelessWidget {
                   borderRadius: const BorderRadius.all(Radius.circular(21)),
                   side: BorderSide(
                     width: 2.5,
-                    color: selected ? _accent : Colors.transparent,
+                    color: selected ? AppPalette.accent : Colors.transparent,
                   ),
                 ),
               ),
@@ -129,10 +127,12 @@ class _Check extends StatelessWidget {
       height: 24,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: selected ? _accent : Colors.transparent,
+        color: selected ? AppPalette.accent : Colors.transparent,
         border: Border.all(
           width: 1.5,
-          color: selected ? _accent : context.colors.wB.withValues(alpha: 0.25),
+          color: selected
+              ? AppPalette.accent
+              : context.colors.wB.withValues(alpha: 0.25),
         ),
       ),
       child: AnimatedScale(
@@ -200,7 +200,9 @@ class _PhoneMock extends StatelessWidget {
                 height: 11,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: [_accent, _highlight]),
+                  gradient: LinearGradient(
+                    colors: [AppPalette.accent, AppPalette.highlight],
+                  ),
                 ),
               ),
             ],
@@ -222,7 +224,7 @@ class _PhoneMock extends StatelessWidget {
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: index == 0 ? _accent : null,
+                      color: index == 0 ? AppPalette.accent : null,
                       border: index == 0
                           ? null
                           : Border.all(
@@ -248,7 +250,10 @@ class _PhoneMock extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+                  colors: [
+                    AppPalette.accent,
+                    Color.lerp(AppPalette.accent, AppPalette.highlight, 0.7)!,
+                  ],
                 ),
                 shape: const RoundedSuperellipseBorder(
                   borderRadius: BorderRadius.all(Radius.circular(5)),

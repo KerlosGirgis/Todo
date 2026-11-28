@@ -1,11 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/utils/link_utils.dart';
 import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/profile_button.dart';
-
-const _accent = Color(0xff3D5AFE);
 
 /// What the link dialog says to do with the link.
 sealed class LinkChange {
@@ -97,7 +96,7 @@ class _LinkDialogState extends State<LinkDialog> {
               ? TextInputAction.next
               : TextInputAction.done,
           onSubmitted: widget.textEditable ? null : (_) => _save(),
-          cursorColor: _accent,
+          cursorColor: AppPalette.accent,
           style: style,
           decoration: formFieldDecoration(context, hint: "Link"),
         ),
@@ -109,7 +108,7 @@ class _LinkDialogState extends State<LinkDialog> {
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _save(),
-            cursorColor: _accent,
+            cursorColor: AppPalette.accent,
             style: style,
             decoration: formFieldDecoration(context, hint: "Text"),
           ),

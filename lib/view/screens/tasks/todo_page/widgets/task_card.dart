@@ -7,20 +7,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:readmore/readmore.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../core/utils/task_labels.dart';
 import '../../../../../models/recurrence.dart';
 import '../../../../../models/repeat_progress.dart';
 import '../../../../../models/todo_item.dart';
 import '../../../../widgets/check_circle.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
-
-/// iOS's system orange on dark pages, and a deeper one that reads on light
-/// ones.
-Color _orange(bool isDarkTheme) =>
-    isDarkTheme ? const Color(0xffFF9F0A) : const Color(0xffC93400);
 
 /// A task on the to-do page, on the same surface as the profile page's
 /// cards: a round check that fills in once it's done, its title and
@@ -324,7 +317,7 @@ class _TaskCardState extends State<TaskCard> {
     final ink = context.colors.wB;
     // Done tasks' chips fade back with the rest of the card.
     final strength = lerpDouble(1, 0.5, doneness)!;
-    final orange = _orange(isDarkTheme);
+    final orange = context.colors.warning;
     // Red once it's overdue, as in Reminders, until it's done.
     final overdue = facts.overdue ? 1 - doneness : 0.0;
     final red = context.colors.systemRed;
@@ -355,8 +348,8 @@ class _TaskCardState extends State<TaskCard> {
           color: Colors.white.withValues(alpha: strength),
           gradient: LinearGradient(
             colors: [
-              _accent.withValues(alpha: strength),
-              _highlight.withValues(alpha: strength),
+              AppPalette.accent.withValues(alpha: strength),
+              AppPalette.highlight.withValues(alpha: strength),
             ],
           ),
         ),
@@ -656,8 +649,8 @@ class _DayDotPainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            _accent.withValues(alpha: math.min(1, fill * 1.6)),
-            _highlight.withValues(alpha: math.min(1, fill * 1.6)),
+            AppPalette.accent.withValues(alpha: math.min(1, fill * 1.6)),
+            AppPalette.highlight.withValues(alpha: math.min(1, fill * 1.6)),
           ],
         ).createShader(Rect.fromCircle(center: center, radius: fillRadius)),
     );
@@ -813,8 +806,8 @@ class _BarPainter extends CustomPainter {
       Paint()
         ..shader = LinearGradient(
           colors: [
-            _accent.withValues(alpha: strength),
-            _highlight.withValues(alpha: strength),
+            AppPalette.accent.withValues(alpha: strength),
+            AppPalette.highlight.withValues(alpha: strength),
           ],
         ).createShader(bar),
     );
@@ -859,7 +852,10 @@ class TaskSubtaskBackground extends StatelessWidget {
     return _SwipeBackground(
       alignment: alignment,
       gradient: LinearGradient(
-        colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+        colors: [
+          AppPalette.accent,
+          Color.lerp(AppPalette.accent, AppPalette.highlight, 0.7)!,
+        ],
       ),
       icon: Icons.subdirectory_arrow_right_rounded,
       label: "Subtask",

@@ -19,7 +19,10 @@ import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/page_bar_actions.dart';
+import '../../../../widgets/page_gutters.dart';
+import '../../../../widgets/page_tours.dart';
 import '../../../../widgets/password_dialogs.dart';
+import '../../../../widgets/restore_backup_dialog.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../../widgets/themed_status_bar.dart';
 import '../../../../widgets/tour.dart';
@@ -31,7 +34,6 @@ import '../widgets/empty_notes.dart';
 import '../widgets/note_card.dart';
 import '../widgets/note_dialog.dart';
 import '../widgets/note_grid_layout.dart';
-import '../widgets/notes_overwrite_dialog.dart';
 import '../widgets/notes_search_field.dart';
 import '../widgets/notes_tour.dart';
 import '../widgets/reorder_notes_dialog.dart';
@@ -41,9 +43,6 @@ const _title = "Notes";
 /// The room above the grid's first row.
 const _gridTop = 20.0;
 
-/// How long the page takes to rise in, which its tour waits for.
-const _tourDelay = Duration(milliseconds: 900);
-
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
 
@@ -52,7 +51,7 @@ class NotesPage extends StatefulWidget {
 }
 
 class _NotesPageState extends State<NotesPage>
-    with WidgetPageRequests<NotesPage> {
+    with WidgetPageRequests<NotesPage>, PageTours<NotesPage> {
   @override
   StartPage get widgetPage => StartPage.notes;
 
@@ -74,14 +73,6 @@ class _NotesPageState extends State<NotesPage>
   /// when the page opens, and none once the grid only changes.
   int _gridDelay = 2;
 
-  /// The page's tour, which shows once, as the page first opens.
-  final _tour = TourController();
-  Timer? _tourStart;
-
-  /// Whether the tour is on, or about to be, when the first card has
-  /// [_firstCardKey], for the tour to find it by.
-  bool _touring = false;
-
   /// What the tour points at.
   final _headerKey = GlobalKey();
   final _firstCardKey = GlobalKey();
@@ -89,33 +80,26 @@ class _NotesPageState extends State<NotesPage>
   final _buttonsKey = GlobalKey();
   final _menuKey = GlobalKey();
 
-  /// Which tours are due, which says when the user asks for them again.
-  late final TourViewModel _tours;
-
   @override
   void initState() {
     super.initState();
-    _tours = context.read<TourViewModel>()..addListener(_toursReplayed);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final tourDue = _tours.isDue(PageTour.notes);
+      final tourDue = tours.isDue(PageTour.notes);
       final failed = await context.read<NotesViewModel>().get();
       // Not over notes that couldn't be read in.
-      final touring = failed == null && await tourDue;
+      final due = failed == null && await tourDue;
       if (!mounted) return;
       setState(() {
         _loaded = true;
-        _touring = touring;
+        touring = due;
       });
       FeedbackToast.show(failed);
-      if (touring) _tourStart = Timer(_tourDelay, _startTour);
+      if (due) startTourSoon(PageTour.notes);
     });
   }
 
   @override
   void dispose() {
-    _tours.removeListener(_toursReplayed);
-    _tourStart?.cancel();
-    _tour.dispose();
     _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -124,44 +108,58 @@ class _NotesPageState extends State<NotesPage>
 
   /// Shows the tour again once the user asks for the tips again in the
   /// settings, as they come back from them.
-  Future<void> _toursReplayed() async {
-    if (_touring || !await _tours.isDue(PageTour.notes) || !mounted) return;
-    setState(() => _touring = true);
-    _tourStart?.cancel();
-    _tourStart = Timer(_tourDelay, _startTour);
+  @override
+  Future<void> toursReplayed() async {
+    if (touring || !await tours.isDue(PageTour.notes) || !mounted) return;
+    setState(() => touring = true);
+    startTourSoon(PageTour.notes);
+  }
+
+  @override
+  void startTour(PageTour tour) {
+    _searchFocusNode.unfocus();
+    super.startTour(tour);
   }
 
   /// Shows the user how the page works: on the first card, or on an example
   /// one when there are no notes.
-  void _startTour() {
-    _searchFocusNode.unfocus();
+  @override
+  List<TourStep> tourSteps(PageTour tour) {
     final notes = context.read<NotesViewModel>();
     final note = notes.notes.firstOrNull;
-    _tour.start(
-      notesTour(
-        note: note,
-        preview: note == null ? null : notes.previewOf(note),
-        card: _firstCardKey,
-        header: _headerKey,
-        gap: _gridTop,
-        // Only there with notes to search.
-        search: note == null ? null : _searchKey,
-        buttons: _buttonsKey,
-        menu: _menuKey,
-      ),
-      onEnd: () {
-        setState(() => _touring = false);
-        _tours.finish(PageTour.notes);
-      },
+    return notesTour(
+      note: note,
+      preview: note == null ? null : notes.previewOf(note),
+      card: _firstCardKey,
+      header: _headerKey,
+      gap: _gridTop,
+      // Only there with notes to search.
+      search: note == null ? null : _searchKey,
+      buttons: _buttonsKey,
+      menu: _menuKey,
     );
   }
+
+  /// Imports notes from a backup file, in place of the ones there are now or
+  /// alongside them, as the user chooses.
+  void _restoreBackup() => showFormDialog<void>(
+    context,
+    RestoreBackupDialog(
+      things: "notes",
+      restore: (context, overwrite) => context.read<NotesViewModel>().restore(
+        overwrite,
+        askForPassword: noteLockPasswordPrompt(context),
+        askForBackupPassword: backupPasswordPrompt(context),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final (gutterLeft, gutterRight) = noteGutters(
-      MediaQuery.sizeOf(context).width,
-      padding,
+    final EdgeInsets(left: gutterLeft, right: gutterRight) = pageGutters(
+      context,
+      maxWidth: noteGridMaxWidth,
     );
     // The last cards scroll clear of the buttons, or of the keyboard while
     // searching.
@@ -174,7 +172,7 @@ class _NotesPageState extends State<NotesPage>
     );
     return ThemedStatusBar(
       child: Tour(
-        controller: _tour,
+        controller: tourController,
         child: Scaffold(
           resizeToAvoidBottomInset: false,
           backgroundColor: context.colors.pageBackground,
@@ -247,7 +245,7 @@ class _NotesPageState extends State<NotesPage>
                   gridDelay: _gridDelay,
                   onOpen: _openNote,
                   onEdit: _editNote,
-                  firstCardKey: _touring ? _firstCardKey : null,
+                  firstCardKey: touring ? _firstCardKey : null,
                 ),
             ],
           ),
@@ -266,8 +264,7 @@ class _NotesPageState extends State<NotesPage>
     GlassMenuItem(
       icon: Icons.settings_backup_restore_rounded,
       tooltip: "Restore Backup",
-      onPressed: () =>
-          showFormDialog<void>(context, const NotesOverwriteDialog()),
+      onPressed: _restoreBackup,
     ),
     GlassMenuItem(
       icon: Icons.backup_rounded,

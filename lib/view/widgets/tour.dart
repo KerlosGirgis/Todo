@@ -4,9 +4,7 @@ import 'package:flutter/foundation.dart' show clampDouble;
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/extensions/theme_extensions.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
+import '../../core/theme/palette.dart';
 
 /// A gesture a [TourDemo] acts out on its copy.
 enum TourGesture {
@@ -1062,7 +1060,7 @@ class _FingerPainter extends CustomPainter {
         false,
         ringPaint
           ..strokeCap = StrokeCap.round
-          ..color = _highlight.withValues(alpha: ringAlpha),
+          ..color = AppPalette.highlight.withValues(alpha: ringAlpha),
       );
     }
     // Squashed a little as it presses down.
@@ -1235,7 +1233,7 @@ class _Tip extends StatelessWidget {
             ),
           ),
           // Solid rather than glass, as the page behind it is dimmed.
-          color: isDarkTheme ? const Color(0xff2C2C2E) : Colors.white,
+          color: isDarkTheme ? SystemColors.gray5Dark : Colors.white,
           shadows: [
             BoxShadow(
               color: Colors.black.withValues(alpha: isDarkTheme ? 0.5 : 0.22),
@@ -1333,7 +1331,10 @@ class _TipIcon extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+            colors: [
+              AppPalette.accent,
+              Color.lerp(AppPalette.accent, AppPalette.highlight, 0.7)!,
+            ],
           ),
         ),
         child: Icon(icon, size: 20, color: Colors.white),
@@ -1399,7 +1400,10 @@ class _TipButton extends StatelessWidget {
           shape: shape,
           gradient: filled
               ? LinearGradient(
-                  colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+                  colors: [
+                    AppPalette.accent,
+                    Color.lerp(AppPalette.accent, AppPalette.highlight, 0.7)!,
+                  ],
                 )
               : null,
         ),

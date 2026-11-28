@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'palette.dart';
+
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   final Color floatingActionButtonBackground;
@@ -30,6 +32,11 @@ class AppColors extends ThemeExtension<AppColors> {
   /// deletes, and for what's overdue.
   final Color systemRed;
 
+  /// Orange for what still needs the user, as a missing time or a repeat
+  /// that's ending: iOS's system orange, brighter on dark pages, and
+  /// deepened to read as text on light ones.
+  final Color warning;
+
   const AppColors({
     required this.floatingActionButtonBackground,
     required this.floatingActionButtonForeground,
@@ -48,10 +55,11 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.dialogExitIcon,
     required this.dialogExitContainer,
     required this.systemRed,
+    required this.warning,
   });
 
   static const light = AppColors(
-    floatingActionButtonBackground: Color(0xff3D5AFE),
+    floatingActionButtonBackground: AppPalette.accent,
     floatingActionButtonForeground: Colors.white,
     wB: Colors.black,
     cardBackground: Color(0xffF5F5F5),
@@ -62,12 +70,13 @@ class AppColors extends ThemeExtension<AppColors> {
     profileAlertBackground: Colors.grey,
     profilePageName: Colors.blue,
     appBarIcons: Color(0xff616161),
-    moreLess: Color(0xff3D5AFE),
+    moreLess: AppPalette.accent,
     dialogIconContainer: Color(0xffd8defb),
-    dialogIcon: Color(0xff3D5AFE),
+    dialogIcon: AppPalette.accent,
     dialogExitIcon: Color(0xff424242),
     dialogExitContainer: Color(0xffE0E0E0),
-    systemRed: Color(0xffFF3B30),
+    systemRed: SystemColors.red,
+    warning: SystemColors.orangeHighContrast,
   );
 
   static final dark = AppColors(
@@ -87,7 +96,8 @@ class AppColors extends ThemeExtension<AppColors> {
     dialogIcon: Colors.white,
     dialogExitIcon: Colors.white,
     dialogExitContainer: const Color(0xff404040),
-    systemRed: const Color(0xffFF453A),
+    systemRed: SystemColors.redDark,
+    warning: SystemColors.orangeDark,
   );
 
   static final amoled = dark.copyWith(
@@ -140,6 +150,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? dialogExitIcon,
     Color? dialogExitContainer,
     Color? systemRed,
+    Color? warning,
   }) {
     return AppColors(
       floatingActionButtonBackground:
@@ -162,6 +173,7 @@ class AppColors extends ThemeExtension<AppColors> {
       dialogExitIcon: dialogExitIcon ?? this.dialogExitIcon,
       dialogExitContainer: dialogExitContainer ?? this.dialogExitContainer,
       systemRed: systemRed ?? this.systemRed,
+      warning: warning ?? this.warning,
     );
   }
 
@@ -211,6 +223,7 @@ class AppColors extends ThemeExtension<AppColors> {
         t,
       )!,
       systemRed: Color.lerp(systemRed, other.systemRed, t)!,
+      warning: Color.lerp(warning, other.warning, t)!,
     );
   }
 }

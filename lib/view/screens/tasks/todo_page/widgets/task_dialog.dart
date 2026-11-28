@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../core/utils/task_labels.dart';
@@ -18,18 +19,6 @@ import '../../../../widgets/settings_group.dart';
 import 'month_day_dialog.dart';
 import 'repeat_end_dialog.dart';
 import 'weekday_picker.dart';
-
-const _accent = Color(0xff3D5AFE);
-
-// iOS's system colours, as on the profile page's settings: red for the date
-// and blue for the time, as in Reminders, orange for the alert, indigo for
-// the task it's in, green for how it repeats, and purple for until when.
-const _red = Color(0xffFF3B30);
-const _blue = Color(0xff007AFF);
-const _orange = Color(0xffFF9500);
-const _indigo = Color(0xff5856D6);
-const _green = Color(0xff34C759);
-const _purple = Color(0xffAF52DE);
 
 /// What the reminder's segmented control offers: no reminder, one, or one
 /// each time the task comes round.
@@ -179,7 +168,7 @@ class _TaskDialogState extends State<TaskDialog> {
               maxLines: 1,
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.next,
-              cursorColor: _accent,
+              cursorColor: AppPalette.accent,
               style: TextStyle(
                 color: ink,
                 fontSize: 18,
@@ -196,18 +185,22 @@ class _TaskDialogState extends State<TaskDialog> {
               maxLines: 5,
               keyboardType: TextInputType.multiline,
               textCapitalization: TextCapitalization.sentences,
-              cursorColor: _accent,
+              cursorColor: AppPalette.accent,
               style: TextStyle(color: ink, fontSize: 16, height: 1.35),
               decoration: formFieldDecoration(context, hint: "Description"),
             ),
             const SizedBox(height: 16),
+            // The rows' icons are in iOS's system colours, as on the profile
+            // page's settings: red for the date and blue for the time, as in
+            // Reminders, orange for the alert, indigo for the task it's in,
+            // green for how it repeats, and purple for until when.
             FormDialogGroup(
               children: [
                 // Only with another task for it to be in.
                 if (_draft.places.isNotEmpty)
                   SettingsTile(
                     icon: Icons.account_tree_rounded,
-                    color: _indigo,
+                    color: SystemColors.indigo,
                     title: "Part Of",
                     trailing: _PickedValue(
                       label: parent?.title,
@@ -218,7 +211,7 @@ class _TaskDialogState extends State<TaskDialog> {
                 if (_draft.hasDay)
                   SettingsTile(
                     icon: Icons.calendar_today_rounded,
-                    color: _red,
+                    color: SystemColors.red,
                     title: "Date",
                     trailing: _PickedValue(
                       label: date == null
@@ -230,7 +223,7 @@ class _TaskDialogState extends State<TaskDialog> {
                   ),
                 SettingsTile(
                   icon: Icons.schedule_rounded,
-                  color: _blue,
+                  color: SystemColors.blue,
                   title: "Time",
                   trailing: _PickedValue(
                     label: _draft.time?.label,
@@ -240,7 +233,7 @@ class _TaskDialogState extends State<TaskDialog> {
                 ),
                 SettingsTile(
                   icon: Icons.notifications_rounded,
-                  color: _orange,
+                  color: SystemColors.orange,
                   title: "Reminder",
                   subtitle: _ReminderHint(draft: _draft, now: now),
                   bottom: CupertinoSlidingSegmentedControl<_ReminderChoice>(
@@ -271,7 +264,7 @@ class _TaskDialogState extends State<TaskDialog> {
                 if (_draft.repeats) ...[
                   SettingsTile(
                     icon: Icons.repeat_rounded,
-                    color: _green,
+                    color: SystemColors.green,
                     title: "Repeat",
                     bottom: Column(
                       children: [
@@ -305,7 +298,7 @@ class _TaskDialogState extends State<TaskDialog> {
                       when _draft.reminder == Reminder.monthly)
                     SettingsTile(
                       icon: Icons.event_rounded,
-                      color: _red,
+                      color: SystemColors.red,
                       title: "Day of the Month",
                       trailing: DisclosureValue(
                         DateTimeUtils.ordinal(monthDay),
@@ -314,7 +307,7 @@ class _TaskDialogState extends State<TaskDialog> {
                     ),
                   SettingsTile(
                     icon: Icons.hourglass_bottom_rounded,
-                    color: _purple,
+                    color: SystemColors.purple,
                     title: "Ends",
                     trailing: _PickedValue(
                       label: _draft.until == null
@@ -426,13 +419,7 @@ class _ReminderHint extends StatelessWidget {
     };
     return Text(
       hint,
-      style: missing
-          ? TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xffFF9F0A)
-                  : const Color(0xffC93400),
-            )
-          : null,
+      style: missing ? TextStyle(color: context.colors.warning) : null,
     );
   }
 }

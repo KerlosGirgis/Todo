@@ -36,6 +36,17 @@ void main() {
     expect(AppColors.amoled.systemRed, AppColors.dark.systemRed);
   });
 
+  test("the warning orange is deepened to read as text on light pages, and "
+      "iOS's brighter one on dark pages", () {
+    expect(AppColors.light.warning, const Color(0xffC93400));
+    expect(AppColors.dark.warning, const Color(0xffFF9F0A));
+    expect(AppColors.amoled.warning, AppColors.dark.warning);
+    expect(
+      AppColors.light.lerp(AppColors.dark, 1).warning,
+      AppColors.dark.warning,
+    );
+  });
+
   test('switching to AMOLED black brings the outline in', () {
     expect(
       AppColors.dark.lerp(AppColors.amoled, 1).dialogSide,

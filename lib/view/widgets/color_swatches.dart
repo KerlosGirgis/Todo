@@ -5,10 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/theme/palette.dart';
 import '../../models/note.dart';
 import 'settings_group.dart';
-
-const _accent = Color(0xff3D5AFE);
 
 /// The colours on offer wherever a colour is picked, a note's cover or a
 /// widget's background: iOS's system colours, with the app's own blue among
@@ -16,15 +15,15 @@ const _accent = Color(0xff3D5AFE);
 const colorPalette = <(String, Color)>[
   ("Graphite", Color(Note.defaultCoverColor)),
   ("White", Color(Note.defaultTitleColor)),
-  ("Red", Color(0xffFF3B30)),
-  ("Orange", Color(0xffFF9500)),
-  ("Yellow", Color(0xffFFCC00)),
-  ("Green", Color(0xff34C759)),
-  ("Teal", Color(0xff30B0C7)),
-  ("Blue", _accent),
-  ("Indigo", Color(0xff5856D6)),
-  ("Purple", Color(0xffAF52DE)),
-  ("Pink", Color(0xffFF2D55)),
+  ("Red", SystemColors.red),
+  ("Orange", SystemColors.orange),
+  ("Yellow", SystemColors.yellow),
+  ("Green", SystemColors.green),
+  ("Teal", SystemColors.teal),
+  ("Blue", AppPalette.accent),
+  ("Indigo", SystemColors.indigo),
+  ("Purple", SystemColors.purple),
+  ("Pink", SystemColors.pink),
 ];
 
 /// [color]'s name in the palette, "Custom" for any other colour, or
@@ -238,13 +237,13 @@ class _CustomSwatch extends StatelessWidget {
           shape: BoxShape.circle,
           gradient: SweepGradient(
             colors: [
-              Color(0xffFF3B30),
-              Color(0xffFFCC00),
-              Color(0xff34C759),
-              Color(0xff32ADE6),
-              Color(0xff5856D6),
-              Color(0xffAF52DE),
-              Color(0xffFF3B30),
+              SystemColors.red,
+              SystemColors.yellow,
+              SystemColors.green,
+              SystemColors.cyan,
+              SystemColors.indigo,
+              SystemColors.purple,
+              SystemColors.red,
             ],
           ),
         ),
@@ -358,8 +357,8 @@ class AutomaticDot extends StatelessWidget {
           colors: [
             Color(0xffffffff),
             Color(0xffffffff),
-            Color(0xff2c2c2e),
-            Color(0xff2c2c2e),
+            SystemColors.gray5Dark,
+            SystemColors.gray5Dark,
           ],
           stops: [0, 0.5, 0.5, 1],
         ),
@@ -412,7 +411,7 @@ Future<Color> pickCustomColor(
     ),
     subheading: const _PickerSubheading("Shades"),
     wheelSubheading: const _PickerSubheading("Shades"),
-    selectedPickerTypeColor: _accent,
+    selectedPickerTypeColor: AppPalette.accent,
     backgroundColor: context.colors.dialogBackground,
     surfaceTintColor: Colors.transparent,
     shape: RoundedSuperellipseBorder(

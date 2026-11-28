@@ -3,13 +3,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/theme/palette.dart';
 import '../../core/ui/feedback_toast.dart';
 import '../../models/avatar.dart';
 import '../../models/verse.dart';
 import '../../view_model/user_view_model.dart';
+import 'form_dialog.dart';
 import 'ringed_avatar.dart';
-
-const _accent = Color(0xff3D5AFE);
 
 class AppbarAvatar extends StatefulWidget {
   const AppbarAvatar({super.key});
@@ -63,24 +63,7 @@ class _AppbarAvatarState extends State<AppbarAvatar> {
                       name: user.user.name,
                       verse: user.dailyVerse,
                     ),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                      final curvedAnimation = CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                        reverseCurve: Curves.easeInCubic,
-                      );
-                      return FadeTransition(
-                        opacity: curvedAnimation,
-                        child: ScaleTransition(
-                          scale: Tween<double>(
-                            begin: 0.95,
-                            end: 1,
-                          ).animate(curvedAnimation),
-                          child: child,
-                        ),
-                      );
-                    },
+                transitionsBuilder: formDialogTransition,
               ),
             );
           },
@@ -182,7 +165,7 @@ class _VerseCard extends StatelessWidget {
     }
 
     return Material(
-      color: _accent.withValues(alpha: isDarkTheme ? 0.14 : 0.08),
+      color: AppPalette.accent.withValues(alpha: isDarkTheme ? 0.14 : 0.08),
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),

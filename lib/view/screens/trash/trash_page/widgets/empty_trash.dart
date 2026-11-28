@@ -3,11 +3,9 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../models/trashed.dart';
 import '../../../../widgets/ringed_avatar.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
 
 /// Shown in place of the trash's list, as on the to-do and notes pages: an
 /// icon in the avatar's glowing ring, and a line on what the trash is for.
@@ -95,7 +93,7 @@ class _RingPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = _width
         ..shader = const SweepGradient(
-          colors: [_accent, _highlight, _accent],
+          colors: [AppPalette.accent, AppPalette.highlight, AppPalette.accent],
           transform: GradientRotation(math.pi / 4),
         ).createShader(rect),
     );

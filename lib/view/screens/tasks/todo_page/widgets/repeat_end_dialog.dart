@@ -3,15 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/utils/date_time_utils.dart';
 import '../../../../../models/recurrence.dart';
 import '../../../../../view_model/tasks_view_model.dart';
 import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/profile_button.dart';
 import '../../../../widgets/settings_group.dart';
-
-/// iOS's system red, as for the task's date.
-const _red = Color(0xffFF3B30);
 
 /// Has the user pick how long a task that's to repeat, as [draft] has it,
 /// keeps repeating: for good, for a number of days, weeks or months from
@@ -93,7 +91,8 @@ class _RepeatEndDialogState extends State<RepeatEndDialog> {
                     children: [
                       SettingsTile(
                         icon: Icons.calendar_today_rounded,
-                        color: _red,
+                        // Red, as for the task's date.
+                        color: SystemColors.red,
                         title: "Last Day",
                         trailing: DisclosureValue(
                           DateTimeUtils.friendlyDay(_end.day, today),
@@ -276,9 +275,7 @@ class _TimesLeft extends StatelessWidget {
       text,
       style: TextStyle(
         color: warning
-            ? (Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xffFF9F0A)
-                  : const Color(0xffC93400))
+            ? context.colors.warning
             : context.colors.wB.withValues(alpha: 0.55),
         fontSize: 13.5,
         height: 1.3,

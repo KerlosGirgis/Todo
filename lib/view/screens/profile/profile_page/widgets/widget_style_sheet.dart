@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
 import '../../../../../models/text_size.dart';
@@ -15,19 +16,9 @@ import '../../../../widgets/color_swatches.dart';
 import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/profile_button.dart';
 import '../../../../widgets/settings_group.dart';
+import 'settings_sheet.dart';
 import 'text_size_sheet.dart' show formatTextSize;
 import 'widget_previews.dart';
-
-const _accent = Color(0xff3D5AFE);
-
-// iOS's system colours, as on the settings' other rows.
-const _blue = Color(0xff007AFF);
-const _teal = Color(0xff30B0C7);
-const _indigo = Color(0xff5856D6);
-const _green = Color(0xff34C759);
-const _purple = Color(0xffAF52DE);
-const _pink = Color(0xffFF2D55);
-const _orange = Color(0xffFF9500);
 
 /// The name each kind of widget goes by in its sheet.
 String widgetName(WidgetKind kind) => switch (kind) {
@@ -41,18 +32,7 @@ String widgetName(WidgetKind kind) => switch (kind) {
 Future<void> showWidgetStyleSheet(BuildContext context, WidgetKind kind) async {
   await context.read<WidgetsViewModel>().load();
   if (!context.mounted) return;
-  await showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    backgroundColor: context.colors.dialogBackground,
-    shape: RoundedSuperellipseBorder(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-      side: context.colors.sheetSide,
-    ),
-    builder: (context) => WidgetStyleSheet(kind: kind),
-  );
+  await showSettingsSheet<void>(context, WidgetStyleSheet(kind: kind));
 }
 
 /// Which colour's palette is open.
@@ -454,7 +434,7 @@ class _Controls extends StatelessWidget {
           children: [
             ColorTile(
               icon: Icons.format_color_fill_rounded,
-              color: _blue,
+              color: SystemColors.blue,
               title: "Background",
               value: background == null ? null : Color(background),
               offersAutomatic: true,
@@ -465,7 +445,7 @@ class _Controls extends StatelessWidget {
             ),
             _SliderTile(
               icon: Icons.opacity_rounded,
-              color: _teal,
+              color: SystemColors.teal,
               title: "Opacity",
               value: style.opacity,
               label: "${(style.opacity * 100).round()}%",
@@ -477,7 +457,7 @@ class _Controls extends StatelessWidget {
             ),
             ColorTile(
               icon: Icons.format_color_text_rounded,
-              color: _indigo,
+              color: SystemColors.indigo,
               title: "Text Color",
               value: textColor == null ? null : Color(textColor),
               offersAutomatic: true,
@@ -489,7 +469,7 @@ class _Controls extends StatelessWidget {
             if (tasks)
               ColorTile(
                 icon: Icons.check_circle_rounded,
-                color: _green,
+                color: SystemColors.green,
                 title: "Accent Color",
                 value: Color(style.accent),
                 open: open == _Palette.accent,
@@ -499,7 +479,7 @@ class _Controls extends StatelessWidget {
               ),
             _SliderTile(
               icon: Icons.format_size_rounded,
-              color: _purple,
+              color: SystemColors.purple,
               title: "Text Size",
               value: style.textSize,
               label: formatTextSize(style.textSize),
@@ -511,7 +491,7 @@ class _Controls extends StatelessWidget {
             ),
             SettingsTile(
               icon: Icons.font_download_rounded,
-              color: _pink,
+              color: SystemColors.pink,
               title: "Font",
               bottom: CupertinoSlidingSegmentedControl<WidgetFont>(
                 groupValue: style.font,
@@ -528,7 +508,7 @@ class _Controls extends StatelessWidget {
             if (tasks)
               SettingsSwitchTile(
                 icon: Icons.task_alt_rounded,
-                color: _orange,
+                color: SystemColors.orange,
                 title: "Show Done Tasks",
                 subtitle: const Text("Checked off, rather than hidden"),
                 value: style.showDone,
@@ -598,7 +578,7 @@ class _SliderTile extends StatelessWidget {
       min: min,
       max: max,
       divisions: ((max - min) / step).round(),
-      activeColor: _accent,
+      activeColor: AppPalette.accent,
       // Snapped to the steps the divisions stand for, so the value reads
       // cleanly and matches the saved one exactly.
       onChanged: (value) => onChanged((value / step).round() * step),

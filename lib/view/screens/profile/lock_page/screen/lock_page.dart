@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../models/app_lock.dart';
 import '../../../../../view_model/auth_view_model.dart';
 import '../../../../widgets/password_field.dart';
@@ -38,7 +39,7 @@ class LockPage extends StatelessWidget {
                       icon: const Icon(
                         Icons.refresh_sharp,
                         size: 70,
-                        color: Color(0xff3D5AFE),
+                        color: AppPalette.accent,
                       ),
                     ),
                   ),

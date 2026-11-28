@@ -15,6 +15,7 @@ import '../../../../../view_model/trash_bin.dart';
 import '../../../../widgets/glass_icon_button.dart';
 import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
+import '../../../../widgets/page_gutters.dart';
 import '../../../../widgets/password_dialogs.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../../widgets/themed_status_bar.dart';
@@ -98,11 +99,11 @@ class _TrashPageState extends State<TrashPage> {
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final width = MediaQuery.sizeOf(context).width;
-    // Clear of a camera cutout on a phone turned on its side, and a
-    // comfortable width on large screens, as on the to-do page.
-    final gutterLeft = math.max(16 + padding.left, (width - 640) / 2);
-    final gutterRight = math.max(16 + padding.right, (width - 640) / 2);
+    // As wide as the to-do page's list, at most.
+    final EdgeInsets(left: gutterLeft, right: gutterRight) = pageGutters(
+      context,
+      maxWidth: 640,
+    );
     final tasks = context.select<TasksViewModel, int>(
       (tasks) => tasks.trash.length,
     );

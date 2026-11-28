@@ -2,8 +2,7 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
-
-const _accent = Color(0xff3D5AFE);
+import '../../../../../core/theme/palette.dart';
 
 /// A search field for the notes in the style of iOS's search bars, on the
 /// same fill as the to-do page's segmented control. A tap anywhere else puts
@@ -41,7 +40,7 @@ class NotesSearchField extends StatelessWidget {
         suffixInsets: const EdgeInsetsDirectional.only(end: 8),
         padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 8, 10),
         borderRadius: const BorderRadius.all(Radius.circular(12)),
-        cursorColor: _accent,
+        cursorColor: AppPalette.accent,
       ),
     );
   }

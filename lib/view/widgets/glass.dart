@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/theme/palette.dart';
+
 /// A frosted, translucent surface in the style of Apple's glass materials:
 /// it blurs whatever is behind it, tints it, and draws a thin bright rim.
 class Glass extends StatelessWidget {
@@ -30,7 +32,7 @@ class Glass extends StatelessWidget {
             foregroundPainter: _RimPainter(shape: shape, isDark: isDarkTheme),
             child: ColoredBox(
               color: isDarkTheme
-                  ? const Color(0xff2C2C2E).withValues(alpha: 0.62)
+                  ? SystemColors.gray5Dark.withValues(alpha: 0.62)
                   : Colors.white.withValues(alpha: 0.72),
               child: child,
             ),

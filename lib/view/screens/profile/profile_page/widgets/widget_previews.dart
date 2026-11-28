@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/tasks_widget_snapshot.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../models/clock_time.dart';
 import '../../../../../models/repeat_progress.dart';
 import '../../../../../models/todo_item.dart';
@@ -33,9 +34,6 @@ const _maxIndents = 3;
 /// The note widget's padding and text.
 const _notePadding = 16.0;
 const _noteSize = 22.0;
-
-/// iOS's system red, which an overdue task's details turn.
-const _red = Color(0xffFF3B30);
 
 /// How big each widget is drawn when there's none on the home screen to go
 /// by: about its size as it's first added.
@@ -330,7 +328,8 @@ class _TaskRow extends StatelessWidget {
                       style: _text(
                         style,
                         _detailsSize,
-                        row.late ? _red : inks.secondary,
+                        // Red once it's overdue, as on the widget itself.
+                        row.late ? SystemColors.red : inks.secondary,
                       ),
                     ),
                   ),

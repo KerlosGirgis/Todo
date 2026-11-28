@@ -3,39 +3,16 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../view_model/user_view_model.dart';
+import '../../../../widgets/form_dialog.dart';
 import '../../../../widgets/profile_button.dart';
-
-const _accent = Color(0xff3D5AFE);
 
 /// Opens the dialog that renames the user, growing into view like the app's
 /// other dialogs.
-Future<void> showEditNameDialog(BuildContext context) {
-  return showGeneralDialog<void>(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 300),
-    pageBuilder: (context, animation, secondaryAnimation) =>
-        const EditNameDialog(),
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curvedAnimation = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        opacity: curvedAnimation,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.95, end: 1).animate(curvedAnimation),
-          child: child,
-        ),
-      );
-    },
-  );
-}
+Future<void> showEditNameDialog(BuildContext context) =>
+    showFormDialog<void>(context, const EditNameDialog());
 
 class EditNameDialog extends StatefulWidget {
   const EditNameDialog({super.key});
@@ -121,7 +98,7 @@ class _EditNameDialogState extends State<EditNameDialog> {
               textCapitalization: TextCapitalization.words,
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _save(),
-              cursorColor: _accent,
+              cursorColor: AppPalette.accent,
               style: TextStyle(fontSize: 18, color: context.colors.wB),
               decoration: InputDecoration(
                 hintText: "Your name",
@@ -137,7 +114,10 @@ class _EditNameDialogState extends State<EditNameDialog> {
                 border: fieldShape,
                 enabledBorder: fieldShape,
                 focusedBorder: fieldShape.copyWith(
-                  borderSide: const BorderSide(color: _accent, width: 1.5),
+                  borderSide: const BorderSide(
+                    color: AppPalette.accent,
+                    width: 1.5,
+                  ),
                 ),
                 counterStyle: TextStyle(
                   color: context.colors.wB.withValues(alpha: 0.4),

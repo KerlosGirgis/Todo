@@ -3,9 +3,16 @@ import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/theme/palette.dart';
 import '../../models/avatar.dart';
 
-const _accent = Color(0xff3D5AFE);
+/// What shows behind a bundled avatar drawn on a transparent background: a
+/// pale indigo, lighter at the top left.
+const avatarBackdrop = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [Color(0xffE8EAF6), Color(0xffC5CAE9)],
+);
 
 /// The user's avatar inside the app's gradient ring. It takes its size from
 /// its parent and keeps its proportions at any size, so it also flies
@@ -34,14 +41,7 @@ class RingedAvatar extends StatelessWidget {
             padding: EdgeInsets.all(ringWidth * 2),
             child: ClipOval(
               child: DecoratedBox(
-                // Shows behind avatars drawn on a transparent background.
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xffE8EAF6), Color(0xffC5CAE9)],
-                  ),
-                ),
+                decoration: const BoxDecoration(gradient: avatarBackdrop),
                 // Some bundled avatars are circles with a thin transparent
                 // rim; a slight zoom fills the frame with them.
                 child: Transform.scale(
@@ -86,8 +86,10 @@ class AvatarHalo extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      _accent.withValues(alpha: isDarkTheme ? 0.32 : 0.18),
-                      _accent.withValues(alpha: 0),
+                      AppPalette.accent.withValues(
+                        alpha: isDarkTheme ? 0.32 : 0.18,
+                      ),
+                      AppPalette.accent.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -116,7 +118,7 @@ class _RingPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = width
         ..shader = const SweepGradient(
-          colors: [_accent, Color(0xff40C4FF), _accent],
+          colors: [AppPalette.accent, AppPalette.highlight, AppPalette.accent],
           // Puts the light blue highlight at the top left.
           transform: GradientRotation(math.pi / 4),
         ).createShader(rect),

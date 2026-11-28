@@ -1,9 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/theme/palette.dart';
 import 'form_dialog.dart';
-
-const _accent = Color(0xff3D5AFE);
 
 /// A field for a password, hidden as it's typed unless the eye at its end
 /// shows it, with [error] in red under it when there is one.
@@ -39,7 +38,6 @@ class _PasswordFieldState extends State<PasswordField> {
   @override
   Widget build(BuildContext context) {
     final ink = context.colors.wB;
-    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     final error = widget.error;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +56,7 @@ class _PasswordFieldState extends State<PasswordField> {
           // if it's wrong.
           onEditingComplete: widget.onSubmitted == null ? null : () {},
           onSubmitted: (_) => widget.onSubmitted?.call(),
-          cursorColor: _accent,
+          cursorColor: AppPalette.accent,
           style: TextStyle(
             color: ink,
             fontSize: 18,
@@ -93,9 +91,7 @@ class _PasswordFieldState extends State<PasswordField> {
                   child: Text(
                     error,
                     style: TextStyle(
-                      color: isDarkTheme
-                          ? const Color(0xffFF453A)
-                          : const Color(0xffFF3B30),
+                      color: context.colors.systemRed,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),

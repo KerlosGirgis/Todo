@@ -4,6 +4,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../../core/theme/palette.dart';
 import '../../../../../../core/utils/task_labels.dart';
 import '../../../../../../models/task_tree.dart';
 import '../../../../../../models/todo_item.dart';
@@ -15,14 +16,14 @@ import 'map_layout.dart';
 /// which its subtasks share: iOS's system colours, as on the profile page's
 /// settings, and their brighter versions for dark pages.
 const _branchColors = [
-  (Color(0xff007AFF), Color(0xff0A84FF)),
-  (Color(0xffAF52DE), Color(0xffBF5AF2)),
-  (Color(0xffFF9500), Color(0xffFF9F0A)),
-  (Color(0xff34C759), Color(0xff30D158)),
-  (Color(0xffFF2D55), Color(0xffFF375F)),
-  (Color(0xff30B0C7), Color(0xff40C8E0)),
-  (Color(0xff5856D6), Color(0xff5E5CE6)),
-  (Color(0xff00C7BE), Color(0xff63E6E2)),
+  (SystemColors.blue, SystemColors.blueDark),
+  (SystemColors.purple, SystemColors.purpleDark),
+  (SystemColors.orange, SystemColors.orangeDark),
+  (SystemColors.green, SystemColors.greenDark),
+  (SystemColors.pink, SystemColors.pinkDark),
+  (SystemColors.teal, SystemColors.tealDark),
+  (SystemColors.indigo, SystemColors.indigoDark),
+  (SystemColors.mint, SystemColors.mintDark),
 ];
 
 /// The colour of the centre's branch number [branch].

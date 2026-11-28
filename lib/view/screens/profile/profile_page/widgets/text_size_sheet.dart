@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
 import '../../../../../core/result.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/clock_time.dart';
 import '../../../../../models/note.dart';
@@ -18,8 +19,7 @@ import '../../../notes/note_editor_page/widgets/note_styles.dart';
 import '../../../notes/notes_page/widgets/note_card.dart';
 import '../../../notes/notes_page/widgets/note_grid_layout.dart';
 import '../../../tasks/todo_page/widgets/task_card.dart';
-
-const _accent = Color(0xff3D5AFE);
+import 'settings_sheet.dart';
 
 /// What [setting] is called, over its sheet.
 String _titleOf(TextSizeSetting setting) => switch (setting) {
@@ -40,18 +40,7 @@ String formatTextSize(double size) {
 /// Opens the sheet that sets [setting]. A size that isn't applied is dropped
 /// when the sheet closes.
 Future<void> showTextSizeSheet(BuildContext context, TextSizeSetting setting) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    backgroundColor: context.colors.dialogBackground,
-    shape: RoundedSuperellipseBorder(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-      side: context.colors.sheetSide,
-    ),
-    builder: (context) => TextSizeSheet(setting: setting),
-  );
+  return showSettingsSheet<void>(context, TextSizeSheet(setting: setting));
 }
 
 /// A slider for one of the text sizes, over a preview of the text it sizes.
@@ -127,7 +116,7 @@ class _TextSizeSheetState extends State<TextSizeSheet> {
                   max: TextSizes.max,
                   divisions: ((TextSizes.max - TextSizes.min) / TextSizes.step)
                       .round(),
-                  activeColor: _accent,
+                  activeColor: AppPalette.accent,
                   // Snapped to the steps the divisions stand for, so the
                   // value reads cleanly and matches the saved one exactly.
                   onChanged: (value) => setState(
@@ -348,7 +337,7 @@ class _NoteCardPreview extends StatelessWidget {
         child: SizedBox.fromSize(
           size: cardSize,
           child: NoteCover(
-            color: _accent,
+            color: AppPalette.accent,
             child: NoteCardContent(
               note: _sampleNote,
               preview: _samplePreview,
@@ -365,7 +354,7 @@ class _NoteCardPreview extends StatelessWidget {
 final _sampleNote = Note(
   title: "Weekend Plans",
   body: _sampleText,
-  coverColor: _accent.toARGB32(),
+  coverColor: AppPalette.accent.toARGB32(),
 );
 
 const _sampleText =

@@ -1,10 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/theme/palette.dart';
 import 'glass.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
 
 /// The floating buttons at the bottom of the to-do and notes pages: a glass
 /// one that switches to the other page, over a glowing one in the app's
@@ -123,12 +121,17 @@ class _AddButtonState extends State<_AddButton> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [_accent, Color.lerp(_accent, _highlight, 0.7)!],
+              colors: [
+                AppPalette.accent,
+                Color.lerp(AppPalette.accent, AppPalette.highlight, 0.7)!,
+              ],
             ),
             // A soft shadow of its own colour, which lifts it off the page.
             shadows: [
               BoxShadow(
-                color: _accent.withValues(alpha: isDarkTheme ? 0.22 : 0.25),
+                color: AppPalette.accent.withValues(
+                  alpha: isDarkTheme ? 0.22 : 0.25,
+                ),
                 blurRadius: 12,
                 offset: const Offset(0, 5),
               ),

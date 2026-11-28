@@ -1,10 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/theme/palette.dart';
 import 'settings_group.dart';
-
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
 
 /// Opens [dialog], fading and growing it into view like the profile page's
 /// dialogs.
@@ -16,20 +14,30 @@ Future<T?> showFormDialog<T>(BuildContext context, Widget dialog) {
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 300),
     pageBuilder: (context, animation, secondaryAnimation) => dialog,
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curvedAnimation = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        opacity: curvedAnimation,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.95, end: 1).animate(curvedAnimation),
-          child: child,
-        ),
-      );
-    },
+    transitionBuilder: formDialogTransition,
+  );
+}
+
+/// How a dialog comes into view, and goes: fading in as it grows from a
+/// little smaller. Also for one opened another way, such as the avatar's,
+/// which needs a page route for its hero to fly into.
+Widget formDialogTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  final curvedAnimation = CurvedAnimation(
+    parent: animation,
+    curve: Curves.easeOutCubic,
+    reverseCurve: Curves.easeInCubic,
+  );
+  return FadeTransition(
+    opacity: curvedAnimation,
+    child: ScaleTransition(
+      scale: Tween<double>(begin: 0.95, end: 1).animate(curvedAnimation),
+      child: child,
+    ),
   );
 }
 
@@ -159,12 +167,15 @@ class _HeaderIcon extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: color == null
-              ? [_accent, Color.lerp(_accent, _highlight, 0.7)!]
+              ? [
+                  AppPalette.accent,
+                  Color.lerp(AppPalette.accent, AppPalette.highlight, 0.7)!,
+                ]
               : [color, Color.lerp(color, Colors.white, 0.25)!],
         ),
         shadows: [
           BoxShadow(
-            color: (color ?? _accent).withValues(alpha: 0.25),
+            color: (color ?? AppPalette.accent).withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -228,7 +239,7 @@ InputDecoration formFieldDecoration(
     border: shape,
     enabledBorder: shape,
     focusedBorder: shape.copyWith(
-      borderSide: const BorderSide(color: _accent, width: 1.5),
+      borderSide: const BorderSide(color: AppPalette.accent, width: 1.5),
     ),
   );
 }

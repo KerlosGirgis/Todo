@@ -2,9 +2,8 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/theme/palette.dart';
 import 'profile_card.dart';
-
-const _accent = Color(0xff3D5AFE);
 
 /// A titled group of settings on one card, in the style of iOS's grouped
 /// lists, with hairlines between the rows that start where their text does.
@@ -171,7 +170,7 @@ class SettingsSwitchTile extends StatelessWidget {
         onTap: () => onChanged(!value),
         trailing: CupertinoSwitch(
           value: value,
-          activeTrackColor: _accent,
+          activeTrackColor: AppPalette.accent,
           onChanged: onChanged,
         ),
       ),

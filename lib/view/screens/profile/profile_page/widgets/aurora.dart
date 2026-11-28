@@ -1,9 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../../core/extensions/theme_extensions.dart';
+import '../../../../../core/theme/palette.dart';
 
-const _accent = Color(0xff3D5AFE);
-const _highlight = Color(0xff40C4FF);
 const _violet = Color(0xff7C4DFF);
 
 /// Soft glows of the app's blues behind the top of the profile page, which
@@ -51,8 +50,18 @@ class _AuroraPainter extends CustomPainter {
 
     final width = size.width;
     final height = size.height;
-    glow(Offset(width * 0.1, height * 0.2), width * 0.85, _accent, 0.42);
-    glow(Offset(width * 0.95, height * 0.08), width * 0.7, _highlight, 0.3);
+    glow(
+      Offset(width * 0.1, height * 0.2),
+      width * 0.85,
+      AppPalette.accent,
+      0.42,
+    );
+    glow(
+      Offset(width * 0.95, height * 0.08),
+      width * 0.7,
+      AppPalette.highlight,
+      0.3,
+    );
     glow(Offset(width * 0.55, height * 0.62), width * 0.6, _violet, 0.2);
     canvas.drawRect(
       bounds,

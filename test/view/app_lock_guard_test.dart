@@ -17,11 +17,11 @@ import 'package:todo/services/device_service.dart';
 import 'package:todo/services/file_service.dart';
 import 'package:todo/services/lock_service.dart';
 import 'package:todo/services/verse_service.dart';
-import 'package:todo/view/screens/notes/notes_page/widgets/notes_overwrite_dialog.dart';
 import 'package:todo/view/screens/profile/lock_page/screen/lock_page.dart';
-import 'package:todo/view/screens/tasks/todo_page/widgets/tasks_overwrite_dialog.dart';
 import 'package:todo/view/widgets/app_lock_guard.dart';
 import 'package:todo/view/widgets/form_dialog.dart';
+import 'package:todo/view/widgets/password_dialogs.dart';
+import 'package:todo/view/widgets/restore_backup_dialog.dart';
 import 'package:todo/view_model/auth_view_model.dart';
 import 'package:todo/view_model/notes_view_model.dart';
 import 'package:todo/view_model/tasks_view_model.dart';
@@ -160,14 +160,31 @@ void main() {
                         TextButton(
                           onPressed: () => showFormDialog<void>(
                             context,
-                            const TasksOverwriteDialog(),
+                            RestoreBackupDialog(
+                              things: "tasks",
+                              restore: (context, overwrite) => tasks.restore(
+                                overwrite,
+                                askForBackupPassword: backupPasswordPrompt(
+                                  context,
+                                ),
+                              ),
+                            ),
                           ),
                           child: const Text("Restore tasks"),
                         ),
                         TextButton(
                           onPressed: () => showFormDialog<void>(
                             context,
-                            const NotesOverwriteDialog(),
+                            RestoreBackupDialog(
+                              things: "notes",
+                              restore: (context, overwrite) => notes.restore(
+                                overwrite,
+                                askForPassword: noteLockPasswordPrompt(context),
+                                askForBackupPassword: backupPasswordPrompt(
+                                  context,
+                                ),
+                              ),
+                            ),
                           ),
                           child: const Text("Restore notes"),
                         ),

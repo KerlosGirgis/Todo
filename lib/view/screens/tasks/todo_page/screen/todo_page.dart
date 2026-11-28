@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -22,7 +21,10 @@ import '../../../../widgets/glass_menu.dart';
 import '../../../../widgets/large_title.dart';
 import '../../../../widgets/page_action_buttons.dart';
 import '../../../../widgets/page_bar_actions.dart';
+import '../../../../widgets/page_gutters.dart';
+import '../../../../widgets/page_tours.dart';
 import '../../../../widgets/password_dialogs.dart';
+import '../../../../widgets/restore_backup_dialog.dart';
 import '../../../../widgets/rise_in.dart';
 import '../../../../widgets/themed_status_bar.dart';
 import '../../../../widgets/tour.dart';
@@ -35,7 +37,6 @@ import '../widgets/task_dialog.dart';
 import '../widgets/task_list.dart';
 import '../widgets/task_map/map_tour.dart';
 import '../widgets/task_map/task_map.dart';
-import '../widgets/tasks_overwrite_dialog.dart';
 import '../widgets/tasks_summary_card.dart';
 import '../widgets/todo_tour.dart';
 
@@ -44,9 +45,6 @@ const _title = "ToDo";
 /// The room above the list's first card.
 const _listTop = 20.0;
 
-/// How long the page takes to rise in, which its tour waits for.
-const _tourDelay = Duration(milliseconds: 900);
-
 class TodoPage extends StatefulWidget {
   const TodoPage({super.key});
 
@@ -54,7 +52,8 @@ class TodoPage extends StatefulWidget {
   State<TodoPage> createState() => _TodoPageState();
 }
 
-class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
+class _TodoPageState extends State<TodoPage>
+    with WidgetPageRequests<TodoPage>, PageTours<TodoPage> {
   final _scrollController = ScrollController();
 
   @override
@@ -70,17 +69,6 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   /// How many sections rise in ahead of the list's cards: the summary when
   /// the page opens, and none when only the list changes.
   int _listDelay = 1;
-
-  /// The page's tours, each of which shows once: the list's as the page
-  /// first opens on the list, and the map's as it first shows the map.
-  final _tour = TourController();
-  Timer? _tourStart;
-
-  /// Whether a tour is on, or about to be, when the list's first card has
-  /// [_firstCardKey], for the tour to find it by. It's only there then, as a
-  /// global key moves a card's state along with it when the cards are
-  /// reordered.
-  bool _touring = false;
 
   /// What the tours point at: on the list, on the map, then on both.
   final _headerKey = GlobalKey();
@@ -107,16 +95,12 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   /// Whether another page is over this one, such as the lock page.
   bool _covered = false;
 
-  /// Which tours are due, which says when the user asks for them again.
-  late final TourViewModel _tours;
-
   /// The tasks, which can leave the map with nothing to show.
   late final TasksViewModel _tasks;
 
   @override
   void initState() {
     super.initState();
-    _tours = context.read<TourViewModel>()..addListener(_toursReplayed);
     _tasks = context.read<TasksViewModel>()..addListener(_tasksChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final failed = await _tasks.get();
@@ -146,9 +130,6 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
     }
     _route?.secondaryAnimation?.removeStatusListener(_coverChanged);
     _tasks.removeListener(_tasksChanged);
-    _tours.removeListener(_toursReplayed);
-    _tourStart?.cancel();
-    _tour.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -160,7 +141,8 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
 
   /// Shows the tour again once the user asks for the tips again in the
   /// settings, as they come back from them.
-  void _toursReplayed() => _tourIfDue();
+  @override
+  void toursReplayed() => _tourIfDue();
 
   /// As another page comes over this one, such as the lock page, which has
   /// the phone's bars, and as the page comes back from under it, or from
@@ -177,67 +159,68 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   /// at.
   Future<void> _tourIfDue() async {
     final tour = _pageTour;
-    if (_touring || _fullScreen || !_loaded) return;
-    if (!await _tours.isDue(tour) || !mounted) return;
+    if (touring || _fullScreen || !_loaded) return;
+    if (!await tours.isDue(tour) || !mounted) return;
     // Not for a view that's been switched away from meanwhile, nor under
     // another page.
-    if (_touring ||
+    if (touring ||
         _fullScreen ||
         tour != _pageTour ||
         !(_route?.isCurrent ?? true)) {
       return;
     }
-    setState(() => _touring = true);
-    _tourStart?.cancel();
-    _tourStart = Timer(_tourDelay, () => _startTour(tour));
+    setState(() => touring = true);
+    startTourSoon(tour);
   }
 
-  /// Starts [tour]: the list's, on its first card, or on an example one when
-  /// there are no tasks, or the map's.
-  void _startTour(PageTour tour) {
+  /// Starts [tour], unless it's for a view that's been switched away from
+  /// meanwhile.
+  @override
+  void startTour(PageTour tour) {
     if (tour != _pageTour) {
-      setState(() => _touring = false);
+      setState(() => touring = false);
       return;
     }
+    super.startTour(tour);
+  }
+
+  /// The list's tour, on its first card, or on an example one when there
+  /// are no tasks, or the map's.
+  @override
+  List<TourStep> tourSteps(PageTour tour) {
     final first = _tasks.tree.nodes.firstOrNull;
-    _tour.start(
-      switch (tour) {
-        PageTour.map => mapTour(
-          hub: _hubKey,
-          node: _nodeKey,
-          fit: _fitKey,
-          fullScreen: _fullScreenKey,
-          sortFilter: _sortFilterKey,
-          menu: _menuKey,
-        ),
-        _ => todoTour(
-          task: first?.task,
-          now: _tasks.now,
-          subtasks: first == null || first.subtaskCount == 0
-              ? null
-              : (done: first.doneSubtaskCount, total: first.subtaskCount),
-          card: _firstCardKey,
-          header: _headerKey,
-          gap: _listTop,
-          buttons: _buttonsKey,
-          sortFilter: _sortFilterKey,
-          menu: _menuKey,
-        ),
-      },
-      onEnd: () {
-        setState(() => _touring = false);
-        _tours.finish(tour);
-      },
-    );
+    return switch (tour) {
+      PageTour.map => mapTour(
+        hub: _hubKey,
+        node: _nodeKey,
+        fit: _fitKey,
+        fullScreen: _fullScreenKey,
+        sortFilter: _sortFilterKey,
+        menu: _menuKey,
+      ),
+      _ => todoTour(
+        task: first?.task,
+        now: _tasks.now,
+        subtasks: first == null || first.subtaskCount == 0
+            ? null
+            : (done: first.doneSubtaskCount, total: first.subtaskCount),
+        card: _firstCardKey,
+        header: _headerKey,
+        gap: _listTop,
+        buttons: _buttonsKey,
+        sortFilter: _sortFilterKey,
+        menu: _menuKey,
+      ),
+    };
   }
 
   /// Shows the tasks as a map instead of a list, or the other way round,
   /// for now: only the settings change the view the page opens with.
   void _switchView() {
     // A tour that was about to start is for the view being left.
-    _tourStart?.cancel();
+    stopTourStart();
     setState(() {
-      _touring = false;
+      touring = false;
       // The list opens afresh, under its summary.
       _listDelay = 1;
     });
@@ -252,11 +235,11 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   void _setFullScreen(bool on) {
     if (on == _fullScreen) return;
     // A tour about to start waits until the page has its bar back.
-    final tourWaits = on && (_tourStart?.isActive ?? false);
-    if (tourWaits) _tourStart!.cancel();
+    final tourWaits = on && tourStarting;
+    if (tourWaits) stopTourStart();
     setState(() {
       _fullScreen = on;
-      if (tourWaits) _touring = false;
+      if (tourWaits) touring = false;
     });
     _syncSystemBars();
     if (!on) _tourIfDue();
@@ -296,7 +279,7 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
           if (!didPop) _setFullScreen(false);
         },
         child: Tour(
-          controller: _tour,
+          controller: tourController,
           child: Scaffold(
             resizeToAvoidBottomInset: false,
             backgroundColor: context.colors.pageBackground,
@@ -394,11 +377,8 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
   /// summary, on a phone turned on its side as well.
   Widget _buildList(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    // Clear of a camera cutout on a phone turned on its side, and a
-    // comfortable width for the cards on wide screens.
-    final centred = (MediaQuery.sizeOf(context).width - 640) / 2;
-    final left = math.max(16 + padding.left, centred);
-    final right = math.max(16 + padding.right, centred);
+    // A comfortable width for the cards on wide screens.
+    final EdgeInsets(:left, :right) = pageGutters(context, maxWidth: 640);
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
@@ -439,7 +419,9 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
             listDelay: _listDelay,
             onEdit: _editTask,
             onAddSubtask: _addSubtask,
-            firstCardKey: _touring ? _firstCardKey : null,
+            // Only while touring, as a global key moves a card's state along
+            // with it when the cards are reordered.
+            firstCardKey: touring ? _firstCardKey : null,
           ),
       ],
     );
@@ -458,8 +440,7 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
     GlassMenuItem(
       icon: Icons.settings_backup_restore_rounded,
       tooltip: "Restore Backup",
-      onPressed: () =>
-          showFormDialog<void>(context, const TasksOverwriteDialog()),
+      onPressed: _restoreBackup,
     ),
     GlassMenuItem(
       icon: Icons.backup_rounded,
@@ -502,6 +483,19 @@ class _TodoPageState extends State<TodoPage> with WidgetPageRequests<TodoPage> {
         )
         .then(FeedbackToast.show);
   }
+
+  /// Imports tasks from a backup file, in place of the ones there are now or
+  /// alongside them, as the user chooses.
+  void _restoreBackup() => showFormDialog<void>(
+    context,
+    RestoreBackupDialog(
+      things: "tasks",
+      restore: (context, overwrite) => _tasks.restore(
+        overwrite,
+        askForBackupPassword: backupPasswordPrompt(context),
+      ),
+    ),
+  );
 
   void _addTask() => showFormDialog<void>(context, const TaskDialog());
 

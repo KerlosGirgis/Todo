@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../core/result.dart';
+import '../../../../../core/theme/palette.dart';
 import '../../../../../core/ui/feedback_toast.dart';
 import '../../../../../models/app_lock.dart';
 import '../../../../../models/text_size.dart';
@@ -16,20 +17,6 @@ import '../../../../widgets/settings_group.dart';
 import 'appearance_picker.dart';
 import 'text_size_sheet.dart';
 import 'widget_style_sheet.dart';
-
-// iOS's system colours, so that each setting has an icon of its own colour,
-// as in the Settings app.
-const _blue = Color(0xff007AFF);
-const _orange = Color(0xffFF9500);
-const _green = Color(0xff34C759);
-const _indigo = Color(0xff5856D6);
-const _purple = Color(0xffAF52DE);
-const _teal = Color(0xff30B0C7);
-const _mint = Color(0xff00C7BE);
-const _cyan = Color(0xff32ADE6);
-const _pink = Color(0xffFF2D55);
-const _yellow = Color(0xffFFCC00);
-const _red = Color(0xffFF3B30);
 
 class AppearanceSection extends StatelessWidget {
   const AppearanceSection({super.key});
@@ -49,7 +36,7 @@ class AppearanceSection extends StatelessWidget {
         if (dark)
           SettingsSwitchTile(
             icon: Icons.contrast_rounded,
-            color: _indigo,
+            color: SystemColors.indigo,
             title: "AMOLED Black",
             subtitle: const Text("Pure black backgrounds in dark mode"),
             value: amoled,
@@ -74,7 +61,7 @@ class GeneralSection extends StatelessWidget {
       children: [
         SettingsTile(
           icon: Icons.home_rounded,
-          color: _blue,
+          color: SystemColors.blue,
           title: "Start Page",
           subtitle: const Text("Where the app opens"),
           bottom: CupertinoSlidingSegmentedControl<StartPage>(
@@ -98,7 +85,7 @@ class GeneralSection extends StatelessWidget {
         ),
         SettingsSwitchTile(
           icon: Icons.auto_stories_rounded,
-          color: _orange,
+          color: SystemColors.orange,
           title: "Daily Verse",
           subtitle: const Text("Shown when you tap your avatar"),
           value: user.user.showVerse,
@@ -124,7 +111,7 @@ class _ShowTipsTile extends StatelessWidget {
     return MergeSemantics(
       child: SettingsTile(
         icon: Icons.lightbulb_rounded,
-        color: _yellow,
+        color: SystemColors.yellow,
         title: "Show Tips Again",
         subtitle: const Text("How the To-Do and Notes pages work"),
         onTap: () {
@@ -162,7 +149,7 @@ class _AppLockTileState extends State<_AppLockTile> {
     final lock = context.select<UserViewModel, AppLock>((user) => user.appLock);
     return SettingsTile(
       icon: Icons.lock_rounded,
-      color: _green,
+      color: SystemColors.green,
       title: "App Lock",
       subtitle: const Text(
         "Needed each time the app opens, and after a "
@@ -194,7 +181,7 @@ class _ChangePasswordTile extends StatelessWidget {
     return MergeSemantics(
       child: SettingsTile(
         icon: Icons.password_rounded,
-        color: _green,
+        color: SystemColors.green,
         title: "Change Password",
         onTap: () async =>
             FeedbackToast.show(await _changeAppLock(context, AppLock.password)),
@@ -229,7 +216,7 @@ class TasksSection extends StatelessWidget {
       children: [
         SettingsTile(
           icon: Icons.hub_rounded,
-          color: _green,
+          color: SystemColors.green,
           title: "Show Tasks As",
           subtitle: const Text("A list, or a map that branches into subtasks"),
           bottom: CupertinoSlidingSegmentedControl<TasksView>(
@@ -251,18 +238,18 @@ class TasksSection extends StatelessWidget {
         const _TextSizeTile(
           setting: TextSizeSetting.taskTitle,
           icon: Icons.title_rounded,
-          color: _indigo,
+          color: SystemColors.indigo,
           title: "Title Size",
         ),
         const _TextSizeTile(
           setting: TextSizeSetting.taskDescription,
           icon: Icons.notes_rounded,
-          color: _purple,
+          color: SystemColors.purple,
           title: "Description Size",
         ),
         SettingsTile(
           icon: Icons.segment_rounded,
-          color: _teal,
+          color: SystemColors.teal,
           title: "Description Lines",
           subtitle: const Text("Shown before “Show More”"),
           bottom: CupertinoSlidingSegmentedControl<int>(
@@ -299,7 +286,7 @@ class NotesSection extends StatelessWidget {
       children: [
         SettingsSwitchTile(
           icon: Icons.save_rounded,
-          color: _mint,
+          color: SystemColors.mint,
           title: "Auto Save",
           subtitle: const Text("Save changes as you type"),
           value: user.user.autoSave,
@@ -307,7 +294,7 @@ class NotesSection extends StatelessWidget {
         ),
         SettingsSwitchTile(
           icon: Icons.numbers_rounded,
-          color: _cyan,
+          color: SystemColors.cyan,
           title: "Word Count",
           subtitle: const Text("Show a live count while you write"),
           value: user.user.wordCount,
@@ -315,7 +302,7 @@ class NotesSection extends StatelessWidget {
         ),
         SettingsSwitchTile(
           icon: Icons.font_download_rounded,
-          color: _pink,
+          color: SystemColors.pink,
           title: "Casual Font",
           // Written in the font itself, as a sample.
           subtitle: const Text(
@@ -328,13 +315,13 @@ class NotesSection extends StatelessWidget {
         const _TextSizeTile(
           setting: TextSizeSetting.noteTitle,
           icon: Icons.title_rounded,
-          color: _indigo,
+          color: SystemColors.indigo,
           title: "Title Size",
         ),
         const _TextSizeTile(
           setting: TextSizeSetting.noteBody,
           icon: Icons.notes_rounded,
-          color: _purple,
+          color: SystemColors.purple,
           title: "Body Size",
         ),
         const _WidgetTile(
@@ -384,7 +371,7 @@ class _ClearNoteWidgetTileState extends State<_ClearNoteWidgetTile> {
       child: MergeSemantics(
         child: SettingsTile(
           icon: Icons.backspace_rounded,
-          color: _red,
+          color: SystemColors.red,
           title: "Clear Widget",
           subtitle: Text(
             text == null ? "No note on it now" : "Shows “$firstLine”",
@@ -411,7 +398,7 @@ class _WidgetTile extends StatelessWidget {
     return MergeSemantics(
       child: SettingsTile(
         icon: Icons.widgets_rounded,
-        color: _blue,
+        color: SystemColors.blue,
         title: "Home Screen Widget",
         subtitle: Text(subtitle),
         trailing: const DisclosureValue("Style"),

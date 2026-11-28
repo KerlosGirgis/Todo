@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:todo/core/theme/palette.dart';
 import 'package:todo/models/text_size.dart';
 import 'package:todo/models/widget_style.dart';
 
@@ -13,6 +14,8 @@ void main() {
         expect(style.opacity, 1);
         expect(style.textColor, isNull);
         expect(style.accent, 0xff3D5AFE);
+        // The app's own blue, kept as a number, as models import no theme.
+        expect(Color(style.accent), AppPalette.accent);
         expect(style.textSize, 1);
         expect(style.font, WidgetFont.regular);
         expect(style.showDone, isFalse);

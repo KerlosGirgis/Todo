@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../core/theme/palette.dart';
+
 class ImageService {
   /// Has the user pick a photo from the gallery and crop it to a circle,
   /// then keeps a copy of it in the app's storage. The copy's path, or null
@@ -43,7 +45,7 @@ class ImageService {
           statusBarLight: false,
           backgroundColor: const Color(0xff000000),
           toolbarWidgetColor: const Color(0xffffffff),
-          activeControlsWidgetColor: const Color(0xff3D5AFE),
+          activeControlsWidgetColor: AppPalette.accent,
           initAspectRatio: CropAspectRatioPreset.original,
           cropStyle: CropStyle.circle,
           lockAspectRatio: false,
