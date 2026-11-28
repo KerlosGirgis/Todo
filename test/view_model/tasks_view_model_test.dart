@@ -403,6 +403,55 @@ void main() {
       expect(draft.canSave, isTrue);
     });
 
+    test(
+      "needs a time, and to come round, to save a task that's to repeat",
+      () {
+        final draft = tasks.draft()
+          ..setTitle("Gym")
+          ..setReminder(Reminder.weekly);
+        // Saved like this, it wouldn't repeat at all.
+        expect(draft.reminderStatus(), ReminderStatus.needsTime);
+        expect(draft.canSave, isFalse);
+        draft.setTime(const ClockTime(18, 0));
+        expect(draft.canSave, isTrue);
+        // On Fridays, from today, a Wednesday, until Thursday: never.
+        draft
+          ..toggleWeekday(DateTime.friday)
+          ..toggleWeekday(DateTime.wednesday)
+          ..setUntil(DateTime(2026, 5, 14));
+        expect(draft.reminderStatus(), ReminderStatus.endsTooSoon);
+        expect(draft.canSave, isFalse);
+        draft.setUntil(DateTime(2026, 5, 15));
+        expect(draft.canSave, isTrue);
+      },
+    );
+
+    test("saves a task whose one-time reminder can't be set, or whose "
+        "repeat has ended", () {
+      final call = tasks.draft()
+        ..setTitle("Call")
+        ..setReminder(Reminder.once);
+      expect(call.reminderStatus(), ReminderStatus.needsDayAndTime);
+      expect(call.canSave, isTrue);
+      // This morning, gone by noon.
+      call.setTime(const ClockTime(9, 0));
+      expect(call.reminderStatus(), ReminderStatus.inPast);
+      expect(call.canSave, isTrue);
+
+      final physio = tasks.draft(
+        TodoItem(
+          uuid: "physio",
+          title: "Physio",
+          time: const ClockTime(19, 30),
+          reminder: Reminder.daily,
+          until: DateTime(2026, 5, 10),
+          progress: RepeatProgress(since: DateTime(2026, 5, 1)),
+        ),
+      );
+      expect(physio.reminderStatus(), ReminderStatus.ended);
+      expect(physio.canSave, isTrue);
+    });
+
     test('says what a reminder still needs', () {
       final draft = tasks.draft();
       expect(draft.reminderStatus(), ReminderStatus.off);
@@ -547,6 +596,47 @@ void main() {
       expect((result as Failure).message, "Couldn't set the reminder");
       expect(result, isNot(isA<Unsaved>()));
       expect(task("Call").reminder, Reminder.none);
+    });
+
+    test("saves nothing for a task that's to repeat without a reminder it "
+        "can repeat by", () async {
+      final gym = tasks.draft()
+        ..setTitle("Gym")
+        ..setReminder(Reminder.weekly);
+      expect(
+        (await tasks.save(gym) as Info).message,
+        "A reminder needs a time",
+      );
+      expect(repository.rows, isEmpty);
+
+      gym.setTime(const ClockTime(18, 0));
+      expect(await tasks.save(gym), isA<Success>());
+      final row = repository.rows.single.toMap();
+      final alarms = Map.of(notifications.repeating);
+      expect(alarms, hasLength(1));
+
+      // Nor does a weekly task stop repeating, without its time...
+      final untimed = tasks.draft(task("Gym"))..setTime(null);
+      expect(
+        (await tasks.save(untimed) as Info).message,
+        "A reminder needs a time",
+      );
+      expect(repository.rows.single.toMap(), row);
+      expect(notifications.repeating, alarms);
+
+      // ...or as it comes to stop before it comes round: only on Fridays,
+      // from today, a Wednesday, until Thursday.
+      final never = tasks.draft(task("Gym"))
+        ..toggleWeekday(DateTime.friday)
+        ..toggleWeekday(DateTime.wednesday)
+        ..setUntil(DateTime(2026, 5, 14));
+      expect(
+        (await tasks.save(never) as Info).message,
+        "The reminder ends before the task comes round",
+      );
+      expect(repository.rows.single.toMap(), row);
+      expect(notifications.repeating, alarms);
+      expect(task("Gym").reminder, Reminder.weekly);
     });
 
     test('adds a task with a reminder still to come', () async {
@@ -1453,8 +1543,8 @@ void main() {
       },
     );
 
-    test('are saved without repeating when they would stop before they '
-        'come round', () async {
+    test("aren't saved when they would stop before they come round, as "
+        "they wouldn't repeat at all", () async {
       final draft = tasks.draft()
         ..setTitle("Gym")
         ..setTime(const ClockTime(18, 0))
@@ -1462,12 +1552,13 @@ void main() {
         ..toggleWeekday(DateTime.friday)
         ..toggleWeekday(DateTime.wednesday)
         ..setUntil(DateTime(2026, 5, 14));
+      expect(draft.canSave, isFalse);
       final result = await tasks.save(draft);
       expect(
         (result as Info).message,
         "The reminder ends before the task comes round",
       );
-      expect(task("Gym").reminder, Reminder.none);
+      expect(repository.rows, isEmpty);
       expect(notifications.repeating, isEmpty);
     });
 

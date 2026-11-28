@@ -543,7 +543,8 @@ class TasksViewModel
       TaskDraft._(null, _now, _tree, _current(parent));
 
   /// Adds the task [draft] has, or saves the changes to the one it's for,
-  /// in the task the draft has it in, then sets its reminder.
+  /// in the task the draft has it in, then sets its reminder. Nothing's
+  /// saved while the draft can't be: see [TaskDraft.canSave].
   Future<Result> save(TaskDraft draft) async {
     // All of it now, as the form may close before the task is saved.
     final task = draft.task;
@@ -553,7 +554,12 @@ class TasksViewModel
     final rule = draft.rule;
     final parent = draft.parent;
     final moved = draft.moved;
+    final status = draft.reminderStatus();
     if (title.isEmpty) return Info("Give the task a title");
+    // Before anything's saved: the task is saved without its reminder
+    // first, and one that's to repeat repeats by it.
+    if (status == ReminderStatus.needsTime) return _needsTime;
+    if (status == ReminderStatus.endsTooSoon) return _endsTooSoon;
     if (task == null) {
       var added = TodoItem(
         title: title,
@@ -1042,14 +1048,12 @@ class TasksViewModel
     Recurrence rule, {
     RepeatProgress? progress,
   }) async {
-    if (task.time == null) return const Info("A reminder needs a time");
+    if (task.time == null) return _needsTime;
     final repeating = task.repeatingAs(
       rule,
       progress: progress ?? _progressAs(task, rule),
     );
-    if (repeating.occurrenceOn(today) == null) {
-      return const Info("The reminder ends before the task comes round");
-    }
+    if (repeating.occurrenceOn(today) == null) return _endsTooSoon;
     // One whose last time has gone has nothing more to remind of.
     final ended = repeating.recurrence!.hasEndedBy(today);
     final shown = ended || await _askToShow();
@@ -1095,6 +1099,16 @@ class TasksViewModel
   /// goes off once they're on again.
   static const _notShown =
       "Reminder set, but notifications are off for this app";
+
+  /// What's said of a repeating reminder without a time, as it goes off at
+  /// the task's time each time the task comes round.
+  static const _needsTime = Info("A reminder needs a time");
+
+  /// What's said of a repeating reminder that stops before the task would
+  /// come round at all.
+  static const _endsTooSoon = Info(
+    "The reminder ends before the task comes round",
+  );
 
   /// Whether the phone will show a reminder being turned on, once the user
   /// has been asked to let the app post notifications, if they're off: then,

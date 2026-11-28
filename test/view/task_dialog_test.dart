@@ -5,6 +5,7 @@ import 'package:todo/models/clock_time.dart';
 import 'package:todo/models/recurrence.dart';
 import 'package:todo/models/repeat_progress.dart';
 import 'package:todo/models/todo_item.dart';
+import 'package:todo/view/widgets/profile_button.dart';
 
 import 'todo_page_test.dart' show TodoPageHarness;
 
@@ -17,6 +18,13 @@ void main() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
   }
+
+  /// Whether the form's button with [label], Add or Save, is on.
+  bool isOn(WidgetTester tester, String label) =>
+      tester
+          .widget<ProfileButton>(find.widgetWithText(ProfileButton, label))
+          .onPressed !=
+      null;
 
   /// Opens the form for a new task titled [title], with a time: the one it
   /// is now, which the time picker opens on.
@@ -156,6 +164,84 @@ void main() {
     await tester.tap(find.text("Save"));
     await page.wait(tester);
     expect(page.task("Pills").until, isNull);
+    await page.close(tester);
+  });
+
+  testWidgets("a repeating task isn't saved without its time, which would "
+      "stop it repeating", (tester) async {
+    await page.open(tester, [
+      TodoItem(
+        uuid: "gym",
+        title: "Gym",
+        time: const ClockTime(18, 0),
+        reminder: Reminder.weekly,
+        weekdays: const {DateTime.monday},
+      ),
+    ]);
+    await tester.longPress(find.text("Gym"));
+    await page.wait(tester);
+    expect(isOn(tester, "Save"), isTrue);
+
+    // Its time is the only thing there is to clear.
+    await tester.tap(find.byTooltip("Clear"));
+    await page.wait(tester);
+    expect(find.text("Needs a time"), findsOneWidget);
+    expect(isOn(tester, "Save"), isFalse);
+    await tester.tap(find.text("Save"));
+    await page.wait(tester);
+    expect(find.text("Edit Task"), findsOneWidget);
+    expect(page.task("Gym").reminder, Reminder.weekly);
+    expect(page.task("Gym").time, const ClockTime(18, 0));
+
+    // With a time again, it's saved, still weekly.
+    await tester.tap(find.text("Time"));
+    await page.wait(tester);
+    await tester.tap(find.text("OK"));
+    await page.wait(tester);
+    expect(isOn(tester, "Save"), isTrue);
+    await tester.tap(find.text("Save"));
+    await page.wait(tester);
+    expect(find.text("Edit Task"), findsNothing);
+    expect(page.task("Gym").reminder, Reminder.weekly);
+    await page.close(tester);
+  });
+
+  testWidgets("a form left open into the next day says the task can't come "
+      "round anymore, rather than closing with nothing saved", (tester) async {
+    var time = DateTime(2026, 5, 13, 23, 59);
+    await page.open(tester, const [], clock: () => time);
+    await tester.tap(find.byTooltip("Add Task"));
+    await page.wait(tester);
+    await tester.enterText(find.widgetWithText(TextField, "Title"), "Stretch");
+    // At the time it is now, 11:59 PM, which the picker opens on.
+    await tester.tap(find.text("Time"));
+    await page.wait(tester);
+    await tester.tap(find.text("OK"));
+    await page.wait(tester);
+    await tester.tap(find.text("Repeat"));
+    await page.wait(tester);
+    // Every day, for a day: today only.
+    await tester.tap(find.text("Ends"));
+    await page.wait(tester);
+    await tester.tap(find.text("For a While"));
+    await page.wait(tester);
+    await tester.tap(find.text("Days"));
+    await page.wait(tester);
+    await tester.tap(find.byTooltip("Fewer"));
+    await page.wait(tester);
+    await tester.tap(find.text("Done"));
+    await page.wait(tester);
+    expect(find.text("Every day at 11:59 PM until today"), findsOneWidget);
+    expect(isOn(tester, "Add"), isTrue);
+
+    // Midnight goes by before Add is tapped.
+    time = DateTime(2026, 5, 14, 0, 1);
+    await tester.tap(find.text("Add"));
+    await page.wait(tester);
+    expect(find.text("New Task"), findsOneWidget);
+    expect(find.text("Ends before it comes round"), findsOneWidget);
+    expect(isOn(tester, "Add"), isFalse);
+    expect(page.tasks.items, isEmpty);
     await page.close(tester);
   });
 

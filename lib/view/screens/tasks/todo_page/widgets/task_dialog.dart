@@ -125,6 +125,14 @@ class _TaskDialogState extends State<TaskDialog> {
   bool _saving = false;
 
   Future<void> _save() async {
+    // As the form is now, which a new day can change since it was drawn: a
+    // task that was to repeat from today until today can't come round once
+    // tomorrow has begun. Then the form says so, rather than closing with
+    // nothing saved.
+    if (!_draft.canSave) {
+      setState(() {});
+      return;
+    }
     setState(() => _saving = true);
     final result = await context.read<TasksViewModel>().save(_draft);
     if (mounted) {
@@ -328,7 +336,9 @@ class _TaskDialogState extends State<TaskDialog> {
               tinted: true,
               onPressed: () => Navigator.of(context).pop(),
             ),
-            // Only once there's a title to save.
+            // Only once the task can be saved: with a title, and, for one
+            // that's to repeat, with a reminder it can repeat by, whose hint
+            // says what it still needs otherwise.
             ProfileButton(
               label: adding ? "Add" : "Save",
               onPressed: _draft.canSave && !_saving ? _save : null,

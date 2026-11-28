@@ -108,8 +108,17 @@ class TaskDraft with ChangeNotifier {
     ];
   }
 
-  /// Whether there's a title to save the task with.
-  bool get canSave => _title.trim().isNotEmpty;
+  /// Whether the task can be saved as the form has it: it has a title, and
+  /// one that's to repeat has a reminder it can repeat by, which needs a
+  /// time, and to come round before it stops. Saved without it, the task
+  /// wouldn't repeat at all. A one-time reminder that can't be set doesn't
+  /// keep the task from being saved: it's saved without it.
+  bool get canSave =>
+      _title.trim().isNotEmpty &&
+      switch (reminderStatus()) {
+        ReminderStatus.needsTime || ReminderStatus.endsTooSoon => false,
+        _ => true,
+      };
 
   /// Whether the task can have a day: not while it repeats.
   bool get hasDay => !_reminder.repeats;
